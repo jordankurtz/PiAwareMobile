@@ -75,11 +75,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.jordankurtz.piawareviewer"
+    namespace = "com.jordankurtz.piawaremobile"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.jordankurtz.piawareviewer"
+        applicationId = "com.jordankurtz.piawaremobile"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -107,11 +107,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.jordankurtz.piawareviewer.MainKt"
+        mainClass = "com.jordankurtz.piawaremobile.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.jordankurtz.piawareviewer"
+            packageName = "com.jordankurtz.piawaremobile"
             packageVersion = "1.0.0"
         }
     }

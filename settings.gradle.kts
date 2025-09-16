@@ -1,4 +1,4 @@
-rootProject.name = "PiAwareViewer"
+rootProject.name = "PiAwareMobile"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
