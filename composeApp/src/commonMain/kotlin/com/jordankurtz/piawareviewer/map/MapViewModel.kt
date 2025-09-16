@@ -13,7 +13,9 @@ import com.jordankurtz.piawareviewer.UrlHandler
 import com.jordankurtz.piawareviewer.api.PiAwareApi
 import com.jordankurtz.piawareviewer.model.Aircraft
 import com.jordankurtz.piawareviewer.model.AircraftInfo
+import com.jordankurtz.piawareviewer.model.Async
 import com.jordankurtz.piawareviewer.model.ICAOAircraftType
+import com.jordankurtz.piawareviewer.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -46,10 +48,12 @@ import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.time.Duration.Companion.seconds
 
 class MapViewModel(
     private val piAwareApi: PiAwareApi,
-    private val mapProvider: TileStreamProvider
+    private val mapProvider: TileStreamProvider,
+    private val loadSettingsUseCase: LoadSettingsUseCase
 ) : ViewModel() {
 
     companion object {
@@ -61,11 +65,6 @@ class MapViewModel(
         private const val START_LONG = -93.260981
 
         private val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = 256)
-
-        private const val HOME_PIAWARE = "piaware:8080"
-        private const val CABIN_PIAWARE = "piaware-cabin"
-
-        private val servers = listOf(HOME_PIAWARE, CABIN_PIAWARE)
     }
 
     private lateinit var aircraftTypes: Map<String, ICAOAircraftType>
@@ -74,35 +73,47 @@ class MapViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            aircraftTypes = loadAircraftTypes()
-            while (true) {
-                val aircraft = servers.map { processAircraft(it) }.flatten()
-
-                _numberOfPlanes.value = aircraft.count()
-
-                state.removeAllMarkers()
-
-                aircraft.forEach {
-                    val location = doProjection(it.first.lat, it.first.lon)
-
-                    state.addMarker(
-                        it.first.flight ?: "fake=${it.first.hex}", location.first, location.second
-                    ) {
-                        Image(
-                            painter = painterResource(Res.drawable.ic_plane),
-                            contentDescription = null,
-                            modifier = Modifier.size(30.dp).rotate(it.first.track),
-                            colorFilter = ColorFilter.tint(getColorForAltitude(it.first.altitude))
-                        )
-                    }
+            loadSettingsUseCase().collect {
+                val result = it
+                when (result) {
+                    is Async.Success -> pollServers(result.data.servers.map { it.address }, result.data.refreshInterval)
+                    else -> {}
                 }
-
-                delay(1000L)
             }
+
         }
     }
 
-    private suspend fun loadAircraftTypes() =
+    private suspend fun pollServers(servers: List<String>, refreshInterval: Int) {
+        aircraftTypes = loadAircraftTypes(servers)
+        while (true) {
+            println("Refreshing")
+            val aircraft = servers.map { processAircraft(it) }.flatten()
+
+            _numberOfPlanes.value = aircraft.count()
+
+            state.removeAllMarkers()
+
+            aircraft.forEach {
+                val location = doProjection(it.first.lat, it.first.lon)
+
+                state.addMarker(
+                    it.first.flight ?: "fake=${it.first.hex}", location.first, location.second
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.ic_plane),
+                        contentDescription = null,
+                        modifier = Modifier.size(30.dp).rotate(it.first.track),
+                        colorFilter = ColorFilter.tint(getColorForAltitude(it.first.altitude))
+                    )
+                }
+            }
+
+            delay(refreshInterval.seconds.inWholeMilliseconds)
+        }
+    }
+
+    private suspend fun loadAircraftTypes(servers: List<String>) =
         servers.map { piAwareApi.getAircraftTypes(it) }.flatten()
 
     private suspend fun processAircraft(server: String): List<Pair<Aircraft, AircraftInfo?>> {

@@ -57,6 +57,10 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.uuid)
             implementation(libs.koin.compose.viewmodel.nav)
+            implementation(libs.datastore.preferences)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.material)
 
         }
         desktopMain.dependencies {
