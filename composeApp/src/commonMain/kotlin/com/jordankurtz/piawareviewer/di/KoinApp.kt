@@ -10,7 +10,10 @@ fun initKoin(config: KoinAppDeclaration? = null) {
         modules(
             apiModule,
             networkModule,
-            viewModelModule
+            viewModelModule,
+            dataModule,
+            dataStoreModule,
+            useCaseModule
         )
     }
 }
