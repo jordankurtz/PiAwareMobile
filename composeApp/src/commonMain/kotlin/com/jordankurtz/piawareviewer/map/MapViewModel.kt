@@ -57,8 +57,8 @@ class MapViewModel(
         private const val MIN_LEVEL = 1
         private const val X0 = -2.0037508342789248E7
 
-        private const val START_LAT = 44.924714
-        private const val START_LONG = -93.260981
+        private const val START_LAT = 44.881209356845545
+        private const val START_LONG = -93.20725110896956
 
         private val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = 256)
 
