@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.di
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.jordankurtz.piawaremobile.UrlHandler
+import com.jordankurtz.piawaremobile.location.LocationService
 import okio.Path.Companion.toPath
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
@@ -17,4 +18,6 @@ actual val platformModule: Module
             }
         }
         single { UrlHandler(androidContext()) }
+
+        single { LocationService(androidContext()) }
     }

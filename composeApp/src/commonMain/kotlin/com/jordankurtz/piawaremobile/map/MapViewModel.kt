@@ -11,6 +11,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.UrlHandler
 import com.jordankurtz.piawaremobile.api.PiAwareApi
+import com.jordankurtz.piawaremobile.location.Location
+import com.jordankurtz.piawaremobile.location.LocationService
+import com.jordankurtz.piawaremobile.location.LocationState
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.Async
@@ -24,12 +27,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format.byUnicodePattern
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -39,6 +39,7 @@ import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.removeAllMarkers
+import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
@@ -50,39 +51,69 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.seconds
 
+private const val MAX_LEVEL = 16
+private const val MIN_LEVEL = 1
+private const val X0 = -2.0037508342789248E7
+private val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = 256)
+private val dateFormatter = LocalDateTime.Format {
+    year()
+    monthNumber()
+    dayOfMonth()
+}
+
 class MapViewModel(
     private val piAwareApi: PiAwareApi,
     private val mapProvider: TileStreamProvider,
     private val loadSettingsUseCase: LoadSettingsUseCase,
-    private val urlHandler: UrlHandler
+    private val urlHandler: UrlHandler,
+    private val locationService: LocationService,
 ) : ViewModel() {
-
-    companion object {
-        private const val MAX_LEVEL = 16
-        private const val MIN_LEVEL = 1
-        private const val X0 = -2.0037508342789248E7
-
-        private const val START_LAT = 44.881209356845545
-        private const val START_LONG = -93.20725110896956
-
-        private val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = 256)
-    }
 
     private lateinit var aircraftTypes: Map<String, ICAOAircraftType>
 
     private val aircraftInfoCache = mutableMapOf<String, AircraftInfo>()
+
+    // Merged from LocationViewModel
+    private val _locationState = MutableStateFlow<LocationState>(LocationState.Idle)
+    val locationState: StateFlow<LocationState> = _locationState.asStateFlow()
+
+    private val _currentLocation = MutableStateFlow<Location?>(null)
+    val currentLocation: StateFlow<Location?> = _currentLocation.asStateFlow()
+
+    val numberOfPlanes: StateFlow<Int>
+        get() = _numberOfPlanes
+    private val _numberOfPlanes = MutableStateFlow(0)
+
+    val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
+        minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
+    }.apply {
+        addLayer(mapProvider)
+
+        onMarkerClick { id, x, y ->
+            if (!id.startsWith("fake")) {
+                openFlightPage(id)
+            }
+        }
+    }
+
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             loadSettingsUseCase().collect {
                 val result = it
                 when (result) {
-                    is Async.Success -> pollServers(result.data.servers.map { it.address }, result.data.refreshInterval)
+                    is Async.Success -> pollServers(
+                        result.data.servers.map { it.address },
+                        result.data.refreshInterval
+                    )
+
                     else -> {}
                 }
             }
 
         }
+
+        requestLocationPermission()
     }
 
     private suspend fun pollServers(servers: List<String>, refreshInterval: Int) {
@@ -166,26 +197,43 @@ class MapViewModel(
     }
 
     private fun lookAircraftType(info: JsonElement): ICAOAircraftType? {
-        return info.let { it.jsonObject["t"]?.toString() }?.let { aircraftTypes[it.uppercase()] }
+        return info.let { it.jsonObject["t"]?.toString() }
+            ?.let { aircraftTypes[it.uppercase()] }
     }
 
-    val numberOfPlanes: StateFlow<Int>
-        get() = _numberOfPlanes
-    private val _numberOfPlanes = MutableStateFlow(0)
-
-    val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
-        minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL)).toFloat()))
-
-        val start = doProjection(START_LAT, START_LONG)
-        scroll(start.first, start.second)
-
-    }.apply {
-        addLayer(mapProvider)
-
-        onMarkerClick { id, x, y ->
-            if (!id.startsWith("fake")) {
-                openFlightPage(id)
+    fun requestLocationPermission() {
+        _locationState.value = LocationState.RequestingPermission
+        locationService.requestPermissions { granted ->
+            if (granted) {
+                _locationState.value = LocationState.PermissionGranted
+                startLocationUpdates(::recenterOnLocation)
+            } else {
+                _locationState.value = LocationState.PermissionDenied
             }
+        }
+    }
+
+    fun startLocationUpdates(onFirstLocation: ((Location) -> Unit)? = null) {
+        _locationState.value = LocationState.TrackingLocation
+        var isFirstUpdate = true
+        locationService.startLocationUpdates { location ->
+            _currentLocation.value = location
+            if (isFirstUpdate) {
+                onFirstLocation?.invoke(location)
+                isFirstUpdate = false
+            }
+        }
+    }
+
+    fun stopLocationUpdates() {
+        locationService.stopLocationUpdates()
+        _locationState.value = LocationState.Idle
+    }
+
+    fun recenterOnLocation(location: Location) {
+        viewModelScope.launch {
+            val (x, y) = doProjection(location.latitude, location.longitude)
+            state.scrollTo(x, y)
         }
     }
 
@@ -212,13 +260,7 @@ class MapViewModel(
     }
 
     private fun getFlightAwareUrl(flight: String): String {
-        return "https://www.flightaware.com/live/flight/$flight/history/${
-            LocalDateTime.Format {
-                byUnicodePattern(
-                    "yyyyMMdd"
-                )
-            }.format(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()))
-        }"
+        return "https://www.flightaware.com/live/flight/$flight/history/${dateFormatter}.format(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()))"
     }
 
     private fun getColorForAltitude(altitude: String): Color {
@@ -247,6 +289,11 @@ class MapViewModel(
             in 45001..50000 -> Color(128, 0, 255) // Violet
             else -> Color(192, 0, 255) // Brighter Violet for 50,000+
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopLocationUpdates()
     }
 }
 
