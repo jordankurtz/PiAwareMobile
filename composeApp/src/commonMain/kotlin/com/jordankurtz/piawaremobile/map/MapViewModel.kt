@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -14,12 +15,15 @@ import com.jordankurtz.piawaremobile.api.PiAwareApi
 import com.jordankurtz.piawaremobile.location.Location
 import com.jordankurtz.piawaremobile.location.LocationService
 import com.jordankurtz.piawaremobile.location.LocationState
+import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
+import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -28,6 +32,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
@@ -39,7 +46,10 @@ import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.removeAllMarkers
+import ovh.plrapps.mapcompose.api.scale
+import ovh.plrapps.mapcompose.api.scroll
 import ovh.plrapps.mapcompose.api.scrollTo
+import ovh.plrapps.mapcompose.api.setScroll
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
@@ -49,6 +59,7 @@ import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 private const val MAX_LEVEL = 16
@@ -61,12 +72,15 @@ private val dateFormatter = LocalDateTime.Format {
     dayOfMonth()
 }
 
+@OptIn(FlowPreview::class)
 class MapViewModel(
     private val piAwareApi: PiAwareApi,
     private val mapProvider: TileStreamProvider,
     private val loadSettingsUseCase: LoadSettingsUseCase,
     private val urlHandler: UrlHandler,
     private val locationService: LocationService,
+    private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
+    private val saveMapStateUseCase: SaveMapStateUseCase
 ) : ViewModel() {
 
     private lateinit var aircraftTypes: Map<String, ICAOAircraftType>
@@ -98,6 +112,26 @@ class MapViewModel(
 
 
     init {
+        viewModelScope.launch {
+            val savedState = getSavedMapStateUseCase()
+            println("Restored map state $savedState")
+            state.setScroll(savedState.scrollX, savedState.scrollY)
+            state.scale = savedState.zoom
+
+            // wait to center the map on the user's location until after we restore state
+            requestLocationPermission()
+
+            snapshotFlow { Pair(state.scroll, state.scale) }
+                .debounce(500.milliseconds)
+                .onEach { (scroll, scale) ->
+                    // This check prevents saving the initial state (0.0, 0.0) before the map is ready
+                    if (scroll.x > 0.0 && scroll.y > 0.0) {
+                        saveMapStateUseCase(scroll.x, scroll.y, scale)
+                        println("Saved map state $scroll, $scale")
+                    }
+                }.launchIn(viewModelScope)
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
             loadSettingsUseCase().collect {
                 val result = it
@@ -112,8 +146,6 @@ class MapViewModel(
             }
 
         }
-
-        requestLocationPermission()
     }
 
     private suspend fun pollServers(servers: List<String>, refreshInterval: Int) {
@@ -233,6 +265,7 @@ class MapViewModel(
     fun recenterOnLocation(location: Location) {
         viewModelScope.launch {
             val (x, y) = doProjection(location.latitude, location.longitude)
+            println("Scrolling map to $x, $y")
             state.scrollTo(x, y)
         }
     }

@@ -67,6 +67,8 @@ kotlin {
             implementation(libs.compose.runtime)
             implementation(libs.compose.material)
             implementation(libs.compose.map)
+            implementation(libs.multiplatform.settings.datastore)
+            implementation(libs.multiplatform.settings.coroutines)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

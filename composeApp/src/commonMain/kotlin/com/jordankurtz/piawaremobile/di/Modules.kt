@@ -4,6 +4,10 @@ import com.jordankurtz.piawaremobile.KtorClient
 import com.jordankurtz.piawaremobile.api.PiAwareApi
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMapProvider
+import com.jordankurtz.piawaremobile.map.repo.MapStateRepository
+import com.jordankurtz.piawaremobile.map.repo.MapStateRepositoryImpl
+import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
+import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepositoryImpl
@@ -25,6 +29,7 @@ val viewModelModule = module {
 
 val dataModule = module {
     singleOf(::SettingsRepositoryImpl) { bind<SettingsRepository>() }
+    singleOf(::MapStateRepositoryImpl) { bind<MapStateRepository>() }
 }
 
 val networkModule = module {
@@ -37,10 +42,12 @@ val apiModule = module {
 }
 
 val useCaseModule = module {
-    single{ LoadSettingsUseCase(get()) }
-    single{ AddServerUseCase(get()) }
-    single{ SetRefreshIntervalUseCase(get()) }
+    single { LoadSettingsUseCase(get()) }
+    single { AddServerUseCase(get()) }
+    single { SetRefreshIntervalUseCase(get()) }
+
+    single { SaveMapStateUseCase(get()) }
+    single { GetSavedMapStateUseCase(get()) }
 }
 
 expect val platformModule: Module
-
