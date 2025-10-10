@@ -21,6 +21,7 @@ datastore = "1.1.7"
 compose = "1.8.2"
 playServicesLocation = "21.3.0"
 mapCompose = "0.10.0"
+multiplatformSettings = "1.3.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -52,6 +53,8 @@ koin-compose-viewmodel-nav = { module = "io.insert-koin:koin-compose-viewmodel-n
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 compose-map = { group = "ovh.plrapps", name = "mapcompose-mp", version.ref = "mapCompose" }
+multiplatform-settings-datastore = {group = "com.russhwolf", name = "multiplatform-settings-datastore" , version.ref = "multiplatformSettings"}
+multiplatform-settings-coroutines = {group = "com.russhwolf", name = "multiplatform-settings-coroutines" , version.ref = "multiplatformSettings"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
