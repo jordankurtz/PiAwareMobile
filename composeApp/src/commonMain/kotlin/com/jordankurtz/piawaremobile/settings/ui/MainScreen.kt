@@ -81,6 +81,25 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     onValueChange = viewModel::updateRefreshInterval
                 )
             }
+
+            item {
+                SettingsSwitch(
+                    title = "Center map on user",
+                    description = "Automatically center the map on your location when the app starts",
+                    checked = settings.getValue()?.centerMapOnUserOnStart ?: false,
+                    onCheckedChange = viewModel::updateCenterMapOnUserOnStart
+                )
+            }
+
+            item {
+                SettingsSwitch(
+                    title = "Restore map position",
+                    description = "Save and restore the last map position and zoom level on start",
+                    checked = settings.getValue()?.restoreMapStateOnStart ?: true,
+                    onCheckedChange = viewModel::updateRestoreMapStateOnStart
+                )
+            }
+
         }
     }
 }
@@ -160,6 +179,46 @@ fun SettingsNumberInput(
                     .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 textStyle = MaterialTheme.typography.body1.copy(color = if (isValid) Color.Black else Color.Red)
+            )
+        }
+        Divider()
+    }
+}
+
+@Composable
+fun SettingsSwitch(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { onCheckedChange(!checked) }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.body1
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.caption,
+                    color = Color.Gray
+                )
+            }
+            androidx.compose.material.Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                modifier = Modifier.padding(start = 16.dp)
             )
         }
         Divider()

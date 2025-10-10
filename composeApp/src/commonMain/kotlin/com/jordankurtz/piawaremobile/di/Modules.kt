@@ -13,7 +13,9 @@ import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepositoryImpl
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
 import io.ktor.client.HttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -45,6 +47,8 @@ val useCaseModule = module {
     single { LoadSettingsUseCase(get()) }
     single { AddServerUseCase(get()) }
     single { SetRefreshIntervalUseCase(get()) }
+    single { SetCenterMapOnUserOnStartUseCase(get()) }
+    single { SetRestoreMapStateOnStartUseCase(get()) }
 
     single { SaveMapStateUseCase(get()) }
     single { GetSavedMapStateUseCase(get()) }

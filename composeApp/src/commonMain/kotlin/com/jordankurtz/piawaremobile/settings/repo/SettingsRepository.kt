@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.settings.repo
 
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.jordankurtz.piawaremobile.settings.Settings
@@ -12,6 +13,8 @@ interface SettingsRepository {
     companion object {
         val SERVERS = stringPreferencesKey("servers")
         val REFRESH_INTERVAL = intPreferencesKey("refreshInterval")
+        val CENTER_MAP_ON_USER_ON_START = booleanPreferencesKey("centerMapOnUserOnStart")
+        val RESTORE_MAP_STATE_ON_START = booleanPreferencesKey("restoreMapStateOnStart")
         const val DEFAULT_REFRESH_INTERVAL = 5
     }
 }

@@ -21,10 +21,12 @@ import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
+import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -98,6 +100,10 @@ class MapViewModel(
         get() = _numberOfPlanes
     private val _numberOfPlanes = MutableStateFlow(0)
 
+    // store setting dependent jobs so they can be cancelled and restarted when settings change
+    private var pollingJob: Job? = null
+    private var saveStateJob: Job? = null
+
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
         minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
     }.apply {
@@ -112,39 +118,55 @@ class MapViewModel(
 
 
     init {
-        viewModelScope.launch {
-            val savedState = getSavedMapStateUseCase()
-            println("Restored map state $savedState")
-            state.setScroll(savedState.scrollX, savedState.scrollY)
-            state.scale = savedState.zoom
-
-            // wait to center the map on the user's location until after we restore state
-            requestLocationPermission()
-
-            snapshotFlow { Pair(state.scroll, state.scale) }
-                .debounce(500.milliseconds)
-                .onEach { (scroll, scale) ->
-                    // This check prevents saving the initial state (0.0, 0.0) before the map is ready
-                    if (scroll.x > 0.0 && scroll.y > 0.0) {
-                        saveMapStateUseCase(scroll.x, scroll.y, scale)
-                        println("Saved map state $scroll, $scale")
-                    }
-                }.launchIn(viewModelScope)
-        }
-
         viewModelScope.launch(Dispatchers.IO) {
             loadSettingsUseCase().collect {
                 val result = it
                 when (result) {
-                    is Async.Success -> pollServers(
-                        result.data.servers.map { it.address },
-                        result.data.refreshInterval
-                    )
-
+                    is Async.Success -> onSettingsLoaded(result)
                     else -> {}
                 }
             }
+        }
+    }
 
+    private fun onSettingsLoaded(result: Async.Success<Settings>) {
+        pollingJob?.cancel()
+        saveStateJob?.cancel()
+
+        with(result.data) {
+            pollingJob = viewModelScope.launch {
+                pollServers(
+                    servers.map { it.address },
+                    refreshInterval
+                )
+            }
+
+            if (restoreMapStateOnStart) {
+                saveStateJob = viewModelScope.launch {
+                    val savedState = getSavedMapStateUseCase()
+                    println("Restored map state $savedState")
+                    state.setScroll(savedState.scrollX, savedState.scrollY)
+                    state.scale = savedState.zoom
+
+                    // wait to center the map on the user's location until after we restore state
+                    if (centerMapOnUserOnStart) {
+                        requestLocationPermission()
+                    }
+
+                    snapshotFlow { Pair(state.scroll, state.scale) }
+                        .debounce(500.milliseconds)
+                        .onEach { (scroll, scale) ->
+                            // This check prevents saving the initial state (0.0, 0.0) before the map is ready
+                            if (scroll.x > 0.0 && scroll.y > 0.0) {
+                                saveMapStateUseCase(scroll.x, scroll.y, scale)
+                                println("Saved map state $scroll, $scale")
+                            }
+                        }.launchIn(this)
+                }
+            } else if (result.data.centerMapOnUserOnStart) {
+                // if restore state and centering is on then the map will be centered after state is restore
+                requestLocationPermission()
+            }
         }
     }
 

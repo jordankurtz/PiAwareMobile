@@ -17,7 +17,9 @@ class SettingsRepositoryImpl(
         return datastore.data.map {preferences ->
             Settings(
                 servers = preferences[SettingsRepository.SERVERS]?.let { Json.decodeFromString(it) } ?: emptyList(),
-                refreshInterval = preferences[SettingsRepository.REFRESH_INTERVAL] ?: DEFAULT_REFRESH_INTERVAL
+                refreshInterval = preferences[SettingsRepository.REFRESH_INTERVAL] ?: DEFAULT_REFRESH_INTERVAL,
+                centerMapOnUserOnStart = preferences[SettingsRepository.CENTER_MAP_ON_USER_ON_START] ?: false,
+                restoreMapStateOnStart = preferences[SettingsRepository.RESTORE_MAP_STATE_ON_START] ?: false
             )
         }
     }
@@ -26,6 +28,8 @@ class SettingsRepositoryImpl(
         datastore.edit {preferences ->
             preferences[SettingsRepository.SERVERS] = settings.servers.let { Json.encodeToString(it) }
             preferences[SettingsRepository.REFRESH_INTERVAL] = settings.refreshInterval
+            preferences[SettingsRepository.CENTER_MAP_ON_USER_ON_START] = settings.centerMapOnUserOnStart
+            preferences[SettingsRepository.RESTORE_MAP_STATE_ON_START] = settings.restoreMapStateOnStart
         }
     }
 }
