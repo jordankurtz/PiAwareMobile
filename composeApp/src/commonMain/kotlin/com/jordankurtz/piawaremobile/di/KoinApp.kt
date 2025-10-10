@@ -12,7 +12,7 @@ fun initKoin(config: KoinAppDeclaration? = null) {
             networkModule,
             viewModelModule,
             dataModule,
-            dataStoreModule,
+            platformModule,
             useCaseModule
         )
     }

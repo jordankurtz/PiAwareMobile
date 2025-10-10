@@ -42,5 +42,5 @@ val useCaseModule = module {
     single{ SetRefreshIntervalUseCase(get()) }
 }
 
-expect val dataStoreModule: Module
+expect val platformModule: Module
 
