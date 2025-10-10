@@ -1,7 +1,11 @@
 package com.jordankurtz.piawaremobile.di
 
 import com.jordankurtz.piawaremobile.KtorClient
-import com.jordankurtz.piawaremobile.api.PiAwareApi
+import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
+import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
+import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepoImpl
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMapProvider
 import com.jordankurtz.piawaremobile.map.repo.MapStateRepository
@@ -32,6 +36,7 @@ val viewModelModule = module {
 val dataModule = module {
     singleOf(::SettingsRepositoryImpl) { bind<SettingsRepository>() }
     singleOf(::MapStateRepositoryImpl) { bind<MapStateRepository>() }
+    singleOf(::AircraftRepoImpl) { bind<AircraftRepo>() }
 }
 
 val networkModule = module {
@@ -52,6 +57,9 @@ val useCaseModule = module {
 
     single { SaveMapStateUseCase(get()) }
     single { GetSavedMapStateUseCase(get()) }
+
+    single { GetAircraftWithDetailsUseCase(get()) }
+    single { LoadAircraftTypesUseCase(get()) }
 }
 
 expect val platformModule: Module
