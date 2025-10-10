@@ -11,10 +11,11 @@ plugins {
 }
 
 kotlin {
+
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.add("-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi")
     }
-
 
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -44,6 +45,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.android)
             implementation(libs.koin.android)
+            implementation(libs.play.services.location)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -57,7 +59,6 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.serialization)
             implementation(libs.ktor.client.content.negotiation)
-            implementation("ovh.plrapps:mapcompose-mp:0.9.3")
             implementation(libs.kotlinx.datetime)
             implementation(libs.uuid)
             implementation(libs.koin.compose.viewmodel.nav)
@@ -65,7 +66,7 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.runtime)
             implementation(libs.compose.material)
-
+            implementation(libs.compose.map)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
