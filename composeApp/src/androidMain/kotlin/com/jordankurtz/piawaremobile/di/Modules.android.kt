@@ -1,10 +1,20 @@
 package com.jordankurtz.piawaremobile.di
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.jordankurtz.piawaremobile.UrlHandler
 import okio.Path.Companion.toPath
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-actual val dataStoreModule: Module
-    get() = module { single { PreferenceDataStoreFactory.createWithPath { androidContext().filesDir.resolve("settings.preferences_pb").absolutePath.toPath() } } }
+actual val platformModule: Module
+    get() = module {
+        single {
+            PreferenceDataStoreFactory.createWithPath {
+                androidContext().filesDir.resolve(
+                    "settings.preferences_pb"
+                ).absolutePath.toPath()
+            }
+        }
+        single { UrlHandler(androidContext()) }
+    }

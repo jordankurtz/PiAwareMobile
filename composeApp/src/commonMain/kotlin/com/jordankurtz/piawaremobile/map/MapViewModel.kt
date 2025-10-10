@@ -53,7 +53,8 @@ import kotlin.time.Duration.Companion.seconds
 class MapViewModel(
     private val piAwareApi: PiAwareApi,
     private val mapProvider: TileStreamProvider,
-    private val loadSettingsUseCase: LoadSettingsUseCase
+    private val loadSettingsUseCase: LoadSettingsUseCase,
+    private val urlHandler: UrlHandler
 ) : ViewModel() {
 
     companion object {
@@ -207,7 +208,7 @@ class MapViewModel(
     }
 
     private fun openFlightPage(flight: String) {
-        UrlHandler().openUrl(getFlightAwareUrl(flight))
+        urlHandler.openUrl(getFlightAwareUrl(flight))
     }
 
     private fun getFlightAwareUrl(flight: String): String {
