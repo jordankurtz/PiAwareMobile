@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.aircraft.api
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.PiAwareResponse
+import com.jordankurtz.piawaremobile.model.Receiver
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -44,6 +45,26 @@ class PiAwareApi(private val httpClient: HttpClient) {
                 println("Error fetching aircraft info: ${e.message}")
                 null
             }
+        }
+    }
+
+    suspend fun getDump1090ReceiverInfo(host: String): Receiver? {
+        return try {
+            httpClient.get("http://$host/data/receiver.json")
+                .body<Receiver>()
+        } catch (e: Exception) {
+            println(e.message)
+            null
+        }
+    }
+
+    suspend fun getDump978ReceiverInfo(host: String): Receiver? {
+        return try {
+            httpClient.get("http://$host/data-978/receiver.json")
+                .body<Receiver>()
+        } catch (e: Exception) {
+            println(e.message)
+            null
         }
     }
 }

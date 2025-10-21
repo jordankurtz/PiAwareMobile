@@ -4,6 +4,8 @@ import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
+import com.jordankurtz.piawaremobile.model.Receiver
+import com.jordankurtz.piawaremobile.model.ReceiverType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -30,7 +32,7 @@ class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
                         emptyList()
                     }
                 }
-            }.awaitAll().flatten()
+            }.awaitAll().flatten().filterNoLocation()
         }
 
     override suspend fun loadAircraftTypes(servers: List<String>) {
@@ -45,6 +47,16 @@ class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
         val info = lookupAircraftInfoRecursive(host, hex.replace("~", ""))
         info?.let { aircraftInfoCache[hex] = it }
         return info
+    }
+
+    override suspend fun getReceiverInfo(
+        host: String,
+        receiverType: ReceiverType
+    ): Receiver? {
+       return when (receiverType) {
+            ReceiverType.DUMP_1090 -> piAwareApi.getDump1090ReceiverInfo(host)
+            ReceiverType.DUMP_978 -> piAwareApi.getDump978ReceiverInfo(host)
+        }
     }
 
     private suspend fun lookupAircraftInfoRecursive(
@@ -88,4 +100,7 @@ class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
         forEach { result.putAll(it) }
         return result
     }
+}
+fun List<Aircraft>.filterNoLocation(): List<Aircraft> {
+    return this.filter { it.lat != 0.0 && it.lon != 0.0 }
 }

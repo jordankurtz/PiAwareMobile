@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepoImpl
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMapProvider
@@ -60,6 +61,7 @@ val useCaseModule = module {
 
     single { GetAircraftWithDetailsUseCase(get()) }
     single { LoadAircraftTypesUseCase(get()) }
+    single { GetReceiverLocationUseCase(get()) }
 }
 
 expect val platformModule: Module

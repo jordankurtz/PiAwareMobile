@@ -13,12 +13,12 @@ import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.UrlHandler
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
-import com.jordankurtz.piawaremobile.location.Location
 import com.jordankurtz.piawaremobile.location.LocationService
 import com.jordankurtz.piawaremobile.location.LocationState
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Async
+import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.Dispatchers

@@ -12,6 +12,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.jordankurtz.piawaremobile.model.Location
 
 actual class LocationService(private val context: Context) {
     private val fusedLocationClient: FusedLocationProviderClient =

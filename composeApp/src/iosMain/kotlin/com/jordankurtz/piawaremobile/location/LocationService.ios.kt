@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.location
 
+import com.jordankurtz.piawaremobile.model.Location
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import platform.CoreLocation.CLLocation
