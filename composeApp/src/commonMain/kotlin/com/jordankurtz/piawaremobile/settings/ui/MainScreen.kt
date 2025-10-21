@@ -35,7 +35,18 @@ import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import piawaremobile.composeapp.generated.resources.* 
+import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.center_map_on_user_description
+import piawaremobile.composeapp.generated.resources.center_map_on_user_title
+import piawaremobile.composeapp.generated.resources.ic_chevron_right
+import piawaremobile.composeapp.generated.resources.preferences_title
+import piawaremobile.composeapp.generated.resources.refresh_interval_title
+import piawaremobile.composeapp.generated.resources.restore_map_position_description
+import piawaremobile.composeapp.generated.resources.restore_map_position_title
+import piawaremobile.composeapp.generated.resources.servers_title
+import piawaremobile.composeapp.generated.resources.settings_title
+import piawaremobile.composeapp.generated.resources.show_receiver_locations_description
+import piawaremobile.composeapp.generated.resources.show_receiver_locations_title
 
 @Composable
 fun MainScreen(onServersClicked: () -> Unit) {
