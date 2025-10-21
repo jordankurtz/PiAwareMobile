@@ -67,7 +67,7 @@ class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
         val bkey = hex.substring(0, level)
         val dkey = hex.substring(level)
 
-        val data = piAwareApi.getAircraftInfo(host, bkey) ?: return null
+        val data = piAwareApi.getAircraftInfo(host, bkey.uppercase()) ?: return null
 
         if (data.containsKey(dkey)) {
             val info = data[dkey]!!
