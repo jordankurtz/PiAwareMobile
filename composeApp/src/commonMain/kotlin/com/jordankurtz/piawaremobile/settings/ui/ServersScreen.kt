@@ -17,9 +17,11 @@ import androidx.compose.ui.graphics.Color
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_add
+import piawaremobile.composeapp.generated.resources.servers_title
 
 @Composable
 fun ServersScreen(onBack: () -> Unit) {
@@ -42,7 +44,7 @@ fun ServersScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Servers") },
+                title = { Text(stringResource(Res.string.servers_title)) },
                 backgroundColor = MaterialTheme.colors.primary,
                 contentColor = Color.White,
                 actions = {

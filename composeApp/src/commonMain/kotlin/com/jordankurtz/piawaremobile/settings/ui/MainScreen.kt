@@ -33,9 +33,9 @@ import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import piawaremobile.composeapp.generated.resources.Res
-import piawaremobile.composeapp.generated.resources.ic_chevron_right
+import piawaremobile.composeapp.generated.resources.* 
 
 @Composable
 fun MainScreen(onServersClicked: () -> Unit) {
@@ -46,7 +46,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(Res.string.settings_title)) },
                 backgroundColor = MaterialTheme.colors.primary,
                 contentColor = Color.White
             )
@@ -56,12 +56,12 @@ fun MainScreen(onServersClicked: () -> Unit) {
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             item {
-                SettingsSection(title = "Preferences")
+                SettingsSection(title = stringResource(Res.string.preferences_title))
             }
 
 
             item {
-                SettingsItem(title = "Servers", onClick = onServersClicked, trailingIcon = {
+                SettingsItem(title = stringResource(Res.string.servers_title), onClick = onServersClicked, trailingIcon = {
                     Image(
                         painter = painterResource(Res.drawable.ic_chevron_right),
                         contentDescription = null,
@@ -75,7 +75,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
 
             item {
                 SettingsNumberInput(
-                    title = "Refresh Interval",
+                    title = stringResource(Res.string.refresh_interval_title),
                     value = settings.getValue()?.refreshInterval
                         ?: SettingsRepository.DEFAULT_REFRESH_INTERVAL,
                     onValueChange = viewModel::updateRefreshInterval
@@ -84,8 +84,8 @@ fun MainScreen(onServersClicked: () -> Unit) {
 
             item {
                 SettingsSwitch(
-                    title = "Center map on user",
-                    description = "Automatically center the map on your location when the app starts",
+                    title = stringResource(Res.string.center_map_on_user_title),
+                    description = stringResource(Res.string.center_map_on_user_description),
                     checked = settings.getValue()?.centerMapOnUserOnStart ?: false,
                     onCheckedChange = viewModel::updateCenterMapOnUserOnStart
                 )
@@ -93,8 +93,8 @@ fun MainScreen(onServersClicked: () -> Unit) {
 
             item {
                 SettingsSwitch(
-                    title = "Restore map position",
-                    description = "Save and restore the last map position and zoom level on start",
+                    title = stringResource(Res.string.restore_map_position_title),
+                    description = stringResource(Res.string.restore_map_position_description),
                     checked = settings.getValue()?.restoreMapStateOnStart ?: true,
                     onCheckedChange = viewModel::updateRestoreMapStateOnStart
                 )
@@ -102,8 +102,8 @@ fun MainScreen(onServersClicked: () -> Unit) {
 
             item {
                 SettingsSwitch(
-                    title = "Show receiver locations",
-                    description = "Display a marker for each configured server's location on the map",
+                    title = stringResource(Res.string.show_receiver_locations_title),
+                    description = stringResource(Res.string.show_receiver_locations_description),
                     checked = settings.getValue()?.showReceiverLocations ?: true,
                     onCheckedChange = viewModel::updateShowReceiverLocations
                 )
