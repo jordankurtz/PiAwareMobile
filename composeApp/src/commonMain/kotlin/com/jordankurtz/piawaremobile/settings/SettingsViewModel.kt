@@ -9,6 +9,7 @@ import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -17,7 +18,8 @@ class SettingsViewModel(
     private val addServerUseCase: AddServerUseCase,
     private val setRefreshIntervalUseCase: SetRefreshIntervalUseCase,
     private val setCenterMapOnUserOnStartUseCase: SetCenterMapOnUserOnStartUseCase,
-    private val setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase
+    private val setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase,
+    private val setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase,
 ) : ViewModel() {
 
     val settings: StateFlow<Async<Settings>>
@@ -38,5 +40,9 @@ class SettingsViewModel(
 
     fun updateRestoreMapStateOnStart(enabled: Boolean) = viewModelScope.launch {
         setRestoreMapStateOnStartUseCase(enabled)
+    }
+
+    fun updateShowReceiverLocations(enabled: Boolean) = viewModelScope.launch {
+        setShowReceiverLocationsUseCase(enabled)
     }
 }

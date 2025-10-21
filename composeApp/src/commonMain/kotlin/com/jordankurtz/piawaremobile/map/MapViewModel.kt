@@ -127,7 +127,9 @@ class MapViewModel(
         pollingJob?.cancel()
         saveStateJob?.cancel()
 
-        loadReceiverLocations(settings.servers)
+        if (settings.showReceiverLocations) {
+            loadReceiverLocations(settings.servers)
+        }
 
         pollingJob = viewModelScope.launch {
             pollServers(

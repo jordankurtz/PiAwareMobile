@@ -100,6 +100,15 @@ fun MainScreen(onServersClicked: () -> Unit) {
                 )
             }
 
+            item {
+                SettingsSwitch(
+                    title = "Show receiver locations",
+                    description = "Display a marker for each configured server's location on the map",
+                    checked = settings.getValue()?.showReceiverLocations ?: true,
+                    onCheckedChange = viewModel::updateShowReceiverLocations
+                )
+            }
+
         }
     }
 }

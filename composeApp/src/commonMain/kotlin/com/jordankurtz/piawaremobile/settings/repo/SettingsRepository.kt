@@ -15,6 +15,7 @@ interface SettingsRepository {
         val REFRESH_INTERVAL = intPreferencesKey("refreshInterval")
         val CENTER_MAP_ON_USER_ON_START = booleanPreferencesKey("centerMapOnUserOnStart")
         val RESTORE_MAP_STATE_ON_START = booleanPreferencesKey("restoreMapStateOnStart")
+        val SHOW_RECEIVER_LOCATIONS = booleanPreferencesKey("showReceiverLocations")
         const val DEFAULT_REFRESH_INTERVAL = 5
     }
 }
