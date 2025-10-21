@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.location
 
+import com.jordankurtz.piawaremobile.model.Location
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

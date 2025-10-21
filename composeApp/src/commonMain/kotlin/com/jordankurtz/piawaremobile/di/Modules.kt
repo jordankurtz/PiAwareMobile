@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepoImpl
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMapProvider
@@ -20,6 +21,7 @@ import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
 import io.ktor.client.HttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -54,12 +56,14 @@ val useCaseModule = module {
     single { SetRefreshIntervalUseCase(get()) }
     single { SetCenterMapOnUserOnStartUseCase(get()) }
     single { SetRestoreMapStateOnStartUseCase(get()) }
+    single { SetShowReceiverLocationsUseCase(get()) }
 
     single { SaveMapStateUseCase(get()) }
     single { GetSavedMapStateUseCase(get()) }
 
     single { GetAircraftWithDetailsUseCase(get()) }
     single { LoadAircraftTypesUseCase(get()) }
+    single { GetReceiverLocationUseCase(get()) }
 }
 
 expect val platformModule: Module

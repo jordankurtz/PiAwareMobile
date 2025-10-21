@@ -1,4 +1,4 @@
-package com.jordankurtz.piawaremobile.location
+package com.jordankurtz.piawaremobile.model
 
 data class Location(
     val latitude: Double,

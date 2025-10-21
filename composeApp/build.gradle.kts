@@ -11,12 +11,11 @@ plugins {
 }
 
 kotlin {
-
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
         freeCompilerArgs.add("-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi")
+        freeCompilerArgs.add("-Xopt-in=kotlin.uuid.ExperimentalUuidApi")
     }
-
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
