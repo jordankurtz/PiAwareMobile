@@ -8,6 +8,13 @@ class AddServerUseCase(private val settingsRepository: SettingsRepository) {
     suspend operator fun invoke(name: String, address: String) {
         val settings = settingsRepository.getSettings().first()
         val currentServers = settings.servers
-        settingsRepository.saveSettings(settings.copy(servers = currentServers + Server(name, address)))
+        settingsRepository.saveSettings(
+            settings.copy(
+                servers = currentServers + Server(
+                    name = name,
+                    address = address
+                )
+            )
+        )
     }
 }

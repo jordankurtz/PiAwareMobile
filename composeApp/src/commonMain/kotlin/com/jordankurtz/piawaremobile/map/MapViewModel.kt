@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.UrlHandler
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
 import com.jordankurtz.piawaremobile.location.LocationService
 import com.jordankurtz.piawaremobile.location.LocationState
@@ -19,12 +20,15 @@ import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
+import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +46,7 @@ import org.jetbrains.compose.resources.painterResource
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.onMarkerClick
-import ovh.plrapps.mapcompose.api.removeAllMarkers
+import ovh.plrapps.mapcompose.api.removeMarker
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.api.scroll
 import ovh.plrapps.mapcompose.api.scrollTo
@@ -52,6 +56,7 @@ import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_plane
+import piawaremobile.composeapp.generated.resources.ic_receiver
 import kotlin.coroutines.coroutineContext
 import kotlin.math.abs
 import kotlin.math.ln
@@ -79,7 +84,8 @@ class MapViewModel(
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadAircraftTypesUseCase: LoadAircraftTypesUseCase,
-    private val getAircraftWithDetailsUseCase: GetAircraftWithDetailsUseCase
+    private val getAircraftWithDetailsUseCase: GetAircraftWithDetailsUseCase,
+    private val getReceiverLocationUseCase: GetReceiverLocationUseCase,
 ) : ViewModel() {
 
     private val _locationState = MutableStateFlow<LocationState>(LocationState.Idle)
@@ -121,6 +127,8 @@ class MapViewModel(
         pollingJob?.cancel()
         saveStateJob?.cancel()
 
+        loadReceiverLocations(settings.servers)
+
         pollingJob = viewModelScope.launch {
             pollServers(
                 settings.servers.map { it.address },
@@ -153,11 +161,38 @@ class MapViewModel(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun loadReceiverLocations(servers: List<Server>) {
+        viewModelScope.launch {
+            val locations =
+                servers.map { server -> async { server to getReceiverLocationUseCase(server.address) } }
+                    .awaitAll().filter { it.second != null }.toMap() as Map<Server, Location> // we already filtered out the nulls but type checking doesn't know that
+
+            locations.forEach(::addReceiverToMap)
+        }
+    }
+
+    private fun addReceiverToMap(receiver: Map.Entry<Server, Location>) = viewModelScope.launch {
+        val (x, y) = receiver.value.projected
+        state.addMarker(
+            receiver.key.id.toString(), x, y
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.ic_receiver),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(20.dp)
+            )
+        }
+    }
+
     private suspend fun pollServers(servers: List<String>, refreshInterval: Int) {
         if (servers.isEmpty()) return
 
         loadAircraftTypesUseCase(servers)
         val infoHost = servers.first()
+
+        val previousMarkerIds = mutableSetOf<String>()
 
         while (coroutineContext.isActive) {
             println("Refreshing")
@@ -165,13 +200,16 @@ class MapViewModel(
 
             _numberOfPlanes.value = aircraft.count()
 
-            state.removeAllMarkers()
+            previousMarkerIds.forEach(state::removeMarker)
+            previousMarkerIds.clear()
 
             aircraft.forEach { (plane, _) ->
                 val location = doProjection(plane.lat, plane.lon)
 
                 state.addMarker(
-                    plane.flight ?: "fake=${plane.hex}", location.first, location.second
+                    (plane.flight ?: "fake=${plane.hex}").also { previousMarkerIds.add(it) },
+                    location.first,
+                    location.second
                 ) {
                     Image(
                         painter = painterResource(Res.drawable.ic_plane),
@@ -219,11 +257,14 @@ class MapViewModel(
 
     fun recenterOnLocation(location: Location) {
         viewModelScope.launch {
-            val (x, y) = doProjection(location.latitude, location.longitude)
+            val (x, y) = location.projected
             println("Scrolling map to $x, $y")
             state.scrollTo(x, y)
         }
     }
+
+    val Location.projected: Pair<Double, Double>
+        get() = doProjection(latitude, longitude)
 
     private fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double> {
         if (abs(latitude) > 90 || abs(longitude) > 180) {
