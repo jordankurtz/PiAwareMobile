@@ -1,13 +1,11 @@
-package com.jordankurtz.piawaremobile.api
+package com.jordankurtz.piawaremobile.aircraft.api
 
 import com.jordankurtz.piawaremobile.model.Aircraft
-import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 class PiAwareApi(private val httpClient: HttpClient) {
@@ -20,6 +18,7 @@ class PiAwareApi(private val httpClient: HttpClient) {
                 httpClient.get("http://$host/data/aircraft.json").body<PiAwareResponse>()
             response.aircraft
         } catch (e: Exception) {
+            println("Error fetching aircraft: ${e.message}")
             emptyList()
         }
     }
@@ -29,6 +28,7 @@ class PiAwareApi(private val httpClient: HttpClient) {
             httpClient.get("http://$host/db/aircraft_types/icao_aircraft_types.json")
                 .body<Map<String, ICAOAircraftType>>()
         } catch (e: Exception) {
+            println("Error fetching aircraft types: ${e.message}")
             emptyMap()
         }
     }
@@ -41,6 +41,7 @@ class PiAwareApi(private val httpClient: HttpClient) {
                     key
                 ).body<JsonObject>().also { aircraftInfoMap[key] = it }
             } catch (e: Exception) {
+                println("Error fetching aircraft info: ${e.message}")
                 null
             }
         }

@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.model
 
+@Suppress("UNCHECKED_CAST")
 sealed class Async<out T> {
     object NotStarted : Async<Nothing>()
     object Loading : Async<Nothing>()
