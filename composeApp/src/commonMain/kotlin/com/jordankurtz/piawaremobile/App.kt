@@ -18,6 +18,7 @@ import com.jordankurtz.piawaremobile.model.Screen
 import com.jordankurtz.piawaremobile.settings.ui.SettingsScreen
 import com.jordankurtz.piawaremobile.ui.Theme
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -57,11 +58,10 @@ fun BottomNavigationBar(currentScreen: Screen, onScreenSelected: (Screen) -> Uni
                         )
                     )
                 },
-                label = { Text(screen.title) },
+                label = { Text(stringResource(screen.title)) },
                 selected = currentScreen == screen,
                 onClick = { onScreenSelected(screen) }
             )
         }
     }
 }
-
