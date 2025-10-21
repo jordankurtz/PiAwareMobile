@@ -102,7 +102,6 @@ private class LocationDelegate : NSObject(), CLLocationManagerDelegateProtocol {
                 Location(
                     latitude = latitude,
                     longitude = longitude,
-                    accuracy = location.horizontalAccuracy.toFloat()
                 )
             )
         }
