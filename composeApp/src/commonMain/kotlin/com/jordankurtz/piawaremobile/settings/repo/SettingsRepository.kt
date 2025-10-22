@@ -16,6 +16,7 @@ interface SettingsRepository {
         val CENTER_MAP_ON_USER_ON_START = booleanPreferencesKey("centerMapOnUserOnStart")
         val RESTORE_MAP_STATE_ON_START = booleanPreferencesKey("restoreMapStateOnStart")
         val SHOW_RECEIVER_LOCATIONS = booleanPreferencesKey("showReceiverLocations")
+        val SHOW_USER_LOCATION_ON_MAP = booleanPreferencesKey("showUserLocation")
         const val DEFAULT_REFRESH_INTERVAL = 5
     }
 }

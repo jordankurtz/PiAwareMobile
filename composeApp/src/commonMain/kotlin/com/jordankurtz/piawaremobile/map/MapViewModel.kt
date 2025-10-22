@@ -43,6 +43,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.onMarkerClick
@@ -57,6 +58,8 @@ import ovh.plrapps.mapcompose.ui.state.MapState
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_receiver
+import piawaremobile.composeapp.generated.resources.ic_user_location
+import piawaremobile.composeapp.generated.resources.user_location_content_description
 import kotlin.coroutines.coroutineContext
 import kotlin.math.abs
 import kotlin.math.ln
@@ -68,6 +71,7 @@ import kotlin.time.Duration.Companion.seconds
 private const val MAX_LEVEL = 16
 private const val MIN_LEVEL = 1
 private const val X0 = -2.0037508342789248E7
+private const val USER_LOCATION_MARKER_ID = "user_location"
 private val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = 256)
 private val dateFormatter = LocalDateTime.Format {
     year()
@@ -131,6 +135,14 @@ class MapViewModel(
             loadReceiverLocations(settings.servers)
         }
 
+        if (settings.showUserLocationOnMap) {
+            requestLocationPermission()
+
+            currentLocation.onEach {
+                it?.let(::updateUserLocationMarker)
+            }.launchIn(viewModelScope)
+        }
+
         pollingJob = viewModelScope.launch {
             pollServers(
                 settings.servers.map { it.address },
@@ -168,7 +180,8 @@ class MapViewModel(
         viewModelScope.launch {
             val locations =
                 servers.map { server -> async { server to getReceiverLocationUseCase(server.address) } }
-                    .awaitAll().filter { it.second != null }.toMap() as Map<Server, Location> // we already filtered out the nulls but type checking doesn't know that
+                    .awaitAll().filter { it.second != null }
+                    .toMap() as Map<Server, Location> // we already filtered out the nulls but type checking doesn't know that
 
             locations.forEach(::addReceiverToMap)
         }
@@ -255,6 +268,8 @@ class MapViewModel(
     fun stopLocationUpdates() {
         locationService.stopLocationUpdates()
         _locationState.value = LocationState.Idle
+        _currentLocation.value = null
+        state.removeMarker(USER_LOCATION_MARKER_ID)
     }
 
     fun recenterOnLocation(location: Location) {
@@ -262,6 +277,22 @@ class MapViewModel(
             val (x, y) = location.projected
             println("Scrolling map to $x, $y")
             state.scrollTo(x, y)
+        }
+    }
+
+    private fun updateUserLocationMarker(location: Location) {
+        val (x, y) = location.projected
+        state.removeMarker(USER_LOCATION_MARKER_ID)
+        state.addMarker(
+            id = USER_LOCATION_MARKER_ID,
+            x = x,
+            y = y
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.ic_user_location),
+                contentDescription = stringResource(Res.string.user_location_content_description),
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 

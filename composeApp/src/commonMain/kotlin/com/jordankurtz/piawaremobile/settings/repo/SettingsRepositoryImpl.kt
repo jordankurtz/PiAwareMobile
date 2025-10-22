@@ -20,7 +20,8 @@ class SettingsRepositoryImpl(
                 refreshInterval = preferences[SettingsRepository.REFRESH_INTERVAL] ?: DEFAULT_REFRESH_INTERVAL,
                 centerMapOnUserOnStart = preferences[SettingsRepository.CENTER_MAP_ON_USER_ON_START] ?: false,
                 restoreMapStateOnStart = preferences[SettingsRepository.RESTORE_MAP_STATE_ON_START] ?: false,
-                showReceiverLocations = preferences[SettingsRepository.SHOW_RECEIVER_LOCATIONS] ?: false
+                showReceiverLocations = preferences[SettingsRepository.SHOW_RECEIVER_LOCATIONS] ?: false,
+                showUserLocationOnMap = preferences[SettingsRepository.SHOW_USER_LOCATION_ON_MAP] ?: false,
             )
         }
     }
@@ -32,6 +33,7 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.CENTER_MAP_ON_USER_ON_START] = settings.centerMapOnUserOnStart
             preferences[SettingsRepository.RESTORE_MAP_STATE_ON_START] = settings.restoreMapStateOnStart
             preferences[SettingsRepository.SHOW_RECEIVER_LOCATIONS] = settings.showReceiverLocations
+            preferences[SettingsRepository.SHOW_USER_LOCATION_ON_MAP] = settings.showUserLocationOnMap
         }
     }
 }

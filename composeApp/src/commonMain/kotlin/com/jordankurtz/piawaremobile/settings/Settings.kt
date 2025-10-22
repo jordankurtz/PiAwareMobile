@@ -5,5 +5,6 @@ data class Settings (
     val refreshInterval: Int,
     val centerMapOnUserOnStart: Boolean,
     val restoreMapStateOnStart: Boolean,
-    val showReceiverLocations: Boolean
+    val showReceiverLocations: Boolean,
+    val showUserLocationOnMap: Boolean
 )

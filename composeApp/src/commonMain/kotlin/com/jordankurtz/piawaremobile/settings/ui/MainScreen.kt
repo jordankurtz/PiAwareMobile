@@ -47,6 +47,8 @@ import piawaremobile.composeapp.generated.resources.servers_title
 import piawaremobile.composeapp.generated.resources.settings_title
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_description
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_title
+import piawaremobile.composeapp.generated.resources.show_user_location_description
+import piawaremobile.composeapp.generated.resources.show_user_location_title
 
 @Composable
 fun MainScreen(onServersClicked: () -> Unit) {
@@ -120,6 +122,14 @@ fun MainScreen(onServersClicked: () -> Unit) {
                 )
             }
 
+            item {
+                SettingsSwitch(
+                    title = stringResource(Res.string.show_user_location_title),
+                    description = stringResource(Res.string.show_user_location_description),
+                    checked = settings.getValue()?.showUserLocationOnMap ?: true,
+                    onCheckedChange = viewModel::updateShowUserLocationOnMap
+                )
+            }
         }
     }
 }
