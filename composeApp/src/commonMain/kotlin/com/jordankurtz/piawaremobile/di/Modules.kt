@@ -22,6 +22,7 @@ import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartU
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
 import io.ktor.client.HttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -57,6 +58,7 @@ val useCaseModule = module {
     single { SetCenterMapOnUserOnStartUseCase(get()) }
     single { SetRestoreMapStateOnStartUseCase(get()) }
     single { SetShowReceiverLocationsUseCase(get()) }
+    single { SetShowUserLocationOnMapUseCase(get()) }
 
     single { SaveMapStateUseCase(get()) }
     single { GetSavedMapStateUseCase(get()) }

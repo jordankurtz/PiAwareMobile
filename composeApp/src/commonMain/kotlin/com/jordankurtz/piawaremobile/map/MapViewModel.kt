@@ -125,10 +125,6 @@ class MapViewModel(
                 }
             }
         }
-
-        currentLocation.onEach {
-            it?.let(::updateUserLocationMarker)
-        }.launchIn(viewModelScope)
     }
 
     private fun onSettingsLoaded(settings: Settings) {
@@ -137,6 +133,14 @@ class MapViewModel(
 
         if (settings.showReceiverLocations) {
             loadReceiverLocations(settings.servers)
+        }
+
+        if (settings.showUserLocationOnMap) {
+            requestLocationPermission()
+
+            currentLocation.onEach {
+                it?.let(::updateUserLocationMarker)
+            }.launchIn(viewModelScope)
         }
 
         pollingJob = viewModelScope.launch {
