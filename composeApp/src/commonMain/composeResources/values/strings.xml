@@ -16,4 +16,5 @@
 <!--    <string name="planes_count">%d planes</string>-->
     <string name="planes_count">planes</string>
     <string name="openstreetmap_copyright">© OpenStreetMap contributors</string>
+    <string name="user_location_content_description">User Location</string>
 </resources>
