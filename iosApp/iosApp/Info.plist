@@ -48,6 +48,7 @@
 	</array>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>We need your location to center the map on your position.</string>
-
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
 </dict>
 </plist>
