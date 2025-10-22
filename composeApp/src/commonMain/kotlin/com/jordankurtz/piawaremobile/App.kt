@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.MaterialTheme
@@ -12,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import com.jordankurtz.piawaremobile.map.MapScreen
 import com.jordankurtz.piawaremobile.model.Screen
@@ -32,11 +34,13 @@ fun App() {
                     currentScreen = it
                 }
             }
-        ) {
-            when (currentScreen) {
-                Screen.Map -> MapScreen()
-                Screen.List -> Box {}
-                Screen.Settings -> SettingsScreen()
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                when (currentScreen) {
+                    Screen.Map -> MapScreen()
+                    Screen.List -> Box {}
+                    Screen.Settings -> SettingsScreen()
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
 <resources>
+    <string name="app_name">PiAware Mobile</string>
     <string name="screen_map">Map</string>
     <string name="screen_list">List</string>
     <string name="screen_settings">Settings</string>
@@ -12,4 +13,7 @@
     <string name="restore_map_position_description">Save and restore the last map position and zoom level on start</string>
     <string name="show_receiver_locations_title">Show receiver locations</string>
     <string name="show_receiver_locations_description">Display a marker for each configured server's location on the map</string>
+<!--    <string name="planes_count">%d planes</string>-->
+    <string name="planes_count">planes</string>
+    <string name="openstreetmap_copyright">© OpenStreetMap contributors</string>
 </resources>
