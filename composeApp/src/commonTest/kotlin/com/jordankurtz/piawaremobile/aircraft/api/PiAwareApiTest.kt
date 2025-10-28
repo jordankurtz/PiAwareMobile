@@ -46,7 +46,7 @@ class PiAwareApiTest {
                 json()
             }
         }
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getAircraft("test-host")
@@ -65,7 +65,7 @@ class PiAwareApiTest {
             )
         }
         val httpClient = HttpClient(mockEngine)
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getAircraft("test-host")
@@ -95,7 +95,7 @@ class PiAwareApiTest {
                 json()
             }
         }
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getAircraftTypes("test-host")
@@ -114,7 +114,7 @@ class PiAwareApiTest {
             )
         }
         val httpClient = HttpClient(mockEngine)
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getAircraftTypes("test-host")
@@ -142,7 +142,7 @@ class PiAwareApiTest {
                 json()
             }
         }
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getAircraftInfo("test-host", "test-bkey")
@@ -175,7 +175,7 @@ class PiAwareApiTest {
                 json()
             }
         }
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result1 = piAwareApi.getAircraftInfo("test-host", "test-bkey")
@@ -197,7 +197,7 @@ class PiAwareApiTest {
             )
         }
         val httpClient = HttpClient(mockEngine)
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getAircraftInfo("test-host", "test-bkey")
@@ -225,7 +225,7 @@ class PiAwareApiTest {
                 json()
             }
         }
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getDump1090ReceiverInfo("test-host")
@@ -244,7 +244,7 @@ class PiAwareApiTest {
             )
         }
         val httpClient = HttpClient(mockEngine)
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getDump1090ReceiverInfo("test-host")
@@ -272,7 +272,7 @@ class PiAwareApiTest {
                 json()
             }
         }
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getDump978ReceiverInfo("test-host")
@@ -291,7 +291,7 @@ class PiAwareApiTest {
             )
         }
         val httpClient = HttpClient(mockEngine)
-        val piAwareApi = PiAwareApi(httpClient)
+        val piAwareApi = PiAwareApiImpl(httpClient)
 
         // Act
         val result = piAwareApi.getDump978ReceiverInfo("test-host")

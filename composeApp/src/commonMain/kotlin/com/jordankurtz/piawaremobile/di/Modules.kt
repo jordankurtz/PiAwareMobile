@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.di
 
 import com.jordankurtz.piawaremobile.KtorClient
 import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
+import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApiImpl
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepoImpl
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
@@ -48,7 +49,7 @@ val networkModule = module {
 }
 
 val apiModule = module {
-    single { PiAwareApi(get()) }
+    single<PiAwareApi> { PiAwareApiImpl(get()) }
 }
 
 val useCaseModule = module {
