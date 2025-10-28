@@ -13,6 +13,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
 
@@ -53,34 +54,35 @@ class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
         host: String,
         receiverType: ReceiverType
     ): Receiver? {
-       return when (receiverType) {
+        return when (receiverType) {
             ReceiverType.DUMP_1090 -> piAwareApi.getDump1090ReceiverInfo(host)
             ReceiverType.DUMP_978 -> piAwareApi.getDump978ReceiverInfo(host)
         }
     }
 
-    private suspend fun lookupAircraftInfoRecursive(
+    internal suspend fun lookupAircraftInfoRecursive(
         host: String,
         hex: String,
         level: Int = 1
     ): AircraftInfo? {
-        val bkey = hex.substring(0, level)
-        val dkey = hex.substring(level)
+        val uppercaseHex = hex.uppercase()
+        val bkey = uppercaseHex.substring(0, level)
+        val dkey = uppercaseHex.substring(level)
 
-        val data = piAwareApi.getAircraftInfo(host, bkey.uppercase()) ?: return null
+        val data = piAwareApi.getAircraftInfo(host, bkey) ?: return null
 
         if (data.containsKey(dkey)) {
             val info = data[dkey]!!
             val icaoAircraftType = lookAircraftType(info)
             return AircraftInfo(
-                registration = info.jsonObject["i"]?.toString(),
-                icaoType = info.jsonObject["t"]?.toString(),
+                registration = info.jsonObject["i"]?.jsonPrimitive?.content,
+                icaoType = info.jsonObject["t"]?.jsonPrimitive?.content,
                 typeDescription = icaoAircraftType?.desc,
                 wtc = icaoAircraftType?.wtc
             )
         }
 
-        if (data.containsKey("children")) {
+        if (dkey.isNotEmpty() && data.containsKey("children")) {
             val subkey = bkey + dkey.substring(0, 1)
             if (data["children"]?.let { Json.decodeFromJsonElement<List<String>>(it) }
                     ?.contains(subkey) == true) {
@@ -92,15 +94,17 @@ class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
     }
 
     private fun lookAircraftType(info: JsonElement): ICAOAircraftType? {
-        return info.let { it.jsonObject["t"]?.toString() }
-            ?.let { aircraftTypes?.get(it.uppercase()) }
+        return info.let { it.jsonObject["t"]?.jsonPrimitive?.content }
+            ?.let { aircraftTypes?.get(it) }
     }
+
     fun <K, V> List<Map<K, V>>.flatten(): Map<K, V> {
         val result = mutableMapOf<K, V>()
         forEach { result.putAll(it) }
         return result
     }
 }
+
 fun List<Aircraft>.filterNoLocation(): List<Aircraft> {
     return this.filter { it.lat != 0.0 && it.lon != 0.0 }
 }
