@@ -7,17 +7,18 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
-actual class LocationService {
+actual class LocationServiceImpl : LocationService {
     private var updateJob: Job? = null
     private val json = Json { ignoreUnknownKeys = true }
 
-    actual fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
+    actual override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
         updateJob = CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
                 try {
@@ -32,12 +33,12 @@ actual class LocationService {
         }
     }
 
-    actual fun stopLocationUpdates() {
+    actual override fun stopLocationUpdates() {
         updateJob?.cancel()
         updateJob = null
     }
 
-    actual fun requestPermissions(onResult: (Boolean) -> Unit) {
+    actual override fun requestPermissions(onResult: (Boolean) -> Unit) {
         // Desktop doesn't need permission for IP-based location
         onResult(true)
     }
@@ -59,8 +60,7 @@ actual class LocationService {
             if (locationData.status == "success") {
                 Location(
                     latitude = locationData.lat,
-                    longitude = locationData.lon,
-                    accuracy = 5000f // IP-based location is approximate (~5km accuracy)
+                    longitude = locationData.lon
                 )
             } else {
                 null
@@ -71,3 +71,10 @@ actual class LocationService {
         }
     }
 }
+
+@Serializable
+data class IPLocationResponse(
+    val status: String,
+    val lat: Double,
+    val lon: Double
+)

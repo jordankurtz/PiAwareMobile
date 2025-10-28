@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.jordankurtz.piawaremobile.location.LocationService
+import com.jordankurtz.piawaremobile.location.LocationServiceImpl
 import org.koin.android.ext.android.inject
 import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
@@ -25,13 +26,13 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
             ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
             // When the user responds, notify the LocationService
-            locationService.onResult(isGranted)
+            (locationService as? LocationServiceImpl)?.onResult(isGranted)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        locationService.permissionLauncher = {
+        (locationService as? LocationServiceImpl)?.permissionLauncher = {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
 

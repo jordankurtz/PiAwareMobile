@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.aircraft.usecase
 
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
+import com.jordankurtz.piawaremobile.aircraft.usecase.impl.GetReceiverLocationUseCaseImpl
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
@@ -28,7 +29,7 @@ class GetReceiverLocationUseCaseTest {
     @BeforeTest
     fun setup() {
         aircraftRepo = mock()
-        useCase = GetReceiverLocationUseCase(aircraftRepo)
+        useCase = GetReceiverLocationUseCaseImpl(aircraftRepo)
     }
 
     @Test

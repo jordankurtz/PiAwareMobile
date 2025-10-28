@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.aircraft.usecase
 
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
+import com.jordankurtz.piawaremobile.aircraft.usecase.impl.LoadAircraftTypesUseCaseImpl
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
@@ -17,7 +18,7 @@ class LoadAircraftTypesUseCaseTest {
     @BeforeTest
     fun setup() {
         aircraftRepo = mock()
-        useCase = LoadAircraftTypesUseCase(aircraftRepo)
+        useCase = LoadAircraftTypesUseCaseImpl(aircraftRepo)
     }
 
     @Test

@@ -8,12 +8,17 @@ import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepoImpl
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.impl.GetAircraftWithDetailsUseCaseImpl
+import com.jordankurtz.piawaremobile.aircraft.usecase.impl.GetReceiverLocationUseCaseImpl
+import com.jordankurtz.piawaremobile.aircraft.usecase.impl.LoadAircraftTypesUseCaseImpl
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMapProvider
 import com.jordankurtz.piawaremobile.map.repo.MapStateRepository
 import com.jordankurtz.piawaremobile.map.repo.MapStateRepositoryImpl
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
+import com.jordankurtz.piawaremobile.map.usecase.impl.GetSavedMapStateUseCaseImpl
+import com.jordankurtz.piawaremobile.map.usecase.impl.SaveMapStateUseCaseImpl
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepositoryImpl
@@ -69,12 +74,12 @@ val useCaseModule = module {
     singleOf(::SetShowReceiverLocationsUseCaseImpl) { bind<SetShowReceiverLocationsUseCase>() }
     singleOf(::SetShowUserLocationOnMapUseCaseImpl) { bind<SetShowUserLocationOnMapUseCase>() }
 
-    single { SaveMapStateUseCase(get()) }
-    single { GetSavedMapStateUseCase(get()) }
+    singleOf(::SaveMapStateUseCaseImpl) { bind<SaveMapStateUseCase>() }
+    singleOf(::GetSavedMapStateUseCaseImpl) { bind<GetSavedMapStateUseCase>() }
 
-    single { GetAircraftWithDetailsUseCase(get()) }
-    single { LoadAircraftTypesUseCase(get()) }
-    single { GetReceiverLocationUseCase(get()) }
+    singleOf(::GetAircraftWithDetailsUseCaseImpl) { bind<GetAircraftWithDetailsUseCase>() }
+    singleOf(::LoadAircraftTypesUseCaseImpl) { bind<LoadAircraftTypesUseCase>() }
+    singleOf(::GetReceiverLocationUseCaseImpl) { bind<GetReceiverLocationUseCase>() }
 }
 
 expect val platformModule: Module

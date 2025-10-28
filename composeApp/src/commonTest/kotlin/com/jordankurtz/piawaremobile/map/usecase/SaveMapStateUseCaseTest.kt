@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.map.usecase
 
 import com.jordankurtz.piawaremobile.map.repo.MapStateRepository
+import com.jordankurtz.piawaremobile.map.usecase.impl.SaveMapStateUseCaseImpl
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
@@ -18,7 +19,7 @@ class SaveMapStateUseCaseTest {
     @BeforeTest
     fun setUp() {
         mapStateRepository = mock()
-        saveMapStateUseCase = SaveMapStateUseCase(mapStateRepository)
+        saveMapStateUseCase = SaveMapStateUseCaseImpl(mapStateRepository)
     }
 
     @Test

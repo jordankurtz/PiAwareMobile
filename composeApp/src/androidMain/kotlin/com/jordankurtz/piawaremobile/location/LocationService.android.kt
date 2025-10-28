@@ -14,7 +14,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.jordankurtz.piawaremobile.model.Location
 
-actual class LocationService(private val context: Context) {
+actual class LocationServiceImpl(private val context: Context) : LocationService {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
     private var locationCallback: LocationCallback? = null
@@ -25,7 +25,7 @@ actual class LocationService(private val context: Context) {
     // This lambda will be set by MainActivity to trigger the permission dialog.
     var permissionLauncher: (() -> Unit)? = null
 
-    actual fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
+    actual override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
         val checkSelfPermission = ActivityCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -66,7 +66,7 @@ actual class LocationService(private val context: Context) {
         )
     }
 
-    actual fun stopLocationUpdates() {
+    actual override fun stopLocationUpdates() {
         locationCallback?.let {
             fusedLocationClient.removeLocationUpdates(it)
         }
@@ -76,7 +76,7 @@ actual class LocationService(private val context: Context) {
     /**
      * Requests location permissions by invoking the launcher provided by MainActivity.
      */
-    actual fun requestPermissions(onResult: (Boolean) -> Unit) {
+    actual override fun requestPermissions(onResult: (Boolean) -> Unit) {
         // If permission is already granted, invoke the callback immediately and exit.
         val checkSelfPermission = ActivityCompat.checkSelfPermission(
             context,

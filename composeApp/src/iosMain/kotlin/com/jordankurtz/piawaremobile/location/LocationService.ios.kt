@@ -14,7 +14,7 @@ import platform.CoreLocation.kCLLocationAccuracyBest
 import platform.Foundation.NSError
 import platform.darwin.NSObject
 
-actual class LocationService {
+actual class LocationServiceImpl : LocationService {
     private val locationManager = CLLocationManager()
     // The delegate now needs to be a separate instance to manage its own state.
     private val delegate = LocationDelegate()
@@ -24,19 +24,19 @@ actual class LocationService {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
     }
 
-    actual fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
+    actual override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
         // Pass the location update callback to the delegate
         delegate.onLocationUpdate = onLocationUpdate
         locationManager.startUpdatingLocation()
     }
 
-    actual fun stopLocationUpdates() {
+    actual override fun stopLocationUpdates() {
         locationManager.stopUpdatingLocation()
         // Clean up the callback
         delegate.onLocationUpdate = null
     }
 
-    actual fun requestPermissions(onResult: (Boolean) -> Unit) {
+    actual override fun requestPermissions(onResult: (Boolean) -> Unit) {
         // Store the callback in the delegate. It will be called when the user responds.
         delegate.onPermissionResult = onResult
 
