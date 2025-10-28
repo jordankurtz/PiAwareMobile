@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.settings.usecase
 
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
+import com.jordankurtz.piawaremobile.settings.usecase.impl.AddServerUseCaseImpl
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -26,7 +27,7 @@ class AddServerUseCaseTest {
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        addServerUseCase = AddServerUseCase(settingsRepository)
+        addServerUseCase = AddServerUseCaseImpl(settingsRepository)
     }
 
     @Test

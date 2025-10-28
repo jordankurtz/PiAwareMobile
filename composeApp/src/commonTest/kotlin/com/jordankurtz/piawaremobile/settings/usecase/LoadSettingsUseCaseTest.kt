@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.settings.usecase
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
+import com.jordankurtz.piawaremobile.settings.usecase.impl.LoadSettingsUseCaseImpl
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.mock
@@ -22,7 +23,7 @@ class LoadSettingsUseCaseTest {
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        loadSettingsUseCase = LoadSettingsUseCase(settingsRepository)
+        loadSettingsUseCase = LoadSettingsUseCaseImpl(settingsRepository)
     }
 
     @Test

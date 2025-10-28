@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.settings.usecase
 
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetShowReceiverLocationsUseCaseImpl
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -25,7 +26,7 @@ class SetShowReceiverLocationsUseCaseTest {
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        setShowReceiverLocationsUseCase = SetShowReceiverLocationsUseCase(settingsRepository)
+        setShowReceiverLocationsUseCase = SetShowReceiverLocationsUseCaseImpl(settingsRepository)
     }
 
     @Test

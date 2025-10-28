@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.settings.usecase
 
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetRefreshIntervalUseCaseImpl
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -25,7 +26,7 @@ class SetRefreshIntervalUseCaseTest {
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        setRefreshIntervalUseCase = SetRefreshIntervalUseCase(settingsRepository)
+        setRefreshIntervalUseCase = SetRefreshIntervalUseCaseImpl(settingsRepository)
     }
 
     @Test

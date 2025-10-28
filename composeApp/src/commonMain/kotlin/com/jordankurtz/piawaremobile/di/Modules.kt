@@ -24,6 +24,13 @@ import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.impl.AddServerUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.LoadSettingsUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetCenterMapOnUserOnStartUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetRefreshIntervalUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetRestoreMapStateOnStartUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetShowReceiverLocationsUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetShowUserLocationOnMapUseCaseImpl
 import io.ktor.client.HttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -53,13 +60,14 @@ val apiModule = module {
 }
 
 val useCaseModule = module {
-    single { LoadSettingsUseCase(get()) }
-    single { AddServerUseCase(get()) }
-    single { SetRefreshIntervalUseCase(get()) }
-    single { SetCenterMapOnUserOnStartUseCase(get()) }
-    single { SetRestoreMapStateOnStartUseCase(get()) }
-    single { SetShowReceiverLocationsUseCase(get()) }
-    single { SetShowUserLocationOnMapUseCase(get()) }
+    // Settings
+    singleOf(::LoadSettingsUseCaseImpl) { bind<LoadSettingsUseCase>() }
+    singleOf(::AddServerUseCaseImpl) { bind<AddServerUseCase>() }
+    singleOf(::SetRefreshIntervalUseCaseImpl) { bind<SetRefreshIntervalUseCase>() }
+    singleOf(::SetCenterMapOnUserOnStartUseCaseImpl) { bind<SetCenterMapOnUserOnStartUseCase>() }
+    singleOf(::SetRestoreMapStateOnStartUseCaseImpl) { bind<SetRestoreMapStateOnStartUseCase>() }
+    singleOf(::SetShowReceiverLocationsUseCaseImpl) { bind<SetShowReceiverLocationsUseCase>() }
+    singleOf(::SetShowUserLocationOnMapUseCaseImpl) { bind<SetShowUserLocationOnMapUseCase>() }
 
     single { SaveMapStateUseCase(get()) }
     single { GetSavedMapStateUseCase(get()) }
