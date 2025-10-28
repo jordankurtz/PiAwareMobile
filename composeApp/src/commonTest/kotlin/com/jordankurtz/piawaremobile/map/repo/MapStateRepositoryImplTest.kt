@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.map.repo
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.jordankurtz.piawaremobile.model.MapState
+import com.jordankurtz.piawaremobile.testutil.FakeDataStore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
