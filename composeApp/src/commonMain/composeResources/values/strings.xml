@@ -19,4 +19,6 @@
     <string name="user_location_content_description">User Location</string>
     <string name="show_user_location_title">Show User Location on Map</string>
     <string name="show_user_location_description">Show the user's current location on the map</string>
+    <string name="open_urls_externally_title">Open URLs externally</string>
+    <string name="open_urls_externally_description">Open aircraft and receiver URLs in an external browser</string>
 </resources>

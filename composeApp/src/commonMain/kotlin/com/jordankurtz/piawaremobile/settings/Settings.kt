@@ -8,5 +8,6 @@ data class Settings (
     val centerMapOnUserOnStart: Boolean = false,
     val restoreMapStateOnStart: Boolean = false,
     val showReceiverLocations: Boolean = false,
-    val showUserLocationOnMap: Boolean = false
+    val showUserLocationOnMap: Boolean = false,
+    val openUrlsExternally: Boolean = false
 )

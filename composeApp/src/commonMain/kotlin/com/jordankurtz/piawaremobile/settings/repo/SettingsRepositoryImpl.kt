@@ -22,6 +22,7 @@ class SettingsRepositoryImpl(
                 restoreMapStateOnStart = preferences[SettingsRepository.RESTORE_MAP_STATE_ON_START] ?: false,
                 showReceiverLocations = preferences[SettingsRepository.SHOW_RECEIVER_LOCATIONS] ?: false,
                 showUserLocationOnMap = preferences[SettingsRepository.SHOW_USER_LOCATION_ON_MAP] ?: false,
+                openUrlsExternally = preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] ?: false,
             )
         }
     }
@@ -34,6 +35,7 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.RESTORE_MAP_STATE_ON_START] = settings.restoreMapStateOnStart
             preferences[SettingsRepository.SHOW_RECEIVER_LOCATIONS] = settings.showReceiverLocations
             preferences[SettingsRepository.SHOW_USER_LOCATION_ON_MAP] = settings.showUserLocationOnMap
+            preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] = settings.openUrlsExternally
         }
     }
 }

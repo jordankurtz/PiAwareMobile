@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
@@ -39,6 +40,7 @@ class SettingsViewModelTest {
     private lateinit var setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase
     private lateinit var setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase
     private lateinit var setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase
+    private lateinit var setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -52,6 +54,7 @@ class SettingsViewModelTest {
         setRestoreMapStateOnStartUseCase = mock()
         setShowReceiverLocationsUseCase = mock()
         setShowUserLocationOnMapUseCase = mock()
+        setOpenUrlsExternallyUseCase = mock()
 
         val settings = Settings(
             servers = emptyList(),
@@ -70,7 +73,8 @@ class SettingsViewModelTest {
             setCenterMapOnUserOnStartUseCase = setCenterMapOnUserOnStartUseCase,
             setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
             setShowReceiverLocationsUseCase = setShowReceiverLocationsUseCase,
-            setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase
+            setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase,
+            setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase
         )
     }
 
@@ -98,7 +102,8 @@ class SettingsViewModelTest {
             setCenterMapOnUserOnStartUseCase = setCenterMapOnUserOnStartUseCase,
             setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
             setShowReceiverLocationsUseCase = setShowReceiverLocationsUseCase,
-            setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase
+            setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase,
+            setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase
         )
         newViewModel.settings.test {
             assertEquals(Async.NotStarted, awaitItem())
@@ -176,5 +181,16 @@ class SettingsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         verifySuspend(mode = VerifyMode.exactly(1)) { setShowUserLocationOnMapUseCase(enabled = enabled) }
+    }
+
+    @Test
+    fun `updateOpenUrlsExternally calls setOpenUrlsExternallyUseCase`() = runTest {
+        val enabled = true
+        everySuspend { setOpenUrlsExternallyUseCase(enabled = enabled) } returns Unit
+
+        viewModel.updateOpenUrlsExternally(enabled = enabled)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        verifySuspend(mode = VerifyMode.exactly(1)) { setOpenUrlsExternallyUseCase(enabled = enabled) }
     }
 }
