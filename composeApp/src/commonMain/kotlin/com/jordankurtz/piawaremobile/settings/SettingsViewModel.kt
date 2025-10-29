@@ -14,7 +14,9 @@ import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUs
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Factory
 
+@Factory
 class SettingsViewModel(
     loadSettingsUseCase: LoadSettingsUseCase,
     private val addServerUseCase: AddServerUseCase,

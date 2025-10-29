@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.location
 
+import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
 import com.jordankurtz.piawaremobile.model.Location
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -9,12 +10,15 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.koin.core.annotation.Factory
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
-actual class LocationServiceImpl : LocationService {
+@Factory(binds = [LocationService::class])
+actual class LocationServiceImpl actual constructor(private val contextWrapper: ContextWrapper) :
+    LocationService {
     private var updateJob: Job? = null
     private val json = Json { ignoreUnknownKeys = true }
 

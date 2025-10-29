@@ -14,6 +14,8 @@ import com.jordankurtz.piawaremobile.UrlHandler
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
+import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
+import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
 import com.jordankurtz.piawaremobile.location.LocationService
 import com.jordankurtz.piawaremobile.location.LocationState
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
@@ -44,6 +46,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.core.annotation.Factory
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.onMarkerClick
@@ -79,6 +82,7 @@ private val dateFormatter = LocalDateTime.Format {
 }
 
 @OptIn(FlowPreview::class)
+@Factory
 class MapViewModel(
     private val mapProvider: TileStreamProvider,
     private val loadSettingsUseCase: LoadSettingsUseCase,
@@ -89,8 +93,8 @@ class MapViewModel(
     private val loadAircraftTypesUseCase: LoadAircraftTypesUseCase,
     private val getAircraftWithDetailsUseCase: GetAircraftWithDetailsUseCase,
     private val getReceiverLocationUseCase: GetReceiverLocationUseCase,
-    private val ioDispatcher: CoroutineDispatcher,
-    private val mainDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _locationState = MutableStateFlow<LocationState>(LocationState.Idle)

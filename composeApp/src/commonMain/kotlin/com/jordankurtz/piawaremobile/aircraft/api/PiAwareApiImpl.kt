@@ -8,7 +8,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.serialization.json.JsonObject
+import org.koin.core.annotation.Single
 
+@Single(binds = [PiAwareApi::class])
 class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
 
     private val aircraftInfoMap = mutableMapOf<String, JsonObject>()

@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.mokkery)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -62,7 +63,10 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.kotlinx.datetime)
             implementation(libs.uuid)
-            implementation(libs.koin.compose.viewmodel.nav)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            api(libs.koin.annotations)
+            implementation(libs.koin.compose.viewmodel)
             implementation(libs.datastore.preferences)
             implementation(libs.compose.foundation)
             implementation(libs.compose.runtime)
@@ -117,6 +121,17 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+    add("kspCommonMainMetadata", libs.koin.compiler)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+    if (name != "kspCommonMainKotlinMetadata") {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
+}
+
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
 }
 
 compose.desktop {

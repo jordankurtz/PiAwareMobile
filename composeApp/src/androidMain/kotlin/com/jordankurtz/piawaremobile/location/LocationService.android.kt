@@ -1,7 +1,6 @@
 package com.jordankurtz.piawaremobile.location
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Looper
 import androidx.core.app.ActivityCompat
@@ -12,11 +11,14 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
 import com.jordankurtz.piawaremobile.model.Location
+import org.koin.core.annotation.Factory
 
-actual class LocationServiceImpl(private val context: Context) : LocationService {
+@Factory(binds = [LocationService::class])
+actual class LocationServiceImpl actual constructor(private val contextWrapper: ContextWrapper) : LocationService {
     private val fusedLocationClient: FusedLocationProviderClient =
-        LocationServices.getFusedLocationProviderClient(context)
+        LocationServices.getFusedLocationProviderClient(contextWrapper.context)
     private var locationCallback: LocationCallback? = null
 
     // This property will hold the callback that the ViewModel provides.
@@ -27,7 +29,7 @@ actual class LocationServiceImpl(private val context: Context) : LocationService
 
     actual override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
         val checkSelfPermission = ActivityCompat.checkSelfPermission(
-            context,
+            contextWrapper.context,
             Manifest.permission.ACCESS_FINE_LOCATION
         )
         if (checkSelfPermission != PackageManager.PERMISSION_GRANTED
@@ -79,7 +81,7 @@ actual class LocationServiceImpl(private val context: Context) : LocationService
     actual override fun requestPermissions(onResult: (Boolean) -> Unit) {
         // If permission is already granted, invoke the callback immediately and exit.
         val checkSelfPermission = ActivityCompat.checkSelfPermission(
-            context,
+            contextWrapper.context,
             Manifest.permission.ACCESS_FINE_LOCATION
         )
         if (checkSelfPermission == PackageManager.PERMISSION_GRANTED

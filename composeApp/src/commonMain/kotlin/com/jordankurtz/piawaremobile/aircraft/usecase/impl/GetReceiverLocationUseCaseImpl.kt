@@ -4,7 +4,9 @@ import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.ReceiverType
+import org.koin.core.annotation.Factory
 
+@Factory(binds = [GetReceiverLocationUseCase::class])
 class GetReceiverLocationUseCaseImpl(
     private val aircraftRepo: AircraftRepo
 ) : GetReceiverLocationUseCase {
