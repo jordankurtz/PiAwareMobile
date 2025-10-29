@@ -1,9 +1,11 @@
 package com.jordankurtz.piawaremobile
 
 interface UrlHandler {
-    fun openUrl(url: String)
+    fun openUrlInternally(url: String)
+    fun openUrlExternally(url: String)
 }
 
 expect class UrlHandlerImpl: UrlHandler {
-    override fun openUrl(url: String)
+    override fun openUrlInternally(url: String)
+    override fun openUrlExternally(url: String)
 }

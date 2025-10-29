@@ -24,9 +24,7 @@ import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -91,7 +89,8 @@ class MapViewModel(
     private val loadAircraftTypesUseCase: LoadAircraftTypesUseCase,
     private val getAircraftWithDetailsUseCase: GetAircraftWithDetailsUseCase,
     private val getReceiverLocationUseCase: GetReceiverLocationUseCase,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val ioDispatcher: CoroutineDispatcher,
+    private val mainDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _locationState = MutableStateFlow<LocationState>(LocationState.Idle)
@@ -106,6 +105,7 @@ class MapViewModel(
 
     private var pollingJob: Job? = null
     private var saveStateJob: Job? = null
+    private var settings: Settings? = null
 
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
         minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
@@ -123,6 +123,7 @@ class MapViewModel(
         viewModelScope.launch(ioDispatcher) {
             loadSettingsUseCase().collect {
                 if (it is Async.Success) {
+                    settings = it.data
                     onSettingsLoaded(it.data)
                 }
             }
@@ -155,7 +156,8 @@ class MapViewModel(
                 val savedState = getSavedMapStateUseCase()
                 println("Restored map state $savedState")
                 state.setScroll(savedState.scrollX, savedState.scrollY)
-                state.scale = savedState.zoom
+//                state.scale = savedState.zoom
+                state.scale =0.25
 
                 if (settings.centerMapOnUserOnStart) {
                     requestLocationPermission()
@@ -301,14 +303,20 @@ class MapViewModel(
     }
 
     private fun openFlightPage(flight: String) {
-        val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        urlHandler.openUrl(
-            "https://www.flightaware.com/live/flight/$flight/history/${
+        viewModelScope.launch(mainDispatcher) {
+            val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            val url = "https://www.flightaware.com/live/flight/$flight/history/${
                 dateFormatter.format(
                     dateString
                 )
             }"
-        )
+
+            if (settings?.openUrlsExternally == true) {
+                urlHandler.openUrlExternally(url)
+            } else {
+                urlHandler.openUrlInternally(url)
+            }
+        }
     }
 
     private fun getColorForAltitude(altitude: String): Color {

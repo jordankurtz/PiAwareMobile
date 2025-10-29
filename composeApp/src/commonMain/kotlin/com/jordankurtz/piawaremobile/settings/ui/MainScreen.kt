@@ -39,6 +39,8 @@ import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.center_map_on_user_description
 import piawaremobile.composeapp.generated.resources.center_map_on_user_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
+import piawaremobile.composeapp.generated.resources.open_urls_externally_description
+import piawaremobile.composeapp.generated.resources.open_urls_externally_title
 import piawaremobile.composeapp.generated.resources.preferences_title
 import piawaremobile.composeapp.generated.resources.refresh_interval_title
 import piawaremobile.composeapp.generated.resources.restore_map_position_description
@@ -128,6 +130,15 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     description = stringResource(Res.string.show_user_location_description),
                     checked = settings.getValue()?.showUserLocationOnMap ?: true,
                     onCheckedChange = viewModel::updateShowUserLocationOnMap
+                )
+            }
+
+            item {
+                SettingsSwitch(
+                    title = stringResource(Res.string.open_urls_externally_title),
+                    description = stringResource(Res.string.open_urls_externally_description),
+                    checked = settings.getValue()?.openUrlsExternally ?: false,
+                    onCheckedChange = viewModel::updateOpenUrlsExternally
                 )
             }
         }
