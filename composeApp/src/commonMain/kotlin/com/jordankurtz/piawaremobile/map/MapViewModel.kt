@@ -23,6 +23,7 @@ import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.IO
@@ -34,9 +35,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
@@ -60,7 +62,6 @@ import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_receiver
 import piawaremobile.composeapp.generated.resources.ic_user_location
 import piawaremobile.composeapp.generated.resources.user_location_content_description
-import kotlin.coroutines.coroutineContext
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.pow
@@ -90,6 +91,7 @@ class MapViewModel(
     private val loadAircraftTypesUseCase: LoadAircraftTypesUseCase,
     private val getAircraftWithDetailsUseCase: GetAircraftWithDetailsUseCase,
     private val getReceiverLocationUseCase: GetReceiverLocationUseCase,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
     private val _locationState = MutableStateFlow<LocationState>(LocationState.Idle)
@@ -118,7 +120,7 @@ class MapViewModel(
     }
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             loadSettingsUseCase().collect {
                 if (it is Async.Success) {
                     onSettingsLoaded(it.data)
@@ -143,12 +145,10 @@ class MapViewModel(
             }.launchIn(viewModelScope)
         }
 
-        pollingJob = viewModelScope.launch {
-            pollServers(
-                settings.servers.map { it.address },
-                settings.refreshInterval
-            )
-        }
+        pollingJob = pollServers(
+            servers = settings.servers.map { it.address },
+            refreshInterval = settings.refreshInterval
+        )
 
         if (settings.restoreMapStateOnStart) {
             saveStateJob = viewModelScope.launch {
@@ -201,15 +201,19 @@ class MapViewModel(
         }
     }
 
-    private suspend fun pollServers(servers: List<String>, refreshInterval: Int) {
-        if (servers.isEmpty()) return
+    private fun pollServers(servers: List<String>, refreshInterval: Int): Job? {
+        if (servers.isEmpty() || refreshInterval <= 0) return null
 
-        loadAircraftTypesUseCase(servers)
         val infoHost = servers.first()
-
         val previousMarkerIds = mutableSetOf<String>()
 
-        while (coroutineContext.isActive) {
+        return flow {
+            loadAircraftTypesUseCase(servers)
+            while (true) {
+                emit(Unit)
+                delay(refreshInterval.seconds)
+            }
+        }.onEach {
             println("Refreshing")
             val aircraft = getAircraftWithDetailsUseCase(servers, infoHost)
 
@@ -236,9 +240,9 @@ class MapViewModel(
                     )
                 }
             }
-
-            delay(refreshInterval.seconds.inWholeMilliseconds)
         }
+            .flowOn(ioDispatcher)
+            .launchIn(viewModelScope)
     }
 
     fun requestLocationPermission() {
@@ -296,27 +300,6 @@ class MapViewModel(
         }
     }
 
-    val Location.projected: Pair<Double, Double>
-        get() = doProjection(latitude, longitude)
-
-    private fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double> {
-        if (abs(latitude) > 90 || abs(longitude) > 180) {
-            error("Invalid latitude or longitude")
-        }
-
-        val num = longitude * 0.017453292519943295 // 2*pi / 360
-        val a = latitude * 0.017453292519943295
-
-        val x = normalize(6378137.0 * num, min = X0, max = -X0)
-        val y = normalize(3189068.5 * ln((1.0 + sin(a)) / (1.0 - sin(a))), min = -X0, max = X0)
-
-        return Pair(x, y)
-    }
-
-    private fun normalize(t: Double, min: Double, max: Double): Double {
-        return (t - min) / (max - min)
-    }
-
     private fun openFlightPage(flight: String) {
         val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         urlHandler.openUrl(
@@ -356,6 +339,29 @@ class MapViewModel(
         }
     }
 }
+
+val Location.projected: Pair<Double, Double>
+    get() = doProjection(latitude, longitude)
+
+private fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double> {
+    if (abs(latitude) > 90 || abs(longitude) > 180) {
+        error("Invalid latitude or longitude")
+    }
+
+    val num = longitude * 0.017453292519943295 // 2*pi / 360
+    val a = latitude * 0.017453292519943295
+
+    val x = normalize(6378137.0 * num, min = X0, max = -X0)
+    val y = normalize(3189068.5 * ln((1.0 + sin(a)) / (1.0 - sin(a))), min = -X0, max = X0)
+
+    return Pair(x, y)
+}
+
+
+private fun normalize(t: Double, min: Double, max: Double): Double {
+    return (t - min) / (max - min)
+}
+
 
 private fun mapSizeAtLevel(wmtsLevel: Int, tileSize: Int): Int {
     return tileSize * 2.0.pow(wmtsLevel).toInt()

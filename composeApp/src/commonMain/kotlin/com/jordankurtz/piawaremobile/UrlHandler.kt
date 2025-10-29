@@ -1,5 +1,9 @@
 package com.jordankurtz.piawaremobile
 
-expect class UrlHandler {
+interface UrlHandler {
     fun openUrl(url: String)
+}
+
+expect class UrlHandlerImpl: UrlHandler {
+    override fun openUrl(url: String)
 }

@@ -3,8 +3,8 @@ package com.jordankurtz.piawaremobile
 import java.awt.Desktop
 import java.net.URI
 
-actual class UrlHandler {
-    actual fun openUrl(url: String) {
+actual class UrlHandlerImpl: UrlHandler {
+    actual override fun openUrl(url: String) {
         try {
             Desktop.getDesktop().browse(URI(url))
         } catch (e: Exception) {

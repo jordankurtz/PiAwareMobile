@@ -2,17 +2,23 @@ package com.jordankurtz.piawaremobile.di
 
 import com.jordankurtz.piawaremobile.KtorClient
 import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
+import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApiImpl
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepoImpl
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.impl.GetAircraftWithDetailsUseCaseImpl
+import com.jordankurtz.piawaremobile.aircraft.usecase.impl.GetReceiverLocationUseCaseImpl
+import com.jordankurtz.piawaremobile.aircraft.usecase.impl.LoadAircraftTypesUseCaseImpl
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMapProvider
 import com.jordankurtz.piawaremobile.map.repo.MapStateRepository
 import com.jordankurtz.piawaremobile.map.repo.MapStateRepositoryImpl
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
+import com.jordankurtz.piawaremobile.map.usecase.impl.GetSavedMapStateUseCaseImpl
+import com.jordankurtz.piawaremobile.map.usecase.impl.SaveMapStateUseCaseImpl
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepositoryImpl
@@ -23,6 +29,13 @@ import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.impl.AddServerUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.LoadSettingsUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetCenterMapOnUserOnStartUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetRefreshIntervalUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetRestoreMapStateOnStartUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetShowReceiverLocationsUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.usecase.impl.SetShowUserLocationOnMapUseCaseImpl
 import io.ktor.client.HttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
@@ -48,24 +61,25 @@ val networkModule = module {
 }
 
 val apiModule = module {
-    single { PiAwareApi(get()) }
+    single<PiAwareApi> { PiAwareApiImpl(get()) }
 }
 
 val useCaseModule = module {
-    single { LoadSettingsUseCase(get()) }
-    single { AddServerUseCase(get()) }
-    single { SetRefreshIntervalUseCase(get()) }
-    single { SetCenterMapOnUserOnStartUseCase(get()) }
-    single { SetRestoreMapStateOnStartUseCase(get()) }
-    single { SetShowReceiverLocationsUseCase(get()) }
-    single { SetShowUserLocationOnMapUseCase(get()) }
+    // Settings
+    singleOf(::LoadSettingsUseCaseImpl) { bind<LoadSettingsUseCase>() }
+    singleOf(::AddServerUseCaseImpl) { bind<AddServerUseCase>() }
+    singleOf(::SetRefreshIntervalUseCaseImpl) { bind<SetRefreshIntervalUseCase>() }
+    singleOf(::SetCenterMapOnUserOnStartUseCaseImpl) { bind<SetCenterMapOnUserOnStartUseCase>() }
+    singleOf(::SetRestoreMapStateOnStartUseCaseImpl) { bind<SetRestoreMapStateOnStartUseCase>() }
+    singleOf(::SetShowReceiverLocationsUseCaseImpl) { bind<SetShowReceiverLocationsUseCase>() }
+    singleOf(::SetShowUserLocationOnMapUseCaseImpl) { bind<SetShowUserLocationOnMapUseCase>() }
 
-    single { SaveMapStateUseCase(get()) }
-    single { GetSavedMapStateUseCase(get()) }
+    singleOf(::SaveMapStateUseCaseImpl) { bind<SaveMapStateUseCase>() }
+    singleOf(::GetSavedMapStateUseCaseImpl) { bind<GetSavedMapStateUseCase>() }
 
-    single { GetAircraftWithDetailsUseCase(get()) }
-    single { LoadAircraftTypesUseCase(get()) }
-    single { GetReceiverLocationUseCase(get()) }
+    singleOf(::GetAircraftWithDetailsUseCaseImpl) { bind<GetAircraftWithDetailsUseCase>() }
+    singleOf(::LoadAircraftTypesUseCaseImpl) { bind<LoadAircraftTypesUseCase>() }
+    singleOf(::GetReceiverLocationUseCaseImpl) { bind<GetReceiverLocationUseCase>() }
 }
 
 expect val platformModule: Module
