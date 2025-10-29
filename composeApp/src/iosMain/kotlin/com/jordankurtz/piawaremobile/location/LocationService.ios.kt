@@ -1,8 +1,10 @@
 package com.jordankurtz.piawaremobile.location
 
+import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
 import com.jordankurtz.piawaremobile.model.Location
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
+import org.koin.core.annotation.Factory
 import platform.CoreLocation.CLLocation
 import platform.CoreLocation.CLLocationManager
 import platform.CoreLocation.CLLocationManagerDelegateProtocol
@@ -14,8 +16,11 @@ import platform.CoreLocation.kCLLocationAccuracyBest
 import platform.Foundation.NSError
 import platform.darwin.NSObject
 
-actual class LocationServiceImpl : LocationService {
+@Factory(binds = [LocationService::class])
+actual class LocationServiceImpl actual constructor(private val contextWrapper: ContextWrapper) :
+    LocationService {
     private val locationManager = CLLocationManager()
+
     // The delegate now needs to be a separate instance to manage its own state.
     private val delegate = LocationDelegate()
 
@@ -82,6 +87,7 @@ private class LocationDelegate : NSObject(), CLLocationManagerDelegateProtocol {
                 kCLAuthorizationStatusAuthorizedAlways -> {
                     callback(true) // Permission granted
                 }
+
                 kCLAuthorizationStatusDenied -> {
                     callback(false) // Permission denied
                 }

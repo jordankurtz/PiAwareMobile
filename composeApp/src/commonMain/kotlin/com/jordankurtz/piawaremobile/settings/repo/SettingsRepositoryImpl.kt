@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.koin.core.annotation.Single
 
+@Single(binds = [SettingsRepository::class])
 class SettingsRepositoryImpl(
     val datastore: DataStore<Preferences>
 ): SettingsRepository {

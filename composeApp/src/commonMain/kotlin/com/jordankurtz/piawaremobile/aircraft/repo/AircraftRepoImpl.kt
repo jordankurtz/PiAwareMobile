@@ -14,7 +14,9 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.koin.core.annotation.Single
 
+@Single(binds = [AircraftRepo::class])
 class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
 
     private val aircraftInfoCache = mutableMapOf<String, AircraftInfo>()

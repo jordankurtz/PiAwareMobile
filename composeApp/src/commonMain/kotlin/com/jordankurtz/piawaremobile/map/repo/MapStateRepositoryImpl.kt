@@ -7,7 +7,9 @@ import com.russhwolf.settings.datastore.DataStoreSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Single
 
+@Single(binds = [MapStateRepository::class])
 class MapStateRepositoryImpl(val dataStore: DataStore<Preferences>) : MapStateRepository {
 
     private val settings by lazy {

@@ -1,9 +1,13 @@
 package com.jordankurtz.piawaremobile
 
+import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
+import org.koin.core.annotation.Factory
 import java.awt.Desktop
 import java.net.URI
 
-actual class UrlHandlerImpl : UrlHandler {
+@Factory(binds = [UrlHandler::class])
+actual class UrlHandlerImpl actual constructor(private val contextWrapper: ContextWrapper) :
+    UrlHandler {
     actual override fun openUrlInternally(url: String) {
         open(url)
     }
