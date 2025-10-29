@@ -7,6 +7,7 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
@@ -22,6 +23,7 @@ class SettingsViewModel(
     private val setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase,
     private val setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase,
     private val setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase,
+    private val setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase,
 ) : ViewModel() {
 
     val settings: StateFlow<Async<Settings>>
@@ -50,5 +52,9 @@ class SettingsViewModel(
 
     fun updateShowUserLocationOnMap(enabled: Boolean) = viewModelScope.launch {
         setShowUserLocationOnMapUseCase(enabled)
+    }
+
+    fun updateOpenUrlsExternally(enabled: Boolean) = viewModelScope.launch {
+        setOpenUrlsExternallyUseCase(enabled)
     }
 }
