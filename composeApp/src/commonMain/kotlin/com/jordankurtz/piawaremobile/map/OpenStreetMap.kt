@@ -5,7 +5,7 @@ import ovh.plrapps.mapcompose.ui.MapUI
 import ovh.plrapps.mapcompose.ui.state.MapState
 
 @Composable
-fun OsmCommonUi(
+fun OpenStreetMap(
     state: MapState
 ) {
     MapUI(

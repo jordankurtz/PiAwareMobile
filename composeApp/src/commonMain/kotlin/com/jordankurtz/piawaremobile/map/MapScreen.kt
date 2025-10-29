@@ -44,7 +44,7 @@ fun MapScreen(
     }
 
     Box {
-        OsmCommonUi(state = mapViewModel.state)
+        OpenStreetMap(state = mapViewModel.state)
         Overlay(numberOfPlanes, modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp))
     }
 }
