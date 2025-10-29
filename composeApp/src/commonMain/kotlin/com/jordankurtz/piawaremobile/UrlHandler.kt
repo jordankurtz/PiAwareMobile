@@ -8,7 +8,7 @@ interface UrlHandler {
     fun openUrlExternally(url: String)
 }
 
-@Factory
+@Factory(binds = [UrlHandler::class])
 expect class UrlHandlerImpl(contextWrapper: ContextWrapper): UrlHandler {
     override fun openUrlInternally(url: String)
     override fun openUrlExternally(url: String)

@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.LinkAnnotation
@@ -17,15 +15,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jordankurtz.piawaremobile.map.MapViewModel
 import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.openstreetmap_copyright
 import piawaremobile.composeapp.generated.resources.planes_count
 
 @Composable
-fun Overlay(mapViewModel: MapViewModel, modifier: Modifier) {
-    val numberOfPlanes by mapViewModel.numberOfPlanes.collectAsState()
+fun Overlay(numberOfPlanes: Number, modifier: Modifier) {
 
     Box(modifier = modifier.fillMaxSize()) {
         Text(
