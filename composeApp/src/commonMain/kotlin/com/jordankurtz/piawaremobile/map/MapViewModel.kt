@@ -11,15 +11,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.UrlHandler
-import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
-import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
-import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
-import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
-import com.jordankurtz.piawaremobile.location.LocationService
-import com.jordankurtz.piawaremobile.location.LocationState
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
+import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
@@ -28,15 +23,7 @@ import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -68,7 +55,6 @@ import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 private const val MAX_LEVEL = 16
 private const val MIN_LEVEL = 1
@@ -85,31 +71,16 @@ private val dateFormatter = LocalDateTime.Format {
 @Factory
 class MapViewModel(
     private val mapProvider: TileStreamProvider,
-    private val loadSettingsUseCase: LoadSettingsUseCase,
     private val urlHandler: UrlHandler,
-    private val locationService: LocationService,
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
-    private val loadAircraftTypesUseCase: LoadAircraftTypesUseCase,
-    private val getAircraftWithDetailsUseCase: GetAircraftWithDetailsUseCase,
-    private val getReceiverLocationUseCase: GetReceiverLocationUseCase,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
-    @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher
+    @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
+    private val loadSettingsUseCase: LoadSettingsUseCase,
 ) : ViewModel() {
 
-    private val _locationState = MutableStateFlow<LocationState>(LocationState.Idle)
-    val locationState: StateFlow<LocationState> = _locationState.asStateFlow()
-
-    private val _currentLocation = MutableStateFlow<Location?>(null)
-    val currentLocation: StateFlow<Location?> = _currentLocation.asStateFlow()
-
-    val numberOfPlanes: StateFlow<Int>
-        get() = _numberOfPlanes
-    private val _numberOfPlanes = MutableStateFlow(0)
-
-    private var pollingJob: Job? = null
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
+    private val previousAircraftMarkerIds = mutableSetOf<String>()
 
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
         minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
@@ -124,7 +95,7 @@ class MapViewModel(
     }
 
     init {
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch {
             loadSettingsUseCase().collect {
                 if (it is Async.Success) {
                     settings = it.data
@@ -134,65 +105,35 @@ class MapViewModel(
         }
     }
 
-    private fun onSettingsLoaded(settings: Settings) {
-        pollingJob?.cancel()
+    private suspend fun onSettingsLoaded(settings: Settings) {
         saveStateJob?.cancel()
-
-        if (settings.showReceiverLocations) {
-            loadReceiverLocations(settings.servers)
-        }
-
-        if (settings.showUserLocationOnMap) {
-            requestLocationPermission()
-
-            currentLocation.onEach {
-                it?.let(::updateUserLocationMarker)
-            }.launchIn(viewModelScope)
-        }
-
-        pollingJob = pollServers(
-            servers = settings.servers.map { it.address },
-            refreshInterval = settings.refreshInterval
-        )
-
         if (settings.restoreMapStateOnStart) {
-            saveStateJob = viewModelScope.launch {
-                val savedState = getSavedMapStateUseCase()
-                println("Restored map state $savedState")
-                state.setScroll(savedState.scrollX, savedState.scrollY)
-                state.scale = savedState.zoom
-
-                if (settings.centerMapOnUserOnStart) {
-                    requestLocationPermission()
-                }
-
-                snapshotFlow { Pair(state.scroll, state.scale) }
-                    .debounce(500.milliseconds)
-                    .onEach { (scroll, scale) ->
-                        if (scroll.x > 0.0 && scroll.y > 0.0) {
-                            saveMapStateUseCase(scroll.x, scroll.y, scale)
-                            println("Saved map state $scroll, $scale")
-                        }
-                    }.launchIn(this)
-            }
-        } else if (settings.centerMapOnUserOnStart) {
-            requestLocationPermission()
+            loadMapState()
+            startSaveMapStateJob()
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun loadReceiverLocations(servers: List<Server>) {
-        viewModelScope.launch {
-            val locations =
-                servers.map { server -> async { server to getReceiverLocationUseCase(server.address) } }
-                    .awaitAll().filter { it.second != null }
-                    .toMap() as Map<Server, Location> // we already filtered out the nulls but type checking doesn't know that
+    private suspend fun loadMapState() {
+        val savedState = getSavedMapStateUseCase()
+        println("Restored map state $savedState")
+        state.setScroll(savedState.scrollX, savedState.scrollY)
+        state.scale = savedState.zoom
+    }
 
-            locations.forEach(::addReceiverToMap)
+    private fun startSaveMapStateJob() {
+        saveStateJob = viewModelScope.launch {
+            snapshotFlow { Pair(state.scroll, state.scale) }
+                .debounce(500.milliseconds)
+                .onEach { (scroll, scale) ->
+                    if (scroll.x > 0.0 && scroll.y > 0.0) {
+                        saveMapStateUseCase(scroll.x, scroll.y, scale)
+                        println("Saved map state $scroll, $scale")
+                    }
+                }.launchIn(this)
         }
     }
 
-    private fun addReceiverToMap(receiver: Map.Entry<Server, Location>) = viewModelScope.launch {
+    fun onReceiverLocation(receiver: Map.Entry<Server, Location>) = viewModelScope.launch {
         val (x, y) = receiver.value.projected
         state.addMarker(
             receiver.key.id.toString(), x, y
@@ -206,81 +147,6 @@ class MapViewModel(
         }
     }
 
-    private fun pollServers(servers: List<String>, refreshInterval: Int): Job? {
-        if (servers.isEmpty() || refreshInterval <= 0) return null
-
-        val infoHost = servers.first()
-        val previousMarkerIds = mutableSetOf<String>()
-
-        return flow {
-            loadAircraftTypesUseCase(servers)
-            while (true) {
-                emit(Unit)
-                delay(refreshInterval.seconds)
-            }
-        }.onEach {
-            println("Refreshing")
-            val aircraft = getAircraftWithDetailsUseCase(servers, infoHost)
-
-            _numberOfPlanes.value = aircraft.count()
-
-            previousMarkerIds.forEach(state::removeMarker)
-            previousMarkerIds.clear()
-
-            aircraft.forEach { (plane, _) ->
-                val location = doProjection(plane.lat, plane.lon)
-
-                state.addMarker(
-                    (plane.flight ?: "fake=${plane.hex}").also { previousMarkerIds.add(it) },
-                    location.first,
-                    location.second
-                ) {
-                    Image(
-                        painter = painterResource(Res.drawable.ic_plane),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(30.dp)
-                            .rotate(plane.track),
-                        colorFilter = ColorFilter.tint(getColorForAltitude(plane.altitude))
-                    )
-                }
-            }
-        }
-            .flowOn(ioDispatcher)
-            .launchIn(viewModelScope)
-    }
-
-    fun requestLocationPermission() {
-        _locationState.value = LocationState.RequestingPermission
-        locationService.requestPermissions { granted ->
-            if (granted) {
-                _locationState.value = LocationState.PermissionGranted
-                startLocationUpdates(::recenterOnLocation)
-            } else {
-                _locationState.value = LocationState.PermissionDenied
-            }
-        }
-    }
-
-    fun startLocationUpdates(onFirstLocation: ((Location) -> Unit)? = null) {
-        _locationState.value = LocationState.TrackingLocation
-        var isFirstUpdate = true
-        locationService.startLocationUpdates { location ->
-            _currentLocation.value = location
-            if (isFirstUpdate) {
-                onFirstLocation?.invoke(location)
-                isFirstUpdate = false
-            }
-        }
-    }
-
-    fun stopLocationUpdates() {
-        locationService.stopLocationUpdates()
-        _locationState.value = LocationState.Idle
-        _currentLocation.value = null
-        state.removeMarker(USER_LOCATION_MARKER_ID)
-    }
-
     fun recenterOnLocation(location: Location) {
         viewModelScope.launch {
             val (x, y) = location.projected
@@ -289,7 +155,7 @@ class MapViewModel(
         }
     }
 
-    private fun updateUserLocationMarker(location: Location) {
+    fun onUserLocationChanged(location: Location) {
         val (x, y) = location.projected
         state.removeMarker(USER_LOCATION_MARKER_ID)
         state.addMarker(
@@ -302,6 +168,30 @@ class MapViewModel(
                 contentDescription = stringResource(Res.string.user_location_content_description),
                 modifier = Modifier.size(24.dp)
             )
+        }
+    }
+
+    fun onAircraftUpdated(aircraft: List<Pair<Aircraft, Any?>>) {
+        previousAircraftMarkerIds.forEach(state::removeMarker)
+        previousAircraftMarkerIds.clear()
+
+        aircraft.forEach { (plane, _) ->
+            val location = doProjection(plane.lat, plane.lon)
+
+            state.addMarker(
+                (plane.flight ?: "fake=${plane.hex}").also { previousAircraftMarkerIds.add(it) },
+                location.first,
+                location.second
+            ) {
+                Image(
+                    painter = painterResource(Res.drawable.ic_plane),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(30.dp)
+                        .rotate(plane.track),
+                    colorFilter = ColorFilter.tint(getColorForAltitude(plane.altitude))
+                )
+            }
         }
     }
 
@@ -340,7 +230,7 @@ class MapViewModel(
             in 9001..10000 -> Color(0, 255, 255)
             in 10001..15000 -> Color(0, 224, 255)
             in 15001..20000 -> Color(0, 192, 255)
-            in 20001..25000 -> Color(0, 160, 255)
+            in 2001..25000 -> Color(0, 160, 255)
             in 25001..30000 -> Color(0, 128, 255)
             in 30001..35000 -> Color(0, 64, 255)
             in 35001..40000 -> Color(0, 0, 255)
