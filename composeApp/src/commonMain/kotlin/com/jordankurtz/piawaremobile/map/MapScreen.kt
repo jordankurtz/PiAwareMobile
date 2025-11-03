@@ -69,7 +69,6 @@ fun MapScreen(
 
     FlightDetailsBottomSheet(
         aircraft = selectedAircraft,
-        userLocation = currentLocation,
         flightDetails = flightDetails,
         onDismissRequest = { aircraftViewModel.onFlightDetailsDismissed() },
         sheetState = sheetState
