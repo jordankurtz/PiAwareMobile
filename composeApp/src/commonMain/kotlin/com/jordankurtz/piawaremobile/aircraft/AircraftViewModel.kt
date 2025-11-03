@@ -61,8 +61,8 @@ class AircraftViewModel(
     private val _aircraft = MutableStateFlow<List<Pair<Aircraft, AircraftInfo?>>>(emptyList())
     val aircraft: StateFlow<List<Pair<Aircraft, AircraftInfo?>>> = _aircraft.asStateFlow()
 
-    private val _flightDetails = MutableStateFlow<Async<Flight?>>(Async.NotStarted)
-    val flightDetails: StateFlow<Async<Flight?>> = _flightDetails.asStateFlow()
+    private val _flightDetails = MutableStateFlow<Async<Flight>>(Async.NotStarted)
+    val flightDetails: StateFlow<Async<Flight>> = _flightDetails.asStateFlow()
 
     private val _receiverLocations = MutableStateFlow<Map<Server, Location>>(emptyMap())
     val receiverLocations: StateFlow<Map<Server, Location>> = _receiverLocations.asStateFlow()
@@ -152,8 +152,12 @@ class AircraftViewModel(
     }
 
     fun openFlightInformation(selectedAircraft: String?) {
+        if (selectedAircraft == null) return resetLookup()
         val flight = _aircraft.value.firstOrNull { it.first.hex == selectedAircraft }?.first?.flight
-            ?: return resetLookup()
+        if (flight.isNullOrBlank()) {
+            _flightDetails.value = Async.Error("Flight information not available for this aircraft.")
+            return
+        }
         if (settings?.enableFlightAwareApi == true && settings?.flightAwareApiKey?.isNotEmpty() == true) {
             lookupFlight(flight)
         } else {

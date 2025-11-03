@@ -31,9 +31,11 @@ import kotlin.time.Instant
 
 @Composable
 fun FlightDetailsBottomSheet(
-    flightDetails: Async<Flight?>,
+    flightDetails: Async<Flight>,
     onDismissRequest: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(),
+    sheetState: SheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    ),
 ) {
     if (flightDetails !is Async.NotStarted) {
         ModalBottomSheet(
@@ -49,35 +51,33 @@ fun FlightDetailsBottomSheet(
                 when (flightDetails) {
                     is Async.Error -> Text(text = "Error: ${flightDetails.message}")
                     Async.Loading -> CircularProgressIndicator()
-                    is Async.Success<*> -> {
-                        val flight = flightDetails.data as? Flight
-                        if (flight != null) {
-                            Text(text = "Flight ${flight.ident}", style = MaterialTheme.typography.headlineSmall)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            HorizontalDivider()
-                            Spacer(modifier = Modifier.height(16.dp))
+                    is Async.Success -> {
+                        val flight = flightDetails.data
+                        Text(text = "Flight ${flight.ident}", style = MaterialTheme.typography.headlineSmall)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                            flight.origin?.let {
-                                AirportInfo(
-                                    title = "Departure",
-                                    airport = it,
-                                    scheduledTime = flight.scheduledOut,
-                                    actualTime = flight.actualOut,
-                                    estimatedTime = flight.estimatedOut
-                                )
-                            }
+                        flight.origin?.let {
+                            AirportInfo(
+                                title = "Departure",
+                                airport = it,
+                                scheduledTime = flight.scheduledOut,
+                                actualTime = flight.actualOut,
+                                estimatedTime = flight.estimatedOut
+                            )
+                        }
 
-                            FlightProgress(flight = flight)
+                        FlightProgress(flight = flight)
 
-                            flight.destination?.let {
-                                AirportInfo(
-                                    title = "Destination",
-                                    airport = it,
-                                    scheduledTime = flight.scheduledIn,
-                                    actualTime = flight.actualIn,
-                                    estimatedTime = flight.estimatedIn
-                                )
-                            }
+                        flight.destination?.let {
+                            AirportInfo(
+                                title = "Destination",
+                                airport = it,
+                                scheduledTime = flight.scheduledIn,
+                                actualTime = flight.actualIn,
+                                estimatedTime = flight.estimatedIn
+                            )
                         }
                     }
 

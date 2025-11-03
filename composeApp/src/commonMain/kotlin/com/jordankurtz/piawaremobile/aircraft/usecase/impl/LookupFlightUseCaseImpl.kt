@@ -11,13 +11,18 @@ import kotlin.time.Clock
 class LookupFlightUseCaseImpl(
     private val aircraftRepo: AircraftRepo
 ) : LookupFlightUseCase {
-    override suspend fun invoke(ident: String): Async<Flight?> {
+    override suspend fun invoke(ident: String): Async<Flight> {
         val result = aircraftRepo.lookupFlight(ident)
         if (result is Async.Success) {
-            val filteredFlights = filterFlights(result.data.flights)
-            return Async.Success(filteredFlights)
+            val filteredFlight = filterFlights(result.data.flights)
+            if (filteredFlight != null) {
+                return Async.Success(filteredFlight)
+            }
         }
-        return Async.Success(null)
+        if (result is Async.Error) {
+            return result
+        }
+        return Async.Error("Could not find flight for $ident")
     }
 
     private fun filterFlights(flights: List<Flight>): Flight? {
