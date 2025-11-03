@@ -1,23 +1,34 @@
 package com.jordankurtz.piawaremobile.aircraft.repo
 
+import com.jordankurtz.piawaremobile.aircraft.api.AeroApi
 import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
+import com.jordankurtz.piawaremobile.model.Async
+import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.char
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.koin.core.annotation.Single
+import kotlin.time.Instant
 
 @Single(binds = [AircraftRepo::class])
-class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
+class AircraftRepoImpl(
+    private val piAwareApi: PiAwareApi,
+    private val aeroApi: AeroApi
+) : AircraftRepo {
 
     private val aircraftInfoCache = mutableMapOf<String, AircraftInfo>()
 
@@ -59,6 +70,18 @@ class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
         return when (receiverType) {
             ReceiverType.DUMP_1090 -> piAwareApi.getDump1090ReceiverInfo(host)
             ReceiverType.DUMP_978 -> piAwareApi.getDump978ReceiverInfo(host)
+        }
+    }
+
+    override suspend fun lookupFlight(ident: String): Async<FlightResponse> {
+        return try {
+            val response = aeroApi.getFlight(
+                ident = ident
+            )
+            Async.Success(response)
+        } catch (e: Exception) {
+            println("Failed to fetch flight for ident $ident: ${e.message}")
+            Async.Error("Failed to fetch flight for ident $ident", e)
         }
     }
 
@@ -109,4 +132,25 @@ class AircraftRepoImpl(private val piAwareApi: PiAwareApi) : AircraftRepo {
 
 fun List<Aircraft>.filterNoLocation(): List<Aircraft> {
     return this.filter { it.lat != 0.0 && it.lon != 0.0 }
+}
+
+private fun Instant.toFormattedString(): String {
+    val localDateTime = toLocalDateTime(TimeZone.currentSystemDefault())
+
+    // Define a custom format using the DSL
+    val formatter = LocalDateTime.Format {
+        year()
+        char('-')
+        monthNumber()
+        char('-')
+        day()
+        char('T')
+        hour()
+        char(':')
+        minute()
+        char(':')
+        second()
+        char('Z')
+    }
+    return formatter.format(localDateTime)
 }
