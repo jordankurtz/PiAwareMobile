@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 
 @Serializable
 data class Flight(
@@ -74,29 +75,29 @@ data class Flight(
     val terminalDestination: String?,
     val type: String,
     @SerialName("scheduled_out")
-    val scheduledOut: String?,
+    val scheduledOut: Instant?,
     @SerialName("estimated_out")
-    val estimatedOut: String?,
+    val estimatedOut: Instant?,
     @SerialName("actual_out")
-    val actualOut: String?,
+    val actualOut: Instant?,
     @SerialName("scheduled_off")
-    val scheduledOff: String?,
+    val scheduledOff: Instant?,
     @SerialName("estimated_off")
-    val estimatedOff: String?,
+    val estimatedOff: Instant?,
     @SerialName("actual_off")
-    val actualOff: String?,
+    val actualOff: Instant?,
     @SerialName("scheduled_on")
-    val scheduledOn: String?,
+    val scheduledOn: Instant?,
     @SerialName("estimated_on")
-    val estimatedOn: String?,
+    val estimatedOn: Instant?,
     @SerialName("actual_on")
-    val actualOn: String?,
+    val actualOn: Instant?,
     @SerialName("scheduled_in")
-    val scheduledIn: String?,
+    val scheduledIn: Instant?,
     @SerialName("estimated_in")
-    val estimatedIn: String?,
+    val estimatedIn: Instant?,
     @SerialName("actual_in")
-    val actualIn: String?,
+    val actualIn: Instant?,
     @SerialName("foresight_predictions_available")
     val foresightPredictionsAvailable: Boolean
 )

@@ -10,8 +10,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jordankurtz.piawaremobile.UrlHandler
-import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
@@ -20,17 +18,14 @@ import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.annotation.Factory
@@ -61,20 +56,13 @@ private const val MIN_LEVEL = 1
 private const val X0 = -2.0037508342789248E7
 private const val USER_LOCATION_MARKER_ID = "user_location"
 private val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = 256)
-private val dateFormatter = LocalDateTime.Format {
-    year()
-    monthNumber()
-    dayOfMonth()
-}
 
 @OptIn(FlowPreview::class)
 @Factory
 class MapViewModel(
     private val mapProvider: TileStreamProvider,
-    private val urlHandler: UrlHandler,
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
-    @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     private val loadSettingsUseCase: LoadSettingsUseCase,
 ) : ViewModel() {
 
@@ -82,15 +70,22 @@ class MapViewModel(
     private var settings: Settings? = null
     private val previousAircraftMarkerIds = mutableSetOf<String>()
 
+    private val _selectedAircraft = MutableStateFlow<String?>(null)
+    val selectedAircraft: StateFlow<String?> = _selectedAircraft
+
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
         minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
     }.apply {
         addLayer(mapProvider)
 
         onMarkerClick { id, _, _ ->
-            if (!id.startsWith("fake")) {
-                openFlightPage(id)
-            }
+                if (previousAircraftMarkerIds.contains(id)) {
+                    if (_selectedAircraft.value == id) {
+                        _selectedAircraft.value = null
+                    } else {
+                        _selectedAircraft.value = id
+                    }
+                }
         }
     }
 
@@ -179,7 +174,7 @@ class MapViewModel(
             val location = doProjection(plane.lat, plane.lon)
 
             state.addMarker(
-                (plane.flight ?: "fake=${plane.hex}").also { previousAircraftMarkerIds.add(it) },
+                plane.hex.also { previousAircraftMarkerIds.add(it) },
                 location.first,
                 location.second
             ) {
@@ -191,23 +186,6 @@ class MapViewModel(
                         .rotate(plane.track),
                     colorFilter = ColorFilter.tint(getColorForAltitude(plane.altitude))
                 )
-            }
-        }
-    }
-
-    private fun openFlightPage(flight: String) {
-        viewModelScope.launch(mainDispatcher) {
-            val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            val url = "https://www.flightaware.com/live/flight/$flight/history/${
-                dateFormatter.format(
-                    dateString
-                )
-            }"
-
-            if (settings?.openUrlsExternally == true) {
-                urlHandler.openUrlExternally(url)
-            } else {
-                urlHandler.openUrlInternally(url)
             }
         }
     }
