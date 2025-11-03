@@ -21,4 +21,7 @@
     <string name="show_user_location_description">Show the user's current location on the map</string>
     <string name="open_urls_externally_title">Open URLs externally</string>
     <string name="open_urls_externally_description">Open aircraft and receiver URLs in an external browser</string>
+    <string name="enable_flightaware_api_title">Enable FlightAware API</string>
+    <string name="enable_flightaware_api_description">Use the FlightAware API to get more information about flights</string>
+    <string name="flightaware_api_key_title">FlightAware API Key</string>
 </resources>
