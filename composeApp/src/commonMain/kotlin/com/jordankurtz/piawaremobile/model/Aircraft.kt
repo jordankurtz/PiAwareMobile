@@ -13,7 +13,7 @@ data class Aircraft (
     val squawk: String? = null,
     val category: String? = null,
     @SerialName("alt_baro")
-    val altBaro: Int? = null,
+    val altBaro: String? = null,
     @SerialName("alt_geom")
     val altGeom: Int? = null,
     val gs: Float? = null,

@@ -122,7 +122,10 @@ fun FlightDetailsBottomSheet(
 private fun DetailsTab(aircraft: Aircraft?, userLocation: Location?) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(16.dp))
-        MiniMap(aircraft)
+        MiniMap(
+            aircraft = aircraft,
+            userLocation = userLocation
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -220,16 +223,17 @@ private fun RouteTab(flight: Flight) {
 @Composable
 fun MiniMap(
     aircraft: Aircraft?,
-    miniMapViewModel: MiniMapViewModel = koinViewModel()
+    userLocation: Location?,
+    miniMapViewModel: MiniMapViewModel = koinViewModel(),
 ) {
-    LaunchedEffect(aircraft) {
-        miniMapViewModel.setAircraft(aircraft)
+    LaunchedEffect(key1 = aircraft, key2 = userLocation) {
+        miniMapViewModel.updateMapState(aircraft = aircraft, location = userLocation)
     }
 
     Card {
         OpenStreetMap(
             state = miniMapViewModel.state,
-            modifier = Modifier.height(200.dp)
+            modifier = Modifier.height(height = 200.dp),
         )
     }
 }

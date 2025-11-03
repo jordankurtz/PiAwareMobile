@@ -14,12 +14,17 @@ const val TILE_SIZE = 256
 private const val X0 = -2.0037508342789248E7
 val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = TILE_SIZE)
 
+const val GROUND_ALTITUDE = "ground"
+
 fun mapSizeAtLevel(wmtsLevel: Int, tileSize: Int): Int {
     return tileSize * 2.0.pow(wmtsLevel).toInt()
 }
 
-fun getColorForAltitude(altitude: Int?): Color {
-    return when (altitude ?: 0) {
+fun getColorForAltitude(altitude: String?): Color {
+    if (altitude == GROUND_ALTITUDE) {
+        return Color(139, 69, 19)
+    }
+    return when (altitude?.toIntOrNull() ?: 0) {
         in 0..250 -> Color(255, 64, 0)
         in 251..500 -> Color(255, 128, 0)
         in 501..750 -> Color(255, 160, 0)

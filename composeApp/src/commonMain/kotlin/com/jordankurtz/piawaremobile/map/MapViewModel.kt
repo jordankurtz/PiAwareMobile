@@ -163,23 +163,21 @@ class MapViewModel(
         previousAircraftMarkerIds.clear()
 
         aircraft.forEach { (plane, _) ->
-            if (plane.lat != null && plane.lon != null) {
-                val location = doProjection(plane.lat, plane.lon)
+            val location = doProjection(plane.lat, plane.lon)
 
-                state.addMarker(
-                    plane.hex.also { previousAircraftMarkerIds.add(it) },
-                    location.first,
-                    location.second
-                ) {
-                    Image(
-                        painter = painterResource(Res.drawable.ic_plane),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(30.dp)
-                            .rotate(plane.track ?: 0f),
-                        colorFilter = ColorFilter.tint(getColorForAltitude(plane.altBaro))
-                    )
-                }
+            state.addMarker(
+                plane.hex.also { previousAircraftMarkerIds.add(it) },
+                location.first,
+                location.second
+            ) {
+                Image(
+                    painter = painterResource(Res.drawable.ic_plane),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(30.dp)
+                        .rotate(plane.track ?: 0f),
+                    colorFilter = ColorFilter.tint(getColorForAltitude(plane.altBaro))
+                )
             }
         }
     }
