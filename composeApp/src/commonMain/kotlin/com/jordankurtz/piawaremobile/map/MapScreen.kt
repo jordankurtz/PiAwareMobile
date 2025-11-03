@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -28,10 +27,11 @@ fun MapScreen(
     val receiverLocations by aircraftViewModel.receiverLocations.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val numberOfPlanes by aircraftViewModel.numberOfPlanes.collectAsState()
-    val selectedAircraft by mapViewModel.selectedAircraft.collectAsState()
+    val selectedAircraftHex by mapViewModel.selectedAircraft.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
 
     LaunchedEffect(aircraft) {
         mapViewModel.onAircraftUpdated(aircraft)
@@ -51,8 +51,8 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(selectedAircraft) {
-        aircraftViewModel.openFlightInformation(selectedAircraft)
+    LaunchedEffect(selectedAircraftHex) {
+        aircraftViewModel.openFlightInformation(selectedAircraftHex)
     }
 
     Box {
@@ -63,7 +63,13 @@ fun MapScreen(
         )
     }
 
+    val selectedAircraft = selectedAircraftHex?.let { hex ->
+        aircraft.firstOrNull { it.first.hex == hex }?.first
+    }
+
     FlightDetailsBottomSheet(
+        aircraft = selectedAircraft,
+        userLocation = currentLocation,
         flightDetails = flightDetails,
         onDismissRequest = { aircraftViewModel.onFlightDetailsDismissed() },
         sheetState = sheetState

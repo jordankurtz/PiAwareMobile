@@ -9,7 +9,8 @@ data class Aircraft (
     val lat: Double = 0.0,
     val lon: Double = 0.0,
     val flight: String? = null,
-    val track: Float = 0f,
+    val track: Float? = null,
+    val squawk: String? = null,
     val category: String? = null,
     @SerialName("alt_baro")
     val altBaro: Int? = null,
