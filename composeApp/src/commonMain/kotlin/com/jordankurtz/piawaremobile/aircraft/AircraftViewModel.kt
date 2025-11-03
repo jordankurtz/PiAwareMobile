@@ -61,8 +61,8 @@ class AircraftViewModel(
     private val _aircraft = MutableStateFlow<List<Pair<Aircraft, AircraftInfo?>>>(emptyList())
     val aircraft: StateFlow<List<Pair<Aircraft, AircraftInfo?>>> = _aircraft.asStateFlow()
 
-    private val _flightDetails = MutableStateFlow<Async<Flight>>(Async.NotStarted)
-    val flightDetails: StateFlow<Async<Flight>> = _flightDetails.asStateFlow()
+    private val _flightDetails = MutableStateFlow<Async<Pair<Aircraft, Flight>>>(Async.NotStarted)
+    val flightDetails: StateFlow<Async<Pair<Aircraft, Flight>>> = _flightDetails.asStateFlow()
 
     private val _receiverLocations = MutableStateFlow<Map<Server, Location>>(emptyMap())
     val receiverLocations: StateFlow<Map<Server, Location>> = _receiverLocations.asStateFlow()
@@ -88,11 +88,16 @@ class AircraftViewModel(
         }
     }
 
-    fun lookupFlight(flight: String) {
+    private fun lookupFlight(aircraft: Aircraft) {
         viewModelScope.launch {
             _flightDetails.value = Async.Loading
-            val result = lookupFlightUseCase(flight)
-            _flightDetails.value = result
+            when (val result = lookupFlightUseCase(aircraft.flight!!)) {
+                is Async.Success -> _flightDetails.value = Async.Success(aircraft to result.data)
+                is Async.Error -> _flightDetails.value = Async.Error(result.message)
+                else -> {
+                    // Nothing to do
+                }
+            }
         }
     }
 
@@ -153,15 +158,15 @@ class AircraftViewModel(
 
     fun openFlightInformation(selectedAircraft: String?) {
         if (selectedAircraft == null) return resetLookup()
-        val flight = _aircraft.value.firstOrNull { it.first.hex == selectedAircraft }?.first?.flight
-        if (flight.isNullOrBlank()) {
+        val aircraft = _aircraft.value.firstOrNull { it.first.hex == selectedAircraft }?.first
+        if (aircraft?.flight.isNullOrBlank()) {
             _flightDetails.value = Async.Error("Flight information not available for this aircraft.")
             return
         }
         if (settings?.enableFlightAwareApi == true && settings?.flightAwareApiKey?.isNotEmpty() == true) {
-            lookupFlight(flight)
+            lookupFlight(aircraft!!)
         } else {
-            openFlightPage(flight)
+            openFlightPage(aircraft!!.flight!!)
         }
     }
 

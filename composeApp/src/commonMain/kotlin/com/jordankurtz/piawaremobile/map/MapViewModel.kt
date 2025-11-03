@@ -79,13 +79,13 @@ class MapViewModel(
         addLayer(mapProvider)
 
         onMarkerClick { id, _, _ ->
-                if (previousAircraftMarkerIds.contains(id)) {
-                    if (_selectedAircraft.value == id) {
-                        _selectedAircraft.value = null
-                    } else {
-                        _selectedAircraft.value = id
-                    }
+            if (previousAircraftMarkerIds.contains(id)) {
+                if (_selectedAircraft.value == id) {
+                    _selectedAircraft.value = null
+                } else {
+                    _selectedAircraft.value = id
                 }
+            }
         }
     }
 
@@ -183,15 +183,15 @@ class MapViewModel(
                     contentDescription = null,
                     modifier = Modifier
                         .size(30.dp)
-                        .rotate(plane.track),
-                    colorFilter = ColorFilter.tint(getColorForAltitude(plane.altitude))
+                        .rotate(plane.track ?: 0f),
+                    colorFilter = ColorFilter.tint(getColorForAltitude(plane.altBaro))
                 )
             }
         }
     }
 
-    private fun getColorForAltitude(altitude: String): Color {
-        return when (altitude.toIntOrNull() ?: 0) {
+    private fun getColorForAltitude(altitude: Int?): Color {
+        return when (altitude ?: 0) {
             in 0..250 -> Color(255, 64, 0)
             in 251..500 -> Color(255, 128, 0)
             in 501..750 -> Color(255, 160, 0)
@@ -222,8 +222,8 @@ class MapViewModel(
 val Location.projected: Pair<Double, Double>
     get() = doProjection(latitude, longitude)
 
-private fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double> {
-    if (abs(latitude) > 90 || abs(longitude) > 180) {
+private fun doProjection(latitude: Double?, longitude: Double?): Pair<Double, Double> {
+    if (latitude == null || longitude == null || abs(latitude) > 90 || abs(longitude) > 180) {
         error("Invalid latitude or longitude")
     }
 

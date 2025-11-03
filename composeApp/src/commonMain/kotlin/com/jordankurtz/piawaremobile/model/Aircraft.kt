@@ -12,5 +12,33 @@ data class Aircraft (
     val track: Float = 0f,
     val category: String? = null,
     @SerialName("alt_baro")
-    val altitude: String = ""
+    val altBaro: Int? = null,
+    @SerialName("alt_geom")
+    val altGeom: Int? = null,
+    val gs: Float? = null,
+    @SerialName("baro_rate")
+    val baroRate: Int? = null,
+    @SerialName("nav_qnh")
+    val navQnh: Float? = null,
+    @SerialName("nav_altitude_mcp")
+    val navAltitudeMcp: Int? = null,
+    @SerialName("nav_heading")
+    val navHeading: Float? = null,
+    val version: Int? = null,
+    val nic: Int? = null,
+    val rc: Int? = null,
+    @SerialName("seen_pos")
+    val seenPos: Float? = null,
+    @SerialName("nic_baro")
+    val nicBaro: Int? = null,
+    @SerialName("nac_p")
+    val nacP: Int? = null,
+    @SerialName("nac_v")
+    val nacV: Int? = null,
+    val sil: Int? = null,
+    @SerialName("sil_type")
+    val silType: String? = null,
+    val messages: Int? = null,
+    val seen: Float? = null,
+    val rssi: Float? = null
 )
