@@ -51,6 +51,9 @@ import piawaremobile.composeapp.generated.resources.show_receiver_locations_desc
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_title
 import piawaremobile.composeapp.generated.resources.show_user_location_description
 import piawaremobile.composeapp.generated.resources.show_user_location_title
+import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
+import piawaremobile.composeapp.generated.resources.enable_flightaware_api_description
+import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 
 @Composable
 fun MainScreen(onServersClicked: () -> Unit) {
@@ -141,6 +144,23 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     onCheckedChange = viewModel::updateOpenUrlsExternally
                 )
             }
+
+            item {
+                SettingsSwitch(
+                    title = stringResource(Res.string.enable_flightaware_api_title),
+                    description = stringResource(Res.string.enable_flightaware_api_description),
+                    checked = settings.getValue()?.enableFlightAwareApi ?: false,
+                    onCheckedChange = viewModel::updateEnableFlightAwareApi
+                )
+            }
+
+            item {
+                SettingsTextInput(
+                    title = stringResource(Res.string.flightaware_api_key_title),
+                    value = settings.getValue()?.flightAwareApiKey ?: "",
+                    onValueChange = viewModel::updateFlightAwareApiKey
+                )
+            }
         }
     }
 }
@@ -220,6 +240,48 @@ fun SettingsNumberInput(
                     .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 textStyle = MaterialTheme.typography.body1.copy(color = if (isValid) Color.Black else Color.Red)
+            )
+        }
+        Divider()
+    }
+}
+
+@Composable
+fun SettingsTextInput(
+    title: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var textValue by remember { mutableStateOf(value) }
+
+    LaunchedEffect(value) {
+        textValue = value
+    }
+
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = title, style = MaterialTheme.typography.body1)
+
+            BasicTextField(
+                value = textValue,
+                onValueChange = {
+                    textValue = it
+                    onValueChange(it)
+                },
+                singleLine = true,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
+                    .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                textStyle = MaterialTheme.typography.body1.copy(color = Color.Black)
             )
         }
         Divider()

@@ -25,6 +25,8 @@ class SettingsRepositoryImpl(
                 showReceiverLocations = preferences[SettingsRepository.SHOW_RECEIVER_LOCATIONS] ?: false,
                 showUserLocationOnMap = preferences[SettingsRepository.SHOW_USER_LOCATION_ON_MAP] ?: false,
                 openUrlsExternally = preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] ?: false,
+                enableFlightAwareApi = preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] ?: false,
+                flightAwareApiKey = preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] ?: ""
             )
         }
     }
@@ -38,6 +40,8 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.SHOW_RECEIVER_LOCATIONS] = settings.showReceiverLocations
             preferences[SettingsRepository.SHOW_USER_LOCATION_ON_MAP] = settings.showUserLocationOnMap
             preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] = settings.openUrlsExternally
+            preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] = settings.enableFlightAwareApi
+            preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] = settings.flightAwareApiKey
         }
     }
 }

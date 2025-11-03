@@ -7,6 +7,8 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetFlightAwareApiKeyUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
@@ -26,6 +28,8 @@ class SettingsViewModel(
     private val setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase,
     private val setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase,
     private val setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase,
+    private val setEnableFlightAwareApiUseCase: SetEnableFlightAwareApiUseCase,
+    private val setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase,
 ) : ViewModel() {
 
     val settings: StateFlow<Async<Settings>>
@@ -58,5 +62,13 @@ class SettingsViewModel(
 
     fun updateOpenUrlsExternally(enabled: Boolean) = viewModelScope.launch {
         setOpenUrlsExternallyUseCase(enabled)
+    }
+
+    fun updateEnableFlightAwareApi(enabled: Boolean) = viewModelScope.launch {
+        setEnableFlightAwareApiUseCase(enabled)
+    }
+
+    fun updateFlightAwareApiKey(apiKey: String) = viewModelScope.launch {
+        setFlightAwareApiKeyUseCase(apiKey)
     }
 }
