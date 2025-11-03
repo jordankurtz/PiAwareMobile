@@ -1,7 +1,5 @@
 package com.jordankurtz.piawaremobile.settings.ui
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,13 +9,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,8 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
@@ -38,6 +39,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.center_map_on_user_description
 import piawaremobile.composeapp.generated.resources.center_map_on_user_title
+import piawaremobile.composeapp.generated.resources.enable_flightaware_api_description
+import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
+import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
 import piawaremobile.composeapp.generated.resources.open_urls_externally_description
 import piawaremobile.composeapp.generated.resources.open_urls_externally_title
@@ -51,10 +55,8 @@ import piawaremobile.composeapp.generated.resources.show_receiver_locations_desc
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_title
 import piawaremobile.composeapp.generated.resources.show_user_location_description
 import piawaremobile.composeapp.generated.resources.show_user_location_title
-import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
-import piawaremobile.composeapp.generated.resources.enable_flightaware_api_description
-import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(onServersClicked: () -> Unit) {
     val viewModel = koinViewModel<SettingsViewModel>()
@@ -65,12 +67,15 @@ fun MainScreen(onServersClicked: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.settings_title)) },
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         }
-    ) {
+    ) { paddingValues ->
         LazyColumn(
+            modifier = Modifier.padding(paddingValues),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             item {
@@ -79,15 +84,17 @@ fun MainScreen(onServersClicked: () -> Unit) {
 
 
             item {
-                SettingsItem(title = stringResource(Res.string.servers_title), onClick = onServersClicked, trailingIcon = {
-                    Image(
-                        painter = painterResource(Res.drawable.ic_chevron_right),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(
-                            MaterialTheme.colors.onBackground
+                SettingsItem(
+                    title = stringResource(Res.string.servers_title),
+                    onClick = onServersClicked,
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_chevron_right),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
-                    )
-                })
+                    }
+                )
             }
 
 
@@ -169,8 +176,8 @@ fun MainScreen(onServersClicked: () -> Unit) {
 fun SettingsSection(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.subtitle2,
-        color = Color.Gray,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -193,13 +200,13 @@ fun SettingsItem(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.body1,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
 
             trailingIcon?.invoke()
         }
-        Divider()
+        HorizontalDivider()
     }
 }
 
@@ -214,20 +221,26 @@ fun SettingsNumberInput(
     val isValid = textValue.toIntOrNull() != null
 
     LaunchedEffect(value) {
-        textValue = value.toString()
+        if (textValue.toIntOrNull() != value) {
+            textValue = value.toString()
+        }
     }
 
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = title, style = MaterialTheme.typography.body1)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
 
-            BasicTextField(
+            OutlinedTextField(
                 value = textValue,
                 onValueChange = {
                     textValue = it
@@ -235,14 +248,14 @@ fun SettingsNumberInput(
                 },
                 singleLine = true,
                 modifier = Modifier
-                    .width(60.dp)
-                    .padding(start = 8.dp)
-                    .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                textStyle = MaterialTheme.typography.body1.copy(color = if (isValid) Color.Black else Color.Red)
+                    .width(80.dp)
+                    .padding(start = 16.dp),
+                textStyle = MaterialTheme.typography.bodyLarge,
+                isError = !isValid,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
         }
-        Divider()
+        HorizontalDivider()
     }
 }
 
@@ -256,35 +269,23 @@ fun SettingsTextInput(
     var textValue by remember { mutableStateOf(value) }
 
     LaunchedEffect(value) {
-        textValue = value
+        if (textValue != value) {
+            textValue = value
+        }
     }
 
-    Column(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = title, style = MaterialTheme.typography.body1)
-
-            BasicTextField(
-                value = textValue,
-                onValueChange = {
-                    textValue = it
-                    onValueChange(it)
-                },
-                singleLine = true,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp)
-                    .background(Color.LightGray, shape = RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                textStyle = MaterialTheme.typography.body1.copy(color = Color.Black)
-            )
-        }
-        Divider()
+    Column(modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        OutlinedTextField(
+            value = textValue,
+            onValueChange = {
+                textValue = it
+                onValueChange(it)
+            },
+            label = { Text(title) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            textStyle = MaterialTheme.typography.bodyLarge
+        )
     }
 }
 
@@ -310,20 +311,20 @@ fun SettingsSwitch(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.body1
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.caption,
-                    color = Color.Gray
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            androidx.compose.material.Switch(
+            Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 modifier = Modifier.padding(start = 16.dp)
             )
         }
-        Divider()
+        HorizontalDivider()
     }
 }

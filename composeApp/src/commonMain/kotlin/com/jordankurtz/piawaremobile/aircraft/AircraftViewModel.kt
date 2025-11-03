@@ -67,9 +67,8 @@ class AircraftViewModel(
     private val _receiverLocations = MutableStateFlow<Map<Server, Location>>(emptyMap())
     val receiverLocations: StateFlow<Map<Server, Location>> = _receiverLocations.asStateFlow()
 
-    val numberOfPlanes: StateFlow<Int>
-        get() = _numberOfPlanes
     private val _numberOfPlanes = MutableStateFlow(0)
+    val numberOfPlanes: StateFlow<Int> = _numberOfPlanes.asStateFlow()
 
     private var pollingJob: Job? = null
 
