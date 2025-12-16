@@ -1,6 +1,8 @@
 package com.jordankurtz.piawaremobile
 
 import android.app.Application
+import com.jordankurtz.consolelogger.ConsoleLogger
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.modules.AppModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -11,6 +13,8 @@ class Application: Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        Logger.addWriter(ConsoleLogger())
 
         startKoin {
             androidContext(this@Application)

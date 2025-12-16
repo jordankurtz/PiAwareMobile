@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.aircraft.api.impl
 
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
@@ -22,7 +23,7 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
                 httpClient.get("http://$host/data/aircraft.json").body<PiAwareResponse>()
             response.aircraft
         } catch (e: Exception) {
-            println("Error fetching aircraft: ${e.message}")
+            Logger.e("Error fetching aircraft", e)
             emptyList()
         }
     }
@@ -32,7 +33,7 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
             httpClient.get("http://$host/db/aircraft_types/icao_aircraft_types.json")
                 .body<Map<String, ICAOAircraftType>>()
         } catch (e: Exception) {
-            println("Error fetching aircraft types: ${e.message}")
+            Logger.e("Error fetching aircraft types", e)
             emptyMap()
         }
     }
@@ -40,12 +41,12 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
     override suspend fun getAircraftInfo(host: String, bkey: String): JsonObject? {
         return "http://$host/db/$bkey.json".let { key ->
             aircraftInfoMap[key] ?: try {
-                println("Making request to $key")
+                Logger.d("Making request to $key")
                 httpClient.get(
                     key
                 ).body<JsonObject>().also { aircraftInfoMap[key] = it }
             } catch (e: Exception) {
-                println("Error fetching aircraft info: ${e.message}")
+                Logger.e("Error fetching aircraft info", e)
                 null
             }
         }
@@ -56,7 +57,7 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
             httpClient.get("http://$host/data/receiver.json")
                 .body<Receiver>()
         } catch (e: Exception) {
-            println(e.message)
+            Logger.e("Failed to get dump1090 receiver info", e)
             null
         }
     }
@@ -66,7 +67,7 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
             httpClient.get("http://$host/data-978/receiver.json")
                 .body<Receiver>()
         } catch (e: Exception) {
-            println(e.message)
+            Logger.e("Failed to get dump978 receiver info", e)
             null
         }
     }

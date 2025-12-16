@@ -52,6 +52,8 @@ kotlin {
             implementation(libs.androidx.browser)
         }
         commonMain.dependencies {
+            implementation(project(":console-logger"))
+            implementation(project(":logger"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
