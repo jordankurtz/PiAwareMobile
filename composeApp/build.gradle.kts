@@ -166,13 +166,13 @@ buildkonfig {
             buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.android").getOrElse(""))
         }
         create("iosX64") {
-            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse("fdsafs"))
+            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse(""))
         }
         create("iosArm64") {
-            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse("fdsafs"))
+            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse(""))
         }
         create("iosSimulatorArm64") {
-            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse("fdsafs"))
+            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse(""))
         }
         create("desktop") {
             buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.desktop").getOrElse(""))
