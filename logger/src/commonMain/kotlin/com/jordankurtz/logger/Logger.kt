@@ -7,6 +7,10 @@ object Logger {
         writers.add(writer)
     }
 
+    fun clearWriters() {
+        writers.clear()
+    }
+
     fun v(message: String) = log(VERBOSE, message)
     fun d(message: String) = log(DEBUG, message)
     fun i(message: String) = log(INFO, message)
