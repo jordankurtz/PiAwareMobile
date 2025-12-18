@@ -31,3 +31,4 @@ dependencyResolutionManagement {
 include(":composeApp")
 include(":logger")
 include(":console-logger")
+include(":sentry-logger")

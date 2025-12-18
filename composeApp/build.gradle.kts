@@ -1,6 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -10,6 +11,7 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.mokkery)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
@@ -54,6 +56,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":console-logger"))
             implementation(project(":logger"))
+            implementation(project(":sentry-logger"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -145,6 +148,34 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.jordankurtz.piawaremobile"
             packageVersion = "1.0.0"
+        }
+    }
+}
+
+buildkonfig {
+    packageName = "com.jordankurtz.piawaremobile"
+    objectName = "BuildConfig"
+
+    defaultConfigs {
+        buildConfigField(STRING, "SENTRY_DSN", "")
+
+    }
+
+    targetConfigs {
+        create("android") {
+            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.android").getOrElse(""))
+        }
+        create("iosX64") {
+            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse("fdsafs"))
+        }
+        create("iosArm64") {
+            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse("fdsafs"))
+        }
+        create("iosSimulatorArm64") {
+            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse("fdsafs"))
+        }
+        create("desktop") {
+            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.desktop").getOrElse(""))
         }
     }
 }
