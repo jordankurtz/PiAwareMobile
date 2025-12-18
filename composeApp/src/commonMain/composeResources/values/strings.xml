@@ -13,12 +13,30 @@
     <string name="restore_map_position_description">Save and restore the last map position and zoom level on start</string>
     <string name="show_receiver_locations_title">Show receiver locations</string>
     <string name="show_receiver_locations_description">Display a marker for each configured server's location on the map</string>
-    <!--    <string name="planes_count">%d planes</string>-->
-    <string name="planes_count">planes</string>
+        <string name="planes_count">%1$d planes</string>
+<!--    <string name="planes_count">planes</string>-->
     <string name="openstreetmap_copyright">© OpenStreetMap contributors</string>
     <string name="user_location_content_description">User Location</string>
     <string name="show_user_location_title">Show User Location on Map</string>
     <string name="show_user_location_description">Show the user's current location on the map</string>
     <string name="open_urls_externally_title">Open URLs externally</string>
     <string name="open_urls_externally_description">Open aircraft and receiver URLs in an external browser</string>
+    <string name="enable_flightaware_api_title">Enable FlightAware API</string>
+    <string name="enable_flightaware_api_description">Use the FlightAware API to get more information about flights</string>
+    <string name="flightaware_api_key_title">FlightAware API Key</string>
+
+    <string name="flight_details_error">Error: %1$s</string>
+    <string name="flight_details_flight_number">Flight %1$s</string>
+    <string name="flight_details_departure">Departure</string>
+    <string name="flight_details_destination">Destination</string>
+    <string name="flight_details_flight_progress">Flight progress</string>
+    <string name="flight_details_remaining_time">%1$s remaining</string>
+    <string name="flight_details_scheduled">Scheduled: %1$s</string>
+    <string name="flight_details_actual">Actual: %1$s %2$s</string>
+    <string name="flight_details_estimated">Estimated: %1$s %2$s</string>
+    <string name="flight_details_on_time">(on time)</string>
+    <string name="flight_details_minutes_short">%1$dm</string>
+    <string name="flight_details_hours_minutes_short">%1$dh %2$dm</string>
+    <string name="flight_details_airport_name_code">%1$s (%2$s)</string>
+    <string name="flight_details_minutes_diff">(%1$s%2$dm)</string>
 </resources>

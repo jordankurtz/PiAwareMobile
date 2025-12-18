@@ -17,6 +17,8 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
         freeCompilerArgs.add("-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi")
         freeCompilerArgs.add("-Xopt-in=kotlin.uuid.ExperimentalUuidApi")
+        freeCompilerArgs.add("-opt-in=androidx.compose.material3.ExperimentalMaterial3Api")
+        freeCompilerArgs.add("-Xopt-in=kotlin.time.ExperimentalTime")
     }
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -52,8 +54,11 @@ kotlin {
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material)
+            implementation(compose.material3)
             implementation(compose.ui)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.map)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
@@ -68,10 +73,6 @@ kotlin {
             api(libs.koin.annotations)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.datastore.preferences)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.material)
-            implementation(libs.compose.map)
             implementation(libs.multiplatform.settings.datastore)
             implementation(libs.multiplatform.settings.coroutines)
         }

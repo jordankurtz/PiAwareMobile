@@ -1,6 +1,7 @@
 
 package com.jordankurtz.piawaremobile.aircraft.api
 
+import com.jordankurtz.piawaremobile.aircraft.api.impl.PiAwareApiImpl
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.PiAwareResponse

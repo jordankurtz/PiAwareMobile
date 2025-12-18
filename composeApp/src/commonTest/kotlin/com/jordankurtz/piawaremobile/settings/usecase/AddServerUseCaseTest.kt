@@ -13,6 +13,7 @@ import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -23,15 +24,16 @@ class AddServerUseCaseTest {
 
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var addServerUseCase: AddServerUseCase
+    private val testDispatcher = StandardTestDispatcher()
 
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        addServerUseCase = AddServerUseCaseImpl(settingsRepository)
+        addServerUseCase = AddServerUseCaseImpl(settingsRepository, testDispatcher)
     }
 
     @Test
-    fun `invoke should add server to settings`() = runTest {
+    fun `invoke should add server to settings`() = runTest(testDispatcher) {
         // Given
         val initialSettings = Settings(
             servers = emptyList(),
@@ -39,7 +41,10 @@ class AddServerUseCaseTest {
             centerMapOnUserOnStart = false,
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
-            showUserLocationOnMap = false
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
 

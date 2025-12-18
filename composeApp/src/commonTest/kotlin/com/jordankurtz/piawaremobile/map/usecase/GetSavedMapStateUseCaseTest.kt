@@ -8,6 +8,7 @@ import dev.mokkery.everySuspend
 import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode.Companion.exactly
 import dev.mokkery.verifySuspend
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -17,15 +18,16 @@ class GetSavedMapStateUseCaseTest {
 
     private lateinit var mapStateRepository: MapStateRepository
     private lateinit var getSavedMapStateUseCase: GetSavedMapStateUseCase
+    private val testDispatcher = StandardTestDispatcher()
 
     @BeforeTest
     fun setUp() {
         mapStateRepository = mock()
-        getSavedMapStateUseCase = GetSavedMapStateUseCaseImpl(mapStateRepository)
+        getSavedMapStateUseCase = GetSavedMapStateUseCaseImpl(mapStateRepository, testDispatcher)
     }
 
     @Test
-    fun `invoke should return map state from repository`() = runTest {
+    fun `invoke should return map state from repository`() = runTest(testDispatcher) {
         // Given
         val expectedMapState = MapState(scrollX = 0.5, scrollY = 0.5, zoom = 4.0)
         everySuspend { mapStateRepository.getSavedMapState() } returns expectedMapState

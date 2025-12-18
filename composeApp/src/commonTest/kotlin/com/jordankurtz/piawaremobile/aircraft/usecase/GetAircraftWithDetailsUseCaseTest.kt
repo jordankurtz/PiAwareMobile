@@ -7,6 +7,7 @@ import com.jordankurtz.piawaremobile.model.AircraftInfo
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -16,6 +17,7 @@ class GetAircraftWithDetailsUseCaseTest {
 
     private lateinit var aircraftRepo: AircraftRepo
     private lateinit var useCase: GetAircraftWithDetailsUseCase
+    private val testDispatcher = StandardTestDispatcher()
 
     private val mockAircraft1 = Aircraft(hex = "a8b2c3", flight = "SWA123", lat = 32.7, lon = -96.8)
     private val mockAircraft2 = Aircraft(hex = "a1b2c3", flight = "DAL456", lat = 32.8, lon = -96.9)
@@ -25,11 +27,11 @@ class GetAircraftWithDetailsUseCaseTest {
     @BeforeTest
     fun setup() {
         aircraftRepo = mock()
-        useCase = GetAircraftWithDetailsUseCaseImpl(aircraftRepo)
+        useCase = GetAircraftWithDetailsUseCaseImpl(aircraftRepo, testDispatcher)
     }
 
     @Test
-    fun `invoke returns aircraft with details`() = runTest {
+    fun `invoke returns aircraft with details`() = runTest(testDispatcher) {
         val servers = listOf("server1", "server2")
         val infoHost = "server1"
         everySuspend { aircraftRepo.getAircraft(servers) } returns listOf(mockAircraft1, mockAircraft2)
@@ -44,7 +46,7 @@ class GetAircraftWithDetailsUseCaseTest {
     }
 
     @Test
-    fun `invoke handles case where aircraft info is not found`() = runTest {
+    fun `invoke handles case where aircraft info is not found`() = runTest(testDispatcher) {
         val servers = listOf("server1", "server2")
         val infoHost = "server1"
         everySuspend { aircraftRepo.getAircraft(servers) } returns listOf(mockAircraft1)
@@ -57,7 +59,7 @@ class GetAircraftWithDetailsUseCaseTest {
     }
 
     @Test
-    fun `invoke returns empty list when no aircraft are found`() = runTest {
+    fun `invoke returns empty list when no aircraft are found`() = runTest(testDispatcher) {
         val servers = listOf("server1")
         everySuspend { aircraftRepo.getAircraft(servers) } returns emptyList()
 

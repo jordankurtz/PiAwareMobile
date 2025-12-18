@@ -1,4 +1,4 @@
-package com.jordankurtz.piawaremobile;
+package com.jordankurtz.piawaremobile
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android

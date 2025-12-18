@@ -2,15 +2,21 @@ package com.jordankurtz.piawaremobile.aircraft
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jordankurtz.piawaremobile.UrlHandler
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.LookupFlightUseCase
+import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.Async
+import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
+import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -25,8 +31,19 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.koin.core.annotation.Factory
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+
+
+private val dateFormatter = LocalDateTime.Format {
+    year()
+    monthNumber()
+    day()
+}
 
 @Factory
 class AircraftViewModel(
@@ -34,17 +51,24 @@ class AircraftViewModel(
     private val getAircraftWithDetailsUseCase: GetAircraftWithDetailsUseCase,
     private val getReceiverLocationUseCase: GetReceiverLocationUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
+    private val lookupFlightUseCase: LookupFlightUseCase,
+    private val urlHandler: UrlHandler,
+    @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
+
+    var settings: Settings? = null
 
     private val _aircraft = MutableStateFlow<List<Pair<Aircraft, AircraftInfo?>>>(emptyList())
     val aircraft: StateFlow<List<Pair<Aircraft, AircraftInfo?>>> = _aircraft.asStateFlow()
 
+    private val _flightDetails = MutableStateFlow<Async<Flight>>(Async.NotStarted)
+    val flightDetails: StateFlow<Async<Flight>> = _flightDetails.asStateFlow()
+
     private val _receiverLocations = MutableStateFlow<Map<Server, Location>>(emptyMap())
     val receiverLocations: StateFlow<Map<Server, Location>> = _receiverLocations.asStateFlow()
 
-    val numberOfPlanes: StateFlow<Int>
-        get() = _numberOfPlanes
     private val _numberOfPlanes = MutableStateFlow(0)
+    val numberOfPlanes: StateFlow<Int> = _numberOfPlanes.asStateFlow()
 
     private var pollingJob: Job? = null
 
@@ -52,14 +76,31 @@ class AircraftViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             loadSettingsUseCase().collect {
                 if (it is Async.Success) {
-                    val settings = it.data
-                    if (settings.showReceiverLocations) {
-                        loadReceiverLocations(settings.servers)
+                    with(it.data) {
+                        settings = this
+                        if (showReceiverLocations) {
+                            loadReceiverLocations(servers)
+                        }
+                        startPolling(servers, refreshInterval)
                     }
-                    startPolling(settings.servers, settings.refreshInterval)
                 }
             }
         }
+    }
+
+    private fun lookupFlight(flight: String) {
+        viewModelScope.launch {
+            _flightDetails.value = Async.Loading
+            _flightDetails.value = lookupFlightUseCase(flight)
+        }
+    }
+
+    private fun resetLookup() {
+        _flightDetails.value = Async.NotStarted
+    }
+
+    fun onFlightDetailsDismissed() {
+        resetLookup()
     }
 
     private fun startPolling(servers: List<Server>, refreshInterval: Int) {
@@ -107,5 +148,40 @@ class AircraftViewModel(
         }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
+    }
+
+    fun openFlightInformation(selectedAircraft: String?) {
+        if (selectedAircraft == null) {
+            resetLookup()
+            return
+        }
+        val aircraft = _aircraft.value.firstOrNull { it.first.hex == selectedAircraft }?.first
+        if (aircraft?.flight.isNullOrBlank()) {
+            _flightDetails.value = Async.Error("Flight information not available for this aircraft.")
+            return
+        }
+        if (settings?.enableFlightAwareApi == true && settings?.flightAwareApiKey?.isNotEmpty() == true) {
+            lookupFlight(aircraft.flight)
+        } else {
+            openFlightPage(aircraft.flight)
+        }
+    }
+
+    private fun openFlightPage(flight: String) {
+        //todo add toast that we can't look it up
+        viewModelScope.launch(mainDispatcher) {
+            val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            val url = "https://www.flightaware.com/live/flight/$flight/history/${
+                dateFormatter.format(
+                    dateString
+                )
+            }"
+
+            if (settings?.openUrlsExternally == true) {
+                urlHandler.openUrlExternally(url)
+            } else {
+                urlHandler.openUrlInternally(url)
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@ import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -22,15 +23,16 @@ class SetOpenUrlsExternallyUseCaseTest {
 
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase
+    private val testDispatcher = StandardTestDispatcher()
 
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        setOpenUrlsExternallyUseCase = SetOpenUrlsExternallyUseCaseImpl(settingsRepository)
+        setOpenUrlsExternallyUseCase = SetOpenUrlsExternallyUseCaseImpl(settingsRepository, testDispatcher)
     }
 
     @Test
-    fun `invoke with true should save settings with openUrlsExternally as true`() = runTest {
+    fun `invoke with true should save settings with openUrlsExternally as true`() = runTest(testDispatcher) {
         // Given
         val initialSettings = Settings(
             servers = emptyList(),
@@ -39,7 +41,9 @@ class SetOpenUrlsExternallyUseCaseTest {
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
             showUserLocationOnMap = false,
-            openUrlsExternally = false
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
         val settingsSlot = slot<Settings>()
@@ -55,7 +59,7 @@ class SetOpenUrlsExternallyUseCaseTest {
     }
 
     @Test
-    fun `invoke with false should save settings with openUrlsExternally as false`() = runTest {
+    fun `invoke with false should save settings with openUrlsExternally as false`() = runTest(testDispatcher) {
         // Given
         val initialSettings = Settings(
             servers = emptyList(),
@@ -64,7 +68,9 @@ class SetOpenUrlsExternallyUseCaseTest {
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
             showUserLocationOnMap = true,
-            openUrlsExternally = true
+            openUrlsExternally = true,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
         val settingsSlot = slot<Settings>()
