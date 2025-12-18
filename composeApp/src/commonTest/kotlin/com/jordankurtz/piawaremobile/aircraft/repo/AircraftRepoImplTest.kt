@@ -1,8 +1,12 @@
 package com.jordankurtz.piawaremobile.aircraft.repo
 
+import com.jordankurtz.piawaremobile.aircraft.api.AeroApi
 import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.Async
+import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
+import com.jordankurtz.piawaremobile.model.Links
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
 import dev.mokkery.answering.returns
@@ -20,10 +24,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class AircraftRepoImplTest {
 
     private lateinit var piAwareApi: PiAwareApi
+    private lateinit var aeroApi: AeroApi
     private lateinit var repo: AircraftRepoImpl
 
     private val mockAircraft1 = Aircraft(hex = "a8b2c3", flight = "SWA123", lat = 32.7, lon = -96.8)
@@ -38,7 +44,8 @@ class AircraftRepoImplTest {
     @BeforeTest
     fun setup() {
         piAwareApi = mock()
-        repo = AircraftRepoImpl(piAwareApi)
+        aeroApi = mock()
+        repo = AircraftRepoImpl(piAwareApi, aeroApi)
     }
 
     @Test
@@ -169,5 +176,27 @@ class AircraftRepoImplTest {
         assertEquals("N12345", result.registration)
         assertEquals("A320", result.icaoType)
         assertEquals("Airbus A320", result.typeDescription)
+    }
+
+    @Test
+    fun `lookupFlight returns success`() = runTest {
+        val mockResponse = FlightResponse(flights = emptyList(), links = null, numPages = 1)
+        everySuspend { aeroApi.getFlight(any(), any(), any(), any(), any(), any()) } returns mockResponse
+
+        val result = repo.lookupFlight("SWA123")
+
+        assertTrue(result is Async.Success)
+        assertEquals(mockResponse, (result as Async.Success).data)
+    }
+
+    @Test
+    fun `lookupFlight returns error on exception`() = runTest {
+        val exception = Exception("Network error")
+        everySuspend { aeroApi.getFlight(any(), any(), any(), any(), any(), any()) } throws exception
+
+        val result = repo.lookupFlight("SWA123")
+
+        assertTrue(result is Async.Error)
+        assertEquals("Failed to fetch flight for ident SWA123", (result as Async.Error).message)
     }
 }

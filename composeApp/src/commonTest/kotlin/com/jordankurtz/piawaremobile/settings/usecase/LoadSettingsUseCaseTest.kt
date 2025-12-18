@@ -9,6 +9,7 @@ import dev.mokkery.every
 import dev.mokkery.mock
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -19,15 +20,16 @@ class LoadSettingsUseCaseTest {
 
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var loadSettingsUseCase: LoadSettingsUseCase
+    private val testDispatcher = StandardTestDispatcher()
 
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        loadSettingsUseCase = LoadSettingsUseCaseImpl(settingsRepository)
+        loadSettingsUseCase = LoadSettingsUseCaseImpl(settingsRepository, testDispatcher)
     }
 
     @Test
-    fun `invoke returns loading then settings from repository`() = runTest {
+    fun `invoke returns loading then settings from repository`() = runTest(testDispatcher) {
         // Given
         val settings = Settings(
             servers = emptyList(),
@@ -35,7 +37,10 @@ class LoadSettingsUseCaseTest {
             centerMapOnUserOnStart = false,
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
-            showUserLocationOnMap = false
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         every { settingsRepository.getSettings() } returns flowOf(settings)
 
@@ -50,7 +55,7 @@ class LoadSettingsUseCaseTest {
     }
 
     @Test
-    fun `invoke returns distinct values`() = runTest {
+    fun `invoke returns distinct values`() = runTest(testDispatcher) {
         // Given
         val settings = Settings(
             servers = emptyList(),
@@ -58,7 +63,10 @@ class LoadSettingsUseCaseTest {
             centerMapOnUserOnStart = false,
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
-            showUserLocationOnMap = false
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         every { settingsRepository.getSettings() } returns flowOf(settings, settings)
 

@@ -13,6 +13,7 @@ import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -22,15 +23,16 @@ class SetRefreshIntervalUseCaseTest {
 
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var setRefreshIntervalUseCase: SetRefreshIntervalUseCase
+    private val testDispatcher = StandardTestDispatcher()
 
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        setRefreshIntervalUseCase = SetRefreshIntervalUseCaseImpl(settingsRepository)
+        setRefreshIntervalUseCase = SetRefreshIntervalUseCaseImpl(settingsRepository, testDispatcher)
     }
 
     @Test
-    fun `invoke should save settings with new refresh interval`() = runTest {
+    fun `invoke should save settings with new refresh interval`() = runTest(testDispatcher) {
         // Given
         val initialSettings = Settings(
             servers = emptyList(),
@@ -38,7 +40,10 @@ class SetRefreshIntervalUseCaseTest {
             centerMapOnUserOnStart = false,
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
-            showUserLocationOnMap = false
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
         val settingsSlot = slot<Settings>()

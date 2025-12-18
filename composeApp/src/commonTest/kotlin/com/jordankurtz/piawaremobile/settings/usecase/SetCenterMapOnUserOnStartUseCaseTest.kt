@@ -13,6 +13,7 @@ import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -22,15 +23,16 @@ class SetCenterMapOnUserOnStartUseCaseTest {
 
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var setCenterMapOnUserOnStartUseCase: SetCenterMapOnUserOnStartUseCase
+    private val testDispatcher = StandardTestDispatcher()
 
     @BeforeTest
     fun setUp() {
         settingsRepository = mock()
-        setCenterMapOnUserOnStartUseCase = SetCenterMapOnUserOnStartUseCaseImpl(settingsRepository)
+        setCenterMapOnUserOnStartUseCase = SetCenterMapOnUserOnStartUseCaseImpl(settingsRepository, testDispatcher)
     }
 
     @Test
-    fun `invoke with true should save settings with centerMapOnUserOnStart as true`() = runTest {
+    fun `invoke with true should save settings with centerMapOnUserOnStart as true`() = runTest(testDispatcher) {
         // Given
         val initialSettings = Settings(
             servers = emptyList(),
@@ -38,7 +40,10 @@ class SetCenterMapOnUserOnStartUseCaseTest {
             centerMapOnUserOnStart = false,
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
-            showUserLocationOnMap = false
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
         val settingsSlot = slot<Settings>()
@@ -54,7 +59,7 @@ class SetCenterMapOnUserOnStartUseCaseTest {
     }
 
     @Test
-    fun `invoke with false should save settings with centerMapOnUserOnStart as false`() = runTest {
+    fun `invoke with false should save settings with centerMapOnUserOnStart as false`() = runTest(testDispatcher) {
         // Given
         val initialSettings = Settings(
             servers = emptyList(),
@@ -62,7 +67,10 @@ class SetCenterMapOnUserOnStartUseCaseTest {
             centerMapOnUserOnStart = true,
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
-            showUserLocationOnMap = false
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
         val settingsSlot = slot<Settings>()

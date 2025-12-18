@@ -5,6 +5,8 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetFlightAwareApiKeyUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
@@ -41,6 +43,8 @@ class SettingsViewModelTest {
     private lateinit var setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase
     private lateinit var setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase
     private lateinit var setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase
+    private lateinit var setEnableFlightAwareApiUseCase: SetEnableFlightAwareApiUseCase
+    private lateinit var setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -55,6 +59,8 @@ class SettingsViewModelTest {
         setShowReceiverLocationsUseCase = mock()
         setShowUserLocationOnMapUseCase = mock()
         setOpenUrlsExternallyUseCase = mock()
+        setEnableFlightAwareApiUseCase = mock()
+        setFlightAwareApiKeyUseCase = mock()
 
         val settings = Settings(
             servers = emptyList(),
@@ -62,7 +68,10 @@ class SettingsViewModelTest {
             centerMapOnUserOnStart = false,
             restoreMapStateOnStart = false,
             showReceiverLocations = false,
-            showUserLocationOnMap = false
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = ""
         )
         every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
 
@@ -74,7 +83,9 @@ class SettingsViewModelTest {
             setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
             setShowReceiverLocationsUseCase = setShowReceiverLocationsUseCase,
             setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase,
-            setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase
+            setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase,
+            setEnableFlightAwareApiUseCase = setEnableFlightAwareApiUseCase,
+            setFlightAwareApiKeyUseCase = setFlightAwareApiKeyUseCase
         )
     }
 
@@ -91,7 +102,10 @@ class SettingsViewModelTest {
             centerMapOnUserOnStart = true,
             restoreMapStateOnStart = true,
             showReceiverLocations = true,
-            showUserLocationOnMap = true
+            showUserLocationOnMap = true,
+            openUrlsExternally = true,
+            enableFlightAwareApi = true,
+            flightAwareApiKey = "test_key"
         )
         every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
 
@@ -103,7 +117,9 @@ class SettingsViewModelTest {
             setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
             setShowReceiverLocationsUseCase = setShowReceiverLocationsUseCase,
             setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase,
-            setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase
+            setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase,
+            setEnableFlightAwareApiUseCase = setEnableFlightAwareApiUseCase,
+            setFlightAwareApiKeyUseCase = setFlightAwareApiKeyUseCase
         )
         newViewModel.settings.test {
             assertEquals(Async.NotStarted, awaitItem())
