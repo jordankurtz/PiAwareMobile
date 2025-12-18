@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.location
 
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
 import com.jordankurtz.piawaremobile.model.Location
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -114,6 +115,6 @@ private class LocationDelegate : NSObject(), CLLocationManagerDelegateProtocol {
     }
 
     override fun locationManager(manager: CLLocationManager, didFailWithError: NSError) {
-        println("Location error: ${didFailWithError.localizedDescription}")
+        Logger.e("Location error", Throwable(didFailWithError.localizedDescription))
     }
 }

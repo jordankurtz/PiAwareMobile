@@ -26,6 +26,8 @@ mokkery = "2.10.1"
 turbine = "1.2.1"
 androidx-browser = "1.9.0"
 ksp = "2.3.0"
+buildkonfig = "0.17.1"
+sentry = "0.23.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -76,3 +78,5 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version = "2.2.21" }
 mokkery = { id = "dev.mokkery", version.ref = "mokkery" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
+sentry = { id = "io.sentry.kotlin.multiplatform.gradle", version.ref = "sentry"}

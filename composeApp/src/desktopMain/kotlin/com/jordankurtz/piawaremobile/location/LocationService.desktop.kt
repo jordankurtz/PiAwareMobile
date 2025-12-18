@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.location
 
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
 import com.jordankurtz.piawaremobile.model.Location
 import kotlinx.coroutines.CoroutineScope
@@ -30,7 +31,7 @@ actual class LocationServiceImpl actual constructor(private val contextWrapper: 
                     location?.let { onLocationUpdate(it) }
                     delay(10000) // Update every 10 seconds
                 } catch (e: Exception) {
-                    println("Error fetching location: ${e.message}")
+                    Logger.e("Error fetching location", e)
                     delay(10000)
                 }
             }
@@ -70,7 +71,7 @@ actual class LocationServiceImpl actual constructor(private val contextWrapper: 
                 null
             }
         } catch (e: Exception) {
-            println("Failed to fetch IP location: ${e.message}")
+            Logger.e("Failed to fetch IP location", e)
             null
         }
     }

@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.aircraft.repo
 
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.aircraft.api.AeroApi
 import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
 import com.jordankurtz.piawaremobile.model.Aircraft
@@ -42,7 +43,7 @@ class AircraftRepoImpl(
                         piAwareApi.getAircraft(server)
                     } catch (e: Exception) {
                         // Log the error and return an empty list for the failed server
-                        println("Failed to fetch aircraft from server $server: ${e.message}")
+                        Logger.e("Failed to fetch aircraft from server $server", e)
                         emptyList()
                     }
                 }
@@ -80,7 +81,7 @@ class AircraftRepoImpl(
             )
             Async.Success(response)
         } catch (e: Exception) {
-            println("Failed to fetch flight for ident $ident: ${e.message}")
+            Logger.e("Failed to fetch flight for ident $ident", e)
             Async.Error("Failed to fetch flight for ident $ident", e)
         }
     }

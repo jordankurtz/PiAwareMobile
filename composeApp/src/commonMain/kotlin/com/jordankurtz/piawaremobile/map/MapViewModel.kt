@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
@@ -84,9 +85,18 @@ class MapViewModel(
     init {
         viewModelScope.launch {
             loadSettingsUseCase().collect {
-                if (it is Async.Success) {
-                    settings = it.data
-                    onSettingsLoaded(it.data)
+                when (it) {
+                    is Async.Success -> {
+                        settings = it.data
+                        onSettingsLoaded(it.data)
+                    }
+                    is Async.Error -> {
+                        Logger.e("Failed to load settings", it.throwable)
+                    }
+
+                    else -> {
+                        // No-op
+                    }
                 }
             }
         }
@@ -102,7 +112,7 @@ class MapViewModel(
 
     private suspend fun loadMapState() {
         val savedState = getSavedMapStateUseCase()
-        println("Restored map state $savedState")
+        Logger.d("Restored map state $savedState")
         state.setScroll(savedState.scrollX, savedState.scrollY)
         state.scale = savedState.zoom
     }
@@ -114,7 +124,7 @@ class MapViewModel(
                 .onEach { (scroll, scale) ->
                     if (scroll.x > 0.0 && scroll.y > 0.0) {
                         saveMapStateUseCase(scroll.x, scroll.y, scale)
-                        println("Saved map state $scroll, $scale")
+                        Logger.d("Saved map state $scroll, $scale")
                     }
                 }.launchIn(this)
         }
@@ -137,7 +147,7 @@ class MapViewModel(
     fun recenterOnLocation(location: Location) {
         viewModelScope.launch {
             val (x, y) = location.projected
-            println("Scrolling map to $x, $y")
+            Logger.d("Scrolling map to $x, $y")
             state.scrollTo(x, y)
         }
     }

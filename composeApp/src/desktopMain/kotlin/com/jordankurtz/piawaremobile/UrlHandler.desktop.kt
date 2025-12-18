@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile
 
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
 import org.koin.core.annotation.Factory
 import java.awt.Desktop
@@ -20,7 +21,7 @@ actual class UrlHandlerImpl actual constructor(private val contextWrapper: Conte
         try {
             Desktop.getDesktop().browse(URI(url))
         } catch (e: Exception) {
-            println("Failed to open URL: $url with error: ${e.message}")
+            Logger.e("Failed to open URL: $url", e)
         }
     }
 }

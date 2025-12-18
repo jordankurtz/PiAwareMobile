@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.aircraft
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.UrlHandler
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
@@ -75,13 +76,21 @@ class AircraftViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             loadSettingsUseCase().collect {
-                if (it is Async.Success) {
-                    with(it.data) {
-                        settings = this
-                        if (showReceiverLocations) {
-                            loadReceiverLocations(servers)
+                when (it) {
+                    is Async.Success -> {
+                        with(it.data) {
+                            settings = this
+                            if (showReceiverLocations) {
+                                loadReceiverLocations(servers)
+                            }
+                            startPolling(servers, refreshInterval)
                         }
-                        startPolling(servers, refreshInterval)
+                    }
+                    is Async.Error -> {
+                        Logger.e("Failed to load settings", it.throwable)
+                    }
+                    else -> {
+                        // No-op
                     }
                 }
             }
@@ -139,7 +148,7 @@ class AircraftViewModel(
                 delay(refreshInterval.seconds)
             }
         }.onEach {
-            println("Refreshing")
+            Logger.d("Refreshing")
             val aircraftList = getAircraftWithDetailsUseCase(servers, infoHost)
 
             _numberOfPlanes.value = aircraftList.count()
