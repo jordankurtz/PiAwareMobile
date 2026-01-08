@@ -4,7 +4,7 @@ import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowMinimapTrailsUseCase
 import org.koin.core.annotation.Factory
 
-@Factory
+@Factory(binds = [SetShowMinimapTrailsUseCase::class])
 class SetShowMinimapTrailsUseCaseImpl(
     private val settingsRepository: SettingsRepository
 ) : SetShowMinimapTrailsUseCase {

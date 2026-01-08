@@ -19,17 +19,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.time.Clock
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format.char
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.koin.core.annotation.Single
-import kotlin.time.Instant
 
 @Single(binds = [AircraftRepo::class])
 class AircraftRepoImpl(
@@ -54,7 +49,6 @@ class AircraftRepoImpl(
                     try {
                         piAwareApi.getAircraft(server)
                     } catch (e: Exception) {
-                        // Log the error and return an empty list for the failed server
                         Logger.e("Failed to fetch aircraft from server $server", e)
                         emptyList()
                     }
@@ -99,17 +93,18 @@ class AircraftRepoImpl(
     }
 
     override suspend fun fetchAndMergeHistory(host: String) {
-        val receiver = piAwareApi.getDump1090ReceiverInfo(host)
-        val historyCount = receiver?.history ?: return
-
-        Logger.d("Fetching $historyCount history files from $host")
+        val receiver = piAwareApi.getDump1090ReceiverInfo(host) ?: return
+        val historyCount = receiver.history ?: return
+        if (historyCount <= 0) return
 
         coroutineScope {
-            (0 until historyCount).map { index ->
+            val historyResults = (0 until historyCount).map { index ->
                 async {
                     fetchHistoryWithRetry(host, index)
                 }
             }.awaitAll()
+
+            historyResults
                 .filterNotNull()
                 .flatten()
                 .filter { it.lat != 0.0 && it.lon != 0.0 }
@@ -128,7 +123,6 @@ class AircraftRepoImpl(
         }
 
         updateTrailsStateFlow()
-        Logger.d("Loaded history for ${trailPositions.size} aircraft")
     }
 
     private suspend fun fetchHistoryWithRetry(
@@ -142,11 +136,9 @@ class AircraftRepoImpl(
 
             if (attempt < maxRetries - 1) {
                 val delayMs = (attempt + 1) * 500L
-                Logger.d("Retrying history file $index after ${delayMs}ms (attempt ${attempt + 1})")
                 kotlinx.coroutines.delay(delayMs)
             }
         }
-        Logger.e("Failed to fetch history file $index after $maxRetries attempts", null)
         return null
     }
 
@@ -192,8 +184,8 @@ class AircraftRepoImpl(
         level: Int = 1
     ): AircraftInfo? {
         val uppercaseHex = hex.uppercase()
-        val bkey = uppercaseHex.substring(0, level)
-        val dkey = uppercaseHex.substring(level)
+        val bkey = uppercaseHex.take(level)
+        val dkey = uppercaseHex.drop(level)
 
         val data = piAwareApi.getAircraftInfo(host, bkey) ?: return null
 
@@ -209,7 +201,7 @@ class AircraftRepoImpl(
         }
 
         if (dkey.isNotEmpty() && data.containsKey("children")) {
-            val subkey = bkey + dkey.substring(0, 1)
+            val subkey = bkey + dkey.first()
             if (data["children"]?.let { Json.decodeFromJsonElement<List<String>>(it) }
                     ?.contains(subkey) == true) {
                 return lookupAircraftInfoRecursive(host, hex, level + 1)
@@ -233,25 +225,4 @@ class AircraftRepoImpl(
 
 fun List<Aircraft>.filterNoLocation(): List<Aircraft> {
     return this.filter { it.lat != 0.0 && it.lon != 0.0 }
-}
-
-private fun Instant.toFormattedString(): String {
-    val localDateTime = toLocalDateTime(TimeZone.currentSystemDefault())
-
-    // Define a custom format using the DSL
-    val formatter = LocalDateTime.Format {
-        year()
-        char('-')
-        monthNumber()
-        char('-')
-        day()
-        char('T')
-        hour()
-        char(':')
-        minute()
-        char(':')
-        second()
-        char('Z')
-    }
-    return formatter.format(localDateTime)
 }

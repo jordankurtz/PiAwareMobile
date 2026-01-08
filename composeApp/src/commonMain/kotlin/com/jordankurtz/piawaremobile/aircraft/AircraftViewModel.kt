@@ -8,6 +8,7 @@ import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LookupFlightUseCase
 import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
 import com.jordankurtz.piawaremobile.model.Aircraft
@@ -55,6 +56,7 @@ class AircraftViewModel(
     private val getReceiverLocationUseCase: GetReceiverLocationUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
     private val lookupFlightUseCase: LookupFlightUseCase,
+    private val loadHistoryUseCase: LoadHistoryUseCase,
     private val aircraftRepo: AircraftRepo,
     private val urlHandler: UrlHandler,
     @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
@@ -77,7 +79,6 @@ class AircraftViewModel(
     val aircraftTrails: StateFlow<Map<String, AircraftTrail>> = aircraftRepo.aircraftTrails
 
     private var pollingJob: Job? = null
-    private var historyFetched = false
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -86,6 +87,7 @@ class AircraftViewModel(
                     is Async.Success -> {
                         with(it.data) {
                             settings = this
+                            loadHistoryUseCase(servers.map { server -> server.address })
                             if (showReceiverLocations) {
                                 loadReceiverLocations(servers)
                             }
@@ -149,11 +151,6 @@ class AircraftViewModel(
 
         return flow {
             loadAircraftTypesUseCase(servers)
-
-            if (!historyFetched) {
-                aircraftRepo.fetchAndMergeHistory(infoHost)
-                historyFetched = true
-            }
 
             while (true) {
                 emit(Unit)

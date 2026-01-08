@@ -5,7 +5,7 @@ import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import com.jordankurtz.piawaremobile.settings.usecase.SetTrailDisplayModeUseCase
 import org.koin.core.annotation.Factory
 
-@Factory
+@Factory(binds = [SetTrailDisplayModeUseCase::class])
 class SetTrailDisplayModeUseCaseImpl(
     private val settingsRepository: SettingsRepository
 ) : SetTrailDisplayModeUseCase {

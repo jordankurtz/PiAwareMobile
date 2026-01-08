@@ -25,7 +25,9 @@ class SettingsRepositoryImpl(
                 restoreMapStateOnStart = preferences[SettingsRepository.RESTORE_MAP_STATE_ON_START] ?: false,
                 showReceiverLocations = preferences[SettingsRepository.SHOW_RECEIVER_LOCATIONS] ?: false,
                 showUserLocationOnMap = preferences[SettingsRepository.SHOW_USER_LOCATION_ON_MAP] ?: false,
-                trailDisplayMode = preferences[SettingsRepository.TRAIL_DISPLAY_MODE]?.let { TrailDisplayMode.valueOf(it) } ?: TrailDisplayMode.ALL,
+                trailDisplayMode = preferences[SettingsRepository.TRAIL_DISPLAY_MODE]?.let {
+                    try { TrailDisplayMode.valueOf(it) } catch (_: IllegalArgumentException) { null }
+                } ?: TrailDisplayMode.ALL,
                 showMinimapTrails = preferences[SettingsRepository.SHOW_MINIMAP_TRAILS] ?: true,
                 openUrlsExternally = preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] ?: false,
                 enableFlightAwareApi = preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] ?: false,
