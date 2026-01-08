@@ -12,8 +12,10 @@ import com.jordankurtz.piawaremobile.settings.usecase.SetFlightAwareApiKeyUseCas
 import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetShowMinimapTrailsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetTrailDisplayModeUseCase
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
@@ -27,9 +29,11 @@ class SettingsViewModel(
     private val setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase,
     private val setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase,
     private val setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase,
+    private val setTrailDisplayModeUseCase: SetTrailDisplayModeUseCase,
+    private val setShowMinimapTrailsUseCase: SetShowMinimapTrailsUseCase,
     private val setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase,
     private val setEnableFlightAwareApiUseCase: SetEnableFlightAwareApiUseCase,
-    private val setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase,
+    private val setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase
 ) : ViewModel() {
 
     val settings: StateFlow<Async<Settings>>
@@ -58,6 +62,14 @@ class SettingsViewModel(
 
     fun updateShowUserLocationOnMap(enabled: Boolean) = viewModelScope.launch {
         setShowUserLocationOnMapUseCase(enabled)
+    }
+
+    fun updateTrailDisplayMode(trailDisplayMode: TrailDisplayMode) = viewModelScope.launch {
+        setTrailDisplayModeUseCase(trailDisplayMode)
+    }
+
+    fun updateShowMinimapTrails(enabled: Boolean) = viewModelScope.launch {
+        setShowMinimapTrailsUseCase(enabled)
     }
 
     fun updateOpenUrlsExternally(enabled: Boolean) = viewModelScope.launch {

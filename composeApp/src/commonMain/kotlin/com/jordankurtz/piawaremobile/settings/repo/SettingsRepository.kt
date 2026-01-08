@@ -4,11 +4,14 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.jordankurtz.piawaremobile.settings.Settings
+import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
     fun getSettings() : Flow<Settings>
     suspend fun saveSettings(settings: Settings)
+    suspend fun setTrailDisplayMode(trailDisplayMode: TrailDisplayMode)
+    suspend fun setShowMinimapTrails(showMinimapTrails: Boolean)
 
     companion object {
         val SERVERS = stringPreferencesKey("servers")
@@ -17,6 +20,8 @@ interface SettingsRepository {
         val RESTORE_MAP_STATE_ON_START = booleanPreferencesKey("restoreMapStateOnStart")
         val SHOW_RECEIVER_LOCATIONS = booleanPreferencesKey("showReceiverLocations")
         val SHOW_USER_LOCATION_ON_MAP = booleanPreferencesKey("showUserLocation")
+        val TRAIL_DISPLAY_MODE = stringPreferencesKey("trailDisplayMode")
+        val SHOW_MINIMAP_TRAILS = booleanPreferencesKey("showMinimapTrails")
         val OPEN_URLS_EXTERNALLY = booleanPreferencesKey("openUrlsExternally")
         val ENABLE_FLIGHT_AWARE_API = booleanPreferencesKey("enableFlightAwareApi")
         val FLIGHT_AWARE_API_KEY = stringPreferencesKey("flightAwareApiKey")

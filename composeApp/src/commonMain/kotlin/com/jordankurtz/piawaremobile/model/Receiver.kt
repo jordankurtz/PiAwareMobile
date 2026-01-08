@@ -8,5 +8,6 @@ data class Receiver(
     @SerialName("lat")
     val latitude: Float,
     @SerialName("lon")
-    val longitude: Float
+    val longitude: Float,
+    val history: Int? = null
 )

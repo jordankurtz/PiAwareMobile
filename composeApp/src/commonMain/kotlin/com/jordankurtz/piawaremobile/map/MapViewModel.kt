@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -13,10 +14,13 @@ import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftPosition
+import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
+import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -31,8 +35,10 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.core.annotation.Factory
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.removeMarker
+import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.api.scroll
 import ovh.plrapps.mapcompose.api.scrollTo
@@ -62,9 +68,13 @@ class MapViewModel(
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
     private val previousAircraftMarkerIds = mutableSetOf<String>()
+    private val previousPathIds = mutableSetOf<String>()
+    private var lastTrails: Map<String, AircraftTrail> = emptyMap()
 
     private val _selectedAircraft = MutableStateFlow<String?>(null)
     val selectedAircraft: StateFlow<String?> = _selectedAircraft
+
+    private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
         minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
@@ -73,10 +83,22 @@ class MapViewModel(
 
         onMarkerClick { id, _, _ ->
             if (previousAircraftMarkerIds.contains(id)) {
-                if (_selectedAircraft.value == id) {
-                    _selectedAircraft.value = null
+                if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+                    if (_trailSelectedAircraft.value == id) {
+                        _selectedAircraft.value = id
+                    } else {
+                        _selectedAircraft.value = null
+                        _trailSelectedAircraft.value = id
+                        onAircraftTrailsUpdated(lastTrails)
+                    }
                 } else {
-                    _selectedAircraft.value = id
+                    val newSelection = if (_selectedAircraft.value == id) null else id
+                    if (_selectedAircraft.value != newSelection) {
+                        _selectedAircraft.value = newSelection
+                        if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+                            onAircraftTrailsUpdated(lastTrails)
+                        }
+                    }
                 }
             }
         }
@@ -102,7 +124,17 @@ class MapViewModel(
         }
     }
 
+    fun onAircraftDeselected() {
+        _selectedAircraft.value = null
+        if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+            _trailSelectedAircraft.value = null
+            onAircraftTrailsUpdated(lastTrails)
+        }
+    }
+
     private suspend fun onSettingsLoaded(settings: Settings) {
+        this.settings = settings
+        onAircraftTrailsUpdated(lastTrails)
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
             loadMapState()
@@ -133,7 +165,10 @@ class MapViewModel(
     fun onReceiverLocation(receiver: Map.Entry<Server, Location>) = viewModelScope.launch {
         val (x, y) = receiver.value.projected
         state.addMarker(
-            receiver.key.id.toString(), x, y
+            id = receiver.key.id.toString(),
+            x = x,
+            y = y,
+            relativeOffset = Offset(-0.5f, -0.5f)
         ) {
             Image(
                 painter = painterResource(Res.drawable.ic_receiver),
@@ -158,7 +193,8 @@ class MapViewModel(
         state.addMarker(
             id = USER_LOCATION_MARKER_ID,
             x = x,
-            y = y
+            y = y,
+            relativeOffset = Offset(-0.5f, -0.5f)
         ) {
             Image(
                 painter = painterResource(Res.drawable.ic_user_location),
@@ -176,9 +212,10 @@ class MapViewModel(
             val location = doProjection(plane.lat, plane.lon)
 
             state.addMarker(
-                plane.hex.also { previousAircraftMarkerIds.add(it) },
-                location.first,
-                location.second
+                id = plane.hex.also { previousAircraftMarkerIds.add(it) },
+                x = location.first,
+                y = location.second,
+                relativeOffset = Offset(-0.5f, -0.5f)
             ) {
                 Image(
                     painter = painterResource(Res.drawable.ic_plane),
@@ -190,5 +227,91 @@ class MapViewModel(
                 )
             }
         }
+    }
+
+    fun onAircraftTrailsUpdated(trails: Map<String, AircraftTrail>) {
+        lastTrails = trails
+        clearPaths()
+
+        val mode = settings?.trailDisplayMode ?: TrailDisplayMode.ALL
+
+        val trailsToDisplay = when (mode) {
+            TrailDisplayMode.NONE -> emptyMap()
+            TrailDisplayMode.ALL -> trails
+            TrailDisplayMode.SELECTED -> {
+                val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
+                if (selectedHex != null) {
+                    trails.filterKeys { it == selectedHex }
+                } else {
+                    emptyMap()
+                }
+            }
+        }
+
+        trailsToDisplay.forEach { (hex, trail) ->
+            drawTrail(hex, trail)
+        }
+    }
+
+    private fun drawTrail(hex: String, trail: AircraftTrail) {
+        if (trail.positions.size >= 2) {
+            // Group consecutive positions by altitude color to reduce path count
+            val colorSegments = groupPositionsByAltitudeColor(trail.positions)
+
+            colorSegments.forEachIndexed { index, segment ->
+                if (segment.positions.size >= 2) {
+                    val id = "trail_${hex}_$index"
+                    previousPathIds.add(id)
+
+                    val projectedPoints = segment.positions.map { pos ->
+                        doProjection(pos.latitude, pos.longitude)
+                    }
+
+                    state.addPath(
+                        id = id,
+                        color = segment.color,
+                        width = 1.5.dp
+                    ) {
+                        addPoints(projectedPoints)
+                    }
+                }
+            }
+        }
+    }
+
+    private data class ColorSegment(
+        val color: androidx.compose.ui.graphics.Color,
+        val positions: MutableList<AircraftPosition>
+    )
+
+    private fun groupPositionsByAltitudeColor(positions: List<AircraftPosition>): List<ColorSegment> {
+        if (positions.isEmpty()) return emptyList()
+
+        val segments = mutableListOf<ColorSegment>()
+        var currentColor = getColorForAltitude(positions.first().altitude)
+        var currentSegment = ColorSegment(currentColor, mutableListOf(positions.first()))
+
+        for (i in 1 until positions.size) {
+            val pos = positions[i]
+            val posColor = getColorForAltitude(pos.altitude)
+
+            if (posColor == currentColor) {
+                currentSegment.positions.add(pos)
+            } else {
+                // End current segment and start new one
+                // Add last point of current segment as first point of new segment for continuity
+                segments.add(currentSegment)
+                currentColor = posColor
+                currentSegment = ColorSegment(currentColor, mutableListOf(positions[i - 1], pos))
+            }
+        }
+
+        segments.add(currentSegment)
+        return segments
+    }
+
+    private fun clearPaths() {
+        previousPathIds.forEach { state.removePath(it) }
+        previousPathIds.clear()
     }
 }

@@ -10,8 +10,10 @@ import com.jordankurtz.piawaremobile.settings.usecase.SetFlightAwareApiKeyUseCas
 import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetShowMinimapTrailsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SetTrailDisplayModeUseCase
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -42,6 +44,8 @@ class SettingsViewModelTest {
     private lateinit var setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase
     private lateinit var setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase
     private lateinit var setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase
+    private lateinit var setTrailDisplayModeUseCase: SetTrailDisplayModeUseCase
+    private lateinit var setShowMinimapTrailsUseCase: SetShowMinimapTrailsUseCase
     private lateinit var setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase
     private lateinit var setEnableFlightAwareApiUseCase: SetEnableFlightAwareApiUseCase
     private lateinit var setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase
@@ -58,6 +62,8 @@ class SettingsViewModelTest {
         setRestoreMapStateOnStartUseCase = mock()
         setShowReceiverLocationsUseCase = mock()
         setShowUserLocationOnMapUseCase = mock()
+        setTrailDisplayModeUseCase = mock()
+        setShowMinimapTrailsUseCase = mock()
         setOpenUrlsExternallyUseCase = mock()
         setEnableFlightAwareApiUseCase = mock()
         setFlightAwareApiKeyUseCase = mock()
@@ -83,6 +89,8 @@ class SettingsViewModelTest {
             setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
             setShowReceiverLocationsUseCase = setShowReceiverLocationsUseCase,
             setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase,
+            setTrailDisplayModeUseCase = setTrailDisplayModeUseCase,
+            setShowMinimapTrailsUseCase = setShowMinimapTrailsUseCase,
             setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase,
             setEnableFlightAwareApiUseCase = setEnableFlightAwareApiUseCase,
             setFlightAwareApiKeyUseCase = setFlightAwareApiKeyUseCase
@@ -117,6 +125,8 @@ class SettingsViewModelTest {
             setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
             setShowReceiverLocationsUseCase = setShowReceiverLocationsUseCase,
             setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase,
+            setTrailDisplayModeUseCase = setTrailDisplayModeUseCase,
+            setShowMinimapTrailsUseCase = setShowMinimapTrailsUseCase,
             setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase,
             setEnableFlightAwareApiUseCase = setEnableFlightAwareApiUseCase,
             setFlightAwareApiKeyUseCase = setFlightAwareApiKeyUseCase
