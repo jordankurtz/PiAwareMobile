@@ -71,4 +71,15 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
             null
         }
     }
+
+    override suspend fun getHistoryFile(host: String, index: Int): List<Aircraft>? {
+        return try {
+            val response: PiAwareResponse =
+                httpClient.get("http://$host/data/history_$index.json").body<PiAwareResponse>()
+            response.aircraft
+        } catch (e: Exception) {
+            Logger.e("Error fetching history file $index", e)
+            null
+        }
+    }
 }

@@ -5,6 +5,8 @@ import com.jordankurtz.piawaremobile.aircraft.api.AeroApi
 import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
+import com.jordankurtz.piawaremobile.model.AircraftPosition
+import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
@@ -13,6 +15,10 @@ import com.jordankurtz.piawaremobile.model.ReceiverType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlin.time.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.char
@@ -32,6 +38,12 @@ class AircraftRepoImpl(
 ) : AircraftRepo {
 
     private val aircraftInfoCache = mutableMapOf<String, AircraftInfo>()
+
+    private val _aircraftTrails = MutableStateFlow<Map<String, AircraftTrail>>(emptyMap())
+    override val aircraftTrails: StateFlow<Map<String, AircraftTrail>> = _aircraftTrails.asStateFlow()
+
+    private val trailPositions = mutableMapOf<String, MutableList<AircraftPosition>>()
+    private var currentAircraftHex = setOf<String>()
 
     private var aircraftTypes: Map<String, ICAOAircraftType>? = null
 
@@ -84,6 +96,94 @@ class AircraftRepoImpl(
             Logger.e("Failed to fetch flight for ident $ident", e)
             Async.Error("Failed to fetch flight for ident $ident", e)
         }
+    }
+
+    override suspend fun fetchAndMergeHistory(host: String) {
+        val receiver = piAwareApi.getDump1090ReceiverInfo(host)
+        val historyCount = receiver?.history ?: return
+
+        Logger.d("Fetching $historyCount history files from $host")
+
+        coroutineScope {
+            (0 until historyCount).map { index ->
+                async {
+                    fetchHistoryWithRetry(host, index)
+                }
+            }.awaitAll()
+                .filterNotNull()
+                .flatten()
+                .filter { it.lat != 0.0 && it.lon != 0.0 }
+                .forEach { aircraft ->
+                    val positions = trailPositions.getOrPut(aircraft.hex) { mutableListOf() }
+                    val newPosition = AircraftPosition(
+                        latitude = aircraft.lat,
+                        longitude = aircraft.lon,
+                        altitude = aircraft.altBaro,
+                        timestamp = Clock.System.now().epochSeconds.toDouble()
+                    )
+                    if (positions.lastOrNull()?.let { it.latitude == newPosition.latitude && it.longitude == newPosition.longitude } != true) {
+                        positions.add(newPosition)
+                    }
+                }
+        }
+
+        updateTrailsStateFlow()
+        Logger.d("Loaded history for ${trailPositions.size} aircraft")
+    }
+
+    private suspend fun fetchHistoryWithRetry(
+        host: String,
+        index: Int,
+        maxRetries: Int = 3
+    ): List<Aircraft>? {
+        repeat(maxRetries) { attempt ->
+            val result = piAwareApi.getHistoryFile(host, index)
+            if (result != null) return result
+
+            if (attempt < maxRetries - 1) {
+                val delayMs = (attempt + 1) * 500L
+                Logger.d("Retrying history file $index after ${delayMs}ms (attempt ${attempt + 1})")
+                kotlinx.coroutines.delay(delayMs)
+            }
+        }
+        Logger.e("Failed to fetch history file $index after $maxRetries attempts", null)
+        return null
+    }
+
+    override fun updateTrailsFromAircraft(aircraft: List<Aircraft>) {
+        val timestamp = Clock.System.now().epochSeconds.toDouble()
+        currentAircraftHex = aircraft.map { it.hex }.toSet()
+
+        aircraft
+            .filter { it.lat != 0.0 && it.lon != 0.0 }
+            .forEach { plane ->
+                val positions = trailPositions.getOrPut(plane.hex) { mutableListOf() }
+                val newPosition = AircraftPosition(
+                    latitude = plane.lat,
+                    longitude = plane.lon,
+                    altitude = plane.altBaro,
+                    timestamp = timestamp
+                )
+                if (positions.lastOrNull()?.let { it.latitude == newPosition.latitude && it.longitude == newPosition.longitude } != true) {
+                    positions.add(newPosition)
+                }
+            }
+
+        updateTrailsStateFlow()
+    }
+
+    override fun clearTrails() {
+        trailPositions.clear()
+        currentAircraftHex = emptySet()
+        _aircraftTrails.value = emptyMap()
+    }
+
+    private fun updateTrailsStateFlow() {
+        _aircraftTrails.value = trailPositions
+            .filterKeys { currentAircraftHex.contains(it) }
+            .mapValues { (hex, positions) ->
+                AircraftTrail(hex = hex, positions = positions.toList())
+            }
     }
 
     internal suspend fun lookupAircraftInfoRecursive(

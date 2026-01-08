@@ -13,6 +13,8 @@ import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftPosition
+import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
@@ -31,8 +33,10 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.core.annotation.Factory
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.removeMarker
+import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.api.scroll
 import ovh.plrapps.mapcompose.api.scrollTo
@@ -61,7 +65,9 @@ class MapViewModel(
 
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
+    private var showAircraftPaths: Boolean = true
     private val previousAircraftMarkerIds = mutableSetOf<String>()
+    private val previousPathIds = mutableSetOf<String>()
 
     private val _selectedAircraft = MutableStateFlow<String?>(null)
     val selectedAircraft: StateFlow<String?> = _selectedAircraft
@@ -103,6 +109,7 @@ class MapViewModel(
     }
 
     private suspend fun onSettingsLoaded(settings: Settings) {
+        showAircraftPaths = settings.showAircraftPaths
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
             loadMapState()
@@ -190,5 +197,73 @@ class MapViewModel(
                 )
             }
         }
+    }
+
+    fun onAircraftTrailsUpdated(trails: Map<String, AircraftTrail>) {
+        if (!showAircraftPaths) {
+            clearPaths()
+            return
+        }
+
+        previousPathIds.forEach { state.removePath(it) }
+        previousPathIds.clear()
+
+        trails.forEach { (hex, trail) ->
+            if (trail.positions.size >= 2) {
+                // Group consecutive positions by altitude color to reduce path count
+                val colorSegments = groupPositionsByAltitudeColor(trail.positions)
+
+                colorSegments.forEachIndexed { index, segment ->
+                    if (segment.positions.size >= 2) {
+                        val id = "trail_${hex}_$index"
+                        previousPathIds.add(id)
+
+                        val projectedPoints = segment.positions.map { pos ->
+                            doProjection(pos.latitude, pos.longitude)
+                        }
+
+                        state.addPath(id, color = segment.color) {
+                            addPoints(projectedPoints)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private data class ColorSegment(
+        val color: androidx.compose.ui.graphics.Color,
+        val positions: MutableList<AircraftPosition>
+    )
+
+    private fun groupPositionsByAltitudeColor(positions: List<AircraftPosition>): List<ColorSegment> {
+        if (positions.isEmpty()) return emptyList()
+
+        val segments = mutableListOf<ColorSegment>()
+        var currentColor = getColorForAltitude(positions.first().altitude)
+        var currentSegment = ColorSegment(currentColor, mutableListOf(positions.first()))
+
+        for (i in 1 until positions.size) {
+            val pos = positions[i]
+            val posColor = getColorForAltitude(pos.altitude)
+
+            if (posColor == currentColor) {
+                currentSegment.positions.add(pos)
+            } else {
+                // End current segment and start new one
+                // Add last point of current segment as first point of new segment for continuity
+                segments.add(currentSegment)
+                currentColor = posColor
+                currentSegment = ColorSegment(currentColor, mutableListOf(positions[i - 1], pos))
+            }
+        }
+
+        segments.add(currentSegment)
+        return segments
+    }
+
+    private fun clearPaths() {
+        previousPathIds.forEach { state.removePath(it) }
+        previousPathIds.clear()
     }
 }

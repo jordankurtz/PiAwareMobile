@@ -11,7 +11,10 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.compose.ui.graphics.Color
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftPosition
+import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.Location
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -19,8 +22,10 @@ import org.koin.core.annotation.Factory
 import ovh.plrapps.mapcompose.api.BoundingBox
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.disableGestures
 import ovh.plrapps.mapcompose.api.removeMarker
+import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.api.setScrollOffsetRatio
@@ -37,13 +42,15 @@ class MiniMapViewModel(
     private val mapProvider: TileStreamProvider
 ) : ViewModel() {
 
+    private val previousPathIds = mutableSetOf<String>()
+
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 4).apply {
         addLayer(mapProvider)
         setScrollOffsetRatio(xRatio = 0.5f, yRatio = 0.5f)
         disableGestures()
     }
 
-    fun updateMapState(aircraft: Aircraft?, location: Location?) {
+    fun updateMapState(aircraft: Aircraft?, location: Location?, trail: AircraftTrail? = null) {
         viewModelScope.launch {
             state.removeMarker(id = "aircraft")
             state.removeMarker(id = "user_location")
@@ -85,6 +92,30 @@ class MiniMapViewModel(
                 }
             }
 
+            previousPathIds.forEach { state.removePath(it) }
+            previousPathIds.clear()
+
+            trail?.let { t ->
+                if (t.positions.size >= 2) {
+                    val colorSegments = groupPositionsByAltitudeColor(t.positions)
+
+                    colorSegments.forEachIndexed { index, segment ->
+                        if (segment.positions.size >= 2) {
+                            val id = "trail_$index"
+                            previousPathIds.add(id)
+
+                            val projectedPoints = segment.positions.map { pos ->
+                                doProjection(pos.latitude, pos.longitude)
+                            }
+
+                            state.addPath(id, color = segment.color) {
+                                addPoints(projectedPoints)
+                            }
+                        }
+                    }
+                }
+            }
+
             if (aircraftLat != null && aircraftLon != null && userLat != null && userLon != null) {
                 val (aircraftX, aircraftY) = doProjection(latitude = aircraftLat, longitude = aircraftLon)
                 val (userX, userY) = doProjection(latitude = userLat, longitude = userLon)
@@ -105,5 +136,34 @@ class MiniMapViewModel(
                 state.scale = 0.1
             }
         }
+    }
+
+    private data class ColorSegment(
+        val color: Color,
+        val positions: MutableList<AircraftPosition>
+    )
+
+    private fun groupPositionsByAltitudeColor(positions: List<AircraftPosition>): List<ColorSegment> {
+        if (positions.isEmpty()) return emptyList()
+
+        val segments = mutableListOf<ColorSegment>()
+        var currentColor = getColorForAltitude(positions.first().altitude)
+        var currentSegment = ColorSegment(currentColor, mutableListOf(positions.first()))
+
+        for (i in 1 until positions.size) {
+            val pos = positions[i]
+            val posColor = getColorForAltitude(pos.altitude)
+
+            if (posColor == currentColor) {
+                currentSegment.positions.add(pos)
+            } else {
+                segments.add(currentSegment)
+                currentColor = posColor
+                currentSegment = ColorSegment(currentColor, mutableListOf(positions[i - 1], pos))
+            }
+        }
+
+        segments.add(currentSegment)
+        return segments
     }
 }

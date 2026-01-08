@@ -17,6 +17,7 @@ interface SettingsRepository {
         val RESTORE_MAP_STATE_ON_START = booleanPreferencesKey("restoreMapStateOnStart")
         val SHOW_RECEIVER_LOCATIONS = booleanPreferencesKey("showReceiverLocations")
         val SHOW_USER_LOCATION_ON_MAP = booleanPreferencesKey("showUserLocation")
+        val SHOW_AIRCRAFT_PATHS = booleanPreferencesKey("showAircraftPaths")
         val OPEN_URLS_EXTERNALLY = booleanPreferencesKey("openUrlsExternally")
         val ENABLE_FLIGHT_AWARE_API = booleanPreferencesKey("enableFlightAwareApi")
         val FLIGHT_AWARE_API_KEY = stringPreferencesKey("flightAwareApiKey")

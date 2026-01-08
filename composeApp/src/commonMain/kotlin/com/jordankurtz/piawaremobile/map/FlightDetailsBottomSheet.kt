@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.extensions.formattedTime
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.FlightAirportRef
@@ -62,6 +63,7 @@ import kotlin.time.Instant
 @Composable
 fun FlightDetailsBottomSheet(
     aircraft: Aircraft?,
+    trail: AircraftTrail?,
     flightDetails: Async<Flight>,
     onDismissRequest: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(
@@ -103,7 +105,7 @@ fun FlightDetailsBottomSheet(
                         }
 
                         when (tabIndex) {
-                            0 -> DetailsTab(aircraft, userLocation)
+                            0 -> DetailsTab(aircraft, userLocation, trail)
                             1 -> AircraftTab(aircraft, flight)
                             2 -> RouteTab(flight)
                         }
@@ -119,12 +121,13 @@ fun FlightDetailsBottomSheet(
 }
 
 @Composable
-private fun DetailsTab(aircraft: Aircraft?, userLocation: Location?) {
+private fun DetailsTab(aircraft: Aircraft?, userLocation: Location?, trail: AircraftTrail?) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(16.dp))
         MiniMap(
             aircraft = aircraft,
-            userLocation = userLocation
+            userLocation = userLocation,
+            trail = trail
         )
         Spacer(modifier = Modifier.height(16.dp))
         Row(
@@ -224,10 +227,11 @@ private fun RouteTab(flight: Flight) {
 fun MiniMap(
     aircraft: Aircraft?,
     userLocation: Location?,
+    trail: AircraftTrail? = null,
     miniMapViewModel: MiniMapViewModel = koinViewModel(),
 ) {
-    LaunchedEffect(key1 = aircraft, key2 = userLocation) {
-        miniMapViewModel.updateMapState(aircraft = aircraft, location = userLocation)
+    LaunchedEffect(key1 = aircraft, key2 = userLocation, key3 = trail) {
+        miniMapViewModel.updateMapState(aircraft = aircraft, location = userLocation, trail = trail)
     }
 
     Card {

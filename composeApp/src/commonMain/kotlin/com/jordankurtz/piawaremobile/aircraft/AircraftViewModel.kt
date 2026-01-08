@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.UrlHandler
+import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
@@ -11,6 +12,7 @@ import com.jordankurtz.piawaremobile.aircraft.usecase.LookupFlightUseCase
 import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
+import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.Location
@@ -53,6 +55,7 @@ class AircraftViewModel(
     private val getReceiverLocationUseCase: GetReceiverLocationUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
     private val lookupFlightUseCase: LookupFlightUseCase,
+    private val aircraftRepo: AircraftRepo,
     private val urlHandler: UrlHandler,
     @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -71,7 +74,10 @@ class AircraftViewModel(
     private val _numberOfPlanes = MutableStateFlow(0)
     val numberOfPlanes: StateFlow<Int> = _numberOfPlanes.asStateFlow()
 
+    val aircraftTrails: StateFlow<Map<String, AircraftTrail>> = aircraftRepo.aircraftTrails
+
     private var pollingJob: Job? = null
+    private var historyFetched = false
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -143,6 +149,12 @@ class AircraftViewModel(
 
         return flow {
             loadAircraftTypesUseCase(servers)
+
+            if (!historyFetched) {
+                aircraftRepo.fetchAndMergeHistory(infoHost)
+                historyFetched = true
+            }
+
             while (true) {
                 emit(Unit)
                 delay(refreshInterval.seconds)
@@ -154,6 +166,7 @@ class AircraftViewModel(
             _numberOfPlanes.value = aircraftList.count()
             _aircraft.value = aircraftList
 
+            aircraftRepo.updateTrailsFromAircraft(aircraftList.map { it.first })
         }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)

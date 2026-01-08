@@ -9,6 +9,7 @@ data class Settings (
     val restoreMapStateOnStart: Boolean = false,
     val showReceiverLocations: Boolean = false,
     val showUserLocationOnMap: Boolean = false,
+    val showAircraftPaths: Boolean = true,
     val openUrlsExternally: Boolean = false,
     val enableFlightAwareApi: Boolean = false,
     val flightAwareApiKey: String = ""
