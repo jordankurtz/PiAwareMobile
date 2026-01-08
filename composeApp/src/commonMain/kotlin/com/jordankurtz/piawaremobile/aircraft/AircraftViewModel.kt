@@ -87,7 +87,7 @@ class AircraftViewModel(
                     is Async.Success -> {
                         with(it.data) {
                             settings = this
-                            loadHistoryUseCase(servers.map { server -> server.address })
+                            launch { loadHistoryUseCase(servers.map { server -> server.address }) }
                             if (showReceiverLocations) {
                                 loadReceiverLocations(servers)
                             }
