@@ -27,8 +27,8 @@ class SettingsRepositoryImpl(
                 showUserLocationOnMap = preferences[SettingsRepository.SHOW_USER_LOCATION_ON_MAP] ?: false,
                 trailDisplayMode = preferences[SettingsRepository.TRAIL_DISPLAY_MODE]?.let {
                     try { TrailDisplayMode.valueOf(it) } catch (_: IllegalArgumentException) { null }
-                } ?: TrailDisplayMode.ALL,
-                showMinimapTrails = preferences[SettingsRepository.SHOW_MINIMAP_TRAILS] ?: true,
+                } ?: TrailDisplayMode.NONE,
+                showMinimapTrails = preferences[SettingsRepository.SHOW_MINIMAP_TRAILS] ?: false,
                 openUrlsExternally = preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] ?: false,
                 enableFlightAwareApi = preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] ?: false,
                 flightAwareApiKey = preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] ?: ""
