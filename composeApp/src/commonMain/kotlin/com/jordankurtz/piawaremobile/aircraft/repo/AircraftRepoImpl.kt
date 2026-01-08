@@ -54,7 +54,7 @@ class AircraftRepoImpl(
                     }
                 }
             }.awaitAll().flatten().filterNoLocation()
-        }
+        }.also { updateTrailsFromAircraft(it) }
 
     override suspend fun loadAircraftTypes(servers: List<String>) {
         if (aircraftTypes == null) {
@@ -142,7 +142,7 @@ class AircraftRepoImpl(
         return null
     }
 
-    override fun updateTrailsFromAircraft(aircraft: List<Aircraft>) {
+    private fun updateTrailsFromAircraft(aircraft: List<Aircraft>) {
         val timestamp = Clock.System.now().epochSeconds.toDouble()
         currentAircraftHex = aircraft.map { it.hex }.toSet()
 

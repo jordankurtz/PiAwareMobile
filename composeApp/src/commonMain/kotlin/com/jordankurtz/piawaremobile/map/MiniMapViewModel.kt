@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftTrailUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.AircraftTrail
@@ -20,6 +21,7 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.annotation.Factory
@@ -44,11 +46,15 @@ import kotlin.math.min
 @Factory
 class MiniMapViewModel(
     private val mapProvider: TileStreamProvider,
-    private val loadSettingsUseCase: LoadSettingsUseCase
+    private val loadSettingsUseCase: LoadSettingsUseCase,
+    private val getAircraftTrailUseCase: GetAircraftTrailUseCase
 ) : ViewModel() {
 
     private val previousPathIds = mutableSetOf<String>()
     private var settings: Settings? = null
+    private var currentAircraft: Aircraft? = null
+    private var currentLocation: Location? = null
+    private var trailJob: Job? = null
 
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 4).apply {
         addLayer(mapProvider)
@@ -74,8 +80,28 @@ class MiniMapViewModel(
         }
     }
 
-    fun updateMapState(aircraft: Aircraft?, location: Location?, trail: AircraftTrail? = null) {
+    fun updateMapState(aircraft: Aircraft?, location: Location?) {
+        currentAircraft = aircraft
+        currentLocation = location
+
+        updateMarkersAndScroll()
+
+        // Subscribe to trail updates for this aircraft
+        trailJob?.cancel()
+        trailJob = aircraft?.hex?.let { hex ->
+            viewModelScope.launch {
+                getAircraftTrailUseCase(hex).collect { trail ->
+                    updateTrail(trail)
+                }
+            }
+        }
+    }
+
+    private fun updateMarkersAndScroll() {
         viewModelScope.launch {
+            val aircraft = currentAircraft
+            val location = currentLocation
+
             state.removeMarker(id = "aircraft")
             state.removeMarker(id = "user_location")
 
@@ -118,6 +144,30 @@ class MiniMapViewModel(
                 }
             }
 
+            if (aircraftLat != null && aircraftLon != null && userLat != null && userLon != null) {
+                val (aircraftX, aircraftY) = doProjection(latitude = aircraftLat, longitude = aircraftLon)
+                val (userX, userY) = doProjection(latitude = userLat, longitude = userLon)
+                val boundingBox = BoundingBox(
+                    xLeft = min(aircraftX, userX),
+                    yTop = min(aircraftY, userY),
+                    xRight = max(aircraftX, userX),
+                    yBottom = max(aircraftY, userY)
+                )
+                state.scrollTo(
+                    area = boundingBox,
+                    padding = Offset(x = 0.2f, y = 0.2f),
+                    animationSpec = SpringSpec(stiffness = Spring.StiffnessLow)
+                )
+            } else if (aircraftLat != null && aircraftLon != null) {
+                val (x, y) = doProjection(latitude = aircraftLat, longitude = aircraftLon)
+                state.scrollTo(x = x, y = y)
+                state.scale = 0.1
+            }
+        }
+    }
+
+    private fun updateTrail(trail: AircraftTrail?) {
+        viewModelScope.launch {
             previousPathIds.forEach { state.removePath(it) }
             previousPathIds.clear()
 
@@ -142,26 +192,6 @@ class MiniMapViewModel(
                         }
                     }
                 }
-            }
-
-            if (aircraftLat != null && aircraftLon != null && userLat != null && userLon != null) {
-                val (aircraftX, aircraftY) = doProjection(latitude = aircraftLat, longitude = aircraftLon)
-                val (userX, userY) = doProjection(latitude = userLat, longitude = userLon)
-                val boundingBox = BoundingBox(
-                    xLeft = min(aircraftX, userX),
-                    yTop = min(aircraftY, userY),
-                    xRight = max(aircraftX, userX),
-                    yBottom = max(aircraftY, userY)
-                )
-                state.scrollTo(
-                    area = boundingBox,
-                    padding = Offset(x = 0.2f, y = 0.2f),
-                    animationSpec = SpringSpec(stiffness = Spring.StiffnessLow)
-                )
-            } else if (aircraftLat != null && aircraftLon != null) {
-                val (x, y) = doProjection(latitude = aircraftLat, longitude = aircraftLon)
-                state.scrollTo(x = x, y = y)
-                state.scale = 0.1
             }
         }
     }

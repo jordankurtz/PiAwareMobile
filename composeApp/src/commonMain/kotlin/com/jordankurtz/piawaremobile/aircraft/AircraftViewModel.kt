@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.UrlHandler
-import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetAllAircraftTrailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
@@ -57,7 +57,7 @@ class AircraftViewModel(
     private val loadSettingsUseCase: LoadSettingsUseCase,
     private val lookupFlightUseCase: LookupFlightUseCase,
     private val loadHistoryUseCase: LoadHistoryUseCase,
-    private val aircraftRepo: AircraftRepo,
+    private val getAllAircraftTrailsUseCase: GetAllAircraftTrailsUseCase,
     private val urlHandler: UrlHandler,
     @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -76,7 +76,7 @@ class AircraftViewModel(
     private val _numberOfPlanes = MutableStateFlow(0)
     val numberOfPlanes: StateFlow<Int> = _numberOfPlanes.asStateFlow()
 
-    val aircraftTrails: StateFlow<Map<String, AircraftTrail>> = aircraftRepo.aircraftTrails
+    val aircraftTrails: StateFlow<Map<String, AircraftTrail>> = getAllAircraftTrailsUseCase()
 
     private var pollingJob: Job? = null
 
@@ -162,8 +162,6 @@ class AircraftViewModel(
 
             _numberOfPlanes.value = aircraftList.count()
             _aircraft.value = aircraftList
-
-            aircraftRepo.updateTrailsFromAircraft(aircraftList.map { it.first })
         }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)

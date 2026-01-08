@@ -203,10 +203,10 @@ class AircraftRepoImplTest {
     // Trails tests
 
     @Test
-    fun `updateTrailsFromAircraft adds positions to trails`() = runTest {
-        val aircraft = listOf(mockAircraft1, mockAircraft2)
+    fun `getAircraft adds positions to trails`() = runTest {
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1, mockAircraft2)
 
-        repo.updateTrailsFromAircraft(aircraft)
+        repo.getAircraft(listOf("server1"))
 
         val trails = repo.aircraftTrails.value
         assertEquals(2, trails.size)
@@ -217,23 +217,11 @@ class AircraftRepoImplTest {
     }
 
     @Test
-    fun `updateTrailsFromAircraft filters out aircraft with no location`() = runTest {
-        val aircraft = listOf(mockAircraft1, mockAircraftNoLocation)
+    fun `getAircraft does not add duplicate positions to trails`() = runTest {
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
 
-        repo.updateTrailsFromAircraft(aircraft)
-
-        val trails = repo.aircraftTrails.value
-        assertEquals(1, trails.size)
-        assertTrue(trails.containsKey(mockAircraft1.hex))
-        assertTrue(!trails.containsKey(mockAircraftNoLocation.hex))
-    }
-
-    @Test
-    fun `updateTrailsFromAircraft does not add duplicate positions`() = runTest {
-        val aircraft = listOf(mockAircraft1)
-
-        repo.updateTrailsFromAircraft(aircraft)
-        repo.updateTrailsFromAircraft(aircraft) // Same position again
+        repo.getAircraft(listOf("server1"))
+        repo.getAircraft(listOf("server1")) // Same position again
 
         val trails = repo.aircraftTrails.value
         // Should still only have 1 position since position didn't change
@@ -241,23 +229,27 @@ class AircraftRepoImplTest {
     }
 
     @Test
-    fun `updateTrailsFromAircraft adds new positions when location changes`() = runTest {
-        repo.updateTrailsFromAircraft(listOf(mockAircraft1))
+    fun `getAircraft adds new positions to trails when location changes`() = runTest {
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
+        repo.getAircraft(listOf("server1"))
 
         val movedAircraft = mockAircraft1.copy(lat = 33.0, lon = -97.0)
-        repo.updateTrailsFromAircraft(listOf(movedAircraft))
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(movedAircraft)
+        repo.getAircraft(listOf("server1"))
 
         val trails = repo.aircraftTrails.value
         assertEquals(2, trails[mockAircraft1.hex]?.positions?.size)
     }
 
     @Test
-    fun `updateTrailsFromAircraft only includes current aircraft in trails`() = runTest {
+    fun `getAircraft only includes current aircraft in trails`() = runTest {
         // First update with aircraft1 and aircraft2
-        repo.updateTrailsFromAircraft(listOf(mockAircraft1, mockAircraft2))
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1, mockAircraft2)
+        repo.getAircraft(listOf("server1"))
 
         // Second update with only aircraft1 (aircraft2 is no longer visible)
-        repo.updateTrailsFromAircraft(listOf(mockAircraft1))
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
+        repo.getAircraft(listOf("server1"))
 
         val trails = repo.aircraftTrails.value
         // Only current aircraft (aircraft1) should be in the emitted trails
@@ -268,7 +260,8 @@ class AircraftRepoImplTest {
 
     @Test
     fun `clearTrails removes all trail data`() = runTest {
-        repo.updateTrailsFromAircraft(listOf(mockAircraft1, mockAircraft2))
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1, mockAircraft2)
+        repo.getAircraft(listOf("server1"))
 
         repo.clearTrails()
 
@@ -287,10 +280,10 @@ class AircraftRepoImplTest {
 
         repo.fetchAndMergeHistory("server1")
 
-        // After fetching history, updateTrailsFromAircraft needs to be called to see the trails
+        // After fetching history, getAircraft needs to be called to see the trails
         // The trails are stored but not emitted until currentAircraftHex includes them
-        // Let's verify by calling updateTrailsFromAircraft
-        repo.updateTrailsFromAircraft(listOf(historyAircraft))
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft)
+        repo.getAircraft(listOf("server1"))
 
         val trails = repo.aircraftTrails.value
         assertTrue(trails.containsKey(historyAircraft.hex))
@@ -333,7 +326,8 @@ class AircraftRepoImplTest {
         repo.fetchAndMergeHistory("server1")
 
         // Should still work with partial data
-        repo.updateTrailsFromAircraft(listOf(historyAircraft))
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft)
+        repo.getAircraft(listOf("server1"))
         val trails = repo.aircraftTrails.value
         assertTrue(trails.containsKey(historyAircraft.hex))
     }

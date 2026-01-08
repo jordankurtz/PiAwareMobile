@@ -18,6 +18,5 @@ interface AircraftRepo {
 
     val aircraftTrails: StateFlow<Map<String, AircraftTrail>>
     suspend fun fetchAndMergeHistory(host: String)
-    fun updateTrailsFromAircraft(aircraft: List<Aircraft>)
     fun clearTrails()
 }

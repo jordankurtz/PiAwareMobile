@@ -71,13 +71,9 @@ fun MapScreen(
     val selectedAircraft = selectedAircraftHex?.let { hex ->
         aircraft.firstOrNull { it.first.hex == hex }?.first
     }
-    val selectedAircraftTrail = selectedAircraftHex?.let { hex ->
-        aircraftTrails[hex]
-    }
 
     FlightDetailsBottomSheet(
         aircraft = selectedAircraft,
-        trail = selectedAircraftTrail,
         flightDetails = flightDetails,
         onDismissRequest = { mapViewModel.onAircraftDeselected() },
         sheetState = sheetState
