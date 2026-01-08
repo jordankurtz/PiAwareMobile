@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -19,6 +20,7 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
+import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -65,9 +67,9 @@ class MapViewModel(
 
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
-    private var showAircraftPaths: Boolean = true
     private val previousAircraftMarkerIds = mutableSetOf<String>()
     private val previousPathIds = mutableSetOf<String>()
+    private var lastTrails: Map<String, AircraftTrail> = emptyMap()
 
     private val _selectedAircraft = MutableStateFlow<String?>(null)
     val selectedAircraft: StateFlow<String?> = _selectedAircraft
@@ -79,10 +81,12 @@ class MapViewModel(
 
         onMarkerClick { id, _, _ ->
             if (previousAircraftMarkerIds.contains(id)) {
-                if (_selectedAircraft.value == id) {
-                    _selectedAircraft.value = null
-                } else {
-                    _selectedAircraft.value = id
+                val newSelection = if (_selectedAircraft.value == id) null else id
+                if (_selectedAircraft.value != newSelection) {
+                    _selectedAircraft.value = newSelection
+                    if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+                        onAircraftTrailsUpdated(lastTrails)
+                    }
                 }
             }
         }
@@ -109,7 +113,8 @@ class MapViewModel(
     }
 
     private suspend fun onSettingsLoaded(settings: Settings) {
-        showAircraftPaths = settings.showAircraftPaths
+        this.settings = settings
+        onAircraftTrailsUpdated(lastTrails)
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
             loadMapState()
@@ -140,7 +145,10 @@ class MapViewModel(
     fun onReceiverLocation(receiver: Map.Entry<Server, Location>) = viewModelScope.launch {
         val (x, y) = receiver.value.projected
         state.addMarker(
-            receiver.key.id.toString(), x, y
+            id = receiver.key.id.toString(),
+            x = x, 
+            y = y,
+            relativeOffset = Offset(-0.5f, -0.5f)
         ) {
             Image(
                 painter = painterResource(Res.drawable.ic_receiver),
@@ -165,7 +173,8 @@ class MapViewModel(
         state.addMarker(
             id = USER_LOCATION_MARKER_ID,
             x = x,
-            y = y
+            y = y,
+            relativeOffset = Offset(-0.5f, -0.5f)
         ) {
             Image(
                 painter = painterResource(Res.drawable.ic_user_location),
@@ -183,9 +192,10 @@ class MapViewModel(
             val location = doProjection(plane.lat, plane.lon)
 
             state.addMarker(
-                plane.hex.also { previousAircraftMarkerIds.add(it) },
-                location.first,
-                location.second
+                id = plane.hex.also { previousAircraftMarkerIds.add(it) },
+                x = location.first,
+                y = location.second,
+                relativeOffset = Offset(-0.5f, -0.5f)
             ) {
                 Image(
                     painter = painterResource(Res.drawable.ic_plane),
@@ -200,31 +210,49 @@ class MapViewModel(
     }
 
     fun onAircraftTrailsUpdated(trails: Map<String, AircraftTrail>) {
-        if (!showAircraftPaths) {
-            clearPaths()
-            return
+        lastTrails = trails
+        clearPaths()
+
+        val mode = settings?.trailDisplayMode ?: TrailDisplayMode.ALL
+
+        val trailsToDisplay = when (mode) {
+            TrailDisplayMode.NONE -> emptyMap()
+            TrailDisplayMode.ALL -> trails
+            TrailDisplayMode.SELECTED -> {
+                val selectedHex = _selectedAircraft.value
+                if (selectedHex != null) {
+                    trails.filterKeys { it == selectedHex }
+                } else {
+                    emptyMap()
+                }
+            }
         }
 
-        previousPathIds.forEach { state.removePath(it) }
-        previousPathIds.clear()
+        trailsToDisplay.forEach { (hex, trail) ->
+            drawTrail(hex, trail)
+        }
+    }
 
-        trails.forEach { (hex, trail) ->
-            if (trail.positions.size >= 2) {
-                // Group consecutive positions by altitude color to reduce path count
-                val colorSegments = groupPositionsByAltitudeColor(trail.positions)
+    private fun drawTrail(hex: String, trail: AircraftTrail) {
+        if (trail.positions.size >= 2) {
+            // Group consecutive positions by altitude color to reduce path count
+            val colorSegments = groupPositionsByAltitudeColor(trail.positions)
 
-                colorSegments.forEachIndexed { index, segment ->
-                    if (segment.positions.size >= 2) {
-                        val id = "trail_${hex}_$index"
-                        previousPathIds.add(id)
+            colorSegments.forEachIndexed { index, segment ->
+                if (segment.positions.size >= 2) {
+                    val id = "trail_${hex}_$index"
+                    previousPathIds.add(id)
 
-                        val projectedPoints = segment.positions.map { pos ->
-                            doProjection(pos.latitude, pos.longitude)
-                        }
+                    val projectedPoints = segment.positions.map { pos ->
+                        doProjection(pos.latitude, pos.longitude)
+                    }
 
-                        state.addPath(id, color = segment.color) {
-                            addPoints(projectedPoints)
-                        }
+                    state.addPath(
+                        id = id,
+                        color = segment.color,
+                        width = 1.dp
+                    ) {
+                        addPoints(projectedPoints)
                     }
                 }
             }

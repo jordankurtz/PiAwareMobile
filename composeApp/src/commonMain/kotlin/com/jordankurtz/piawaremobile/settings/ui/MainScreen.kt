@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.settings.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -18,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -32,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
+import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -51,10 +56,12 @@ import piawaremobile.composeapp.generated.resources.restore_map_position_descrip
 import piawaremobile.composeapp.generated.resources.restore_map_position_title
 import piawaremobile.composeapp.generated.resources.servers_title
 import piawaremobile.composeapp.generated.resources.settings_title
+import piawaremobile.composeapp.generated.resources.show_minimap_trails_description
+import piawaremobile.composeapp.generated.resources.show_minimap_trails_title
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_description
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_title
-import piawaremobile.composeapp.generated.resources.show_aircraft_paths_description
-import piawaremobile.composeapp.generated.resources.show_aircraft_paths_title
+import piawaremobile.composeapp.generated.resources.trail_display_mode_description
+import piawaremobile.composeapp.generated.resources.trail_display_mode_title
 import piawaremobile.composeapp.generated.resources.show_user_location_description
 import piawaremobile.composeapp.generated.resources.show_user_location_title
 
@@ -146,11 +153,21 @@ fun MainScreen(onServersClicked: () -> Unit) {
             }
 
             item {
+                SettingsDropdown(
+                    title = stringResource(Res.string.trail_display_mode_title),
+                    description = stringResource(Res.string.trail_display_mode_description),
+                    selectedValue = settings.getValue()?.trailDisplayMode ?: TrailDisplayMode.ALL,
+                    values = TrailDisplayMode.entries.toTypedArray(),
+                    onValueSelected = viewModel::updateTrailDisplayMode
+                )
+            }
+
+            item {
                 SettingsSwitch(
-                    title = stringResource(Res.string.show_aircraft_paths_title),
-                    description = stringResource(Res.string.show_aircraft_paths_description),
-                    checked = settings.getValue()?.showAircraftPaths ?: true,
-                    onCheckedChange = viewModel::updateShowAircraftPaths
+                    title = stringResource(Res.string.show_minimap_trails_title),
+                    description = stringResource(Res.string.show_minimap_trails_description),
+                    checked = settings.getValue()?.showMinimapTrails ?: true,
+                    onCheckedChange = viewModel::updateShowMinimapTrails
                 )
             }
 
@@ -216,6 +233,61 @@ fun SettingsItem(
             )
 
             trailingIcon?.invoke()
+        }
+        HorizontalDivider()
+    }
+}
+
+@Composable
+fun <T> SettingsDropdown(
+    title: String,
+    description: String,
+    selectedValue: T,
+    values: Array<T>,
+    onValueSelected: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    stringFor: @Composable (T) -> String = { it.toString() }
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { expanded = true }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Box {
+                TextButton(onClick = { expanded = true }) {
+                    Text(stringFor(selectedValue))
+                }
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    values.forEach { value ->
+                        DropdownMenuItem(
+                            text = { Text(stringFor(value)) },
+                            onClick = {
+                                onValueSelected(value)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
         }
         HorizontalDivider()
     }

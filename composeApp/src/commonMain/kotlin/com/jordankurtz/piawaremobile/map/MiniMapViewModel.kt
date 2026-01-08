@@ -7,15 +7,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.compose.ui.graphics.Color
+import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.AircraftTrail
+import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
+import com.jordankurtz.piawaremobile.settings.Settings
+import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.annotation.Factory
@@ -39,15 +43,35 @@ import kotlin.math.min
 
 @Factory
 class MiniMapViewModel(
-    private val mapProvider: TileStreamProvider
+    private val mapProvider: TileStreamProvider,
+    private val loadSettingsUseCase: LoadSettingsUseCase
 ) : ViewModel() {
 
     private val previousPathIds = mutableSetOf<String>()
+    private var settings: Settings? = null
 
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 4).apply {
         addLayer(mapProvider)
         setScrollOffsetRatio(xRatio = 0.5f, yRatio = 0.5f)
         disableGestures()
+    }
+
+    init {
+        viewModelScope.launch {
+            loadSettingsUseCase().collect {
+                when (it) {
+                    is Async.Success -> {
+                        settings = it.data
+                    }
+                    is Async.Error -> {
+                        Logger.e("Failed to load settings in MiniMapViewModel", it.throwable)
+                    }
+                    else -> {
+                        // No-op
+                    }
+                }
+            }
+        }
     }
 
     fun updateMapState(aircraft: Aircraft?, location: Location?, trail: AircraftTrail? = null) {
@@ -63,6 +87,7 @@ class MiniMapViewModel(
                     id = "aircraft",
                     x = x,
                     y = y,
+                    relativeOffset = Offset(-0.5f, -0.5f)
                 ) {
                     Image(
                         painter = painterResource(resource = Res.drawable.ic_plane),
@@ -82,7 +107,8 @@ class MiniMapViewModel(
                 state.addMarker(
                     id = "user_location",
                     x = x,
-                    y = y
+                    y = y,
+                    relativeOffset = Offset(-0.0f, -0.5f)
                 ) {
                     Image(
                         painter = painterResource(resource = Res.drawable.ic_user_location),
@@ -95,21 +121,23 @@ class MiniMapViewModel(
             previousPathIds.forEach { state.removePath(it) }
             previousPathIds.clear()
 
-            trail?.let { t ->
-                if (t.positions.size >= 2) {
-                    val colorSegments = groupPositionsByAltitudeColor(t.positions)
+            if (settings?.showMinimapTrails == true) {
+                trail?.let { t ->
+                    if (t.positions.size >= 2) {
+                        val colorSegments = groupPositionsByAltitudeColor(t.positions)
 
-                    colorSegments.forEachIndexed { index, segment ->
-                        if (segment.positions.size >= 2) {
-                            val id = "trail_$index"
-                            previousPathIds.add(id)
+                        colorSegments.forEachIndexed { index, segment ->
+                            if (segment.positions.size >= 2) {
+                                val id = "trail_$index"
+                                previousPathIds.add(id)
 
-                            val projectedPoints = segment.positions.map { pos ->
-                                doProjection(pos.latitude, pos.longitude)
-                            }
+                                val projectedPoints = segment.positions.map { pos ->
+                                    doProjection(pos.latitude, pos.longitude)
+                                }
 
-                            state.addPath(id, color = segment.color) {
-                                addPoints(projectedPoints)
+                                state.addPath(id, color = segment.color, width = 1.dp) {
+                                    addPoints(projectedPoints)
+                                }
                             }
                         }
                     }
