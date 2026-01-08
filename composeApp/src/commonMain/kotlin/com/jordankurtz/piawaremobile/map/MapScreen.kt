@@ -79,7 +79,7 @@ fun MapScreen(
         aircraft = selectedAircraft,
         trail = selectedAircraftTrail,
         flightDetails = flightDetails,
-        onDismissRequest = { aircraftViewModel.onFlightDetailsDismissed() },
+        onDismissRequest = { mapViewModel.onAircraftDeselected() },
         sheetState = sheetState
     )
 }

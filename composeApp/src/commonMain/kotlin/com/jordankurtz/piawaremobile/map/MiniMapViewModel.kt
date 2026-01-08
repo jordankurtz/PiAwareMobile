@@ -135,7 +135,7 @@ class MiniMapViewModel(
                                     doProjection(pos.latitude, pos.longitude)
                                 }
 
-                                state.addPath(id, color = segment.color, width = 1.dp) {
+                                state.addPath(id, color = segment.color, width = 1.5.dp) {
                                     addPoints(projectedPoints)
                                 }
                             }

@@ -74,6 +74,8 @@ class MapViewModel(
     private val _selectedAircraft = MutableStateFlow<String?>(null)
     val selectedAircraft: StateFlow<String?> = _selectedAircraft
 
+    private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
+
     val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
         minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
     }.apply {
@@ -81,11 +83,21 @@ class MapViewModel(
 
         onMarkerClick { id, _, _ ->
             if (previousAircraftMarkerIds.contains(id)) {
-                val newSelection = if (_selectedAircraft.value == id) null else id
-                if (_selectedAircraft.value != newSelection) {
-                    _selectedAircraft.value = newSelection
-                    if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+                if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+                    if (_trailSelectedAircraft.value == id) {
+                        _selectedAircraft.value = id
+                    } else {
+                        _selectedAircraft.value = null
+                        _trailSelectedAircraft.value = id
                         onAircraftTrailsUpdated(lastTrails)
+                    }
+                } else {
+                    val newSelection = if (_selectedAircraft.value == id) null else id
+                    if (_selectedAircraft.value != newSelection) {
+                        _selectedAircraft.value = newSelection
+                        if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+                            onAircraftTrailsUpdated(lastTrails)
+                        }
                     }
                 }
             }
@@ -109,6 +121,14 @@ class MapViewModel(
                     }
                 }
             }
+        }
+    }
+
+    fun onAircraftDeselected() {
+        _selectedAircraft.value = null
+        if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+            _trailSelectedAircraft.value = null
+            onAircraftTrailsUpdated(lastTrails)
         }
     }
 
@@ -146,7 +166,7 @@ class MapViewModel(
         val (x, y) = receiver.value.projected
         state.addMarker(
             id = receiver.key.id.toString(),
-            x = x, 
+            x = x,
             y = y,
             relativeOffset = Offset(-0.5f, -0.5f)
         ) {
@@ -219,7 +239,7 @@ class MapViewModel(
             TrailDisplayMode.NONE -> emptyMap()
             TrailDisplayMode.ALL -> trails
             TrailDisplayMode.SELECTED -> {
-                val selectedHex = _selectedAircraft.value
+                val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
                 if (selectedHex != null) {
                     trails.filterKeys { it == selectedHex }
                 } else {
@@ -250,7 +270,7 @@ class MapViewModel(
                     state.addPath(
                         id = id,
                         color = segment.color,
-                        width = 1.dp
+                        width = 1.5.dp
                     ) {
                         addPoints(projectedPoints)
                     }
