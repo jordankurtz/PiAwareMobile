@@ -12,9 +12,8 @@ import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LookupFlightUseCase
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
-import com.jordankurtz.piawaremobile.model.Aircraft
-import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.AircraftTrail
+import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.Location
@@ -74,8 +73,8 @@ class AircraftViewModel(
 ) : ViewModel() {
     var settings: Settings? = null
 
-    private val _aircraft = MutableStateFlow<List<Pair<Aircraft, AircraftInfo?>>>(emptyList())
-    val aircraft: StateFlow<List<Pair<Aircraft, AircraftInfo?>>> = _aircraft.asStateFlow()
+    private val _aircraft = MutableStateFlow<List<AircraftWithServers>>(emptyList())
+    val aircraft: StateFlow<List<AircraftWithServers>> = _aircraft.asStateFlow()
 
     private val _flightDetails = MutableStateFlow<Async<Flight>>(Async.NotStarted)
     val flightDetails: StateFlow<Async<Flight>> = _flightDetails.asStateFlow()
@@ -138,7 +137,7 @@ class AircraftViewModel(
         pollingJob?.cancel()
         pollingJob =
             pollServers(
-                servers = servers.map { it.address },
+                servers = servers,
                 refreshInterval = refreshInterval,
             )
     }
@@ -172,12 +171,12 @@ class AircraftViewModel(
     }
 
     private fun pollServers(
-        servers: List<String>,
+        servers: List<Server>,
         refreshInterval: Int,
     ): Job? {
         if (servers.isEmpty() || refreshInterval <= 0) return null
 
-        val infoHost = servers.first()
+        val infoHost = servers.first().address
 
         return viewModelScope.launch(ioDispatcher) {
             loadAircraftTypesUseCase(servers)
@@ -199,7 +198,7 @@ class AircraftViewModel(
             resetLookup()
             return
         }
-        val aircraft = _aircraft.value.firstOrNull { it.first.hex == selectedAircraft }?.first
+        val aircraft = _aircraft.value.firstOrNull { it.aircraft.hex == selectedAircraft }?.aircraft
         if (aircraft?.flight.isNullOrBlank()) {
             _flightDetails.value = Async.Error("Flight information not available for this aircraft.")
             return

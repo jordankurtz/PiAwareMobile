@@ -13,9 +13,9 @@ import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
-import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.AircraftTrail
+import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
@@ -207,11 +207,11 @@ class MapViewModel(
         }
     }
 
-    fun onAircraftUpdated(aircraft: List<Pair<Aircraft, Any?>>) {
+    fun onAircraftUpdated(aircraft: List<AircraftWithServers>) {
         previousAircraftMarkerIds.forEach(state::removeMarker)
         previousAircraftMarkerIds.clear()
 
-        aircraft.forEach { (plane, _) ->
+        aircraft.forEach { (plane, _, _) ->
             val location = doProjection(plane.lat, plane.lon)
 
             state.addMarker(

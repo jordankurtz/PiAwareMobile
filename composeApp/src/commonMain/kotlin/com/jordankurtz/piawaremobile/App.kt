@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.jordankurtz.piawaremobile.list.AircraftListScreen
 import com.jordankurtz.piawaremobile.map.MapScreen
 import com.jordankurtz.piawaremobile.model.Screen
 import com.jordankurtz.piawaremobile.settings.ui.SettingsScreen
@@ -36,7 +37,7 @@ fun App() {
             Box(modifier = Modifier.padding(innerPadding)) {
                 when (currentScreen) {
                     Screen.Map -> MapScreen()
-                    Screen.List -> Box {}
+                    Screen.List -> AircraftListScreen()
                     Screen.Settings -> SettingsScreen()
                 }
             }

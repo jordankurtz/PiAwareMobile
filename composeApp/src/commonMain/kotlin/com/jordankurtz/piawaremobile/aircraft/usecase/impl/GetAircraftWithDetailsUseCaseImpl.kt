@@ -3,8 +3,8 @@ package com.jordankurtz.piawaremobile.aircraft.usecase.impl
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
-import com.jordankurtz.piawaremobile.model.Aircraft
-import com.jordankurtz.piawaremobile.model.AircraftInfo
+import com.jordankurtz.piawaremobile.model.AircraftWithServers
+import com.jordankurtz.piawaremobile.settings.Server
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -17,22 +17,23 @@ class GetAircraftWithDetailsUseCaseImpl(
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : GetAircraftWithDetailsUseCase {
     override suspend operator fun invoke(
-        servers: List<String>,
+        servers: List<Server>,
         infoHost: String,
-    ): List<Pair<Aircraft, AircraftInfo?>> =
+    ): List<AircraftWithServers> =
         withContext(ioDispatcher) {
-            val allAircraft = aircraftRepo.getAircraft(servers)
+            val aircraftWithServers = aircraftRepo.getAircraftWithServers(servers)
 
-            allAircraft.map { aircraft ->
+            aircraftWithServers.map { (aircraft, serverSet) ->
                 async {
                     val aircraftInfo =
                         aircraftRepo.findAircraftInfo(
                             host = infoHost,
                             hex = aircraft.hex,
                         )
-                    Pair(
-                        first = aircraft,
-                        second = aircraftInfo,
+                    AircraftWithServers(
+                        aircraft = aircraft,
+                        info = aircraftInfo,
+                        servers = serverSet,
                     )
                 }
             }.awaitAll()

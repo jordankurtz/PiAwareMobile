@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.aircraft.usecase
 
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.usecase.impl.LoadAircraftTypesUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.Server
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
@@ -16,6 +17,9 @@ class LoadAircraftTypesUseCaseTest {
     private lateinit var useCase: LoadAircraftTypesUseCase
     private val testDispatcher = StandardTestDispatcher()
 
+    private val server1 = Server(name = "Server 1", address = "server1")
+    private val server2 = Server(name = "Server 2", address = "server2")
+
     @BeforeTest
     fun setup() {
         aircraftRepo = mock()
@@ -25,7 +29,7 @@ class LoadAircraftTypesUseCaseTest {
     @Test
     fun `invoke calls repo to load aircraft types`() =
         runTest(testDispatcher) {
-            val servers = listOf("server1", "server2")
+            val servers = listOf(server1, server2)
             everySuspend { aircraftRepo.loadAircraftTypes(servers) } returns Unit
 
             useCase(servers)

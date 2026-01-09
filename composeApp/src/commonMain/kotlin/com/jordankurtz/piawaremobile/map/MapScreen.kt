@@ -77,7 +77,7 @@ fun MapScreen(
 
     val selectedAircraft =
         selectedAircraftHex?.let { hex ->
-            aircraft.firstOrNull { it.first.hex == hex }?.first
+            aircraft.firstOrNull { it.aircraft.hex == hex }?.aircraft
         }
 
     FlightDetailsBottomSheet(

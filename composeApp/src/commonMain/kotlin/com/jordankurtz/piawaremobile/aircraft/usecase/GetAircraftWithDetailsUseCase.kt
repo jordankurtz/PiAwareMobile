@@ -1,11 +1,11 @@
 package com.jordankurtz.piawaremobile.aircraft.usecase
 
-import com.jordankurtz.piawaremobile.model.Aircraft
-import com.jordankurtz.piawaremobile.model.AircraftInfo
+import com.jordankurtz.piawaremobile.model.AircraftWithServers
+import com.jordankurtz.piawaremobile.settings.Server
 
 interface GetAircraftWithDetailsUseCase {
     suspend operator fun invoke(
-        servers: List<String>,
+        servers: List<Server>,
         infoHost: String,
-    ): List<Pair<Aircraft, AircraftInfo?>>
+    ): List<AircraftWithServers>
 }

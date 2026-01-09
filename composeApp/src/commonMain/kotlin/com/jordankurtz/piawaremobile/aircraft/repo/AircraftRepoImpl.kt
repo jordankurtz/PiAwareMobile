@@ -13,6 +13,7 @@ import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
+import com.jordankurtz.piawaremobile.settings.Server
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -45,27 +46,50 @@ class AircraftRepoImpl(
 
     private var aircraftTypes: Map<String, ICAOAircraftType>? = null
 
-    override suspend fun getAircraft(servers: List<String>): List<Aircraft> {
+    override suspend fun getAircraftWithServers(servers: List<Server>): Map<Aircraft, Set<Server>> {
         val result =
             coroutineScope {
-                servers.map { server ->
-                    async {
-                        try {
-                            piAwareApi.getAircraft(server)
-                        } catch (e: Exception) {
-                            Logger.e("Failed to fetch aircraft from server $server", e)
-                            emptyList()
+                // Fetch aircraft from each server with the server name
+                val aircraftByServer =
+                    servers.map { server ->
+                        async {
+                            try {
+                                piAwareApi.getAircraft(server.address).map { aircraft -> aircraft to server }
+                            } catch (e: Exception) {
+                                Logger.e("Failed to fetch aircraft from server $server", e)
+                                emptyList()
+                            }
+                        }
+                    }.awaitAll().flatten()
+
+                // Group by hex and merge - keep freshest aircraft data, accumulate servers
+                val mergedAircraft = mutableMapOf<String, Pair<Aircraft, MutableSet<Server>>>()
+                for ((aircraft, server) in aircraftByServer) {
+                    if (aircraft.lat == 0.0 && aircraft.lon == 0.0) continue
+
+                    val existing = mergedAircraft[aircraft.hex]
+                    if (existing == null) {
+                        mergedAircraft[aircraft.hex] = aircraft to mutableSetOf(server)
+                    } else {
+                        existing.second.add(server)
+                        // Keep the fresher aircraft data (lower `seen` value means more recent)
+                        val existingSeenTime = existing.first.seen ?: Float.MAX_VALUE
+                        val newSeenTime = aircraft.seen ?: Float.MAX_VALUE
+                        if (newSeenTime < existingSeenTime) {
+                            mergedAircraft[aircraft.hex] = aircraft to existing.second
                         }
                     }
-                }.awaitAll().flatten().filterNoLocation()
+                }
+
+                mergedAircraft.values.associate { (aircraft, servers) -> aircraft to servers.toSet() }
             }
-        updateTrailsFromAircraft(result)
+        updateTrailsFromAircraft(result.keys.toList())
         return result
     }
 
-    override suspend fun loadAircraftTypes(servers: List<String>) {
+    override suspend fun loadAircraftTypes(servers: List<Server>) {
         if (aircraftTypes == null) {
-            aircraftTypes = servers.map { piAwareApi.getAircraftTypes(it) }.flatten()
+            aircraftTypes = servers.map { piAwareApi.getAircraftTypes(it.address) }.flatten()
         }
     }
 
