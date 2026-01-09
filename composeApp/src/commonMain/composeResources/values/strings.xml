@@ -43,4 +43,59 @@
     <string name="flight_details_hours_minutes_short">%1$dh %2$dm</string>
     <string name="flight_details_airport_name_code">%1$s (%2$s)</string>
     <string name="flight_details_minutes_diff">(%1$s%2$dm)</string>
+
+    <!-- Aircraft List Screen -->
+    <string name="aircraft_list_title">Aircraft</string>
+    <string name="aircraft_list_stat_tracked">Tracked</string>
+    <string name="aircraft_list_stat_with_position">With Position</string>
+    <string name="aircraft_list_stat_avg_altitude">Avg Alt</string>
+    <string name="aircraft_list_empty">No aircraft detected</string>
+    <string name="aircraft_list_expand">Expand</string>
+    <string name="aircraft_list_collapse">Collapse</string>
+    <string name="aircraft_list_load_flight_details">Load Flight Details</string>
+    <string name="aircraft_list_loading_flight_details">Loading flight details...</string>
+    <string name="aircraft_list_dismiss">Dismiss</string>
+    <string name="aircraft_list_route_arrow">to</string>
+    <string name="aircraft_list_progress_percent">%1$d%% complete</string>
+
+    <!-- Units -->
+    <string name="unit_feet">ft</string>
+    <string name="unit_knots">kts</string>
+    <string name="unit_heading">hdg</string>
+    <string name="unit_kilometers">km</string>
+    <string name="unit_squawk">sqk</string>
+    <string name="unit_fpm">fpm</string>
+    <string name="unit_dbm">dBm</string>
+    <string name="unit_seconds_ago">s ago</string>
+    <string name="unit_degrees">°</string>
+
+    <!-- Labels -->
+    <string name="label_altitude">Altitude</string>
+    <string name="label_heading">Heading</string>
+    <string name="label_speed">Speed</string>
+    <string name="label_vertical_speed">Vertical Speed</string>
+    <string name="label_squawk">Squawk</string>
+    <string name="label_location">Location</string>
+    <string name="label_distance">Distance</string>
+    <string name="label_direction">Direction</string>
+    <string name="label_signal">Signal</string>
+    <string name="label_last_seen">Last Seen</string>
+    <string name="label_type">Type</string>
+    <string name="label_aircraft_type">Aircraft Type</string>
+    <string name="label_description">Description</string>
+    <string name="label_wtc">WTC</string>
+    <string name="label_registration">Reg</string>
+    <string name="label_operator">Operator</string>
+    <string name="label_flight">Flight %1$s</string>
+
+    <!-- Formatted values -->
+    <string name="value_altitude_feet">%1$s ft</string>
+    <string name="value_heading_degrees">%1$s°</string>
+    <string name="value_speed_knots">%1$d kts</string>
+    <string name="value_vertical_speed_fpm">%1$d fpm</string>
+    <string name="value_distance_km">%1$d km</string>
+    <string name="value_signal_dbm">%1$s dBm</string>
+    <string name="value_last_seen_seconds">%1$s s ago</string>
+    <string name="value_location_coords">(%1$s, %2$s)</string>
+    <string name="value_direction_with_cardinal">%1$d° %2$s</string>
 </resources>

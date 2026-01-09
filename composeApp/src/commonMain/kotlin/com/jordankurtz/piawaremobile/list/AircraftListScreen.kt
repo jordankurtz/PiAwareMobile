@@ -13,13 +13,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,14 +40,39 @@ import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.MiniMap
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
+import com.jordankurtz.piawaremobile.model.Async
+import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.Location
-import com.jordankurtz.piawaremobile.model.bearingTo
 import com.jordankurtz.piawaremobile.model.distanceTo
+import com.jordankurtz.piawaremobile.ui.AircraftDetailsGrid
+import com.jordankurtz.piawaremobile.ui.AircraftInfoRow
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.aircraft_list_collapse
+import piawaremobile.composeapp.generated.resources.aircraft_list_dismiss
+import piawaremobile.composeapp.generated.resources.aircraft_list_empty
+import piawaremobile.composeapp.generated.resources.aircraft_list_expand
+import piawaremobile.composeapp.generated.resources.aircraft_list_load_flight_details
+import piawaremobile.composeapp.generated.resources.aircraft_list_loading_flight_details
+import piawaremobile.composeapp.generated.resources.aircraft_list_progress_percent
+import piawaremobile.composeapp.generated.resources.aircraft_list_route_arrow
+import piawaremobile.composeapp.generated.resources.aircraft_list_stat_avg_altitude
+import piawaremobile.composeapp.generated.resources.aircraft_list_stat_tracked
+import piawaremobile.composeapp.generated.resources.aircraft_list_stat_with_position
+import piawaremobile.composeapp.generated.resources.aircraft_list_title
 import piawaremobile.composeapp.generated.resources.ic_expand_less
 import piawaremobile.composeapp.generated.resources.ic_expand_more
+import piawaremobile.composeapp.generated.resources.label_flight
+import piawaremobile.composeapp.generated.resources.label_operator
+import piawaremobile.composeapp.generated.resources.label_registration
+import piawaremobile.composeapp.generated.resources.label_type
+import piawaremobile.composeapp.generated.resources.unit_feet
+import piawaremobile.composeapp.generated.resources.unit_heading
+import piawaremobile.composeapp.generated.resources.unit_kilometers
+import piawaremobile.composeapp.generated.resources.unit_knots
+import piawaremobile.composeapp.generated.resources.unit_squawk
 import kotlin.math.roundToInt
 
 @Composable
@@ -51,9 +82,10 @@ fun AircraftListScreen(
 ) {
     val aircraft by aircraftViewModel.aircraft.collectAsState()
     val userLocation by locationViewModel.currentLocation.collectAsState()
+    val flightDetails by aircraftViewModel.flightDetails.collectAsState()
+    var selectedFlightHex by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header
         ListHeader(aircraft = aircraft)
 
         if (aircraft.isEmpty()) {
@@ -66,7 +98,16 @@ fun AircraftListScreen(
                 ) { aircraftWithServers ->
                     AircraftListItem(
                         aircraftWithServers = aircraftWithServers,
-                        userLocation = userLocation
+                        userLocation = userLocation,
+                        flightDetails = if (selectedFlightHex == aircraftWithServers.aircraft.hex) flightDetails else Async.NotStarted,
+                        onLoadFlightDetails = {
+                            selectedFlightHex = aircraftWithServers.aircraft.hex
+                            aircraftViewModel.openFlightInformation(aircraftWithServers.aircraft.hex)
+                        },
+                        onDismissFlightDetails = {
+                            selectedFlightHex = null
+                            aircraftViewModel.onFlightDetailsDismissed()
+                        }
                     )
                     HorizontalDivider()
                 }
@@ -77,6 +118,7 @@ fun AircraftListScreen(
 
 @Composable
 private fun ListHeader(aircraft: List<AircraftWithServers>) {
+    val unitFeet = stringResource(Res.string.unit_feet)
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surfaceVariant
@@ -85,7 +127,7 @@ private fun ListHeader(aircraft: List<AircraftWithServers>) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Aircraft",
+                text = stringResource(Res.string.aircraft_list_title),
                 style = MaterialTheme.typography.headlineMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -93,10 +135,10 @@ private fun ListHeader(aircraft: List<AircraftWithServers>) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                StatItem(label = "Tracked", value = aircraft.size.toString())
+                StatItem(label = stringResource(Res.string.aircraft_list_stat_tracked), value = aircraft.size.toString())
 
                 val withPosition = aircraft.count { it.aircraft.lat != 0.0 && it.aircraft.lon != 0.0 }
-                StatItem(label = "With Position", value = withPosition.toString())
+                StatItem(label = stringResource(Res.string.aircraft_list_stat_with_position), value = withPosition.toString())
 
                 val avgAltitude = aircraft
                     .mapNotNull { it.aircraft.altBaro?.replace(",", "")?.toIntOrNull() }
@@ -104,7 +146,7 @@ private fun ListHeader(aircraft: List<AircraftWithServers>) {
                     ?.average()
                     ?.roundToInt()
                 if (avgAltitude != null) {
-                    StatItem(label = "Avg Alt", value = "${avgAltitude}ft")
+                    StatItem(label = stringResource(Res.string.aircraft_list_stat_avg_altitude), value = "$avgAltitude$unitFeet")
                 }
             }
         }
@@ -134,7 +176,7 @@ private fun EmptyAircraftList() {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "No aircraft detected",
+            text = stringResource(Res.string.aircraft_list_empty),
             style = MaterialTheme.typography.titleMedium
         )
     }
@@ -143,10 +185,19 @@ private fun EmptyAircraftList() {
 @Composable
 private fun AircraftListItem(
     aircraftWithServers: AircraftWithServers,
-    userLocation: Location?
+    userLocation: Location?,
+    flightDetails: Async<Flight>,
+    onLoadFlightDetails: () -> Unit,
+    onDismissFlightDetails: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val aircraft = aircraftWithServers.aircraft
+    val info = aircraftWithServers.info
+
+    // Calculate distance
+    val distance = if (aircraft.lat != 0.0 && aircraft.lon != 0.0 && userLocation != null) {
+        userLocation.distanceTo(Location(aircraft.lat, aircraft.lon))
+    } else null
 
     Column(
         modifier = Modifier
@@ -155,19 +206,20 @@ private fun AircraftListItem(
             .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // Header row
+        // Header row - flight number and expand icon
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = aircraft.flight?.trim() ?: aircraft.hex,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                aircraftWithServers.info?.let { info ->
-                    info.registration?.let {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = aircraft.flight?.trim() ?: aircraft.hex,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    info?.icaoType?.let {
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = it,
                             style = MaterialTheme.typography.bodySmall,
@@ -175,32 +227,61 @@ private fun AircraftListItem(
                         )
                     }
                 }
-            }
-
-            // Quick stats
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                aircraft.altBaro?.let {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(it, style = MaterialTheme.typography.bodyMedium)
-                        Text("ft", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-                aircraft.gs?.let {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("${it.toInt()}", style = MaterialTheme.typography.bodyMedium)
-                        Text("kts", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                // Second line: registration and type description
+                val subtitle = buildList {
+                    info?.registration?.let { add(it) }
+                    info?.typeDescription?.let { add(it) }
+                }.joinToString(" - ")
+                if (subtitle.isNotEmpty()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
             Icon(
                 painter = painterResource(if (expanded) Res.drawable.ic_expand_less else Res.drawable.ic_expand_more),
-                contentDescription = if (expanded) "Collapse" else "Expand",
-                modifier = Modifier.padding(start = 8.dp)
+                contentDescription = stringResource(if (expanded) Res.string.aircraft_list_collapse else Res.string.aircraft_list_expand)
             )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Stats row
+        val unitFeet = stringResource(Res.string.unit_feet)
+        val unitKnots = stringResource(Res.string.unit_knots)
+        val unitHeading = stringResource(Res.string.unit_heading)
+        val unitKm = stringResource(Res.string.unit_kilometers)
+        val unitSquawk = stringResource(Res.string.unit_squawk)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left side stats
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                aircraft.altBaro?.let {
+                    CompactStat(value = it, unit = unitFeet)
+                }
+                aircraft.gs?.let {
+                    CompactStat(value = "${it.toInt()}", unit = unitKnots)
+                }
+                aircraft.track?.let {
+                    CompactStat(value = "${it.toInt()}°", unit = unitHeading)
+                }
+            }
+
+            // Right side stats
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                distance?.let {
+                    CompactStat(value = "${it.roundToInt()}", unit = unitKm)
+                }
+                aircraft.squawk?.let {
+                    CompactStat(value = it, unit = unitSquawk)
+                }
+            }
         }
 
         // Server info
@@ -232,120 +313,166 @@ private fun AircraftListItem(
                 AircraftDetailsGrid(aircraft = aircraft, userLocation = userLocation)
 
                 // Aircraft info
-                aircraftWithServers.info?.let { info ->
+                info?.let {
                     Spacer(modifier = Modifier.height(8.dp))
-                    AircraftInfoRow(info)
+                    AircraftInfoRow(it)
                 }
-            }
-        }
-    }
-}
 
-@Composable
-private fun AircraftDetailsGrid(aircraft: Aircraft, userLocation: Location?) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            aircraft.altBaro?.let {
-                DetailItem(label = "Altitude", value = "$it ft")
-            }
-            aircraft.track?.let {
-                DetailItem(label = "Heading", value = "$it°")
-            }
-            aircraft.gs?.let {
-                DetailItem(label = "Speed", value = "${it.toInt()} kts")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            aircraft.baroRate?.let {
-                DetailItem(label = "Vertical Speed", value = "$it fpm")
-            }
-            aircraft.squawk?.let {
-                DetailItem(label = "Squawk", value = it)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            if (aircraft.lat != 0.0 && aircraft.lon != 0.0) {
-                DetailItem(
-                    label = "Location",
-                    value = "(${aircraft.lat.round(4)}, ${aircraft.lon.round(4)})"
+                // Flight details section
+                Spacer(modifier = Modifier.height(12.dp))
+                FlightDetailsSection(
+                    aircraft = aircraft,
+                    flightDetails = flightDetails,
+                    onLoadFlightDetails = onLoadFlightDetails,
+                    onDismiss = onDismissFlightDetails
                 )
+            }
+        }
+    }
+}
 
-                userLocation?.let { location ->
-                    val aircraftLocation = Location(aircraft.lat, aircraft.lon)
-                    val distance = location.distanceTo(aircraftLocation)
-                    val bearing = location.bearingTo(aircraftLocation)
+@Composable
+private fun CompactStat(value: String, unit: String) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        Text(value, style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.width(2.dp))
+        Text(unit, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
 
-                    DetailItem(label = "Distance", value = "${distance.roundToInt()} km")
-                    DetailItem(label = "Direction", value = "${bearing.roundToInt()}° ${bearing.toCardinalDirection()}")
+@Composable
+private fun FlightDetailsSection(
+    aircraft: Aircraft,
+    flightDetails: Async<Flight>,
+    onLoadFlightDetails: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column {
+        when (flightDetails) {
+            Async.NotStarted -> {
+                if (!aircraft.flight.isNullOrBlank()) {
+                    Button(
+                        onClick = onLoadFlightDetails,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(Res.string.aircraft_list_load_flight_details))
+                    }
+                }
+            }
+            Async.Loading -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(Res.string.aircraft_list_loading_flight_details))
+                }
+            }
+            is Async.Error -> {
+                Text(
+                    text = flightDetails.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(Res.string.aircraft_list_dismiss))
+                }
+            }
+            is Async.Success -> {
+                val flight = flightDetails.data
+                FlightInfo(flight = flight, onDismiss = onDismiss)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FlightInfo(flight: Flight, onDismiss: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(Res.string.label_flight, flight.ident),
+                style = MaterialTheme.typography.titleSmall
+            )
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.aircraft_list_dismiss))
+            }
+        }
+
+        // Route info
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            flight.origin?.let { origin ->
+                Column {
+                    Text(origin.code ?: "", style = MaterialTheme.typography.titleMedium)
+                    Text(origin.city ?: origin.name ?: "", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
+            Text(stringResource(Res.string.aircraft_list_route_arrow), style = MaterialTheme.typography.titleLarge)
+
+            flight.destination?.let { dest ->
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(dest.code ?: "", style = MaterialTheme.typography.titleMedium)
+                    Text(dest.city ?: dest.name ?: "", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        // Progress bar
+        flight.progressPercent?.let { progress ->
+            if (progress in 0..100) {
+                Spacer(modifier = Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = { progress / 100f },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = stringResource(Res.string.aircraft_list_progress_percent, progress),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
+        // Aircraft info from FlightAware
+        Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            aircraft.rssi?.let {
-                DetailItem(label = "Signal", value = "$it dBm")
+            flight.aircraftType?.let {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(Res.string.label_type), style = MaterialTheme.typography.labelSmall)
+                }
             }
-            aircraft.seen?.let {
-                DetailItem(label = "Last Seen", value = "$it s ago")
+            flight.registration?.let {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(Res.string.label_registration), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            flight.operator?.let {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(Res.string.label_operator), style = MaterialTheme.typography.labelSmall)
+                }
             }
         }
     }
 }
 
-@Composable
-private fun AircraftInfoRow(info: com.jordankurtz.piawaremobile.model.AircraftInfo) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround
-    ) {
-        info.icaoType?.let {
-            DetailItem(label = "Type", value = it)
-        }
-        info.typeDescription?.let {
-            DetailItem(label = "Description", value = it)
-        }
-        info.wtc?.let {
-            DetailItem(label = "WTC", value = it)
-        }
-    }
-}
-
-@Composable
-private fun DetailItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, style = MaterialTheme.typography.labelSmall)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
-private fun Double.round(decimals: Int): Double {
-    var multiplier = 1.0
-    repeat(decimals) { multiplier *= 10 }
-    return kotlin.math.round(this * multiplier) / multiplier
-}
-
-private fun Double.toCardinalDirection(): String {
-    val directions = listOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
-    val index = ((this / 45) + 0.5).toInt() % 8
-    return directions[index]
-}
