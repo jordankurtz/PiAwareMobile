@@ -85,6 +85,9 @@ class AircraftViewModel(
     private val _numberOfPlanes = MutableStateFlow(0)
     val numberOfPlanes: StateFlow<Int> = _numberOfPlanes.asStateFlow()
 
+    private val _selectedAircraftHex = MutableStateFlow<String?>(null)
+    val selectedAircraftHex: StateFlow<String?> = _selectedAircraftHex.asStateFlow()
+
     val aircraftTrails: StateFlow<Map<String, AircraftTrail>> = getAllAircraftTrailsUseCase()
 
     private var pollingJob: Job? = null
@@ -128,6 +131,13 @@ class AircraftViewModel(
 
     fun onFlightDetailsDismissed() {
         resetLookup()
+    }
+
+    fun selectAircraft(hex: String?) {
+        _selectedAircraftHex.value = hex
+        if (hex == null) {
+            resetLookup()
+        }
     }
 
     private fun startPolling(
@@ -200,18 +210,22 @@ class AircraftViewModel(
         }
         val aircraft = _aircraft.value.firstOrNull { it.aircraft.hex == selectedAircraft }?.aircraft
         if (aircraft?.flight.isNullOrBlank()) {
-            _flightDetails.value = Async.Error("Flight information not available for this aircraft.")
             return
         }
         if (settings?.enableFlightAwareApi == true && settings?.flightAwareApiKey?.isNotEmpty() == true) {
             lookupFlight(aircraft.flight)
-        } else {
-            openFlightPage(aircraft.flight)
+        }
+        // If API not enabled, do nothing - user can manually tap "Open in FlightAware"
+    }
+
+    fun openFlightPage(selectedAircraft: String?) {
+        val aircraft = _aircraft.value.firstOrNull { it.aircraft.hex == selectedAircraft }?.aircraft
+        if (!aircraft?.flight.isNullOrBlank()) {
+            openFlightPageInternal(aircraft.flight)
         }
     }
 
-    private fun openFlightPage(flight: String) {
-        // todo add toast that we can't look it up
+    private fun openFlightPageInternal(flight: String) {
         viewModelScope.launch(mainDispatcher) {
             val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val url = "https://www.flightaware.com/live/flight/$flight/history/${

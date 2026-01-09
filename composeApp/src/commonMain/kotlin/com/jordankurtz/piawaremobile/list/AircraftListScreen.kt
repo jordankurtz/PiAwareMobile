@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -66,6 +67,7 @@ import piawaremobile.composeapp.generated.resources.ic_expand_less
 import piawaremobile.composeapp.generated.resources.ic_expand_more
 import piawaremobile.composeapp.generated.resources.label_flight
 import piawaremobile.composeapp.generated.resources.label_operator
+import piawaremobile.composeapp.generated.resources.open_in_flightaware
 import piawaremobile.composeapp.generated.resources.label_registration
 import piawaremobile.composeapp.generated.resources.label_type
 import piawaremobile.composeapp.generated.resources.unit_feet
@@ -104,9 +106,8 @@ fun AircraftListScreen(
                             selectedFlightHex = aircraftWithServers.aircraft.hex
                             aircraftViewModel.openFlightInformation(aircraftWithServers.aircraft.hex)
                         },
-                        onDismissFlightDetails = {
-                            selectedFlightHex = null
-                            aircraftViewModel.onFlightDetailsDismissed()
+                        onOpenFlightPage = {
+                            aircraftViewModel.openFlightPage(aircraftWithServers.aircraft.hex)
                         }
                     )
                     HorizontalDivider()
@@ -117,7 +118,7 @@ fun AircraftListScreen(
 }
 
 @Composable
-private fun ListHeader(aircraft: List<AircraftWithServers>) {
+internal fun ListHeader(aircraft: List<AircraftWithServers>) {
     val unitFeet = stringResource(Res.string.unit_feet)
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -188,7 +189,7 @@ private fun AircraftListItem(
     userLocation: Location?,
     flightDetails: Async<Flight>,
     onLoadFlightDetails: () -> Unit,
-    onDismissFlightDetails: () -> Unit
+    onOpenFlightPage: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val aircraft = aircraftWithServers.aircraft
@@ -324,7 +325,7 @@ private fun AircraftListItem(
                     aircraft = aircraft,
                     flightDetails = flightDetails,
                     onLoadFlightDetails = onLoadFlightDetails,
-                    onDismiss = onDismissFlightDetails
+                    onOpenFlightPage = onOpenFlightPage
                 )
             }
         }
@@ -341,11 +342,11 @@ private fun CompactStat(value: String, unit: String) {
 }
 
 @Composable
-private fun FlightDetailsSection(
+internal fun FlightDetailsSection(
     aircraft: Aircraft,
     flightDetails: Async<Flight>,
     onLoadFlightDetails: () -> Unit,
-    onDismiss: () -> Unit
+    onOpenFlightPage: () -> Unit
 ) {
     Column {
         when (flightDetails) {
@@ -376,39 +377,27 @@ private fun FlightDetailsSection(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(Res.string.aircraft_list_dismiss))
-                }
             }
             is Async.Success -> {
                 val flight = flightDetails.data
-                FlightInfo(flight = flight, onDismiss = onDismiss)
+                FlightInfo(flight = flight, onOpenFlightPage = onOpenFlightPage)
             }
         }
     }
 }
 
 @Composable
-private fun FlightInfo(flight: Flight, onDismiss: () -> Unit) {
+internal fun FlightInfo(flight: Flight, onOpenFlightPage: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
             .padding(12.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(Res.string.label_flight, flight.ident),
-                style = MaterialTheme.typography.titleSmall
-            )
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.aircraft_list_dismiss))
-            }
-        }
+        Text(
+            text = stringResource(Res.string.label_flight, flight.ident),
+            style = MaterialTheme.typography.titleSmall
+        )
 
         // Route info
         Row(
@@ -472,6 +461,15 @@ private fun FlightInfo(flight: Flight, onDismiss: () -> Unit) {
                     Text(stringResource(Res.string.label_operator), style = MaterialTheme.typography.labelSmall)
                 }
             }
+        }
+
+        // Open in FlightAware button
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedButton(
+            onClick = onOpenFlightPage,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.open_in_flightaware))
         }
     }
 }
