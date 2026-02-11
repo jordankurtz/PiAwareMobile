@@ -7,6 +7,7 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.Links
+import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
 import dev.mokkery.answering.returns
@@ -272,11 +273,17 @@ class AircraftRepoImplTest {
     @Test
     fun `fetchAndMergeHistory fetches history files from server`() = runTest {
         val historyReceiver = mockReceiver1090.copy(history = 2)
-        val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5)
+        val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 5f)
 
         everySuspend { piAwareApi.getDump1090ReceiverInfo("server1") } returns historyReceiver
-        everySuspend { piAwareApi.getHistoryFile("server1", 0) } returns listOf(historyAircraft)
-        everySuspend { piAwareApi.getHistoryFile("server1", 1) } returns listOf(historyAircraft.copy(lat = 32.6))
+        everySuspend { piAwareApi.getHistoryFile("server1", 0) } returns PiAwareResponse(
+            now = 1000.0,
+            aircraft = listOf(historyAircraft)
+        )
+        everySuspend { piAwareApi.getHistoryFile("server1", 1) } returns PiAwareResponse(
+            now = 1030.0,
+            aircraft = listOf(historyAircraft.copy(lat = 32.6, seenPos = 5f))
+        )
 
         repo.fetchAndMergeHistory("server1")
 
@@ -316,12 +323,18 @@ class AircraftRepoImplTest {
     @Test
     fun `fetchAndMergeHistory handles failed history file requests`() = runTest {
         val historyReceiver = mockReceiver1090.copy(history = 3)
-        val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5)
+        val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 5f)
 
         everySuspend { piAwareApi.getDump1090ReceiverInfo("server1") } returns historyReceiver
-        everySuspend { piAwareApi.getHistoryFile("server1", 0) } returns listOf(historyAircraft)
+        everySuspend { piAwareApi.getHistoryFile("server1", 0) } returns PiAwareResponse(
+            now = 1000.0,
+            aircraft = listOf(historyAircraft)
+        )
         everySuspend { piAwareApi.getHistoryFile("server1", 1) } returns null // Failed request
-        everySuspend { piAwareApi.getHistoryFile("server1", 2) } returns listOf(historyAircraft.copy(lat = 32.6))
+        everySuspend { piAwareApi.getHistoryFile("server1", 2) } returns PiAwareResponse(
+            now = 1060.0,
+            aircraft = listOf(historyAircraft.copy(lat = 32.6, seenPos = 5f))
+        )
 
         repo.fetchAndMergeHistory("server1")
 
@@ -330,5 +343,40 @@ class AircraftRepoImplTest {
         repo.getAircraft(listOf("server1"))
         val trails = repo.aircraftTrails.value
         assertTrue(trails.containsKey(historyAircraft.hex))
+    }
+
+    @Test
+    fun `fetchAndMergeHistory sorts positions by timestamp`() = runTest {
+        val historyReceiver = mockReceiver1090.copy(history = 3)
+        val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 0f)
+
+        everySuspend { piAwareApi.getDump1090ReceiverInfo("server1") } returns historyReceiver
+        // Return history files in non-chronological order (simulating parallel fetch race condition)
+        everySuspend { piAwareApi.getHistoryFile("server1", 0) } returns PiAwareResponse(
+            now = 1060.0, // Middle timestamp
+            aircraft = listOf(historyAircraft.copy(lat = 32.6))
+        )
+        everySuspend { piAwareApi.getHistoryFile("server1", 1) } returns PiAwareResponse(
+            now = 1000.0, // Oldest timestamp
+            aircraft = listOf(historyAircraft.copy(lat = 32.5))
+        )
+        everySuspend { piAwareApi.getHistoryFile("server1", 2) } returns PiAwareResponse(
+            now = 1120.0, // Newest timestamp
+            aircraft = listOf(historyAircraft.copy(lat = 32.7))
+        )
+
+        repo.fetchAndMergeHistory("server1")
+
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft.copy(lat = 32.7))
+        repo.getAircraftWithServers(listOf(server1))
+
+        val trails = repo.aircraftTrails.value
+        val positions = trails[historyAircraft.hex]!!.positions
+
+        // Verify positions are sorted by timestamp (oldest first)
+        assertEquals(3, positions.size)
+        assertEquals(32.5, positions[0].latitude)  // From now=1000
+        assertEquals(32.6, positions[1].latitude)  // From now=1060
+        assertEquals(32.7, positions[2].latitude)  // From now=1120
     }
 }

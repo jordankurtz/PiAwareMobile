@@ -10,6 +10,7 @@ import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
+import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
 import kotlinx.coroutines.async
@@ -106,20 +107,34 @@ class AircraftRepoImpl(
 
             historyResults
                 .filterNotNull()
-                .flatten()
-                .filter { it.lat != 0.0 && it.lon != 0.0 }
-                .forEach { aircraft ->
-                    val positions = trailPositions.getOrPut(aircraft.hex) { mutableListOf() }
-                    val newPosition = AircraftPosition(
-                        latitude = aircraft.lat,
-                        longitude = aircraft.lon,
-                        altitude = aircraft.altBaro,
-                        timestamp = Clock.System.now().epochSeconds.toDouble()
-                    )
-                    if (positions.lastOrNull()?.let { it.latitude == newPosition.latitude && it.longitude == newPosition.longitude } != true) {
-                        positions.add(newPosition)
+                .forEach { response ->
+                    val snapshotTime = response.now ?: return@forEach
+                    response.aircraft
+                        .filter { it.lat != 0.0 && it.lon != 0.0 }
+                        .forEach { aircraft ->
+                            val positions = trailPositions.getOrPut(aircraft.hex) { mutableListOf() }
+                            val positionAge = aircraft.seenPos ?: aircraft.seen ?: 0f
+                            val newPosition = AircraftPosition(
+                                latitude = aircraft.lat,
+                                longitude = aircraft.lon,
+                                altitude = aircraft.altBaro,
+                                timestamp = snapshotTime - positionAge
+                            )
+                            positions.add(newPosition)
+                        }
+                }
+
+            // Sort positions by timestamp and deduplicate
+            trailPositions.forEach { (_, positions) ->
+                val sorted = positions.sortedBy { it.timestamp }
+                positions.clear()
+                sorted.forEach { pos ->
+                    val last = positions.lastOrNull()
+                    if (last == null || last.latitude != pos.latitude || last.longitude != pos.longitude) {
+                        positions.add(pos)
                     }
                 }
+            }
         }
 
         updateTrailsStateFlow()
@@ -129,7 +144,7 @@ class AircraftRepoImpl(
         host: String,
         index: Int,
         maxRetries: Int = 3
-    ): List<Aircraft>? {
+    ): PiAwareResponse? {
         repeat(maxRetries) { attempt ->
             val result = piAwareApi.getHistoryFile(host, index)
             if (result != null) return result
