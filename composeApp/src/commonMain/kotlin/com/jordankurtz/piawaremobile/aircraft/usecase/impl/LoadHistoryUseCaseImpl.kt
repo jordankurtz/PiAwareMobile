@@ -13,12 +13,7 @@ class LoadHistoryUseCaseImpl(
     private val aircraftRepo: AircraftRepo
 ) : LoadHistoryUseCase {
 
-    private var hasBeenExecuted = false
-
     override suspend fun invoke(servers: List<String>) {
-        if (hasBeenExecuted) return
-        hasBeenExecuted = true
-
         if (servers.isEmpty()) return
 
         coroutineScope {

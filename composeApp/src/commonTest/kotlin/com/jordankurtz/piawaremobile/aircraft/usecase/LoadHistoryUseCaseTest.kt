@@ -6,6 +6,7 @@ import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
+import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -45,7 +46,7 @@ class LoadHistoryUseCaseTest {
     }
 
     @Test
-    fun `invoke only executes once`() = runTest {
+    fun `invoke can be called multiple times`() = runTest {
         aircraftRepo = mock()
 
         val servers = listOf("server1.local")
@@ -54,9 +55,9 @@ class LoadHistoryUseCaseTest {
 
         val useCase = createUseCase()
         useCase(servers)
-        useCase(servers) // Second call should be ignored
+        useCase(servers)
 
-        verifySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") }
+        verifySuspend(mode = VerifyMode.exactly(2)) { aircraftRepo.fetchAndMergeHistory("server1.local") }
     }
 
     @Test

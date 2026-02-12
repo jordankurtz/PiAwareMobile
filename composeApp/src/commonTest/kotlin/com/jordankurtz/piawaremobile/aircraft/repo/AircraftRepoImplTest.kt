@@ -346,6 +346,34 @@ class AircraftRepoImplTest {
     }
 
     @Test
+    fun `fetchAndMergeHistory deduplicates positions on repeated calls`() = runTest {
+        val historyReceiver = mockReceiver1090.copy(history = 2)
+        val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 5f)
+
+        everySuspend { piAwareApi.getDump1090ReceiverInfo("server1") } returns historyReceiver
+        everySuspend { piAwareApi.getHistoryFile("server1", 0) } returns PiAwareResponse(
+            now = 1000.0,
+            aircraft = listOf(historyAircraft)
+        )
+        everySuspend { piAwareApi.getHistoryFile("server1", 1) } returns PiAwareResponse(
+            now = 1030.0,
+            aircraft = listOf(historyAircraft.copy(lat = 32.6, seenPos = 5f))
+        )
+
+        repo.fetchAndMergeHistory("server1")
+        repo.fetchAndMergeHistory("server1") // Second fetch with same data
+
+        everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft)
+        repo.getAircraft(listOf("server1"))
+
+        val trails = repo.aircraftTrails.value
+        val positions = trails[historyAircraft.hex]!!.positions
+        // 2 deduped history positions + 1 current from getAircraft = 3
+        // Without dedup this would be 4 history + 1 current = 5
+        assertEquals(3, positions.size)
+    }
+
+    @Test
     fun `fetchAndMergeHistory sorts positions by timestamp`() = runTest {
         val historyReceiver = mockReceiver1090.copy(history = 3)
         val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 0f)
@@ -368,7 +396,7 @@ class AircraftRepoImplTest {
         repo.fetchAndMergeHistory("server1")
 
         everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft.copy(lat = 32.7))
-        repo.getAircraftWithServers(listOf(server1))
+        repo.getAircraft(listOf("server1"))
 
         val trails = repo.aircraftTrails.value
         val positions = trails[historyAircraft.hex]!!.positions
