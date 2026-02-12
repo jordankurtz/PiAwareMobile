@@ -32,7 +32,6 @@ fun TabletAircraftListPanel(
     flightDetails: Async<Flight>,
     userLocation: Location?,
     onAircraftSelected: (String?) -> Unit,
-    onLoadFlightDetails: () -> Unit,
     onOpenFlightPage: () -> Unit
 ) {
     val selectedAircraft = aircraft.find { it.aircraft.hex == selectedHex }
@@ -48,7 +47,6 @@ fun TabletAircraftListPanel(
                 flightDetails = flightDetails,
                 userLocation = userLocation,
                 onClose = { onAircraftSelected(null) },
-                onLoadFlightDetails = onLoadFlightDetails,
                 onOpenFlightPage = onOpenFlightPage
             )
         } else {

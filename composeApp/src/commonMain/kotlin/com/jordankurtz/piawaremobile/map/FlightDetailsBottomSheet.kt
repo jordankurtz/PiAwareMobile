@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -57,6 +58,7 @@ import piawaremobile.composeapp.generated.resources.flight_details_minutes_short
 import piawaremobile.composeapp.generated.resources.flight_details_on_time
 import piawaremobile.composeapp.generated.resources.flight_details_remaining_time
 import piawaremobile.composeapp.generated.resources.flight_details_scheduled
+import piawaremobile.composeapp.generated.resources.open_in_flightaware
 import piawaremobile.composeapp.generated.resources.ic_arrow_downward
 import kotlin.time.Instant
 
@@ -65,6 +67,7 @@ fun FlightDetailsBottomSheet(
     aircraft: Aircraft?,
     flightDetails: Async<Flight>,
     onDismissRequest: () -> Unit,
+    onOpenFlightPage: () -> Unit,
     sheetState: SheetState =
         rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
@@ -100,6 +103,14 @@ fun FlightDetailsBottomSheet(
                             text = stringResource(Res.string.flight_details_flight_number, flight.ident),
                             style = MaterialTheme.typography.headlineSmall,
                         )
+
+                        if (!aircraft?.flight.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(onClick = onOpenFlightPage) {
+                                Text(stringResource(Res.string.open_in_flightaware))
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
 
                         TabRow(selectedTabIndex = tabIndex) {

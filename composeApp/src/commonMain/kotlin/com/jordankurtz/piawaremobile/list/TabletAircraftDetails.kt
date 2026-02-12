@@ -36,7 +36,6 @@ fun TabletAircraftDetails(
     flightDetails: Async<Flight>,
     userLocation: Location?,
     onClose: () -> Unit,
-    onLoadFlightDetails: () -> Unit,
     onOpenFlightPage: () -> Unit
 ) {
     val aircraft = aircraftWithServers.aircraft
@@ -109,7 +108,7 @@ fun TabletAircraftDetails(
         FlightDetailsSection(
             aircraft = aircraft,
             flightDetails = flightDetails,
-            onLoadFlightDetails = onLoadFlightDetails,
+            onLoadFlightDetails = { /* retry handled by re-selecting */ },
             onOpenFlightPage = onOpenFlightPage
         )
     }

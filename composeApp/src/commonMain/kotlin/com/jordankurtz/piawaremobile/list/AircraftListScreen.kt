@@ -5,6 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.HorizontalDivider
@@ -55,8 +55,8 @@ import piawaremobile.composeapp.generated.resources.aircraft_list_collapse
 import piawaremobile.composeapp.generated.resources.aircraft_list_dismiss
 import piawaremobile.composeapp.generated.resources.aircraft_list_empty
 import piawaremobile.composeapp.generated.resources.aircraft_list_expand
-import piawaremobile.composeapp.generated.resources.aircraft_list_load_flight_details
 import piawaremobile.composeapp.generated.resources.aircraft_list_loading_flight_details
+import piawaremobile.composeapp.generated.resources.aircraft_list_retry_flight_details
 import piawaremobile.composeapp.generated.resources.aircraft_list_progress_percent
 import piawaremobile.composeapp.generated.resources.aircraft_list_route_arrow
 import piawaremobile.composeapp.generated.resources.aircraft_list_stat_avg_altitude
@@ -194,6 +194,12 @@ private fun AircraftListItem(
     var expanded by remember { mutableStateOf(false) }
     val aircraft = aircraftWithServers.aircraft
     val info = aircraftWithServers.info
+
+    LaunchedEffect(expanded) {
+        if (expanded && !aircraft.flight.isNullOrBlank()) {
+            onLoadFlightDetails()
+        }
+    }
 
     // Calculate distance
     val distance = if (aircraft.lat != 0.0 && aircraft.lon != 0.0 && userLocation != null) {
@@ -351,14 +357,7 @@ internal fun FlightDetailsSection(
     Column {
         when (flightDetails) {
             Async.NotStarted -> {
-                if (!aircraft.flight.isNullOrBlank()) {
-                    Button(
-                        onClick = onLoadFlightDetails,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(Res.string.aircraft_list_load_flight_details))
-                    }
-                }
+                // Auto-trigger happens elsewhere; nothing to show
             }
             Async.Loading -> {
                 Row(
@@ -377,17 +376,31 @@ internal fun FlightDetailsSection(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
+                TextButton(onClick = onLoadFlightDetails) {
+                    Text(stringResource(Res.string.aircraft_list_retry_flight_details))
+                }
             }
             is Async.Success -> {
                 val flight = flightDetails.data
-                FlightInfo(flight = flight, onOpenFlightPage = onOpenFlightPage)
+                FlightInfo(flight = flight)
+            }
+        }
+
+        // Always show "Open in FlightAware" when flight is available
+        if (!aircraft.flight.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onOpenFlightPage,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(Res.string.open_in_flightaware))
             }
         }
     }
 }
 
 @Composable
-internal fun FlightInfo(flight: Flight, onOpenFlightPage: () -> Unit) {
+internal fun FlightInfo(flight: Flight) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -461,15 +474,6 @@ internal fun FlightInfo(flight: Flight, onOpenFlightPage: () -> Unit) {
                     Text(stringResource(Res.string.label_operator), style = MaterialTheme.typography.labelSmall)
                 }
             }
-        }
-
-        // Open in FlightAware button
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedButton(
-            onClick = onOpenFlightPage,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(Res.string.open_in_flightaware))
         }
     }
 }

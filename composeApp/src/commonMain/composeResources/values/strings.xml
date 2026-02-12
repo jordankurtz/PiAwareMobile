@@ -54,6 +54,7 @@
     <string name="aircraft_list_collapse">Collapse</string>
     <string name="aircraft_list_load_flight_details">Load Flight Details</string>
     <string name="aircraft_list_loading_flight_details">Loading flight details...</string>
+    <string name="aircraft_list_retry_flight_details">Retry</string>
     <string name="aircraft_list_dismiss">Dismiss</string>
     <string name="open_in_flightaware">Open in FlightAware</string>
     <string name="close">Close</string>

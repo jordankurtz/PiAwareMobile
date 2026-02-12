@@ -137,6 +137,8 @@ class AircraftViewModel(
         _selectedAircraftHex.value = hex
         if (hex == null) {
             resetLookup()
+        } else {
+            openFlightInformation(hex)
         }
     }
 

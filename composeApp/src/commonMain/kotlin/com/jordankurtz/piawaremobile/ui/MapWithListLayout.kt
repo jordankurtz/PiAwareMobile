@@ -79,9 +79,6 @@ fun MapWithListLayout(
     LaunchedEffect(mapSelectedHex) {
         if (mapSelectedHex != selectedHex) {
             aircraftViewModel.selectAircraft(mapSelectedHex)
-            if (mapSelectedHex != null) {
-                aircraftViewModel.openFlightInformation(mapSelectedHex)
-            }
         }
     }
 
@@ -140,9 +137,6 @@ fun MapWithListLayout(
                 onAircraftSelected = { hex ->
                     aircraftViewModel.selectAircraft(hex)
                     mapViewModel.syncSelection(hex)
-                },
-                onLoadFlightDetails = {
-                    selectedHex?.let { aircraftViewModel.openFlightInformation(it) }
                 },
                 onOpenFlightPage = {
                     aircraftViewModel.openFlightPage(selectedHex)

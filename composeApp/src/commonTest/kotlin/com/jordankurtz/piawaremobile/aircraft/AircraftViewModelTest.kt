@@ -7,7 +7,9 @@ import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LookupFlightUseCase
+import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftTrail
+import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
@@ -28,6 +30,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import dev.mokkery.matcher.any
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -82,8 +85,8 @@ class AircraftViewModelTest {
         every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
         every { getAllAircraftTrailsUseCase() } returns MutableStateFlow(emptyMap<String, AircraftTrail>())
         everySuspend { loadHistoryUseCase(listOf("server1.local")) } returns Unit
-        everySuspend { loadAircraftTypesUseCase(listOf("server1.local")) } returns Unit
-        everySuspend { getAircraftWithDetailsUseCase(listOf("server1.local"), "server1.local") } returns emptyList()
+        everySuspend { loadAircraftTypesUseCase(servers) } returns Unit
+        everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns emptyList()
     }
 
     @AfterTest
@@ -155,5 +158,52 @@ class AircraftViewModelTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             assertEquals(0, viewModel.numberOfPlanes.value) // empty list from mock
+        }
+
+    @Test
+    fun `selectAircraft triggers flight lookup when API is enabled`() =
+        runTest {
+            val apiSettings =
+                settings.copy(
+                    enableFlightAwareApi = true,
+                    flightAwareApiKey = "test-key",
+                )
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(apiSettings))
+
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(aircraft = Aircraft(hex = "abc123", flight = "UAL123")),
+                )
+            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { lookupFlightUseCase(any()) } returns Async.Error("test")
+
+            val viewModel = createViewModel()
+            // Init launches on IO: loads settings, queues polling collector on test dispatcher
+            Thread.sleep(100)
+            // Start the polling collector so the upstream IO flow begins
+            testDispatcher.scheduler.advanceUntilIdle()
+            // Wait for the first poll cycle on IO to populate aircraft list
+            Thread.sleep(100)
+
+            viewModel.selectAircraft("abc123")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals("abc123", viewModel.selectedAircraftHex.value)
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                lookupFlightUseCase("UAL123")
+            }
+        }
+
+    @Test
+    fun `selectAircraft with null resets flight details`() =
+        runTest {
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.selectAircraft(null)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(null, viewModel.selectedAircraftHex.value)
+            assertEquals(Async.NotStarted, viewModel.flightDetails.value)
         }
 }
