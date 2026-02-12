@@ -11,6 +11,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.jordankurtz.piawaremobile.Overlay
 import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.location.LocationViewModel
@@ -58,6 +60,10 @@ fun MapScreen(
 
     LaunchedEffect(selectedAircraftHex) {
         aircraftViewModel.openFlightInformation(selectedAircraftHex)
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        aircraftViewModel.onResume()
     }
 
     Box {

@@ -79,6 +79,7 @@ class AircraftViewModel(
     val aircraftTrails: StateFlow<Map<String, AircraftTrail>> = getAllAircraftTrailsUseCase()
 
     private var pollingJob: Job? = null
+    private var isFirstResume = true
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -126,6 +127,18 @@ class AircraftViewModel(
             servers = servers.map { it.address },
             refreshInterval = refreshInterval
         )
+    }
+
+    fun onResume() {
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
+        val servers = settings?.servers?.map { it.address } ?: return
+        Logger.v("Refreshing trail history on resume")
+        viewModelScope.launch(Dispatchers.IO) {
+            loadHistoryUseCase(servers)
+        }
     }
 
     fun stopPolling() {
