@@ -11,7 +11,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class GetAllAircraftTrailsUseCaseTest {
-
     private lateinit var aircraftRepo: AircraftRepo
 
     private fun createUseCase(): GetAllAircraftTrailsUseCase {

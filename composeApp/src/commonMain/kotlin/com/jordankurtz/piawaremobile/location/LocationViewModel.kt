@@ -18,7 +18,6 @@ class LocationViewModel(
     private val locationService: LocationService,
     private val loadSettingsUseCase: LoadSettingsUseCase,
 ) : ViewModel() {
-
     private val _locationState = MutableStateFlow<LocationState>(LocationState.Idle)
     val locationState: StateFlow<LocationState> = _locationState.asStateFlow()
 

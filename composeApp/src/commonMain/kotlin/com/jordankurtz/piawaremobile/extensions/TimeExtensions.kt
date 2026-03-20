@@ -11,12 +11,13 @@ val Instant.formattedTime: String
         val localDateTime = toLocalDateTime(TimeZone.currentSystemDefault())
 
         // Define a custom format using the DSL
-        val formatter = LocalDateTime.Format {
-            amPmHour()
-            char(':')
-            minute()
-            char(' ')
-            amPmMarker("am", "pm")
-        }
+        val formatter =
+            LocalDateTime.Format {
+                amPmHour()
+                char(':')
+                minute()
+                char(' ')
+                amPmMarker("am", "pm")
+            }
         return formatter.format(localDateTime)
     }

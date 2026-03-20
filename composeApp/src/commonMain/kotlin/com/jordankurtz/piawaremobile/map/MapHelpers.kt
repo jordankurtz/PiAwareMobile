@@ -16,7 +16,10 @@ val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = TILE_SIZE)
 
 const val GROUND_ALTITUDE = "ground"
 
-fun mapSizeAtLevel(wmtsLevel: Int, tileSize: Int): Int {
+fun mapSizeAtLevel(
+    wmtsLevel: Int,
+    tileSize: Int,
+): Int {
     return tileSize * 2.0.pow(wmtsLevel).toInt()
 }
 
@@ -54,7 +57,10 @@ fun getColorForAltitude(altitude: String?): Color {
 val Location.projected: Pair<Double, Double>
     get() = doProjection(latitude, longitude)
 
-fun doProjection(latitude: Double?, longitude: Double?): Pair<Double, Double> {
+fun doProjection(
+    latitude: Double?,
+    longitude: Double?,
+): Pair<Double, Double> {
     if (latitude == null || longitude == null || abs(latitude) > 90 || abs(longitude) > 180) {
         error("Invalid latitude or longitude")
     }
@@ -68,6 +74,10 @@ fun doProjection(latitude: Double?, longitude: Double?): Pair<Double, Double> {
     return Pair(x, y)
 }
 
-private fun normalize(t: Double, min: Double, max: Double): Double {
+private fun normalize(
+    t: Double,
+    min: Double,
+    max: Double,
+): Double {
     return (t - min) / (max - min)
 }

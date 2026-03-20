@@ -47,20 +47,20 @@ import kotlin.math.min
 class MiniMapViewModel(
     private val mapProvider: TileStreamProvider,
     private val loadSettingsUseCase: LoadSettingsUseCase,
-    private val getAircraftTrailUseCase: GetAircraftTrailUseCase
+    private val getAircraftTrailUseCase: GetAircraftTrailUseCase,
 ) : ViewModel() {
-
     private val previousPathIds = mutableSetOf<String>()
     private var settings: Settings? = null
     private var currentAircraft: Aircraft? = null
     private var currentLocation: Location? = null
     private var trailJob: Job? = null
 
-    val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 4).apply {
-        addLayer(mapProvider)
-        setScrollOffsetRatio(xRatio = 0.5f, yRatio = 0.5f)
-        disableGestures()
-    }
+    val state =
+        MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 4).apply {
+            addLayer(mapProvider)
+            setScrollOffsetRatio(xRatio = 0.5f, yRatio = 0.5f)
+            disableGestures()
+        }
 
     init {
         viewModelScope.launch {
@@ -80,7 +80,10 @@ class MiniMapViewModel(
         }
     }
 
-    fun updateMapState(aircraft: Aircraft?, location: Location?) {
+    fun updateMapState(
+        aircraft: Aircraft?,
+        location: Location?,
+    ) {
         currentAircraft = aircraft
         currentLocation = location
 
@@ -88,13 +91,14 @@ class MiniMapViewModel(
 
         // Subscribe to trail updates for this aircraft
         trailJob?.cancel()
-        trailJob = aircraft?.hex?.let { hex ->
-            viewModelScope.launch {
-                getAircraftTrailUseCase(hex).collect { trail ->
-                    updateTrail(trail)
+        trailJob =
+            aircraft?.hex?.let { hex ->
+                viewModelScope.launch {
+                    getAircraftTrailUseCase(hex).collect { trail ->
+                        updateTrail(trail)
+                    }
                 }
             }
-        }
     }
 
     private fun updateMarkersAndScroll() {
@@ -113,15 +117,16 @@ class MiniMapViewModel(
                     id = "aircraft",
                     x = x,
                     y = y,
-                    relativeOffset = Offset(-0.5f, -0.5f)
+                    relativeOffset = Offset(-0.5f, -0.5f),
                 ) {
                     Image(
                         painter = painterResource(resource = Res.drawable.ic_plane),
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(size = 30.dp)
-                            .rotate(degrees = aircraft.track ?: 0f),
-                        colorFilter = ColorFilter.tint(color = getColorForAltitude(altitude = aircraft.altBaro))
+                        modifier =
+                            Modifier
+                                .size(size = 30.dp)
+                                .rotate(degrees = aircraft.track ?: 0f),
+                        colorFilter = ColorFilter.tint(color = getColorForAltitude(altitude = aircraft.altBaro)),
                     )
                 }
             }
@@ -134,12 +139,12 @@ class MiniMapViewModel(
                     id = "user_location",
                     x = x,
                     y = y,
-                    relativeOffset = Offset(-0.0f, -0.5f)
+                    relativeOffset = Offset(-0.0f, -0.5f),
                 ) {
                     Image(
                         painter = painterResource(resource = Res.drawable.ic_user_location),
                         contentDescription = null,
-                        modifier = Modifier.size(size = 24.dp)
+                        modifier = Modifier.size(size = 24.dp),
                     )
                 }
             }
@@ -147,16 +152,17 @@ class MiniMapViewModel(
             if (aircraftLat != null && aircraftLon != null && userLat != null && userLon != null) {
                 val (aircraftX, aircraftY) = doProjection(latitude = aircraftLat, longitude = aircraftLon)
                 val (userX, userY) = doProjection(latitude = userLat, longitude = userLon)
-                val boundingBox = BoundingBox(
-                    xLeft = min(aircraftX, userX),
-                    yTop = min(aircraftY, userY),
-                    xRight = max(aircraftX, userX),
-                    yBottom = max(aircraftY, userY)
-                )
+                val boundingBox =
+                    BoundingBox(
+                        xLeft = min(aircraftX, userX),
+                        yTop = min(aircraftY, userY),
+                        xRight = max(aircraftX, userX),
+                        yBottom = max(aircraftY, userY),
+                    )
                 state.scrollTo(
                     area = boundingBox,
                     padding = Offset(x = 0.2f, y = 0.2f),
-                    animationSpec = SpringSpec(stiffness = Spring.StiffnessLow)
+                    animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
                 )
             } else if (aircraftLat != null && aircraftLon != null) {
                 val (x, y) = doProjection(latitude = aircraftLat, longitude = aircraftLon)
@@ -181,9 +187,10 @@ class MiniMapViewModel(
                                 val id = "trail_$index"
                                 previousPathIds.add(id)
 
-                                val projectedPoints = segment.positions.map { pos ->
-                                    doProjection(pos.latitude, pos.longitude)
-                                }
+                                val projectedPoints =
+                                    segment.positions.map { pos ->
+                                        doProjection(pos.latitude, pos.longitude)
+                                    }
 
                                 state.addPath(id, color = segment.color, width = 1.5.dp) {
                                     addPoints(projectedPoints)
@@ -198,7 +205,7 @@ class MiniMapViewModel(
 
     private data class ColorSegment(
         val color: Color,
-        val positions: MutableList<AircraftPosition>
+        val positions: MutableList<AircraftPosition>,
     )
 
     private fun groupPositionsByAltitudeColor(positions: List<AircraftPosition>): List<ColorSegment> {

@@ -8,10 +8,10 @@ import ovh.plrapps.mapcompose.ui.state.MapState
 @Composable
 fun OpenStreetMap(
     state: MapState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     MapUI(
         state = state,
-        modifier = modifier
+        modifier = modifier,
     )
 }

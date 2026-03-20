@@ -15,13 +15,15 @@ actual class DataStoreModule {
     @Single
     actual fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences> {
         return PreferenceDataStoreFactory.createWithPath {
-            (requireNotNull(
-                NSSearchPathForDirectoriesInDomains(
-                    NSApplicationSupportDirectory,
-                    NSUserDomainMask,
-                    true
-                ).firstOrNull()?.toString()
-            ) + "/settings.preferences_pb").toPath()
+            (
+                requireNotNull(
+                    NSSearchPathForDirectoriesInDomains(
+                        NSApplicationSupportDirectory,
+                        NSUserDomainMask,
+                        true,
+                    ).firstOrNull()?.toString(),
+                ) + "/settings.preferences_pb"
+            ).toPath()
         }
     }
 }

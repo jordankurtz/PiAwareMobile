@@ -7,5 +7,5 @@ import kotlin.uuid.Uuid
 data class Server(
     val id: Uuid = Uuid.random(),
     val name: String,
-    val address: String
+    val address: String,
 )

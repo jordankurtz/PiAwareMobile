@@ -17,7 +17,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class LoadSettingsUseCaseTest {
-
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var loadSettingsUseCase: LoadSettingsUseCase
     private val testDispatcher = StandardTestDispatcher()
@@ -29,54 +28,58 @@ class LoadSettingsUseCaseTest {
     }
 
     @Test
-    fun `invoke returns loading then settings from repository`() = runTest(testDispatcher) {
-        // Given
-        val settings = Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = false,
-            openUrlsExternally = false,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = ""
-        )
-        every { settingsRepository.getSettings() } returns flowOf(settings)
+    fun `invoke returns loading then settings from repository`() =
+        runTest(testDispatcher) {
+            // Given
+            val settings =
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = false,
+                    openUrlsExternally = false,
+                    enableFlightAwareApi = false,
+                    flightAwareApiKey = "",
+                )
+            every { settingsRepository.getSettings() } returns flowOf(settings)
 
-        // When
-        val result = loadSettingsUseCase()
+            // When
+            val result = loadSettingsUseCase()
 
-        // Then
-        val emissions = result.toList()
-        assertEquals(2, emissions.size)
-        assertTrue(emissions[0] is Async.Loading)
-        assertEquals(Async.Success(settings), emissions[1])
-    }
+            // Then
+            val emissions = result.toList()
+            assertEquals(2, emissions.size)
+            assertTrue(emissions[0] is Async.Loading)
+            assertEquals(Async.Success(settings), emissions[1])
+        }
 
     @Test
-    fun `invoke returns distinct values`() = runTest(testDispatcher) {
-        // Given
-        val settings = Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = false,
-            openUrlsExternally = false,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = ""
-        )
-        every { settingsRepository.getSettings() } returns flowOf(settings, settings)
+    fun `invoke returns distinct values`() =
+        runTest(testDispatcher) {
+            // Given
+            val settings =
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = false,
+                    openUrlsExternally = false,
+                    enableFlightAwareApi = false,
+                    flightAwareApiKey = "",
+                )
+            every { settingsRepository.getSettings() } returns flowOf(settings, settings)
 
-        // When
-        val result = loadSettingsUseCase()
+            // When
+            val result = loadSettingsUseCase()
 
-        // Then
-        val emissions = result.toList()
-        assertEquals(2, emissions.size)
-        assertTrue(emissions[0] is Async.Loading)
-        assertEquals(Async.Success(settings), emissions[1])
-    }
+            // Then
+            val emissions = result.toList()
+            assertEquals(2, emissions.size)
+            assertTrue(emissions[0] is Async.Loading)
+            assertEquals(Async.Success(settings), emissions[1])
+        }
 }

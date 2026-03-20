@@ -11,7 +11,9 @@ import piawaremobile.composeapp.generated.resources.screen_map
 import piawaremobile.composeapp.generated.resources.screen_settings
 
 sealed class Screen(val title: StringResource, val icon: DrawableResource) {
-    object Map: Screen(Res.string.screen_map, Res.drawable.ic_map)
-    object List: Screen(Res.string.screen_list, Res.drawable.ic_list)
-    object Settings: Screen(Res.string.screen_settings, Res.drawable.ic_settings)
+    object Map : Screen(Res.string.screen_map, Res.drawable.ic_map)
+
+    object List : Screen(Res.string.screen_list, Res.drawable.ic_list)
+
+    object Settings : Screen(Res.string.screen_settings, Res.drawable.ic_settings)
 }

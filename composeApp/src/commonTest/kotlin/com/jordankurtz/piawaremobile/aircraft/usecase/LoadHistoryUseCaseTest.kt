@@ -12,7 +12,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
 class LoadHistoryUseCaseTest {
-
     private lateinit var aircraftRepo: AircraftRepo
 
     private fun createUseCase(): LoadHistoryUseCase {
@@ -20,62 +19,68 @@ class LoadHistoryUseCaseTest {
     }
 
     @Test
-    fun `invoke fetches history from all servers`() = runTest {
-        aircraftRepo = mock()
+    fun `invoke fetches history from all servers`() =
+        runTest {
+            aircraftRepo = mock()
 
-        val servers = listOf("server1.local", "server2.local")
+            val servers = listOf("server1.local", "server2.local")
 
-        everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
-        everySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") } returns Unit
+            everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
+            everySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") } returns Unit
 
-        val useCase = createUseCase()
-        useCase(servers)
+            val useCase = createUseCase()
+            useCase(servers)
 
-        verifySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") }
-        verifySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") }
-    }
-
-    @Test
-    fun `invoke does not fetch history when no servers`() = runTest {
-        aircraftRepo = mock()
-
-        val useCase = createUseCase()
-        useCase(emptyList())
-
-        // Should not call fetchAndMergeHistory when there are no servers
-    }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") }
+        }
 
     @Test
-    fun `invoke can be called multiple times`() = runTest {
-        aircraftRepo = mock()
+    fun `invoke does not fetch history when no servers`() =
+        runTest {
+            aircraftRepo = mock()
 
-        val servers = listOf("server1.local")
+            val useCase = createUseCase()
+            useCase(emptyList())
 
-        everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
-
-        val useCase = createUseCase()
-        useCase(servers)
-        useCase(servers)
-
-        verifySuspend(mode = VerifyMode.exactly(2)) { aircraftRepo.fetchAndMergeHistory("server1.local") }
-    }
+            // Should not call fetchAndMergeHistory when there are no servers
+        }
 
     @Test
-    fun `invoke continues with other servers when one fails`() = runTest {
-        aircraftRepo = mock()
+    fun `invoke can be called multiple times`() =
+        runTest {
+            aircraftRepo = mock()
 
-        val servers = listOf("server1.local", "server2.local", "server3.local")
+            val servers = listOf("server1.local")
 
-        everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
-        everySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") } throws RuntimeException("Server unavailable")
-        everySuspend { aircraftRepo.fetchAndMergeHistory("server3.local") } returns Unit
+            everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
 
-        val useCase = createUseCase()
-        useCase(servers)
+            val useCase = createUseCase()
+            useCase(servers)
+            useCase(servers)
 
-        // All servers should have been attempted despite the failure
-        verifySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") }
-        verifySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") }
-        verifySuspend { aircraftRepo.fetchAndMergeHistory("server3.local") }
-    }
+            verifySuspend(mode = VerifyMode.exactly(2)) { aircraftRepo.fetchAndMergeHistory("server1.local") }
+        }
+
+    @Test
+    fun `invoke continues with other servers when one fails`() =
+        runTest {
+            aircraftRepo = mock()
+
+            val servers = listOf("server1.local", "server2.local", "server3.local")
+
+            everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
+            everySuspend {
+                aircraftRepo.fetchAndMergeHistory("server2.local")
+            } throws RuntimeException("Server unavailable")
+            everySuspend { aircraftRepo.fetchAndMergeHistory("server3.local") } returns Unit
+
+            val useCase = createUseCase()
+            useCase(servers)
+
+            // All servers should have been attempted despite the failure
+            verifySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory("server3.local") }
+        }
 }

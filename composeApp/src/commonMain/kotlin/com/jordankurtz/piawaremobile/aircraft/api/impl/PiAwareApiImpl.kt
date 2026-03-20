@@ -14,7 +14,6 @@ import org.koin.core.annotation.Single
 
 @Single(binds = [PiAwareApi::class])
 class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
-
     private val aircraftInfoMap = mutableMapOf<String, JsonObject>()
 
     override suspend fun getAircraft(host: String): List<Aircraft> {
@@ -38,12 +37,15 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
         }
     }
 
-    override suspend fun getAircraftInfo(host: String, bkey: String): JsonObject? {
+    override suspend fun getAircraftInfo(
+        host: String,
+        bkey: String,
+    ): JsonObject? {
         return "http://$host/db/$bkey.json".let { key ->
             aircraftInfoMap[key] ?: try {
                 Logger.d("Making request to $key")
                 httpClient.get(
-                    key
+                    key,
                 ).body<JsonObject>().also { aircraftInfoMap[key] = it }
             } catch (e: Exception) {
                 Logger.e("Error fetching aircraft info", e)
@@ -72,7 +74,10 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
         }
     }
 
-    override suspend fun getHistoryFile(host: String, index: Int): PiAwareResponse? {
+    override suspend fun getHistoryFile(
+        host: String,
+        index: Int,
+    ): PiAwareResponse? {
         return try {
             httpClient.get("http://$host/data/history_$index.json").body<PiAwareResponse>()
         } catch (e: Exception) {

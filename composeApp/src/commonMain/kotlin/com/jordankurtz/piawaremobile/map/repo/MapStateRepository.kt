@@ -6,7 +6,11 @@ interface MapStateRepository {
     /**
      * Saves the map's current state (latitude, longitude, and zoom) to persistent storage.
      */
-    suspend fun saveMapState(scrollX: Double, scrollY: Double, zoom: Double)
+    suspend fun saveMapState(
+        scrollX: Double,
+        scrollY: Double,
+        zoom: Double,
+    )
 
     /**
      * Loads the last saved map state from persistent storage.

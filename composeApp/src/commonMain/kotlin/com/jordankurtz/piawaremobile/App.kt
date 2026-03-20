@@ -31,7 +31,7 @@ fun App() {
                 BottomNavigationBar(currentScreen = currentScreen) {
                     currentScreen = it
                 }
-            }
+            },
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 when (currentScreen) {
@@ -45,7 +45,10 @@ fun App() {
 }
 
 @Composable
-fun BottomNavigationBar(currentScreen: Screen, onScreenSelected: (Screen) -> Unit) {
+fun BottomNavigationBar(
+    currentScreen: Screen,
+    onScreenSelected: (Screen) -> Unit,
+) {
     val items = listOf(Screen.Map, Screen.List, Screen.Settings)
 
     NavigationBar {
@@ -54,12 +57,12 @@ fun BottomNavigationBar(currentScreen: Screen, onScreenSelected: (Screen) -> Uni
                 icon = {
                     Icon(
                         painter = painterResource(screen.icon),
-                        contentDescription = null
+                        contentDescription = null,
                     )
                 },
                 label = { Text(stringResource(screen.title)) },
                 selected = currentScreen == screen,
-                onClick = { onScreenSelected(screen) }
+                onClick = { onScreenSelected(screen) },
             )
         }
     }

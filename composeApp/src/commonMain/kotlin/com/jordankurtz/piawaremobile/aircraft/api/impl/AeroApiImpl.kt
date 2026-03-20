@@ -13,16 +13,15 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [AeroApi::class])
 class AeroApiImpl(
     private val client: HttpClient,
-    private val getFlightAwareApiKeyUseCase: GetFlightAwareApiKeyUseCase
+    private val getFlightAwareApiKeyUseCase: GetFlightAwareApiKeyUseCase,
 ) : AeroApi {
-
     override suspend fun getFlight(
         ident: String,
         identType: String?,
         start: String?,
         end: String?,
         maxPages: Int?,
-        cursor: String?
+        cursor: String?,
     ): FlightResponse {
         return client.get("https://aeroapi.flightaware.com/aeroapi/flights/$ident") {
             header("x-apikey", getFlightAwareApiKeyUseCase())

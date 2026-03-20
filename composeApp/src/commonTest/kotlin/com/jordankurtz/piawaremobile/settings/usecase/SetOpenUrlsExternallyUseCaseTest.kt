@@ -20,7 +20,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SetOpenUrlsExternallyUseCaseTest {
-
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase
     private val testDispatcher = StandardTestDispatcher()
@@ -32,56 +31,60 @@ class SetOpenUrlsExternallyUseCaseTest {
     }
 
     @Test
-    fun `invoke with true should save settings with openUrlsExternally as true`() = runTest(testDispatcher) {
-        // Given
-        val initialSettings = Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = false,
-            openUrlsExternally = false,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = ""
-        )
-        everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
-        val settingsSlot = slot<Settings>()
-        everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
+    fun `invoke with true should save settings with openUrlsExternally as true`() =
+        runTest(testDispatcher) {
+            // Given
+            val initialSettings =
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = false,
+                    openUrlsExternally = false,
+                    enableFlightAwareApi = false,
+                    flightAwareApiKey = "",
+                )
+            everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
+            val settingsSlot = slot<Settings>()
+            everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
 
-        // When
-        setOpenUrlsExternallyUseCase(enabled = true)
+            // When
+            setOpenUrlsExternallyUseCase(enabled = true)
 
-        // Then
-        verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
-        val captured = settingsSlot.value as? SlotCapture.Value.Present
-        assertEquals(true, captured?.value?.openUrlsExternally)
-    }
+            // Then
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
+            val captured = settingsSlot.value as? SlotCapture.Value.Present
+            assertEquals(true, captured?.value?.openUrlsExternally)
+        }
 
     @Test
-    fun `invoke with false should save settings with openUrlsExternally as false`() = runTest(testDispatcher) {
-        // Given
-        val initialSettings = Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = true,
-            openUrlsExternally = true,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = ""
-        )
-        everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
-        val settingsSlot = slot<Settings>()
-        everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
+    fun `invoke with false should save settings with openUrlsExternally as false`() =
+        runTest(testDispatcher) {
+            // Given
+            val initialSettings =
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = true,
+                    openUrlsExternally = true,
+                    enableFlightAwareApi = false,
+                    flightAwareApiKey = "",
+                )
+            everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
+            val settingsSlot = slot<Settings>()
+            everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
 
-        // When
-        setOpenUrlsExternallyUseCase(enabled = false)
+            // When
+            setOpenUrlsExternallyUseCase(enabled = false)
 
-        // Then
-        verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
-        val captured = settingsSlot.value as? SlotCapture.Value.Present
-        assertEquals(false, captured?.value?.openUrlsExternally)
-    }
+            // Then
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
+            val captured = settingsSlot.value as? SlotCapture.Value.Present
+            assertEquals(false, captured?.value?.openUrlsExternally)
+        }
 }

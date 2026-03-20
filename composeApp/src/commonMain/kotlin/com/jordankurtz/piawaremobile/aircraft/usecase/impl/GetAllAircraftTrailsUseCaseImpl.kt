@@ -8,9 +8,8 @@ import org.koin.core.annotation.Factory
 
 @Factory(binds = [GetAllAircraftTrailsUseCase::class])
 class GetAllAircraftTrailsUseCaseImpl(
-    private val aircraftRepo: AircraftRepo
+    private val aircraftRepo: AircraftRepo,
 ) : GetAllAircraftTrailsUseCase {
-
     override fun invoke(): StateFlow<Map<String, AircraftTrail>> {
         return aircraftRepo.aircraftTrails
     }

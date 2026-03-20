@@ -11,15 +11,15 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [SetRefreshIntervalUseCase::class])
 class SetRefreshIntervalUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SetRefreshIntervalUseCase {
     override suspend operator fun invoke(newRefreshInterval: Int) {
         withContext(ioDispatcher) {
             val settings = settingsRepository.getSettings().first()
             settingsRepository.saveSettings(
                 settings.copy(
-                    refreshInterval = newRefreshInterval
-                )
+                    refreshInterval = newRefreshInterval,
+                ),
             )
         }
     }

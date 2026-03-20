@@ -15,9 +15,10 @@ actual class UrlHandlerImpl actual constructor(private val contextWrapper: Conte
     }
 
     actual override fun openUrlExternally(url: String) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val intent =
+            Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
         contextWrapper.context.startActivity(intent)
     }
 }

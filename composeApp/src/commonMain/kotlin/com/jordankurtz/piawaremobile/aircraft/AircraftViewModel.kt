@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.UrlHandler
-import com.jordankurtz.piawaremobile.aircraft.usecase.GetAllAircraftTrailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetAllAircraftTrailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
@@ -42,12 +42,12 @@ import org.koin.core.annotation.Factory
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
-
-private val dateFormatter = LocalDateTime.Format {
-    year()
-    monthNumber()
-    day()
-}
+private val dateFormatter =
+    LocalDateTime.Format {
+        year()
+        monthNumber()
+        day()
+    }
 
 @Factory
 class AircraftViewModel(
@@ -61,7 +61,6 @@ class AircraftViewModel(
     private val urlHandler: UrlHandler,
     @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
-
     var settings: Settings? = null
 
     private val _aircraft = MutableStateFlow<List<Pair<Aircraft, AircraftInfo?>>>(emptyList())
@@ -121,12 +120,16 @@ class AircraftViewModel(
         resetLookup()
     }
 
-    private fun startPolling(servers: List<Server>, refreshInterval: Int) {
+    private fun startPolling(
+        servers: List<Server>,
+        refreshInterval: Int,
+    ) {
         pollingJob?.cancel()
-        pollingJob = pollServers(
-            servers = servers.map { it.address },
-            refreshInterval = refreshInterval
-        )
+        pollingJob =
+            pollServers(
+                servers = servers.map { it.address },
+                refreshInterval = refreshInterval,
+            )
     }
 
     fun onResume() {
@@ -157,7 +160,10 @@ class AircraftViewModel(
         }
     }
 
-    private fun pollServers(servers: List<String>, refreshInterval: Int): Job? {
+    private fun pollServers(
+        servers: List<String>,
+        refreshInterval: Int,
+    ): Job? {
         if (servers.isEmpty() || refreshInterval <= 0) return null
 
         val infoHost = servers.first()
@@ -198,12 +204,12 @@ class AircraftViewModel(
     }
 
     private fun openFlightPage(flight: String) {
-        //todo add toast that we can't look it up
+        // todo add toast that we can't look it up
         viewModelScope.launch(mainDispatcher) {
             val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val url = "https://www.flightaware.com/live/flight/$flight/history/${
                 dateFormatter.format(
-                    dateString
+                    dateString,
                 )
             }"
 

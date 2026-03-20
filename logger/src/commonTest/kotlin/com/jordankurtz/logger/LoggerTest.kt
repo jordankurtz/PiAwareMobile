@@ -8,7 +8,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class LoggerTest {
-
     private lateinit var mockWriter: MockLogWriter
 
     @BeforeTest
@@ -106,7 +105,12 @@ class LoggerTest {
         var lastMessage: String? = null
         var lastThrowable: Throwable? = null
 
-        override fun log(priority: Int, tag: String, message: String, throwable: Throwable?) {
+        override fun log(
+            priority: Int,
+            tag: String,
+            message: String,
+            throwable: Throwable?,
+        ) {
             this.lastPriority = priority
             this.lastTag = tag
             this.lastMessage = message

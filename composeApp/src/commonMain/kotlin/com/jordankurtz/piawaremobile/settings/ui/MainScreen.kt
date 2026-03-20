@@ -60,10 +60,10 @@ import piawaremobile.composeapp.generated.resources.show_minimap_trails_descript
 import piawaremobile.composeapp.generated.resources.show_minimap_trails_title
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_description
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_title
-import piawaremobile.composeapp.generated.resources.trail_display_mode_description
-import piawaremobile.composeapp.generated.resources.trail_display_mode_title
 import piawaremobile.composeapp.generated.resources.show_user_location_description
 import piawaremobile.composeapp.generated.resources.show_user_location_title
+import piawaremobile.composeapp.generated.resources.trail_display_mode_description
+import piawaremobile.composeapp.generated.resources.trail_display_mode_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,21 +76,21 @@ fun MainScreen(onServersClicked: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.settings_title)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
             )
-        }
+        },
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.padding(paddingValues),
-            contentPadding = PaddingValues(vertical = 8.dp)
+            contentPadding = PaddingValues(vertical = 8.dp),
         ) {
             item {
                 SettingsSection(title = stringResource(Res.string.preferences_title))
             }
-
 
             item {
                 SettingsItem(
@@ -100,19 +100,19 @@ fun MainScreen(onServersClicked: () -> Unit) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_chevron_right),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = MaterialTheme.colorScheme.onBackground,
                         )
-                    }
+                    },
                 )
             }
-
 
             item {
                 SettingsNumberInput(
                     title = stringResource(Res.string.refresh_interval_title),
-                    value = settings.getValue()?.refreshInterval
-                        ?: SettingsRepository.DEFAULT_REFRESH_INTERVAL,
-                    onValueChange = viewModel::updateRefreshInterval
+                    value =
+                        settings.getValue()?.refreshInterval
+                            ?: SettingsRepository.DEFAULT_REFRESH_INTERVAL,
+                    onValueChange = viewModel::updateRefreshInterval,
                 )
             }
 
@@ -121,7 +121,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     title = stringResource(Res.string.center_map_on_user_title),
                     description = stringResource(Res.string.center_map_on_user_description),
                     checked = settings.getValue()?.centerMapOnUserOnStart ?: false,
-                    onCheckedChange = viewModel::updateCenterMapOnUserOnStart
+                    onCheckedChange = viewModel::updateCenterMapOnUserOnStart,
                 )
             }
 
@@ -130,7 +130,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     title = stringResource(Res.string.restore_map_position_title),
                     description = stringResource(Res.string.restore_map_position_description),
                     checked = settings.getValue()?.restoreMapStateOnStart ?: true,
-                    onCheckedChange = viewModel::updateRestoreMapStateOnStart
+                    onCheckedChange = viewModel::updateRestoreMapStateOnStart,
                 )
             }
 
@@ -139,7 +139,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     title = stringResource(Res.string.show_receiver_locations_title),
                     description = stringResource(Res.string.show_receiver_locations_description),
                     checked = settings.getValue()?.showReceiverLocations ?: true,
-                    onCheckedChange = viewModel::updateShowReceiverLocations
+                    onCheckedChange = viewModel::updateShowReceiverLocations,
                 )
             }
 
@@ -148,7 +148,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     title = stringResource(Res.string.show_user_location_title),
                     description = stringResource(Res.string.show_user_location_description),
                     checked = settings.getValue()?.showUserLocationOnMap ?: true,
-                    onCheckedChange = viewModel::updateShowUserLocationOnMap
+                    onCheckedChange = viewModel::updateShowUserLocationOnMap,
                 )
             }
 
@@ -158,7 +158,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     description = stringResource(Res.string.trail_display_mode_description),
                     selectedValue = settings.getValue()?.trailDisplayMode ?: TrailDisplayMode.ALL,
                     values = TrailDisplayMode.entries.toTypedArray(),
-                    onValueSelected = viewModel::updateTrailDisplayMode
+                    onValueSelected = viewModel::updateTrailDisplayMode,
                 )
             }
 
@@ -167,7 +167,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     title = stringResource(Res.string.show_minimap_trails_title),
                     description = stringResource(Res.string.show_minimap_trails_description),
                     checked = settings.getValue()?.showMinimapTrails ?: true,
-                    onCheckedChange = viewModel::updateShowMinimapTrails
+                    onCheckedChange = viewModel::updateShowMinimapTrails,
                 )
             }
 
@@ -176,7 +176,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     title = stringResource(Res.string.open_urls_externally_title),
                     description = stringResource(Res.string.open_urls_externally_description),
                     checked = settings.getValue()?.openUrlsExternally ?: false,
-                    onCheckedChange = viewModel::updateOpenUrlsExternally
+                    onCheckedChange = viewModel::updateOpenUrlsExternally,
                 )
             }
 
@@ -185,7 +185,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                     title = stringResource(Res.string.enable_flightaware_api_title),
                     description = stringResource(Res.string.enable_flightaware_api_description),
                     checked = settings.getValue()?.enableFlightAwareApi ?: false,
-                    onCheckedChange = viewModel::updateEnableFlightAwareApi
+                    onCheckedChange = viewModel::updateEnableFlightAwareApi,
                 )
             }
 
@@ -193,7 +193,7 @@ fun MainScreen(onServersClicked: () -> Unit) {
                 SettingsTextInput(
                     title = stringResource(Res.string.flightaware_api_key_title),
                     value = settings.getValue()?.flightAwareApiKey ?: "",
-                    onValueChange = viewModel::updateFlightAwareApiKey
+                    onValueChange = viewModel::updateFlightAwareApiKey,
                 )
             }
         }
@@ -206,9 +206,10 @@ fun SettingsSection(title: String) {
         text = title,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
     )
 }
 
@@ -216,20 +217,21 @@ fun SettingsSection(title: String) {
 fun SettingsItem(
     title: String,
     onClick: () -> Unit,
-    trailingIcon: @Composable (() -> Unit)? = null
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     Column {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onClick)
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             trailingIcon?.invoke()
@@ -246,30 +248,31 @@ fun <T> SettingsDropdown(
     values: Array<T>,
     onValueSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
-    stringFor: @Composable (T) -> String = { it.toString() }
+    stringFor: @Composable (T) -> String = { it.toString() },
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     Column {
         Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .clickable { expanded = true }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = true }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Box {
@@ -283,7 +286,7 @@ fun <T> SettingsDropdown(
                             onClick = {
                                 onValueSelected(value)
                                 expanded = false
-                            }
+                            },
                         )
                     }
                 }
@@ -298,7 +301,7 @@ fun SettingsNumberInput(
     title: String,
     value: Int,
     onValueChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var textValue by remember { mutableStateOf(value.toString()) }
     val isValid = textValue.toIntOrNull() != null
@@ -311,16 +314,17 @@ fun SettingsNumberInput(
 
     Column(modifier = modifier) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             OutlinedTextField(
@@ -330,12 +334,13 @@ fun SettingsNumberInput(
                     it.toIntOrNull()?.let(onValueChange)
                 },
                 singleLine = true,
-                modifier = Modifier
-                    .width(80.dp)
-                    .padding(start = 16.dp),
+                modifier =
+                    Modifier
+                        .width(80.dp)
+                        .padding(start = 16.dp),
                 textStyle = MaterialTheme.typography.bodyLarge,
                 isError = !isValid,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
         }
         HorizontalDivider()
@@ -347,7 +352,7 @@ fun SettingsTextInput(
     title: String,
     value: String,
     onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var textValue by remember { mutableStateOf(value) }
 
@@ -367,7 +372,7 @@ fun SettingsTextInput(
             label = { Text(title) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            textStyle = MaterialTheme.typography.bodyLarge
+            textStyle = MaterialTheme.typography.bodyLarge,
         )
     }
 }
@@ -378,34 +383,35 @@ fun SettingsSwitch(
     description: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column {
         Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .clickable { onCheckedChange(!checked) }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .clickable { onCheckedChange(!checked) }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.padding(start = 16.dp),
             )
         }
         HorizontalDivider()

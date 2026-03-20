@@ -11,13 +11,14 @@ import kotlinx.serialization.json.JsonNamingStrategy
 actual fun getKtorClient(): HttpClient {
     return HttpClient(Android) {
         install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true
-                namingStrategy = JsonNamingStrategy.SnakeCase
-
-            })
+            json(
+                Json {
+                    prettyPrint = true
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                    namingStrategy = JsonNamingStrategy.SnakeCase
+                },
+            )
         }
         install(HttpTimeout) {
             requestTimeoutMillis = 1000

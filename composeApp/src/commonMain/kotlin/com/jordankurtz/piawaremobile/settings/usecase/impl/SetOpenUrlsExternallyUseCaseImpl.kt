@@ -11,13 +11,13 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [SetOpenUrlsExternallyUseCase::class])
 class SetOpenUrlsExternallyUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SetOpenUrlsExternallyUseCase {
     override suspend operator fun invoke(enabled: Boolean) {
         withContext(ioDispatcher) {
             val currentSettings = settingsRepository.getSettings().first()
             settingsRepository.saveSettings(
-                currentSettings.copy(openUrlsExternally = enabled)
+                currentSettings.copy(openUrlsExternally = enabled),
             )
         }
     }

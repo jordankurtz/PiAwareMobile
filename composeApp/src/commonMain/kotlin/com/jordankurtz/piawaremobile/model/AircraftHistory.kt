@@ -1,6 +1,6 @@
 package com.jordankurtz.piawaremobile.model
 
-data class AircraftHistory (
+data class AircraftHistory(
     val aircraft: Aircraft,
-    val time: Float
+    val time: Float,
 )

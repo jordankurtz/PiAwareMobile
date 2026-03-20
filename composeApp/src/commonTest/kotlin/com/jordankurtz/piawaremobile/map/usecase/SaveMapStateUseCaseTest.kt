@@ -13,7 +13,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class SaveMapStateUseCaseTest {
-
     private lateinit var mapStateRepository: MapStateRepository
     private lateinit var saveMapStateUseCase: SaveMapStateUseCase
     private val testDispatcher = StandardTestDispatcher()
@@ -25,17 +24,18 @@ class SaveMapStateUseCaseTest {
     }
 
     @Test
-    fun `invoke should call saveMapState on repository`() = runTest(testDispatcher) {
-        // Given
-        val scrollX = 0.1
-        val scrollY = 0.2
-        val zoom = 5.0
-        everySuspend { mapStateRepository.saveMapState(scrollX, scrollY, zoom) } returns Unit
+    fun `invoke should call saveMapState on repository`() =
+        runTest(testDispatcher) {
+            // Given
+            val scrollX = 0.1
+            val scrollY = 0.2
+            val zoom = 5.0
+            everySuspend { mapStateRepository.saveMapState(scrollX, scrollY, zoom) } returns Unit
 
-        // When
-        saveMapStateUseCase(scrollX, scrollY, zoom)
+            // When
+            saveMapStateUseCase(scrollX, scrollY, zoom)
 
-        // Then
-        verifySuspend(exactly(1)) { mapStateRepository.saveMapState(scrollX, scrollY, zoom) }
-    }
+            // Then
+            verifySuspend(exactly(1)) { mapStateRepository.saveMapState(scrollX, scrollY, zoom) }
+        }
 }

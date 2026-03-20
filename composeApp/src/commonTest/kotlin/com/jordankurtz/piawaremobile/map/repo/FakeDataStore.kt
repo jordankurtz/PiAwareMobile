@@ -9,7 +9,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class FakeDataStore(initialPreferences: Preferences = emptyPreferences()) : DataStore<Preferences> {
-
     private val flow = MutableStateFlow(initialPreferences)
     private val mutex = Mutex()
 

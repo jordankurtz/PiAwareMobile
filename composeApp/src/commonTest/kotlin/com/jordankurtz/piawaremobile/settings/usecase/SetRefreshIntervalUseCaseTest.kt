@@ -20,7 +20,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SetRefreshIntervalUseCaseTest {
-
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var setRefreshIntervalUseCase: SetRefreshIntervalUseCase
     private val testDispatcher = StandardTestDispatcher()
@@ -32,30 +31,32 @@ class SetRefreshIntervalUseCaseTest {
     }
 
     @Test
-    fun `invoke should save settings with new refresh interval`() = runTest(testDispatcher) {
-        // Given
-        val initialSettings = Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = false,
-            openUrlsExternally = false,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = ""
-        )
-        everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
-        val settingsSlot = slot<Settings>()
-        everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
-        val newRefreshInterval = 10
+    fun `invoke should save settings with new refresh interval`() =
+        runTest(testDispatcher) {
+            // Given
+            val initialSettings =
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = false,
+                    openUrlsExternally = false,
+                    enableFlightAwareApi = false,
+                    flightAwareApiKey = "",
+                )
+            everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
+            val settingsSlot = slot<Settings>()
+            everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
+            val newRefreshInterval = 10
 
-        // When
-        setRefreshIntervalUseCase(newRefreshInterval = newRefreshInterval)
+            // When
+            setRefreshIntervalUseCase(newRefreshInterval = newRefreshInterval)
 
-        // Then
-        verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
-        val captured = settingsSlot.value as? SlotCapture.Value.Present
-        assertEquals(newRefreshInterval, captured?.value?.refreshInterval)
-    }
+            // Then
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
+            val captured = settingsSlot.value as? SlotCapture.Value.Present
+            assertEquals(newRefreshInterval, captured?.value?.refreshInterval)
+        }
 }

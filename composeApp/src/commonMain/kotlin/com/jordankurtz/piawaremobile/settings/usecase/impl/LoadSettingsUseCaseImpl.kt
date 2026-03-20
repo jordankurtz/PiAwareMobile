@@ -15,7 +15,7 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [LoadSettingsUseCase::class])
 class LoadSettingsUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : LoadSettingsUseCase {
     override operator fun invoke(): Flow<Async<Settings>> {
         return settingsRepository.getSettings()

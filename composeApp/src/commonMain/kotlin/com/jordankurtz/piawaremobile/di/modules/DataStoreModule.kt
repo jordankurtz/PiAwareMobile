@@ -7,7 +7,6 @@ import org.koin.core.annotation.Single
 
 @Module
 expect class DataStoreModule() {
-
     @Single
     fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences>
 }

@@ -21,28 +21,31 @@ import piawaremobile.composeapp.generated.resources.openstreetmap_copyright
 import piawaremobile.composeapp.generated.resources.planes_count
 
 @Composable
-fun Overlay(numberOfPlanes: Int, modifier: Modifier) {
-
+fun Overlay(
+    numberOfPlanes: Int,
+    modifier: Modifier,
+) {
     Box(modifier = modifier.fillMaxSize()) {
         Text(
             // there seems to be a bug with string formatting with stringResource so do it unideally for now
             text = stringResource(Res.string.planes_count, numberOfPlanes),
 //            text = "$numberOfPlanes ${stringResource(Res.string.planes_count)}",
             modifier = Modifier.align(Alignment.BottomStart).padding(4.dp),
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
         )
 
-        val annotatedString = buildAnnotatedString {
-            withStyle(style = SpanStyle(fontSize = 12.sp)) {
-                pushLink(LinkAnnotation.Url("https://www.openstreetmap.org/copyright"))
-                append(stringResource(Res.string.openstreetmap_copyright))
-                pop()
+        val annotatedString =
+            buildAnnotatedString {
+                withStyle(style = SpanStyle(fontSize = 12.sp)) {
+                    pushLink(LinkAnnotation.Url("https://www.openstreetmap.org/copyright"))
+                    append(stringResource(Res.string.openstreetmap_copyright))
+                    pop()
+                }
             }
-        }
 
         Text(
             text = annotatedString,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp)
+            modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp),
         )
     }
 }

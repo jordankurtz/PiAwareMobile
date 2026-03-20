@@ -21,7 +21,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class AddServerUseCaseTest {
-
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var addServerUseCase: AddServerUseCase
     private val testDispatcher = StandardTestDispatcher()
@@ -33,39 +32,41 @@ class AddServerUseCaseTest {
     }
 
     @Test
-    fun `invoke should add server to settings`() = runTest(testDispatcher) {
-        // Given
-        val initialSettings = Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = false,
-            openUrlsExternally = false,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = ""
-        )
-        everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
+    fun `invoke should add server to settings`() =
+        runTest(testDispatcher) {
+            // Given
+            val initialSettings =
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = false,
+                    openUrlsExternally = false,
+                    enableFlightAwareApi = false,
+                    flightAwareApiKey = "",
+                )
+            everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
 
-        val settingsSlot = slot<Settings>()
-        everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
+            val settingsSlot = slot<Settings>()
+            everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
 
-        val serverName = "Test Server"
-        val serverAddress = "http://192.168.1.100"
+            val serverName = "Test Server"
+            val serverAddress = "http://192.168.1.100"
 
-        // When
-        addServerUseCase(name = serverName, address = serverAddress)
+            // When
+            addServerUseCase(name = serverName, address = serverAddress)
 
-        // Then
-        verifySuspend(VerifyMode.exactly(1)) { settingsRepository.getSettings() }
-        verifySuspend(VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
+            // Then
+            verifySuspend(VerifyMode.exactly(1)) { settingsRepository.getSettings() }
+            verifySuspend(VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
 
-        val capturedSettings = settingsSlot.value as? SlotCapture.Value.Present
-        assertEquals(1, capturedSettings?.value?.servers?.size)
-        val server = capturedSettings?.value?.servers?.first()
-        assertNotNull(server)
-        assertEquals(serverName, server.name)
-        assertEquals(serverAddress, server.address)
-    }
+            val capturedSettings = settingsSlot.value as? SlotCapture.Value.Present
+            assertEquals(1, capturedSettings?.value?.servers?.size)
+            val server = capturedSettings?.value?.servers?.first()
+            assertNotNull(server)
+            assertEquals(serverName, server.name)
+            assertEquals(serverAddress, server.address)
+        }
 }

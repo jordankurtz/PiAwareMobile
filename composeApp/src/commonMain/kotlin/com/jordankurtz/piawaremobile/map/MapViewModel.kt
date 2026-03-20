@@ -64,7 +64,6 @@ class MapViewModel(
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
 ) : ViewModel() {
-
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
     private val previousAircraftMarkerIds = mutableSetOf<String>()
@@ -76,33 +75,34 @@ class MapViewModel(
 
     private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
-    val state = MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
-        minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
-    }.apply {
-        addLayer(mapProvider)
+    val state =
+        MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
+            minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
+        }.apply {
+            addLayer(mapProvider)
 
-        onMarkerClick { id, _, _ ->
-            if (previousAircraftMarkerIds.contains(id)) {
-                if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
-                    if (_trailSelectedAircraft.value == id) {
-                        _selectedAircraft.value = id
-                    } else {
-                        _selectedAircraft.value = null
-                        _trailSelectedAircraft.value = id
-                        onAircraftTrailsUpdated(lastTrails)
-                    }
-                } else {
-                    val newSelection = if (_selectedAircraft.value == id) null else id
-                    if (_selectedAircraft.value != newSelection) {
-                        _selectedAircraft.value = newSelection
-                        if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+            onMarkerClick { id, _, _ ->
+                if (previousAircraftMarkerIds.contains(id)) {
+                    if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+                        if (_trailSelectedAircraft.value == id) {
+                            _selectedAircraft.value = id
+                        } else {
+                            _selectedAircraft.value = null
+                            _trailSelectedAircraft.value = id
                             onAircraftTrailsUpdated(lastTrails)
+                        }
+                    } else {
+                        val newSelection = if (_selectedAircraft.value == id) null else id
+                        if (_selectedAircraft.value != newSelection) {
+                            _selectedAircraft.value = newSelection
+                            if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
+                                onAircraftTrailsUpdated(lastTrails)
+                            }
                         }
                     }
                 }
             }
         }
-    }
 
     init {
         viewModelScope.launch {
@@ -150,34 +150,37 @@ class MapViewModel(
     }
 
     private fun startSaveMapStateJob() {
-        saveStateJob = viewModelScope.launch {
-            snapshotFlow { Pair(state.scroll, state.scale) }
-                .debounce(500.milliseconds)
-                .onEach { (scroll, scale) ->
-                    if (scroll.x > 0.0 && scroll.y > 0.0) {
-                        saveMapStateUseCase(scroll.x, scroll.y, scale)
-                        Logger.d("Saved map state $scroll, $scale")
-                    }
-                }.launchIn(this)
-        }
+        saveStateJob =
+            viewModelScope.launch {
+                snapshotFlow { Pair(state.scroll, state.scale) }
+                    .debounce(500.milliseconds)
+                    .onEach { (scroll, scale) ->
+                        if (scroll.x > 0.0 && scroll.y > 0.0) {
+                            saveMapStateUseCase(scroll.x, scroll.y, scale)
+                            Logger.d("Saved map state $scroll, $scale")
+                        }
+                    }.launchIn(this)
+            }
     }
 
-    fun onReceiverLocation(receiver: Map.Entry<Server, Location>) = viewModelScope.launch {
-        val (x, y) = receiver.value.projected
-        state.addMarker(
-            id = receiver.key.id.toString(),
-            x = x,
-            y = y,
-            relativeOffset = Offset(-0.5f, -0.5f)
-        ) {
-            Image(
-                painter = painterResource(Res.drawable.ic_receiver),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(20.dp)
-            )
+    fun onReceiverLocation(receiver: Map.Entry<Server, Location>) =
+        viewModelScope.launch {
+            val (x, y) = receiver.value.projected
+            state.addMarker(
+                id = receiver.key.id.toString(),
+                x = x,
+                y = y,
+                relativeOffset = Offset(-0.5f, -0.5f),
+            ) {
+                Image(
+                    painter = painterResource(Res.drawable.ic_receiver),
+                    contentDescription = null,
+                    modifier =
+                        Modifier
+                            .size(20.dp),
+                )
+            }
         }
-    }
 
     fun recenterOnLocation(location: Location) {
         viewModelScope.launch {
@@ -194,12 +197,12 @@ class MapViewModel(
             id = USER_LOCATION_MARKER_ID,
             x = x,
             y = y,
-            relativeOffset = Offset(-0.5f, -0.5f)
+            relativeOffset = Offset(-0.5f, -0.5f),
         ) {
             Image(
                 painter = painterResource(Res.drawable.ic_user_location),
                 contentDescription = stringResource(Res.string.user_location_content_description),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
         }
     }
@@ -215,15 +218,16 @@ class MapViewModel(
                 id = plane.hex.also { previousAircraftMarkerIds.add(it) },
                 x = location.first,
                 y = location.second,
-                relativeOffset = Offset(-0.5f, -0.5f)
+                relativeOffset = Offset(-0.5f, -0.5f),
             ) {
                 Image(
                     painter = painterResource(Res.drawable.ic_plane),
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(30.dp)
-                        .rotate(plane.track ?: 0f),
-                    colorFilter = ColorFilter.tint(getColorForAltitude(plane.altBaro))
+                    modifier =
+                        Modifier
+                            .size(30.dp)
+                            .rotate(plane.track ?: 0f),
+                    colorFilter = ColorFilter.tint(getColorForAltitude(plane.altBaro)),
                 )
             }
         }
@@ -235,25 +239,29 @@ class MapViewModel(
 
         val mode = settings?.trailDisplayMode ?: TrailDisplayMode.ALL
 
-        val trailsToDisplay = when (mode) {
-            TrailDisplayMode.NONE -> emptyMap()
-            TrailDisplayMode.ALL -> trails
-            TrailDisplayMode.SELECTED -> {
-                val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
-                if (selectedHex != null) {
-                    trails.filterKeys { it == selectedHex }
-                } else {
-                    emptyMap()
+        val trailsToDisplay =
+            when (mode) {
+                TrailDisplayMode.NONE -> emptyMap()
+                TrailDisplayMode.ALL -> trails
+                TrailDisplayMode.SELECTED -> {
+                    val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
+                    if (selectedHex != null) {
+                        trails.filterKeys { it == selectedHex }
+                    } else {
+                        emptyMap()
+                    }
                 }
             }
-        }
 
         trailsToDisplay.forEach { (hex, trail) ->
             drawTrail(hex, trail)
         }
     }
 
-    private fun drawTrail(hex: String, trail: AircraftTrail) {
+    private fun drawTrail(
+        hex: String,
+        trail: AircraftTrail,
+    ) {
         if (trail.positions.size >= 2) {
             // Group consecutive positions by altitude color to reduce path count
             val colorSegments = groupPositionsByAltitudeColor(trail.positions)
@@ -263,14 +271,15 @@ class MapViewModel(
                     val id = "trail_${hex}_$index"
                     previousPathIds.add(id)
 
-                    val projectedPoints = segment.positions.map { pos ->
-                        doProjection(pos.latitude, pos.longitude)
-                    }
+                    val projectedPoints =
+                        segment.positions.map { pos ->
+                            doProjection(pos.latitude, pos.longitude)
+                        }
 
                     state.addPath(
                         id = id,
                         color = segment.color,
-                        width = 1.5.dp
+                        width = 1.5.dp,
                     ) {
                         addPoints(projectedPoints)
                     }
@@ -281,7 +290,7 @@ class MapViewModel(
 
     private data class ColorSegment(
         val color: androidx.compose.ui.graphics.Color,
-        val positions: MutableList<AircraftPosition>
+        val positions: MutableList<AircraftPosition>,
     )
 
     private fun groupPositionsByAltitudeColor(positions: List<AircraftPosition>): List<ColorSegment> {

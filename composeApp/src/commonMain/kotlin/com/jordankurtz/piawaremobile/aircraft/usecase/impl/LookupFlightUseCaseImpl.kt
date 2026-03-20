@@ -9,7 +9,7 @@ import kotlin.time.Clock
 
 @Single(binds = [LookupFlightUseCase::class])
 class LookupFlightUseCaseImpl(
-    private val aircraftRepo: AircraftRepo
+    private val aircraftRepo: AircraftRepo,
 ) : LookupFlightUseCase {
     override suspend fun invoke(ident: String): Async<Flight> {
         val result = aircraftRepo.lookupFlight(ident)
@@ -27,15 +27,17 @@ class LookupFlightUseCaseImpl(
 
     private fun filterFlights(flights: List<Flight>): Flight? {
         val now = Clock.System.now()
-        val mostRecentFlight = flights
-            .mapNotNull { flight ->
-                val departureTime = flight.scheduledOut
-                    ?: flight.scheduledOff
-                departureTime?.let { flight to it }
-            }
-            .filter { (_, departureTime) -> departureTime < now }
-            .maxByOrNull { (_, departureTime) -> departureTime }
-            ?.first
+        val mostRecentFlight =
+            flights
+                .mapNotNull { flight ->
+                    val departureTime =
+                        flight.scheduledOut
+                            ?: flight.scheduledOff
+                    departureTime?.let { flight to it }
+                }
+                .filter { (_, departureTime) -> departureTime < now }
+                .maxByOrNull { (_, departureTime) -> departureTime }
+                ?.first
 
         return mostRecentFlight
     }

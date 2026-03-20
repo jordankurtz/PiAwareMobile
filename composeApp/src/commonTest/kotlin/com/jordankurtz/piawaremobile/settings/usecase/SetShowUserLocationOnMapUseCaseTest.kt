@@ -20,7 +20,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SetShowUserLocationOnMapUseCaseTest {
-
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase
     private val testDispatcher = StandardTestDispatcher()
@@ -32,56 +31,60 @@ class SetShowUserLocationOnMapUseCaseTest {
     }
 
     @Test
-    fun `invoke with true should save settings with showUserLocationOnMap as true`() = runTest(testDispatcher) {
-        // Given
-        val initialSettings = Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = false,
-            openUrlsExternally = false,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = ""
-        )
-        everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
-        val settingsSlot = slot<Settings>()
-        everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
+    fun `invoke with true should save settings with showUserLocationOnMap as true`() =
+        runTest(testDispatcher) {
+            // Given
+            val initialSettings =
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = false,
+                    openUrlsExternally = false,
+                    enableFlightAwareApi = false,
+                    flightAwareApiKey = "",
+                )
+            everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
+            val settingsSlot = slot<Settings>()
+            everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
 
-        // When
-        setShowUserLocationOnMapUseCase(enabled = true)
+            // When
+            setShowUserLocationOnMapUseCase(enabled = true)
 
-        // Then
-        verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
-        val captured = settingsSlot.value as? SlotCapture.Value.Present
-        assertEquals(true, captured?.value?.showUserLocationOnMap)
-    }
+            // Then
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
+            val captured = settingsSlot.value as? SlotCapture.Value.Present
+            assertEquals(true, captured?.value?.showUserLocationOnMap)
+        }
 
     @Test
-    fun `invoke with false should save settings with showUserLocationOnMap as false`() = runTest(testDispatcher) {
-        // Given
-        val initialSettings = Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = true,
-            openUrlsExternally = false,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = ""
-        )
-        everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
-        val settingsSlot = slot<Settings>()
-        everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
+    fun `invoke with false should save settings with showUserLocationOnMap as false`() =
+        runTest(testDispatcher) {
+            // Given
+            val initialSettings =
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = true,
+                    openUrlsExternally = false,
+                    enableFlightAwareApi = false,
+                    flightAwareApiKey = "",
+                )
+            everySuspend { settingsRepository.getSettings() } returns flowOf(initialSettings)
+            val settingsSlot = slot<Settings>()
+            everySuspend { settingsRepository.saveSettings(capture(settingsSlot)) } returns Unit
 
-        // When
-        setShowUserLocationOnMapUseCase(enabled = false)
+            // When
+            setShowUserLocationOnMapUseCase(enabled = false)
 
-        // Then
-        verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
-        val captured = settingsSlot.value as? SlotCapture.Value.Present
-        assertEquals(false, captured?.value?.showUserLocationOnMap)
-    }
+            // Then
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
+            val captured = settingsSlot.value as? SlotCapture.Value.Present
+            assertEquals(false, captured?.value?.showUserLocationOnMap)
+        }
 }

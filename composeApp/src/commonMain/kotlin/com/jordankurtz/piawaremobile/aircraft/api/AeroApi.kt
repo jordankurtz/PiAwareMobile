@@ -3,7 +3,6 @@ package com.jordankurtz.piawaremobile.aircraft.api
 import com.jordankurtz.piawaremobile.model.FlightResponse
 
 interface AeroApi {
-
     /**
      * Get information for a flight
      *
@@ -23,6 +22,6 @@ interface AeroApi {
         start: String? = null,
         end: String? = null,
         maxPages: Int? = 1,
-        cursor: String? =null,
+        cursor: String? = null,
     ): FlightResponse
 }

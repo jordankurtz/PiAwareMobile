@@ -1,8 +1,8 @@
 package com.jordankurtz.piawaremobile.aircraft
 
 import com.jordankurtz.piawaremobile.UrlHandler
-import com.jordankurtz.piawaremobile.aircraft.usecase.GetAllAircraftTrailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftWithDetailsUseCase
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetAllAircraftTrailsUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
@@ -32,7 +32,6 @@ import kotlin.test.Test
 
 @ExperimentalCoroutinesApi
 class AircraftViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var loadAircraftTypesUseCase: LoadAircraftTypesUseCase
@@ -44,21 +43,23 @@ class AircraftViewModelTest {
     private lateinit var getAllAircraftTrailsUseCase: GetAllAircraftTrailsUseCase
     private lateinit var urlHandler: UrlHandler
 
-    private val servers = listOf(
-        Server(name = "Test", address = "server1.local")
-    )
+    private val servers =
+        listOf(
+            Server(name = "Test", address = "server1.local"),
+        )
 
-    private val settings = Settings(
-        servers = servers,
-        refreshInterval = 5,
-        centerMapOnUserOnStart = false,
-        restoreMapStateOnStart = false,
-        showReceiverLocations = false,
-        showUserLocationOnMap = false,
-        openUrlsExternally = false,
-        enableFlightAwareApi = false,
-        flightAwareApiKey = ""
-    )
+    private val settings =
+        Settings(
+            servers = servers,
+            refreshInterval = 5,
+            centerMapOnUserOnStart = false,
+            restoreMapStateOnStart = false,
+            showReceiverLocations = false,
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = "",
+        )
 
     @BeforeTest
     fun setUp() {
@@ -100,17 +101,18 @@ class AircraftViewModelTest {
     }
 
     @Test
-    fun `onResume skips first call and reloads history on subsequent calls`() = runTest {
-        val viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+    fun `onResume skips first call and reloads history on subsequent calls`() =
+        runTest {
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onResume() // First resume skipped (init already loading history)
-        viewModel.onResume() // Second resume should reload history
-        testDispatcher.scheduler.advanceUntilIdle()
+            viewModel.onResume() // First resume skipped (init already loading history)
+            viewModel.onResume() // Second resume should reload history
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        // Once from init + once from second onResume
-        verifySuspend(mode = VerifyMode.exactly(2)) {
-            loadHistoryUseCase(listOf("server1.local"))
+            // Once from init + once from second onResume
+            verifySuspend(mode = VerifyMode.exactly(2)) {
+                loadHistoryUseCase(listOf("server1.local"))
+            }
         }
-    }
 }

@@ -14,7 +14,10 @@ import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.settings.Server
 
 @Composable
-fun ServerList(servers: List<Server>, modifier: Modifier = Modifier) {
+fun ServerList(
+    servers: List<Server>,
+    modifier: Modifier = Modifier,
+) {
     LazyColumn(modifier = modifier) {
         items(servers) { server ->
             ServerItem(server)
@@ -24,11 +27,15 @@ fun ServerList(servers: List<Server>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ServerItem(server: Server, modifier: Modifier = Modifier) {
+fun ServerItem(
+    server: Server,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(16.dp),
     ) {
         Text(text = server.name, style = MaterialTheme.typography.titleMedium)
         Text(text = server.address, style = MaterialTheme.typography.bodyMedium)

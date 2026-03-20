@@ -45,7 +45,7 @@ fun ServersScreen(onBack: () -> Unit) {
             onConfirm = { name, address ->
                 viewModel.addServer(name, address)
                 showDialog = false
-            }
+            },
         )
     }
 
@@ -57,42 +57,45 @@ fun ServersScreen(onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_arrow_back),
-                            contentDescription = "Back"
+                            contentDescription = "Back",
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-                ),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                        actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
                 actions = {
                     IconButton(
-                        onClick = { showDialog = true }
+                        onClick = { showDialog = true },
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_add),
                             contentDescription = "Add Server",
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+            contentAlignment = Alignment.Center,
         ) {
             when (settings) {
                 is Async.Error -> Text(text = settings.message)
                 Async.Loading, Async.NotStarted -> CircularProgressIndicator()
-                is Async.Success -> ServerList(
-                    servers = settings.data.servers,
-                    modifier = Modifier.fillMaxSize()
-                )
+                is Async.Success ->
+                    ServerList(
+                        servers = settings.data.servers,
+                        modifier = Modifier.fillMaxSize(),
+                    )
             }
         }
     }

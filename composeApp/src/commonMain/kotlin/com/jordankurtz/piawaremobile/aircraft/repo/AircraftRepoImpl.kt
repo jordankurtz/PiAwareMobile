@@ -21,20 +21,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.time.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.koin.core.annotation.Single
+import kotlin.time.Clock
 
 @Single(binds = [AircraftRepo::class])
 class AircraftRepoImpl(
     private val piAwareApi: PiAwareApi,
-    private val aeroApi: AeroApi
+    private val aeroApi: AeroApi,
 ) : AircraftRepo {
-
     private val aircraftInfoCache = mutableMapOf<String, AircraftInfo>()
 
     private val _aircraftTrails = MutableStateFlow<Map<String, AircraftTrail>>(emptyMap())
@@ -47,18 +46,19 @@ class AircraftRepoImpl(
     private var aircraftTypes: Map<String, ICAOAircraftType>? = null
 
     override suspend fun getAircraft(servers: List<String>): List<Aircraft> {
-        val result = coroutineScope {
-            servers.map { server ->
-                async {
-                    try {
-                        piAwareApi.getAircraft(server)
-                    } catch (e: Exception) {
-                        Logger.e("Failed to fetch aircraft from server $server", e)
-                        emptyList()
+        val result =
+            coroutineScope {
+                servers.map { server ->
+                    async {
+                        try {
+                            piAwareApi.getAircraft(server)
+                        } catch (e: Exception) {
+                            Logger.e("Failed to fetch aircraft from server $server", e)
+                            emptyList()
+                        }
                     }
-                }
-            }.awaitAll().flatten().filterNoLocation()
-        }
+                }.awaitAll().flatten().filterNoLocation()
+            }
         updateTrailsFromAircraft(result)
         return result
     }
@@ -69,7 +69,10 @@ class AircraftRepoImpl(
         }
     }
 
-    override suspend fun findAircraftInfo(host: String, hex: String): AircraftInfo? {
+    override suspend fun findAircraftInfo(
+        host: String,
+        hex: String,
+    ): AircraftInfo? {
         if (aircraftInfoCache.containsKey(hex)) return aircraftInfoCache[hex]
 
         val info = lookupAircraftInfoRecursive(host, hex.replace("~", ""))
@@ -79,7 +82,7 @@ class AircraftRepoImpl(
 
     override suspend fun getReceiverInfo(
         host: String,
-        receiverType: ReceiverType
+        receiverType: ReceiverType,
     ): Receiver? {
         return when (receiverType) {
             ReceiverType.DUMP_1090 -> piAwareApi.getDump1090ReceiverInfo(host)
@@ -89,9 +92,10 @@ class AircraftRepoImpl(
 
     override suspend fun lookupFlight(ident: String): Async<FlightResponse> {
         return try {
-            val response = aeroApi.getFlight(
-                ident = ident
-            )
+            val response =
+                aeroApi.getFlight(
+                    ident = ident,
+                )
             Async.Success(response)
         } catch (e: Exception) {
             Logger.e("Failed to fetch flight for ident $ident", e)
@@ -105,11 +109,12 @@ class AircraftRepoImpl(
         if (historyCount <= 0) return
 
         coroutineScope {
-            val historyResults = (0 until historyCount).map { index ->
-                async {
-                    fetchHistoryWithRetry(host, index)
-                }
-            }.awaitAll()
+            val historyResults =
+                (0 until historyCount).map { index ->
+                    async {
+                        fetchHistoryWithRetry(host, index)
+                    }
+                }.awaitAll()
 
             trailMutex.withLock {
                 historyResults
@@ -121,12 +126,13 @@ class AircraftRepoImpl(
                             .forEach { aircraft ->
                                 val positions = trailPositions.getOrPut(aircraft.hex) { mutableListOf() }
                                 val positionAge = aircraft.seenPos ?: aircraft.seen ?: 0f
-                                val newPosition = AircraftPosition(
-                                    latitude = aircraft.lat,
-                                    longitude = aircraft.lon,
-                                    altitude = aircraft.altBaro,
-                                    timestamp = snapshotTime - positionAge
-                                )
+                                val newPosition =
+                                    AircraftPosition(
+                                        latitude = aircraft.lat,
+                                        longitude = aircraft.lon,
+                                        altitude = aircraft.altBaro,
+                                        timestamp = snapshotTime - positionAge,
+                                    )
                                 positions.add(newPosition)
                             }
                     }
@@ -151,7 +157,7 @@ class AircraftRepoImpl(
     private suspend fun fetchHistoryWithRetry(
         host: String,
         index: Int,
-        maxRetries: Int = 3
+        maxRetries: Int = 3,
     ): PiAwareResponse? {
         repeat(maxRetries) { attempt ->
             val result = piAwareApi.getHistoryFile(host, index)
@@ -174,13 +180,17 @@ class AircraftRepoImpl(
                 .filter { it.lat != 0.0 && it.lon != 0.0 }
                 .forEach { plane ->
                     val positions = trailPositions.getOrPut(plane.hex) { mutableListOf() }
-                    val newPosition = AircraftPosition(
-                        latitude = plane.lat,
-                        longitude = plane.lon,
-                        altitude = plane.altBaro,
-                        timestamp = timestamp
-                    )
-                    if (positions.lastOrNull()?.let { it.latitude == newPosition.latitude && it.longitude == newPosition.longitude } != true) {
+                    val newPosition =
+                        AircraftPosition(
+                            latitude = plane.lat,
+                            longitude = plane.lon,
+                            altitude = plane.altBaro,
+                            timestamp = timestamp,
+                        )
+                    if (positions.lastOrNull()?.let {
+                            it.latitude == newPosition.latitude && it.longitude == newPosition.longitude
+                        } != true
+                    ) {
                         positions.add(newPosition)
                     }
                 }
@@ -198,17 +208,18 @@ class AircraftRepoImpl(
     }
 
     private fun updateTrailsStateFlow() {
-        _aircraftTrails.value = trailPositions
-            .filterKeys { currentAircraftHex.contains(it) }
-            .mapValues { (hex, positions) ->
-                AircraftTrail(hex = hex, positions = positions.toList())
-            }
+        _aircraftTrails.value =
+            trailPositions
+                .filterKeys { currentAircraftHex.contains(it) }
+                .mapValues { (hex, positions) ->
+                    AircraftTrail(hex = hex, positions = positions.toList())
+                }
     }
 
     internal suspend fun lookupAircraftInfoRecursive(
         host: String,
         hex: String,
-        level: Int = 1
+        level: Int = 1,
     ): AircraftInfo? {
         val uppercaseHex = hex.uppercase()
         val bkey = uppercaseHex.take(level)
@@ -223,14 +234,15 @@ class AircraftRepoImpl(
                 registration = info.jsonObject["i"]?.jsonPrimitive?.content,
                 icaoType = info.jsonObject["t"]?.jsonPrimitive?.content,
                 typeDescription = icaoAircraftType?.desc,
-                wtc = icaoAircraftType?.wtc
+                wtc = icaoAircraftType?.wtc,
             )
         }
 
         if (dkey.isNotEmpty() && data.containsKey("children")) {
             val subkey = bkey + dkey.first()
             if (data["children"]?.let { Json.decodeFromJsonElement<List<String>>(it) }
-                    ?.contains(subkey) == true) {
+                    ?.contains(subkey) == true
+            ) {
                 return lookupAircraftInfoRecursive(host, hex, level + 1)
             }
         }

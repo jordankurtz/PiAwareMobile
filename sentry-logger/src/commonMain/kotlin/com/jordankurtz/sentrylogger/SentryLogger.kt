@@ -1,12 +1,10 @@
 package com.jordankurtz.sentrylogger
 
-import com.jordankurtz.logger.Logger
 import com.jordankurtz.logger.LogWriter
+import com.jordankurtz.logger.Logger
 import io.sentry.kotlin.multiplatform.Sentry
-import io.sentry.kotlin.multiplatform.SentryLevel
 
 class SentryLogger(val dsn: String) : LogWriter {
-
     init {
         Sentry.init { options ->
             options.dsn = dsn
@@ -16,7 +14,13 @@ class SentryLogger(val dsn: String) : LogWriter {
             options.attachStackTrace = true
         }
     }
-    override fun log(priority: Int, tag: String, message: String, throwable: Throwable?) {
+
+    override fun log(
+        priority: Int,
+        tag: String,
+        message: String,
+        throwable: Throwable?,
+    ) {
         if (priority < Logger.ERROR) {
             return
         }

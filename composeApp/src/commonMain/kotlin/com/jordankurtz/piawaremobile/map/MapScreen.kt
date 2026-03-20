@@ -32,9 +32,10 @@ fun MapScreen(
     val selectedAircraftHex by mapViewModel.selectedAircraft.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
+    val sheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+        )
 
     LaunchedEffect(aircraft) {
         mapViewModel.onAircraftUpdated(aircraft)
@@ -70,18 +71,19 @@ fun MapScreen(
         OpenStreetMap(state = mapViewModel.state)
         Overlay(
             numberOfPlanes,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp)
+            modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
         )
     }
 
-    val selectedAircraft = selectedAircraftHex?.let { hex ->
-        aircraft.firstOrNull { it.first.hex == hex }?.first
-    }
+    val selectedAircraft =
+        selectedAircraftHex?.let { hex ->
+            aircraft.firstOrNull { it.first.hex == hex }?.first
+        }
 
     FlightDetailsBottomSheet(
         aircraft = selectedAircraft,
         flightDetails = flightDetails,
         onDismissRequest = { mapViewModel.onAircraftDeselected() },
-        sheetState = sheetState
+        sheetState = sheetState,
     )
 }

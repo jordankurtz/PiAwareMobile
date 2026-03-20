@@ -11,7 +11,7 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [GetShowUserLocationOnMapUseCase::class])
 class GetShowUserLocationOnMapUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @Suppress("UnusedPrivateProperty") @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : GetShowUserLocationOnMapUseCase {
     override fun invoke(): Flow<Boolean> {
         return settingsRepository.getSettings().map { it.showUserLocationOnMap }
