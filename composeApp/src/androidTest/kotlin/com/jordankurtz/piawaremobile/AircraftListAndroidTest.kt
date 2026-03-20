@@ -23,23 +23,25 @@ class AircraftListAndroidTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val testAircraft = listOf(
-        AircraftWithServers(
-            aircraft = mockAircraft(hex = "A1B2C3", flight = "TST101  ", altBaro = "35000"),
-            info = AircraftInfo(
-                registration = "N12345",
-                icaoType = "A320",
-                typeDescription = "Airbus A320",
-                wtc = "M"
+    private val testAircraft =
+        listOf(
+            AircraftWithServers(
+                aircraft = mockAircraft(hex = "A1B2C3", flight = "TST101  ", altBaro = "35000"),
+                info =
+                    AircraftInfo(
+                        registration = "N12345",
+                        icaoType = "A320",
+                        typeDescription = "Airbus A320",
+                        wtc = "M",
+                    ),
+                servers = setOf(mockServer()),
             ),
-            servers = setOf(mockServer())
-        ),
-        AircraftWithServers(
-            aircraft = mockAircraft(hex = "D4E5F6", flight = "TST202  "),
-            info = null,
-            servers = setOf(mockServer())
-        ),
-    )
+            AircraftWithServers(
+                aircraft = mockAircraft(hex = "D4E5F6", flight = "TST202  "),
+                info = null,
+                servers = setOf(mockServer()),
+            ),
+        )
 
     @Test
     fun listHeaderRendersOnAndroid() {
@@ -59,7 +61,7 @@ class AircraftListAndroidTest {
                 flightDetails = Async.NotStarted,
                 userLocation = null,
                 onAircraftSelected = {},
-                onOpenFlightPage = {}
+                onOpenFlightPage = {},
             )
         }
         composeTestRule.onNodeWithText("TST101").assertIsDisplayed()
@@ -75,7 +77,7 @@ class AircraftListAndroidTest {
                 flightDetails = Async.NotStarted,
                 userLocation = null,
                 onAircraftSelected = {},
-                onOpenFlightPage = {}
+                onOpenFlightPage = {},
             )
         }
         composeTestRule.onNodeWithText("TST101").assertIsDisplayed()
@@ -91,7 +93,7 @@ class AircraftListAndroidTest {
                 flightDetails = Async.NotStarted,
                 userLocation = null,
                 onClose = { closed = true },
-                onOpenFlightPage = {}
+                onOpenFlightPage = {},
             )
         }
         composeTestRule.onNodeWithContentDescription("Back to list").performClick()
@@ -115,7 +117,7 @@ class AircraftListAndroidTest {
                 aircraft = mockAircraft(flight = "TST101"),
                 flightDetails = Async.Loading,
                 onLoadFlightDetails = {},
-                onOpenFlightPage = {}
+                onOpenFlightPage = {},
             )
         }
         composeTestRule.onNodeWithText("Loading flight details...").assertIsDisplayed()
@@ -129,7 +131,7 @@ class AircraftListAndroidTest {
                 aircraft = mockAircraft(flight = "TST101"),
                 flightDetails = Async.Error("Network error"),
                 onLoadFlightDetails = { retried = true },
-                onOpenFlightPage = {}
+                onOpenFlightPage = {},
             )
         }
         composeTestRule.onNodeWithText("Network error").assertIsDisplayed()

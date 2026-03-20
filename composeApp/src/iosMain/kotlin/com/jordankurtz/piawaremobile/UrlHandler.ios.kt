@@ -10,8 +10,9 @@ import platform.darwin.dispatch_get_main_queue
 
 @Factory(binds = [UrlHandler::class])
 @Suppress("UnusedPrivateProperty") // contextWrapper required by actual constructor signature
-actual class UrlHandlerImpl actual constructor(private val contextWrapper: ContextWrapper) :
-    UrlHandler {
+actual class UrlHandlerImpl actual constructor(
+    private val contextWrapper: ContextWrapper,
+) : UrlHandler {
     actual override fun openUrlInternally(url: String) {
         dispatch_async(dispatch_get_main_queue()) {
             val nsURL = NSURL.URLWithString(url) ?: return@dispatch_async
