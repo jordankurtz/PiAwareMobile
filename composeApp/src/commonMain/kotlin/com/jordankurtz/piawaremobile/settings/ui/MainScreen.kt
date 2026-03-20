@@ -67,8 +67,10 @@ import piawaremobile.composeapp.generated.resources.trail_display_mode_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(onServersClicked: () -> Unit) {
-    val viewModel = koinViewModel<SettingsViewModel>()
+fun MainScreen(
+    onServersClicked: () -> Unit,
+    viewModel: SettingsViewModel = koinViewModel(),
+) {
     val settingsState by viewModel.settings.collectAsState()
     val settings = settingsState
 
