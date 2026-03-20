@@ -21,9 +21,9 @@ actual fun getKtorClient(): HttpClient {
             )
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 1000
-            connectTimeoutMillis = 1000
-            socketTimeoutMillis = 1000
+            requestTimeoutMillis = HttpTimeoutDefaults.REQUEST_TIMEOUT_MS
+            connectTimeoutMillis = HttpTimeoutDefaults.CONNECT_TIMEOUT_MS
+            socketTimeoutMillis = HttpTimeoutDefaults.SOCKET_TIMEOUT_MS
         }
     }
 }
