@@ -98,6 +98,10 @@ class AircraftViewModel(
                     is Async.Success -> {
                         with(it.data) {
                             settings = this
+                            if (servers.isEmpty()) {
+                                stopPolling()
+                                return@collect
+                            }
                             launch { loadHistoryUseCase(servers.map { server -> server.address }) }
                             if (showReceiverLocations) {
                                 loadReceiverLocations(servers)
@@ -148,7 +152,7 @@ class AircraftViewModel(
             isFirstResume = false
             return
         }
-        val servers = settings?.servers?.map { it.address } ?: return
+        val servers = settings?.servers?.map { it.address }?.takeIf { it.isNotEmpty() } ?: return
         Logger.v("Refreshing trail history on resume")
         viewModelScope.launch(ioDispatcher) {
             loadHistoryUseCase(servers)
