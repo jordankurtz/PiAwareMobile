@@ -22,6 +22,7 @@ import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.label_aircraft_type
 import piawaremobile.composeapp.generated.resources.label_altitude
+import piawaremobile.composeapp.generated.resources.label_description
 import piawaremobile.composeapp.generated.resources.label_direction
 import piawaremobile.composeapp.generated.resources.label_distance
 import piawaremobile.composeapp.generated.resources.label_heading
@@ -31,10 +32,9 @@ import piawaremobile.composeapp.generated.resources.label_registration
 import piawaremobile.composeapp.generated.resources.label_signal
 import piawaremobile.composeapp.generated.resources.label_speed
 import piawaremobile.composeapp.generated.resources.label_squawk
+import piawaremobile.composeapp.generated.resources.label_type
 import piawaremobile.composeapp.generated.resources.label_vertical_speed
 import piawaremobile.composeapp.generated.resources.label_wtc
-import piawaremobile.composeapp.generated.resources.label_description
-import piawaremobile.composeapp.generated.resources.label_type
 import piawaremobile.composeapp.generated.resources.value_altitude_feet
 import piawaremobile.composeapp.generated.resources.value_direction_with_cardinal
 import piawaremobile.composeapp.generated.resources.value_distance_km
@@ -53,11 +53,11 @@ import kotlin.math.roundToInt
 fun LabeledValue(
     label: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall)
         Text(value, style = MaterialTheme.typography.bodyLarge)
@@ -71,17 +71,17 @@ fun LabeledValue(
 fun CompactLabeledValue(
     value: String,
     unit: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier,
-        verticalAlignment = Alignment.Bottom
+        verticalAlignment = Alignment.Bottom,
     ) {
         Text(value, style = MaterialTheme.typography.bodyMedium)
         Text(
             " $unit",
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -92,29 +92,29 @@ fun CompactLabeledValue(
 @Composable
 fun AircraftPrimaryDetails(
     aircraft: Aircraft,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         aircraft.altBaro?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_altitude),
-                value = stringResource(Res.string.value_altitude_feet, it)
+                value = stringResource(Res.string.value_altitude_feet, it),
             )
         }
         aircraft.track?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_heading),
-                value = stringResource(Res.string.value_heading_degrees, it.toString())
+                value = stringResource(Res.string.value_heading_degrees, it.toString()),
             )
         }
         aircraft.gs?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_speed),
-                value = stringResource(Res.string.value_speed_knots, it.toInt())
+                value = stringResource(Res.string.value_speed_knots, it.toInt()),
             )
         }
     }
@@ -127,21 +127,22 @@ fun AircraftPrimaryDetails(
 fun AircraftLocationDetails(
     aircraft: Aircraft,
     userLocation: Location?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (aircraft.lat != 0.0 && aircraft.lon != 0.0) {
             LabeledValue(
                 label = stringResource(Res.string.label_location),
-                value = stringResource(
-                    Res.string.value_location_coords,
-                    aircraft.lat.round(4).toString(),
-                    aircraft.lon.round(4).toString()
-                )
+                value =
+                    stringResource(
+                        Res.string.value_location_coords,
+                        aircraft.lat.round(4).toString(),
+                        aircraft.lon.round(4).toString(),
+                    ),
             )
             userLocation?.let { location ->
                 val aircraftLocation = Location(aircraft.lat, aircraft.lon)
@@ -150,15 +151,16 @@ fun AircraftLocationDetails(
 
                 LabeledValue(
                     label = stringResource(Res.string.label_distance),
-                    value = stringResource(Res.string.value_distance_km, distance.roundToInt())
+                    value = stringResource(Res.string.value_distance_km, distance.roundToInt()),
                 )
                 LabeledValue(
                     label = stringResource(Res.string.label_direction),
-                    value = stringResource(
-                        Res.string.value_direction_with_cardinal,
-                        bearing.roundToInt(),
-                        bearing.toCardinalDirection()
-                    )
+                    value =
+                        stringResource(
+                            Res.string.value_direction_with_cardinal,
+                            bearing.roundToInt(),
+                            bearing.toCardinalDirection(),
+                        ),
                 )
             }
         }
@@ -171,23 +173,23 @@ fun AircraftLocationDetails(
 @Composable
 fun AircraftSecondaryDetails(
     aircraft: Aircraft,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         aircraft.baroRate?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_vertical_speed),
-                value = stringResource(Res.string.value_vertical_speed_fpm, it)
+                value = stringResource(Res.string.value_vertical_speed_fpm, it),
             )
         }
         aircraft.squawk?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_squawk),
-                value = it
+                value = it,
             )
         }
     }
@@ -199,23 +201,23 @@ fun AircraftSecondaryDetails(
 @Composable
 fun AircraftSignalDetails(
     aircraft: Aircraft,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         aircraft.rssi?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_signal),
-                value = stringResource(Res.string.value_signal_dbm, it.toString())
+                value = stringResource(Res.string.value_signal_dbm, it.toString()),
             )
         }
         aircraft.seen?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_last_seen),
-                value = stringResource(Res.string.value_last_seen_seconds, it.toString())
+                value = stringResource(Res.string.value_last_seen_seconds, it.toString()),
             )
         }
     }
@@ -228,35 +230,35 @@ fun AircraftSignalDetails(
 fun FlightAircraftDetails(
     aircraft: Aircraft?,
     flight: Flight,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         aircraft?.baroRate?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_vertical_speed),
-                value = stringResource(Res.string.value_vertical_speed_fpm, it)
+                value = stringResource(Res.string.value_vertical_speed_fpm, it),
             )
         }
         aircraft?.squawk?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_squawk),
-                value = it
+                value = it,
             )
         }
         flight.aircraftType?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_aircraft_type),
-                value = it
+                value = it,
             )
         }
         flight.registration?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_registration),
-                value = it
+                value = it,
             )
         }
     }
@@ -269,7 +271,7 @@ fun FlightAircraftDetails(
 fun AircraftDetailsGrid(
     aircraft: Aircraft,
     userLocation: Location?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         AircraftPrimaryDetails(aircraft = aircraft)
@@ -294,11 +296,11 @@ fun AircraftDetailsGrid(
 @Composable
 fun AircraftInfoRow(
     info: AircraftInfo,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround
+        horizontalArrangement = Arrangement.SpaceAround,
     ) {
         info.icaoType?.let {
             LabeledValue(label = stringResource(Res.string.label_type), value = it)

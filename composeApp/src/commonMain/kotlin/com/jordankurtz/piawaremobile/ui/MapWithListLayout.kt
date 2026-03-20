@@ -37,7 +37,7 @@ fun MapWithListLayout(
     onSettingsClick: () -> Unit,
     aircraftViewModel: AircraftViewModel = koinViewModel(),
     mapViewModel: MapViewModel = koinViewModel(),
-    locationViewModel: LocationViewModel = koinViewModel()
+    locationViewModel: LocationViewModel = koinViewModel(),
 ) {
     val aircraft by aircraftViewModel.aircraft.collectAsState()
     val selectedHex by aircraftViewModel.selectedAircraftHex.collectAsState()
@@ -92,31 +92,35 @@ fun MapWithListLayout(
     Row(modifier = Modifier.fillMaxSize()) {
         // Map takes 60% of width
         Box(
-            modifier = Modifier
-                .weight(0.6f)
-                .fillMaxHeight()
+            modifier =
+                Modifier
+                    .weight(0.6f)
+                    .fillMaxHeight(),
         ) {
             OpenStreetMap(state = mapViewModel.state)
             Overlay(
                 numberOfPlanes,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(horizontal = 8.dp)
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(horizontal = 8.dp),
             )
             // Settings button
             IconButton(
                 onClick = onSettingsClick,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                )
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp),
+                colors =
+                    IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    ),
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_settings),
                     contentDescription = stringResource(Res.string.settings_title),
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
             }
         }
@@ -125,9 +129,10 @@ fun MapWithListLayout(
 
         // List panel takes 40% of width
         Surface(
-            modifier = Modifier
-                .weight(0.4f)
-                .fillMaxHeight()
+            modifier =
+                Modifier
+                    .weight(0.4f)
+                    .fillMaxHeight(),
         ) {
             TabletAircraftListPanel(
                 aircraft = aircraft,
@@ -140,7 +145,7 @@ fun MapWithListLayout(
                 },
                 onOpenFlightPage = {
                     aircraftViewModel.openFlightPage(selectedHex)
-                }
+                },
             )
         }
     }

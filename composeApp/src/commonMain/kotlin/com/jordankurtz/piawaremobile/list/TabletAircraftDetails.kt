@@ -36,45 +36,47 @@ fun TabletAircraftDetails(
     flightDetails: Async<Flight>,
     userLocation: Location?,
     onClose: () -> Unit,
-    onOpenFlightPage: () -> Unit
+    onOpenFlightPage: () -> Unit,
 ) {
     val aircraft = aircraftWithServers.aircraft
     val info = aircraftWithServers.info
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
     ) {
         // Header with back button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onClose) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_arrow_back),
-                        contentDescription = stringResource(Res.string.back_to_list)
+                        contentDescription = stringResource(Res.string.back_to_list),
                     )
                 }
                 Column {
                     Text(
                         text = aircraft.flight?.trim() ?: aircraft.hex,
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.headlineSmall,
                     )
                     info?.let {
-                        val subtitle = buildList {
-                            it.registration?.let { reg -> add(reg) }
-                            it.typeDescription?.let { desc -> add(desc) }
-                        }.joinToString(" - ")
+                        val subtitle =
+                            buildList {
+                                it.registration?.let { reg -> add(reg) }
+                                it.typeDescription?.let { desc -> add(desc) }
+                            }.joinToString(" - ")
                         if (subtitle.isNotEmpty()) {
                             Text(
                                 text = subtitle,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -99,7 +101,7 @@ fun TabletAircraftDetails(
             Text(
                 text = "Detected by: ${aircraftWithServers.servers.joinToString(", ") { it.name }}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -109,7 +111,7 @@ fun TabletAircraftDetails(
             aircraft = aircraft,
             flightDetails = flightDetails,
             onLoadFlightDetails = { /* retry handled by re-selecting */ },
-            onOpenFlightPage = onOpenFlightPage
+            onOpenFlightPage = onOpenFlightPage,
         )
     }
 }

@@ -1,6 +1,5 @@
 package com.jordankurtz.piawaremobile.ui
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -14,19 +13,20 @@ import androidx.compose.ui.unit.dp
 enum class WindowSizeClass {
     Compact,
     Medium,
-    Expanded
+    Expanded,
 }
 
 data class WindowSize(
     val width: Dp,
-    val height: Dp
+    val height: Dp,
 ) {
     val widthSizeClass: WindowSizeClass
-        get() = when {
-            width < 600.dp -> WindowSizeClass.Compact
-            width < 840.dp -> WindowSizeClass.Medium
-            else -> WindowSizeClass.Expanded
-        }
+        get() =
+            when {
+                width < 600.dp -> WindowSizeClass.Compact
+                width < 840.dp -> WindowSizeClass.Medium
+                else -> WindowSizeClass.Expanded
+            }
 
     val isTablet: Boolean
         get() = widthSizeClass != WindowSizeClass.Compact

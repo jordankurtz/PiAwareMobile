@@ -58,8 +58,8 @@ import piawaremobile.composeapp.generated.resources.flight_details_minutes_short
 import piawaremobile.composeapp.generated.resources.flight_details_on_time
 import piawaremobile.composeapp.generated.resources.flight_details_remaining_time
 import piawaremobile.composeapp.generated.resources.flight_details_scheduled
-import piawaremobile.composeapp.generated.resources.open_in_flightaware
 import piawaremobile.composeapp.generated.resources.ic_arrow_downward
+import piawaremobile.composeapp.generated.resources.open_in_flightaware
 import kotlin.time.Instant
 
 @Composable

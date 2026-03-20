@@ -17,6 +17,7 @@ import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
+import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
@@ -30,7 +31,6 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import dev.mokkery.matcher.any
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

@@ -66,7 +66,7 @@ private fun CompactLayout() {
             BottomNavigationBar(currentScreen = currentScreen) {
                 currentScreen = it
             }
-        }
+        },
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (currentScreen) {
@@ -94,10 +94,10 @@ private fun ExpandedLayout() {
                     IconButton(onClick = { showSettings = false }) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_arrow_back),
-                            contentDescription = stringResource(Res.string.back_to_list)
+                            contentDescription = stringResource(Res.string.back_to_list),
                         )
                     }
-                }
+                },
             )
             SettingsScreen()
         }
