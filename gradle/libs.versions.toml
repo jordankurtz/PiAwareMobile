@@ -31,6 +31,7 @@ sentry = "0.23.0"
 ktlint-plugin = "12.2.0"
 detekt = "1.23.8"
 kover = "0.9.1"
+androidx-compose-ui-test = "1.9.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -72,6 +73,8 @@ multiplatform-settings-datastore = {group = "com.russhwolf", name = "multiplatfo
 multiplatform-settings-coroutines = {group = "com.russhwolf", name = "multiplatform-settings-coroutines" , version.ref = "multiplatformSettings"}
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "androidx-browser" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "androidx-compose-ui-test" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "androidx-compose-ui-test" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
