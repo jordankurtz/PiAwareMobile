@@ -51,8 +51,7 @@ actual class LocationServiceImpl actual constructor(private val contextWrapper: 
 
         private fun fetchLocationFromIP(): Location? {
             return try {
-                // Using ip-api.com free API for geolocation
-                val url = URL("http://ip-api.com/json/")
+                val url = URL("https://ipwho.is/")
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
                 connection.connectTimeout = 5000
@@ -64,10 +63,10 @@ actual class LocationServiceImpl actual constructor(private val contextWrapper: 
 
                 val locationData = json.decodeFromString<IPLocationResponse>(response)
 
-                if (locationData.status == "success") {
+                if (locationData.success) {
                     Location(
-                        latitude = locationData.lat,
-                        longitude = locationData.lon,
+                        latitude = locationData.latitude,
+                        longitude = locationData.longitude,
                     )
                 } else {
                     null
