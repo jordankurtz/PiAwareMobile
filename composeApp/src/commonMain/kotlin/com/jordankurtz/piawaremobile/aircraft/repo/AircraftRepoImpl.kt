@@ -65,7 +65,7 @@ class AircraftRepoImpl(
                 // Group by hex and merge - keep freshest aircraft data, accumulate servers
                 val mergedAircraft = mutableMapOf<String, Pair<Aircraft, MutableSet<Server>>>()
                 for ((aircraft, server) in aircraftByServer) {
-                    if (aircraft.lat == 0.0 && aircraft.lon == 0.0) continue
+                    if (!aircraft.hasPosition) continue
 
                     val existing = mergedAircraft[aircraft.hex]
                     if (existing == null) {
