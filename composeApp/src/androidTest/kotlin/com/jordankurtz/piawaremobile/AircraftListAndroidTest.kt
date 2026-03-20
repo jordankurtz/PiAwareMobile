@@ -10,12 +10,13 @@ import com.jordankurtz.piawaremobile.list.FlightInfo
 import com.jordankurtz.piawaremobile.list.ListHeader
 import com.jordankurtz.piawaremobile.list.TabletAircraftDetails
 import com.jordankurtz.piawaremobile.list.TabletAircraftListPanel
+import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
-import com.jordankurtz.piawaremobile.testutil.mockAircraft
-import com.jordankurtz.piawaremobile.testutil.mockFlight
-import com.jordankurtz.piawaremobile.testutil.mockServer
+import com.jordankurtz.piawaremobile.model.Flight
+import com.jordankurtz.piawaremobile.model.FlightAirportRef
+import com.jordankurtz.piawaremobile.settings.Server
 import org.junit.Rule
 import org.junit.Test
 
@@ -23,10 +24,12 @@ class AircraftListAndroidTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private val testServer = Server(name = "Test PiAware", address = "piaware.local")
+
     private val testAircraft =
         listOf(
             AircraftWithServers(
-                aircraft = mockAircraft(hex = "A1B2C3", flight = "TST101  ", altBaro = "35000"),
+                aircraft = Aircraft(hex = "A1B2C3", flight = "TST101  ", altBaro = "35000"),
                 info =
                     AircraftInfo(
                         registration = "N12345",
@@ -34,13 +37,90 @@ class AircraftListAndroidTest {
                         typeDescription = "Airbus A320",
                         wtc = "M",
                     ),
-                servers = setOf(mockServer()),
+                servers = setOf(testServer),
             ),
             AircraftWithServers(
-                aircraft = mockAircraft(hex = "D4E5F6", flight = "TST202  "),
+                aircraft = Aircraft(hex = "D4E5F6", flight = "TST202  "),
                 info = null,
-                servers = setOf(mockServer()),
+                servers = setOf(testServer),
             ),
+        )
+
+    private val testFlight =
+        Flight(
+            ident = "TST101",
+            identIcao = "TST101",
+            identIata = "TT101",
+            actualRunwayOff = null,
+            actualRunwayOn = null,
+            faFlightId = "TST101-0001",
+            operator = "Test Airlines",
+            operatorIcao = "TST",
+            operatorIata = "TT",
+            flightNumber = "101",
+            registration = "N12345",
+            atcIdent = "TST101",
+            inboundFaFlightId = null,
+            codeshares = null,
+            codesharesIata = null,
+            blocked = false,
+            diverted = false,
+            cancelled = false,
+            positionOnly = false,
+            origin =
+                FlightAirportRef(
+                    code = "KTST",
+                    codeIcao = "KTST",
+                    codeIata = "TST",
+                    codeLid = "KTST",
+                    timezone = "America/Chicago",
+                    name = "Test Origin Airport",
+                    city = "Test City",
+                    airportInfoUrl = "/airports/KTST",
+                ),
+            destination =
+                FlightAirportRef(
+                    code = "KDST",
+                    codeIcao = "KDST",
+                    codeIata = "DST",
+                    codeLid = "KDST",
+                    timezone = "America/Chicago",
+                    name = "Test Destination Airport",
+                    city = "Destination City",
+                    airportInfoUrl = "/airports/KDST",
+                ),
+            departureDelay = null,
+            arrivalDelay = null,
+            filedEte = null,
+            progressPercent = 50,
+            status = "En Route",
+            aircraftType = "A320",
+            routeDistance = null,
+            filedAirspeed = null,
+            filedAltitude = null,
+            route = null,
+            baggageClaim = null,
+            seatsCabinBusiness = null,
+            seatsCabinCoach = null,
+            seatsCabinFirst = null,
+            gateOrigin = null,
+            gateDestination = null,
+            terminalOrigin = null,
+            terminalDestination = null,
+            type = "Airline",
+            scheduledOut = null,
+            estimatedOut = null,
+            actualOut = null,
+            scheduledOff = null,
+            estimatedOff = null,
+            actualOff = null,
+            scheduledOn = null,
+            estimatedOn = null,
+            actualOn = null,
+            scheduledIn = null,
+            estimatedIn = null,
+            actualIn = null,
+            foresightPredictionsAvailable = false,
         )
 
     @Test
@@ -103,7 +183,7 @@ class AircraftListAndroidTest {
     @Test
     fun flightInfoRendersOnAndroid() {
         composeTestRule.setContent {
-            FlightInfo(flight = mockFlight())
+            FlightInfo(flight = testFlight)
         }
         composeTestRule.onNodeWithText("KTST").assertIsDisplayed()
         composeTestRule.onNodeWithText("KDST").assertIsDisplayed()
@@ -114,7 +194,7 @@ class AircraftListAndroidTest {
     fun flightDetailsSectionLoadingState() {
         composeTestRule.setContent {
             FlightDetailsSection(
-                aircraft = mockAircraft(flight = "TST101"),
+                aircraft = Aircraft(hex = "A1B2C3", flight = "TST101"),
                 flightDetails = Async.Loading,
                 onLoadFlightDetails = {},
                 onOpenFlightPage = {},
@@ -128,7 +208,7 @@ class AircraftListAndroidTest {
         var retried = false
         composeTestRule.setContent {
             FlightDetailsSection(
-                aircraft = mockAircraft(flight = "TST101"),
+                aircraft = Aircraft(hex = "A1B2C3", flight = "TST101"),
                 flightDetails = Async.Error("Network error"),
                 onLoadFlightDetails = { retried = true },
                 onOpenFlightPage = {},
