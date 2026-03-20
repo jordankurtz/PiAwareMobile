@@ -142,7 +142,7 @@ class AircraftViewModelTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(2)) {
-                getAircraftWithDetailsUseCase(listOf("server1.local"), "server1.local")
+                getAircraftWithDetailsUseCase(servers, "server1.local")
             }
         }
 
@@ -178,12 +178,11 @@ class AircraftViewModelTest {
             everySuspend { lookupFlightUseCase(any()) } returns Async.Error("test")
 
             val viewModel = createViewModel()
-            // Init launches on IO: loads settings, queues polling collector on test dispatcher
-            Thread.sleep(100)
-            // Start the polling collector so the upstream IO flow begins
             testDispatcher.scheduler.advanceUntilIdle()
-            // Wait for the first poll cycle on IO to populate aircraft list
-            Thread.sleep(100)
+
+            // Emit a tick to trigger polling and populate the aircraft list
+            pollTicker.emit(Unit)
+            testDispatcher.scheduler.advanceUntilIdle()
 
             viewModel.selectAircraft("abc123")
             testDispatcher.scheduler.advanceUntilIdle()
