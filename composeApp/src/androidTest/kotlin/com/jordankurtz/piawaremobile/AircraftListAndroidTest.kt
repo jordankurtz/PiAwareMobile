@@ -17,6 +17,7 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.FlightAirportRef
 import com.jordankurtz.piawaremobile.settings.Server
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -177,7 +178,7 @@ class AircraftListAndroidTest {
             )
         }
         composeTestRule.onNodeWithContentDescription("Back to list").performClick()
-        assert(closed)
+        assertTrue(closed)
     }
 
     @Test
@@ -216,6 +217,6 @@ class AircraftListAndroidTest {
         }
         composeTestRule.onNodeWithText("Network error").assertIsDisplayed()
         composeTestRule.onNodeWithText("Retry").performClick()
-        assert(retried)
+        assertTrue(retried)
     }
 }

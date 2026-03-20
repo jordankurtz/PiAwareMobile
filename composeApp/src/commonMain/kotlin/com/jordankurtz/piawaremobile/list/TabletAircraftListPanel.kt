@@ -80,7 +80,7 @@ private fun TabletAircraftListItem(
     val info = aircraftWithServers.info
 
     val distance =
-        if (aircraft.lat != 0.0 && aircraft.lon != 0.0 && userLocation != null) {
+        if (aircraft.hasPosition && userLocation != null) {
             userLocation.distanceTo(Location(aircraft.lat, aircraft.lon))
         } else {
             null
@@ -120,14 +120,9 @@ private fun TabletAircraftListItem(
             }
 
             // Subtitle: registration and type
-            val subtitle =
-                buildList {
-                    info?.registration?.let { add(it) }
-                    info?.typeDescription?.let { add(it) }
-                }.joinToString(" - ")
-            if (subtitle.isNotEmpty()) {
+            info?.subtitle?.takeIf { it.isNotEmpty() }?.let {
                 Text(
-                    text = subtitle,
+                    text = it,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

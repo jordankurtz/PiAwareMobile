@@ -38,6 +38,7 @@ import com.jordankurtz.piawaremobile.model.FlightAirportRef
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.ui.AircraftLocationDetails
 import com.jordankurtz.piawaremobile.ui.AircraftPrimaryDetails
+import com.jordankurtz.piawaremobile.ui.AircraftSecondaryDetails
 import com.jordankurtz.piawaremobile.ui.AircraftSignalDetails
 import com.jordankurtz.piawaremobile.ui.FlightAircraftDetails
 import org.jetbrains.compose.resources.painterResource
@@ -167,9 +168,11 @@ private fun AircraftTab(
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(16.dp))
-        FlightAircraftDetails(aircraft = aircraft, flight = flight)
+        FlightAircraftDetails(flight = flight)
         Spacer(modifier = Modifier.height(8.dp))
         aircraft?.let {
+            AircraftSecondaryDetails(aircraft = it)
+            Spacer(modifier = Modifier.height(8.dp))
             AircraftSignalDetails(aircraft = it)
         }
     }

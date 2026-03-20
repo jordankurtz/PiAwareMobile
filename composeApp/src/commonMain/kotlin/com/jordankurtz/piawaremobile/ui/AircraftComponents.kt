@@ -65,28 +65,6 @@ fun LabeledValue(
 }
 
 /**
- * A compact labeled value with the value first (larger) and unit/label after (smaller).
- */
-@Composable
-fun CompactLabeledValue(
-    value: String,
-    unit: String,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        Text(value, style = MaterialTheme.typography.bodyMedium)
-        Text(
-            " $unit",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/**
  * Primary aircraft details: Altitude, Heading, Speed
  */
 @Composable
@@ -134,7 +112,7 @@ fun AircraftLocationDetails(
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (aircraft.lat != 0.0 && aircraft.lon != 0.0) {
+        if (aircraft.hasPosition) {
             LabeledValue(
                 label = stringResource(Res.string.label_location),
                 value =
@@ -228,7 +206,6 @@ fun AircraftSignalDetails(
  */
 @Composable
 fun FlightAircraftDetails(
-    aircraft: Aircraft?,
     flight: Flight,
     modifier: Modifier = Modifier,
 ) {
@@ -237,18 +214,6 @@ fun FlightAircraftDetails(
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        aircraft?.baroRate?.let {
-            LabeledValue(
-                label = stringResource(Res.string.label_vertical_speed),
-                value = stringResource(Res.string.value_vertical_speed_fpm, it),
-            )
-        }
-        aircraft?.squawk?.let {
-            LabeledValue(
-                label = stringResource(Res.string.label_squawk),
-                value = it,
-            )
-        }
         flight.aircraftType?.let {
             LabeledValue(
                 label = stringResource(Res.string.label_aircraft_type),

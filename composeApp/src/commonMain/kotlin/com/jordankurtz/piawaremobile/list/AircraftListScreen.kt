@@ -145,7 +145,7 @@ internal fun ListHeader(aircraft: List<AircraftWithServers>) {
                     value = aircraft.size.toString(),
                 )
 
-                val withPosition = aircraft.count { it.aircraft.lat != 0.0 && it.aircraft.lon != 0.0 }
+                val withPosition = aircraft.count { it.aircraft.hasPosition }
                 StatItem(
                     label = stringResource(Res.string.aircraft_list_stat_with_position),
                     value = withPosition.toString(),
@@ -220,7 +220,7 @@ private fun AircraftListItem(
 
     // Calculate distance
     val distance =
-        if (aircraft.lat != 0.0 && aircraft.lon != 0.0 && userLocation != null) {
+        if (aircraft.hasPosition && userLocation != null) {
             userLocation.distanceTo(Location(aircraft.lat, aircraft.lon))
         } else {
             null
@@ -256,14 +256,9 @@ private fun AircraftListItem(
                     }
                 }
                 // Second line: registration and type description
-                val subtitle =
-                    buildList {
-                        info?.registration?.let { add(it) }
-                        info?.typeDescription?.let { add(it) }
-                    }.joinToString(" - ")
-                if (subtitle.isNotEmpty()) {
+                info?.subtitle?.takeIf { it.isNotEmpty() }?.let {
                     Text(
-                        text = subtitle,
+                        text = it,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

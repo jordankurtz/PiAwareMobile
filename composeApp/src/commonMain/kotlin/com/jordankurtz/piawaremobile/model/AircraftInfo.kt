@@ -5,4 +5,11 @@ data class AircraftInfo(
     val icaoType: String?,
     val typeDescription: String?,
     val wtc: String?,
-)
+) {
+    val subtitle: String
+        get() =
+            buildList {
+                registration?.let { add(it) }
+                typeDescription?.let { add(it) }
+            }.joinToString(" - ")
+}

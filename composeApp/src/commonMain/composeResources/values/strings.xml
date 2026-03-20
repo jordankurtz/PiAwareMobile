@@ -59,6 +59,7 @@
     <string name="open_in_flightaware">Open in FlightAware</string>
     <string name="close">Close</string>
     <string name="back_to_list">Back to list</string>
+    <string name="detected_by">Detected by: %1$s</string>
     <string name="aircraft_list_route_arrow">to</string>
     <string name="aircraft_list_progress_percent">%1$d%% complete</string>
 

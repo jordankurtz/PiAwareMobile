@@ -146,7 +146,7 @@ class AircraftRepoImpl(
                     .forEach { response ->
                         val snapshotTime = response.now ?: return@forEach
                         response.aircraft
-                            .filter { it.lat != 0.0 && it.lon != 0.0 }
+                            .filter { it.hasPosition }
                             .forEach { aircraft ->
                                 val positions = trailPositions.getOrPut(aircraft.hex) { mutableListOf() }
                                 val positionAge = aircraft.seenPos ?: aircraft.seen ?: 0f
@@ -201,7 +201,7 @@ class AircraftRepoImpl(
             currentAircraftHex = aircraft.map { it.hex }.toSet()
 
             aircraft
-                .filter { it.lat != 0.0 && it.lon != 0.0 }
+                .filter { it.hasPosition }
                 .forEach { plane ->
                     val positions = trailPositions.getOrPut(plane.hex) { mutableListOf() }
                     val newPosition =
@@ -287,5 +287,5 @@ class AircraftRepoImpl(
 }
 
 fun List<Aircraft>.filterNoLocation(): List<Aircraft> {
-    return this.filter { it.lat != 0.0 && it.lon != 0.0 }
+    return this.filter { it.hasPosition }
 }

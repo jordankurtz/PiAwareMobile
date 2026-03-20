@@ -42,4 +42,6 @@ data class Aircraft(
     val messages: Int? = null,
     val seen: Float? = null,
     val rssi: Float? = null,
-)
+) {
+    val hasPosition: Boolean get() = lat != 0.0 && lon != 0.0
+}

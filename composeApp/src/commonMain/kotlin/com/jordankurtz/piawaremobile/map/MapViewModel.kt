@@ -218,7 +218,8 @@ class MapViewModel(
         previousAircraftMarkerIds.forEach(state::removeMarker)
         previousAircraftMarkerIds.clear()
 
-        aircraft.forEach { (plane, _, _) ->
+        aircraft.forEach { item ->
+            val plane = item.aircraft
             val location = doProjection(plane.lat, plane.lon)
 
             state.addMarker(
@@ -245,14 +246,19 @@ class MapViewModel(
         clearPaths()
 
         val mode = settings?.trailDisplayMode ?: TrailDisplayMode.ALL
-        val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
 
         val trailsToDisplay =
-            when {
-                mode == TrailDisplayMode.NONE -> emptyMap()
-                selectedHex != null -> trails.filterKeys { it == selectedHex }
-                mode == TrailDisplayMode.ALL -> trails
-                else -> emptyMap()
+            when (mode) {
+                TrailDisplayMode.NONE -> emptyMap()
+                TrailDisplayMode.ALL -> trails
+                TrailDisplayMode.SELECTED -> {
+                    val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
+                    if (selectedHex != null) {
+                        trails.filterKeys { it == selectedHex }
+                    } else {
+                        emptyMap()
+                    }
+                }
             }
 
         trailsToDisplay.forEach { (hex, trail) ->

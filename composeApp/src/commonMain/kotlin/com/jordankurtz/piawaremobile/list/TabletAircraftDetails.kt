@@ -28,6 +28,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.back_to_list
+import piawaremobile.composeapp.generated.resources.detected_by
 import piawaremobile.composeapp.generated.resources.ic_arrow_back
 
 @Composable
@@ -67,14 +68,9 @@ fun TabletAircraftDetails(
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     info?.let {
-                        val subtitle =
-                            buildList {
-                                it.registration?.let { reg -> add(reg) }
-                                it.typeDescription?.let { desc -> add(desc) }
-                            }.joinToString(" - ")
-                        if (subtitle.isNotEmpty()) {
+                        if (it.subtitle.isNotEmpty()) {
                             Text(
-                                text = subtitle,
+                                text = it.subtitle,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -99,7 +95,11 @@ fun TabletAircraftDetails(
         if (aircraftWithServers.servers.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Detected by: ${aircraftWithServers.servers.joinToString(", ") { it.name }}",
+                text =
+                    stringResource(
+                        Res.string.detected_by,
+                        aircraftWithServers.servers.joinToString(", ") { it.name },
+                    ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

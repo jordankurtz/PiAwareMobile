@@ -141,7 +141,6 @@ fun MapWithListLayout(
                 userLocation = userLocation,
                 onAircraftSelected = { hex ->
                     aircraftViewModel.selectAircraft(hex)
-                    mapViewModel.syncSelection(hex)
                 },
                 onOpenFlightPage = {
                     aircraftViewModel.openFlightPage(selectedHex)
