@@ -8,7 +8,6 @@ expect class ContextWrapper
 
 @Module
 expect class ContextModule() {
-
     @Single
     fun providesContextWrapper(scope: Scope): ContextWrapper
 }

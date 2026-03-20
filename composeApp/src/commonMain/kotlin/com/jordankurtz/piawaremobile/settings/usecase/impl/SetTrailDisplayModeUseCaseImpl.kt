@@ -7,7 +7,7 @@ import org.koin.core.annotation.Factory
 
 @Factory(binds = [SetTrailDisplayModeUseCase::class])
 class SetTrailDisplayModeUseCaseImpl(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
 ) : SetTrailDisplayModeUseCase {
     override suspend fun invoke(trailDisplayMode: TrailDisplayMode) {
         settingsRepository.setTrailDisplayMode(trailDisplayMode)

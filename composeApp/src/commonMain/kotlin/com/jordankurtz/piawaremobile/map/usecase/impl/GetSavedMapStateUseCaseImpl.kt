@@ -13,7 +13,8 @@ class GetSavedMapStateUseCaseImpl(
     private val mapStateRepository: MapStateRepository,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : GetSavedMapStateUseCase {
-    override suspend operator fun invoke(): MapState = withContext(ioDispatcher) {
-        mapStateRepository.getSavedMapState()
-    }
+    override suspend operator fun invoke(): MapState =
+        withContext(ioDispatcher) {
+            mapStateRepository.getSavedMapState()
+        }
 }

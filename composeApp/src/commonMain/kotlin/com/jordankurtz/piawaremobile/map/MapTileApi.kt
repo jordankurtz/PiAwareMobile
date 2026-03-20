@@ -12,7 +12,10 @@ import kotlinx.io.readByteArray
 /**
  * Utility method to get a [RawSource] from a Ktor HTTP client, using a GET method.
  */
-suspend fun getStream(client: HttpClient, path: String): RawSource {
+suspend fun getStream(
+    client: HttpClient,
+    path: String,
+): RawSource {
     val buffer = Buffer()
     client.prepareGet(path).execute { httpResponse ->
         val channel: ByteReadChannel = httpResponse.body()

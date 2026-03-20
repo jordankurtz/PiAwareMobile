@@ -8,7 +8,6 @@ actual class ContextWrapper
 
 @Module
 actual class ContextModule {
-
     @Single
-    actual fun providesContextWrapper(scope : Scope) : ContextWrapper = ContextWrapper()
+    actual fun providesContextWrapper(scope: Scope): ContextWrapper = ContextWrapper()
 }

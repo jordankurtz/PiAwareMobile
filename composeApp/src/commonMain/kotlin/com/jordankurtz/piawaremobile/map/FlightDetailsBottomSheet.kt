@@ -64,10 +64,11 @@ fun FlightDetailsBottomSheet(
     aircraft: Aircraft?,
     flightDetails: Async<Flight>,
     onDismissRequest: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    ),
-    locationViewModel: LocationViewModel = koinViewModel()
+    sheetState: SheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+        ),
+    locationViewModel: LocationViewModel = koinViewModel(),
 ) {
     val userLocation by locationViewModel.currentLocation.collectAsState()
     if (flightDetails !is Async.NotStarted) {
@@ -79,25 +80,33 @@ fun FlightDetailsBottomSheet(
             val tabs = listOf("Details", "Aircraft", "Route")
 
             Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 when (flightDetails) {
-                    is Async.Error -> Text(text = stringResource(Res.string.flight_details_error, flightDetails.message))
+                    is Async.Error ->
+                        Text(
+                            text = stringResource(Res.string.flight_details_error, flightDetails.message),
+                        )
                     Async.Loading -> CircularProgressIndicator()
                     is Async.Success -> {
                         val flight = flightDetails.data
 
-                        Text(text = stringResource(Res.string.flight_details_flight_number, flight.ident), style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            text = stringResource(Res.string.flight_details_flight_number, flight.ident),
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
 
                         TabRow(selectedTabIndex = tabIndex) {
                             tabs.forEachIndexed { index, title ->
-                                Tab(text = { Text(title) },
+                                Tab(
+                                    text = { Text(title) },
                                     selected = tabIndex == index,
-                                    onClick = { tabIndex = index }
+                                    onClick = { tabIndex = index },
                                 )
                             }
                         }
@@ -119,18 +128,21 @@ fun FlightDetailsBottomSheet(
 }
 
 @Composable
-private fun DetailsTab(aircraft: Aircraft?, userLocation: Location?) {
+private fun DetailsTab(
+    aircraft: Aircraft?,
+    userLocation: Location?,
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(16.dp))
         MiniMap(
             aircraft = aircraft,
-            userLocation = userLocation
+            userLocation = userLocation,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             aircraft?.altBaro?.let {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -157,7 +169,7 @@ private fun DetailsTab(aircraft: Aircraft?, userLocation: Location?) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             aircraft?.lat?.let { lat ->
                 aircraft.lon?.let { lon ->
@@ -175,7 +187,10 @@ private fun DetailsTab(aircraft: Aircraft?, userLocation: Location?) {
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("Direction", style = MaterialTheme.typography.labelSmall)
-                            Text("${bearing.roundToInt()}° ${bearing.toCardinalDirection()}", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                "${bearing.roundToInt()}° ${bearing.toCardinalDirection()}",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
                         }
                     }
                 }
@@ -185,7 +200,10 @@ private fun DetailsTab(aircraft: Aircraft?, userLocation: Location?) {
 }
 
 @Composable
-private fun AircraftTab(aircraft: Aircraft?, flight: Flight) {
+private fun AircraftTab(
+    aircraft: Aircraft?,
+    flight: Flight,
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(16.dp))
         MoreDetails(aircraft, flight)
@@ -202,7 +220,7 @@ private fun RouteTab(flight: Flight) {
                 airport = it,
                 scheduledTime = flight.scheduledOut,
                 actualTime = flight.actualOut,
-                estimatedTime = flight.estimatedOut
+                estimatedTime = flight.estimatedOut,
             )
         }
 
@@ -214,7 +232,7 @@ private fun RouteTab(flight: Flight) {
                 airport = it,
                 scheduledTime = flight.scheduledIn,
                 actualTime = flight.actualIn,
-                estimatedTime = flight.estimatedIn
+                estimatedTime = flight.estimatedIn,
             )
         }
     }
@@ -239,12 +257,15 @@ fun MiniMap(
 }
 
 @Composable
-private fun MoreDetails(aircraft: Aircraft?, flight: Flight) {
+private fun MoreDetails(
+    aircraft: Aircraft?,
+    flight: Flight,
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             aircraft?.baroRate?.let {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -275,7 +296,7 @@ private fun MoreDetails(aircraft: Aircraft?, flight: Flight) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             aircraft?.rssi?.let {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -301,29 +322,30 @@ fun FlightProgress(flight: Flight) {
         val remainingSeconds = ete * (1.0 - progress / 100.0)
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
         ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_arrow_downward),
-                contentDescription = stringResource(Res.string.flight_details_flight_progress)
+                contentDescription = stringResource(Res.string.flight_details_flight_progress),
             )
             if (remainingSeconds > 0) {
                 val remainingString = formatSecondsToHoursMinutes(remainingSeconds.toInt())
                 if (remainingString.isNotBlank()) {
                     Text(
                         text = stringResource(Res.string.flight_details_remaining_time, remainingString),
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp),
                     )
                 }
             }
         }
         LinearProgressIndicator(
             progress = { (progress / 100.0).toFloat() },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -335,19 +357,27 @@ private fun AirportInfo(
     airport: FlightAirportRef,
     scheduledTime: Instant?,
     actualTime: Instant?,
-    estimatedTime: Instant?
+    estimatedTime: Instant?,
 ) {
     Column(
-        modifier = modifier
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
+        modifier =
+            modifier
+                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+        horizontalAlignment = Alignment.Start,
     ) {
         Text(text = title, style = MaterialTheme.typography.titleMedium)
         if (!airport.city.isNullOrBlank()) {
             Text(text = airport.city)
         }
-        Text(text = stringResource(Res.string.flight_details_airport_name_code, airport.name.orEmpty(), airport.code.orEmpty()))
+        Text(
+            text =
+                stringResource(
+                    Res.string.flight_details_airport_name_code,
+                    airport.name.orEmpty(),
+                    airport.code.orEmpty(),
+                ),
+        )
         Spacer(modifier = Modifier.height(8.dp))
 
         scheduledTime?.let { scheduled ->
@@ -369,9 +399,11 @@ private fun AirportInfo(
     }
 }
 
-
 @Composable
-private fun calculateTimeDifference(time1: Instant?, time2: Instant?): String {
+private fun calculateTimeDifference(
+    time1: Instant?,
+    time2: Instant?,
+): String {
     if (time1 == null || time2 == null) return ""
     val differenceInMinutes = (time2 - time1).inWholeMinutes
     return if (differenceInMinutes == 0L) {

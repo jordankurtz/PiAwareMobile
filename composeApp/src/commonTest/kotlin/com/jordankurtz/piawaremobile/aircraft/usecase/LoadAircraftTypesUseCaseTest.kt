@@ -12,7 +12,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class LoadAircraftTypesUseCaseTest {
-
     private lateinit var aircraftRepo: AircraftRepo
     private lateinit var useCase: LoadAircraftTypesUseCase
     private val testDispatcher = StandardTestDispatcher()
@@ -24,12 +23,13 @@ class LoadAircraftTypesUseCaseTest {
     }
 
     @Test
-    fun `invoke calls repo to load aircraft types`() = runTest(testDispatcher) {
-        val servers = listOf("server1", "server2")
-        everySuspend { aircraftRepo.loadAircraftTypes(servers) } returns Unit
+    fun `invoke calls repo to load aircraft types`() =
+        runTest(testDispatcher) {
+            val servers = listOf("server1", "server2")
+            everySuspend { aircraftRepo.loadAircraftTypes(servers) } returns Unit
 
-        useCase(servers)
+            useCase(servers)
 
-        verifySuspend { aircraftRepo.loadAircraftTypes(servers) }
-    }
+            verifySuspend { aircraftRepo.loadAircraftTypes(servers) }
+        }
 }

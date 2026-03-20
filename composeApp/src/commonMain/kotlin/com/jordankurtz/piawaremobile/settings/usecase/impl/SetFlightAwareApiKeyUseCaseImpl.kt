@@ -7,7 +7,7 @@ import org.koin.core.annotation.Factory
 
 @Factory(binds = [SetFlightAwareApiKeyUseCase::class])
 class SetFlightAwareApiKeyUseCaseImpl(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
 ) : SetFlightAwareApiKeyUseCase {
     override suspend operator fun invoke(apiKey: String) {
         val settings = settingsRepository.getSettings().first()

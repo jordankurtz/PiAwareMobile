@@ -17,7 +17,6 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 
 class LookupFlightUseCaseImplTest {
-
     private lateinit var aircraftRepo: AircraftRepo
     private lateinit var useCase: LookupFlightUseCaseImpl
 
@@ -27,7 +26,10 @@ class LookupFlightUseCaseImplTest {
         useCase = LookupFlightUseCaseImpl(aircraftRepo)
     }
 
-    private fun createMockFlight(ident: String, scheduledOut: Instant?): Flight {
+    private fun createMockFlight(
+        ident: String,
+        scheduledOut: Instant?,
+    ): Flight {
         return Flight(
             ident = ident,
             identIcao = null,
@@ -81,48 +83,51 @@ class LookupFlightUseCaseImplTest {
             actualIn = null,
             foresightPredictionsAvailable = false,
             actualRunwayOff = null,
-            actualRunwayOn = null
+            actualRunwayOn = null,
         )
     }
 
     @Test
-    fun `invoke returns most recent past flight when successful`() = runTest {
-        val now = Clock.System.now()
-        val futureFlight = createMockFlight(ident = "SWA123", scheduledOut = now.plus(1.hours))
-        val mostRecentPastFlight = createMockFlight(ident = "SWA123", scheduledOut = now.minus(1.hours))
-        val olderPastFlight = createMockFlight(ident = "SWA123", scheduledOut = now.minus(30.hours))
-        val flights = listOf(futureFlight, mostRecentPastFlight, olderPastFlight)
-        val response = FlightResponse(flights = flights, links = null, numPages = 1)
+    fun `invoke returns most recent past flight when successful`() =
+        runTest {
+            val now = Clock.System.now()
+            val futureFlight = createMockFlight(ident = "SWA123", scheduledOut = now.plus(1.hours))
+            val mostRecentPastFlight = createMockFlight(ident = "SWA123", scheduledOut = now.minus(1.hours))
+            val olderPastFlight = createMockFlight(ident = "SWA123", scheduledOut = now.minus(30.hours))
+            val flights = listOf(futureFlight, mostRecentPastFlight, olderPastFlight)
+            val response = FlightResponse(flights = flights, links = null, numPages = 1)
 
-        everySuspend { aircraftRepo.lookupFlight("SWA123") } returns Async.Success(response)
+            everySuspend { aircraftRepo.lookupFlight("SWA123") } returns Async.Success(response)
 
-        val result = useCase.invoke("SWA123")
+            val result = useCase.invoke("SWA123")
 
-        assertTrue(result is Async.Success)
-        assertEquals(mostRecentPastFlight, (result as Async.Success).data)
-    }
-
-    @Test
-    fun `invoke returns error when no past flights are found`() = runTest {
-        val now = Clock.System.now()
-        val futureFlight = createMockFlight(ident = "SWA123", scheduledOut = now.plus(1.hours))
-        val flights = listOf(futureFlight)
-        val response = FlightResponse(flights = flights, links = null, numPages = 1)
-
-        everySuspend { aircraftRepo.lookupFlight("SWA123") } returns Async.Success(response)
-
-        val result = useCase.invoke("SWA123")
-
-        assertTrue(result is Async.Error)
-    }
+            assertTrue(result is Async.Success)
+            assertEquals(mostRecentPastFlight, (result as Async.Success).data)
+        }
 
     @Test
-    fun `invoke returns error when lookup fails`() = runTest {
-        val error = Async.Error("Network error")
-        everySuspend { aircraftRepo.lookupFlight("SWA123") } returns error
+    fun `invoke returns error when no past flights are found`() =
+        runTest {
+            val now = Clock.System.now()
+            val futureFlight = createMockFlight(ident = "SWA123", scheduledOut = now.plus(1.hours))
+            val flights = listOf(futureFlight)
+            val response = FlightResponse(flights = flights, links = null, numPages = 1)
 
-        val result = useCase.invoke("SWA123")
+            everySuspend { aircraftRepo.lookupFlight("SWA123") } returns Async.Success(response)
 
-        assertEquals(error, result)
-    }
+            val result = useCase.invoke("SWA123")
+
+            assertTrue(result is Async.Error)
+        }
+
+    @Test
+    fun `invoke returns error when lookup fails`() =
+        runTest {
+            val error = Async.Error("Network error")
+            everySuspend { aircraftRepo.lookupFlight("SWA123") } returns error
+
+            val result = useCase.invoke("SWA123")
+
+            assertEquals(error, result)
+        }
 }

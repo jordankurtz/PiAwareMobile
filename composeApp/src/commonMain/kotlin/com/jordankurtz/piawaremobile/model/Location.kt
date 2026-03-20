@@ -10,7 +10,7 @@ import kotlin.math.sqrt
 @Serializable
 data class Location(
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
 )
 
 fun Location.distanceTo(other: Location): Double {
@@ -22,7 +22,8 @@ fun Location.distanceTo(other: Location): Double {
     val originLat = this.latitude * (PI / 180)
     val destinationLat = other.latitude * (PI / 180)
 
-    val a = sin(dLat / 2) * sin(dLat / 2) +
+    val a =
+        sin(dLat / 2) * sin(dLat / 2) +
             sin(dLon / 2) * sin(dLon / 2) * cos(originLat) * cos(destinationLat)
     val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 

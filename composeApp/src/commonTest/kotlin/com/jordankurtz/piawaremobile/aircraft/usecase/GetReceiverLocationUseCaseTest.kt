@@ -18,15 +18,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class GetReceiverLocationUseCaseTest {
-
     private lateinit var aircraftRepo: AircraftRepo
     private lateinit var useCase: GetReceiverLocationUseCase
     private val testDispatcher = StandardTestDispatcher()
 
-    private val mockReceiverInfo = Receiver(
-        latitude = 32.7f,
-        longitude = -96.8f
-    )
+    private val mockReceiverInfo =
+        Receiver(
+            latitude = 32.7f,
+            longitude = -96.8f,
+        )
 
     @BeforeTest
     fun setup() {
@@ -35,46 +35,50 @@ class GetReceiverLocationUseCaseTest {
     }
 
     @Test
-    fun `invoke returns location from dump1090 when available`() = runTest(testDispatcher) {
-        val server = "server1"
-        everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns mockReceiverInfo
+    fun `invoke returns location from dump1090 when available`() =
+        runTest(testDispatcher) {
+            val server = "server1"
+            everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns mockReceiverInfo
 
-        val result = useCase(server)
+            val result = useCase(server)
 
-        val expectedLocation = Location(mockReceiverInfo.latitude.toDouble(), mockReceiverInfo.longitude.toDouble())
-        assertEquals(expectedLocation, result)
-    }
-
-    @Test
-    fun `invoke falls back to dump978 when dump1090 is unavailable`() = runTest(testDispatcher) {
-        val server = "server1"
-        everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns null
-        everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_978) } returns mockReceiverInfo
-
-        val result = useCase(server)
-
-        val expectedLocation = Location(mockReceiverInfo.latitude.toDouble(), mockReceiverInfo.longitude.toDouble())
-        assertEquals(expectedLocation, result)
-    }
+            val expectedLocation = Location(mockReceiverInfo.latitude.toDouble(), mockReceiverInfo.longitude.toDouble())
+            assertEquals(expectedLocation, result)
+        }
 
     @Test
-    fun `invoke returns null when no location is available`() = runTest(testDispatcher) {
-        val server = "server1"
-        everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns null
-        everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_978) } returns null
+    fun `invoke falls back to dump978 when dump1090 is unavailable`() =
+        runTest(testDispatcher) {
+            val server = "server1"
+            everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns null
+            everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_978) } returns mockReceiverInfo
 
-        val result = useCase(server)
+            val result = useCase(server)
 
-        assertNull(result)
-    }
+            val expectedLocation = Location(mockReceiverInfo.latitude.toDouble(), mockReceiverInfo.longitude.toDouble())
+            assertEquals(expectedLocation, result)
+        }
 
     @Test
-    fun `invoke does not query dump978 when dump1090 is available`() = runTest(testDispatcher) {
-        val server = "server1"
-        everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns mockReceiverInfo
+    fun `invoke returns null when no location is available`() =
+        runTest(testDispatcher) {
+            val server = "server1"
+            everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns null
+            everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_978) } returns null
 
-        useCase(server)
+            val result = useCase(server)
 
-        verifySuspend(VerifyMode.not) { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_978) }
-    }
+            assertNull(result)
+        }
+
+    @Test
+    fun `invoke does not query dump978 when dump1090 is available`() =
+        runTest(testDispatcher) {
+            val server = "server1"
+            everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns mockReceiverInfo
+
+            useCase(server)
+
+            verifySuspend(VerifyMode.not) { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_978) }
+        }
 }

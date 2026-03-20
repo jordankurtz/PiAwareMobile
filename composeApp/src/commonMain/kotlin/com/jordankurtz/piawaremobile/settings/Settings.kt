@@ -2,7 +2,7 @@ package com.jordankurtz.piawaremobile.settings
 
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 
-data class Settings (
+data class Settings(
     val servers: List<Server> = emptyList(),
     val refreshInterval: Int = SettingsRepository.DEFAULT_REFRESH_INTERVAL,
     val centerMapOnUserOnStart: Boolean = false,
@@ -13,5 +13,5 @@ data class Settings (
     val showMinimapTrails: Boolean = false,
     val openUrlsExternally: Boolean = false,
     val enableFlightAwareApi: Boolean = false,
-    val flightAwareApiKey: String = ""
+    val flightAwareApiKey: String = "",
 )

@@ -16,14 +16,13 @@ import org.koin.androidx.scope.activityScope
 import org.koin.core.scope.Scope
 
 class MainActivity : ComponentActivity(), AndroidScopeComponent {
-
     override val scope: Scope by activityScope()
 
     private val locationService: LocationService by inject()
 
     private val requestPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
+            ActivityResultContracts.RequestPermission(),
         ) { isGranted: Boolean ->
             // When the user responds, notify the LocationService
             (locationService as? LocationServiceImpl)?.onResult(isGranted)

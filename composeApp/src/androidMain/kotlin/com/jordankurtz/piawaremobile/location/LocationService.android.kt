@@ -28,43 +28,47 @@ actual class LocationServiceImpl actual constructor(private val contextWrapper: 
     var permissionLauncher: (() -> Unit)? = null
 
     actual override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
-        val checkSelfPermission = ActivityCompat.checkSelfPermission(
-            contextWrapper.context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
+        val checkSelfPermission =
+            ActivityCompat.checkSelfPermission(
+                contextWrapper.context,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            )
         if (checkSelfPermission != PackageManager.PERMISSION_GRANTED
         ) {
             // If permissions are not granted, do not start updates.
             return
         }
 
-        val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            5000L // 5 seconds
-        ).apply {
-            setMinUpdateIntervalMillis(2000L)
-        }.build()
+        val locationRequest =
+            LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                // 5 seconds
+                5000L,
+            ).apply {
+                setMinUpdateIntervalMillis(2000L)
+            }.build()
 
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let { androidLocation ->
-                    onLocationUpdate(
-                        Location(
-                            latitude = androidLocation.latitude,
-                            longitude = androidLocation.longitude
+        locationCallback =
+            object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    result.lastLocation?.let { androidLocation ->
+                        onLocationUpdate(
+                            Location(
+                                latitude = androidLocation.latitude,
+                                longitude = androidLocation.longitude,
+                            ),
                         )
-                    )
+                    }
+                }
+
+                override fun onLocationAvailability(p0: LocationAvailability) {
                 }
             }
-
-            override fun onLocationAvailability(p0: LocationAvailability) {
-            }
-        }
 
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback!!,
-            Looper.getMainLooper()
+            Looper.getMainLooper(),
         )
     }
 
@@ -80,10 +84,11 @@ actual class LocationServiceImpl actual constructor(private val contextWrapper: 
      */
     actual override fun requestPermissions(onResult: (Boolean) -> Unit) {
         // If permission is already granted, invoke the callback immediately and exit.
-        val checkSelfPermission = ActivityCompat.checkSelfPermission(
-            contextWrapper.context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
+        val checkSelfPermission =
+            ActivityCompat.checkSelfPermission(
+                contextWrapper.context,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            )
         if (checkSelfPermission == PackageManager.PERMISSION_GRANTED
         ) {
             onResult(true)

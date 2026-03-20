@@ -33,54 +33,66 @@ class SettingsViewModel(
     private val setShowMinimapTrailsUseCase: SetShowMinimapTrailsUseCase,
     private val setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase,
     private val setEnableFlightAwareApiUseCase: SetEnableFlightAwareApiUseCase,
-    private val setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase
+    private val setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase,
 ) : ViewModel() {
-
     val settings: StateFlow<Async<Settings>>
         get() = _settings
     private val _settings = loadSettingsUseCase().stateIn(viewModelScope)
 
-    fun addServer(name: String, address: String) = viewModelScope.launch {
+    fun addServer(
+        name: String,
+        address: String,
+    ) = viewModelScope.launch {
         addServerUseCase(name, address)
     }
 
-    fun updateRefreshInterval(refreshInterval: Int) = viewModelScope.launch {
-        setRefreshIntervalUseCase(refreshInterval)
-    }
+    fun updateRefreshInterval(refreshInterval: Int) =
+        viewModelScope.launch {
+            setRefreshIntervalUseCase(refreshInterval)
+        }
 
-    fun updateCenterMapOnUserOnStart(enabled: Boolean) = viewModelScope.launch {
-        setCenterMapOnUserOnStartUseCase(enabled)
-    }
+    fun updateCenterMapOnUserOnStart(enabled: Boolean) =
+        viewModelScope.launch {
+            setCenterMapOnUserOnStartUseCase(enabled)
+        }
 
-    fun updateRestoreMapStateOnStart(enabled: Boolean) = viewModelScope.launch {
-        setRestoreMapStateOnStartUseCase(enabled)
-    }
+    fun updateRestoreMapStateOnStart(enabled: Boolean) =
+        viewModelScope.launch {
+            setRestoreMapStateOnStartUseCase(enabled)
+        }
 
-    fun updateShowReceiverLocations(enabled: Boolean) = viewModelScope.launch {
-        setShowReceiverLocationsUseCase(enabled)
-    }
+    fun updateShowReceiverLocations(enabled: Boolean) =
+        viewModelScope.launch {
+            setShowReceiverLocationsUseCase(enabled)
+        }
 
-    fun updateShowUserLocationOnMap(enabled: Boolean) = viewModelScope.launch {
-        setShowUserLocationOnMapUseCase(enabled)
-    }
+    fun updateShowUserLocationOnMap(enabled: Boolean) =
+        viewModelScope.launch {
+            setShowUserLocationOnMapUseCase(enabled)
+        }
 
-    fun updateTrailDisplayMode(trailDisplayMode: TrailDisplayMode) = viewModelScope.launch {
-        setTrailDisplayModeUseCase(trailDisplayMode)
-    }
+    fun updateTrailDisplayMode(trailDisplayMode: TrailDisplayMode) =
+        viewModelScope.launch {
+            setTrailDisplayModeUseCase(trailDisplayMode)
+        }
 
-    fun updateShowMinimapTrails(enabled: Boolean) = viewModelScope.launch {
-        setShowMinimapTrailsUseCase(enabled)
-    }
+    fun updateShowMinimapTrails(enabled: Boolean) =
+        viewModelScope.launch {
+            setShowMinimapTrailsUseCase(enabled)
+        }
 
-    fun updateOpenUrlsExternally(enabled: Boolean) = viewModelScope.launch {
-        setOpenUrlsExternallyUseCase(enabled)
-    }
+    fun updateOpenUrlsExternally(enabled: Boolean) =
+        viewModelScope.launch {
+            setOpenUrlsExternallyUseCase(enabled)
+        }
 
-    fun updateEnableFlightAwareApi(enabled: Boolean) = viewModelScope.launch {
-        setEnableFlightAwareApiUseCase(enabled)
-    }
+    fun updateEnableFlightAwareApi(enabled: Boolean) =
+        viewModelScope.launch {
+            setEnableFlightAwareApiUseCase(enabled)
+        }
 
-    fun updateFlightAwareApiKey(apiKey: String) = viewModelScope.launch {
-        setFlightAwareApiKeyUseCase(apiKey)
-    }
+    fun updateFlightAwareApiKey(apiKey: String) =
+        viewModelScope.launch {
+            setFlightAwareApiKeyUseCase(apiKey)
+        }
 }

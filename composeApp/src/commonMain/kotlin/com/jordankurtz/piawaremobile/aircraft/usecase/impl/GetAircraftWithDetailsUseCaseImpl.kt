@@ -16,24 +16,25 @@ class GetAircraftWithDetailsUseCaseImpl(
     private val aircraftRepo: AircraftRepo,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : GetAircraftWithDetailsUseCase {
-
     override suspend operator fun invoke(
         servers: List<String>,
         infoHost: String,
-    ): List<Pair<Aircraft, AircraftInfo?>> = withContext(ioDispatcher) {
-        val allAircraft = aircraftRepo.getAircraft(servers)
+    ): List<Pair<Aircraft, AircraftInfo?>> =
+        withContext(ioDispatcher) {
+            val allAircraft = aircraftRepo.getAircraft(servers)
 
-        allAircraft.map { aircraft ->
-            async {
-                val aircraftInfo = aircraftRepo.findAircraftInfo(
-                    host = infoHost,
-                    hex = aircraft.hex,
-                )
-                Pair(
-                    first = aircraft,
-                    second = aircraftInfo,
-                )
-            }
-        }.awaitAll()
-    }
+            allAircraft.map { aircraft ->
+                async {
+                    val aircraftInfo =
+                        aircraftRepo.findAircraftInfo(
+                            host = infoHost,
+                            hex = aircraft.hex,
+                        )
+                    Pair(
+                        first = aircraft,
+                        second = aircraftInfo,
+                    )
+                }
+            }.awaitAll()
+        }
 }

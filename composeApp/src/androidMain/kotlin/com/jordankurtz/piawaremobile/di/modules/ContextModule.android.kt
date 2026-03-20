@@ -10,7 +10,6 @@ actual class ContextWrapper(val context: Context)
 
 @Module
 actual class ContextModule {
-
     // needs androidContext() to be setup at start
     @Single
     actual fun providesContextWrapper(scope: Scope): ContextWrapper = ContextWrapper(scope.get())

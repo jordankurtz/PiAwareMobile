@@ -11,7 +11,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class SetShowMinimapTrailsUseCaseTest {
-
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var useCase: SetShowMinimapTrailsUseCase
 
@@ -22,20 +21,22 @@ class SetShowMinimapTrailsUseCaseTest {
     }
 
     @Test
-    fun `invoke with true should call repository with true`() = runTest {
-        everySuspend { settingsRepository.setShowMinimapTrails(true) } returns Unit
+    fun `invoke with true should call repository with true`() =
+        runTest {
+            everySuspend { settingsRepository.setShowMinimapTrails(true) } returns Unit
 
-        useCase(true)
+            useCase(true)
 
-        verifySuspend { settingsRepository.setShowMinimapTrails(true) }
-    }
+            verifySuspend { settingsRepository.setShowMinimapTrails(true) }
+        }
 
     @Test
-    fun `invoke with false should call repository with false`() = runTest {
-        everySuspend { settingsRepository.setShowMinimapTrails(false) } returns Unit
+    fun `invoke with false should call repository with false`() =
+        runTest {
+            everySuspend { settingsRepository.setShowMinimapTrails(false) } returns Unit
 
-        useCase(false)
+            useCase(false)
 
-        verifySuspend { settingsRepository.setShowMinimapTrails(false) }
-    }
+            verifySuspend { settingsRepository.setShowMinimapTrails(false) }
+        }
 }

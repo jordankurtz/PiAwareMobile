@@ -17,62 +17,64 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 @Factory(binds = [LocationService::class])
+@Suppress("UnusedPrivateProperty") // contextWrapper required by actual constructor signature
 actual class LocationServiceImpl actual constructor(private val contextWrapper: ContextWrapper) :
     LocationService {
-    private var updateJob: Job? = null
-    private val json = Json { ignoreUnknownKeys = true }
+        private var updateJob: Job? = null
+        private val json = Json { ignoreUnknownKeys = true }
 
-    actual override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
-        updateJob = CoroutineScope(Dispatchers.IO).launch {
-            while (isActive) {
-                try {
-                    val location = fetchLocationFromIP()
-                    location?.let { onLocationUpdate(it) }
-                    delay(10000) // Update every 10 seconds
-                } catch (e: Exception) {
-                    Logger.e("Error fetching location", e)
-                    delay(10000)
+        actual override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit) {
+            updateJob =
+                CoroutineScope(Dispatchers.IO).launch {
+                    while (isActive) {
+                        try {
+                            val location = fetchLocationFromIP()
+                            location?.let { onLocationUpdate(it) }
+                            delay(10000) // Update every 10 seconds
+                        } catch (e: Exception) {
+                            Logger.e("Error fetching location", e)
+                            delay(10000)
+                        }
+                    }
                 }
-            }
         }
-    }
 
-    actual override fun stopLocationUpdates() {
-        updateJob?.cancel()
-        updateJob = null
-    }
+        actual override fun stopLocationUpdates() {
+            updateJob?.cancel()
+            updateJob = null
+        }
 
-    actual override fun requestPermissions(onResult: (Boolean) -> Unit) {
-        // Desktop doesn't need permission for IP-based location
-        onResult(true)
-    }
+        actual override fun requestPermissions(onResult: (Boolean) -> Unit) {
+            // Desktop doesn't need permission for IP-based location
+            onResult(true)
+        }
 
-    private fun fetchLocationFromIP(): Location? {
-        return try {
-            // Using ip-api.com free API for geolocation
-            val url = URL("http://ip-api.com/json/")
-            val connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 5000
-            connection.readTimeout = 5000
+        private fun fetchLocationFromIP(): Location? {
+            return try {
+                // Using ip-api.com free API for geolocation
+                val url = URL("http://ip-api.com/json/")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
 
-            val response = BufferedReader(InputStreamReader(connection.inputStream))
-                .use { it.readText() }
+                val response =
+                    BufferedReader(InputStreamReader(connection.inputStream))
+                        .use { it.readText() }
 
-            val locationData = json.decodeFromString<IPLocationResponse>(response)
+                val locationData = json.decodeFromString<IPLocationResponse>(response)
 
-            if (locationData.status == "success") {
-                Location(
-                    latitude = locationData.lat,
-                    longitude = locationData.lon
-                )
-            } else {
+                if (locationData.status == "success") {
+                    Location(
+                        latitude = locationData.lat,
+                        longitude = locationData.lon,
+                    )
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                Logger.e("Failed to fetch IP location", e)
                 null
             }
-        } catch (e: Exception) {
-            Logger.e("Failed to fetch IP location", e)
-            null
         }
     }
-}
-

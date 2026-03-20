@@ -12,7 +12,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class SetTrailDisplayModeUseCaseTest {
-
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var useCase: SetTrailDisplayModeUseCase
 
@@ -23,29 +22,32 @@ class SetTrailDisplayModeUseCaseTest {
     }
 
     @Test
-    fun `invoke with ALL should call repository with ALL`() = runTest {
-        everySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.ALL) } returns Unit
+    fun `invoke with ALL should call repository with ALL`() =
+        runTest {
+            everySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.ALL) } returns Unit
 
-        useCase(TrailDisplayMode.ALL)
+            useCase(TrailDisplayMode.ALL)
 
-        verifySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.ALL) }
-    }
-
-    @Test
-    fun `invoke with SELECTED should call repository with SELECTED`() = runTest {
-        everySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.SELECTED) } returns Unit
-
-        useCase(TrailDisplayMode.SELECTED)
-
-        verifySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.SELECTED) }
-    }
+            verifySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.ALL) }
+        }
 
     @Test
-    fun `invoke with NONE should call repository with NONE`() = runTest {
-        everySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.NONE) } returns Unit
+    fun `invoke with SELECTED should call repository with SELECTED`() =
+        runTest {
+            everySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.SELECTED) } returns Unit
 
-        useCase(TrailDisplayMode.NONE)
+            useCase(TrailDisplayMode.SELECTED)
 
-        verifySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.NONE) }
-    }
+            verifySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.SELECTED) }
+        }
+
+    @Test
+    fun `invoke with NONE should call repository with NONE`() =
+        runTest {
+            everySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.NONE) } returns Unit
+
+            useCase(TrailDisplayMode.NONE)
+
+            verifySuspend { settingsRepository.setTrailDisplayMode(TrailDisplayMode.NONE) }
+        }
 }

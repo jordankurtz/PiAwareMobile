@@ -6,13 +6,17 @@ import org.koin.core.annotation.Factory
 
 interface LocationService {
     fun startLocationUpdates(onLocationUpdate: (Location) -> Unit)
+
     fun stopLocationUpdates()
+
     fun requestPermissions(onResult: (Boolean) -> Unit)
 }
 
 @Factory(binds = [LocationService::class])
-expect class LocationServiceImpl(contextWrapper: ContextWrapper): LocationService {
+expect class LocationServiceImpl(contextWrapper: ContextWrapper) : LocationService {
     override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit)
+
     override fun stopLocationUpdates()
+
     override fun requestPermissions(onResult: (Boolean) -> Unit)
 }

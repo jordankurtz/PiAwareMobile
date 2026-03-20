@@ -11,13 +11,13 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [SetShowReceiverLocationsUseCase::class])
 class SetShowReceiverLocationsUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SetShowReceiverLocationsUseCase {
     override suspend operator fun invoke(enabled: Boolean) {
         withContext(ioDispatcher) {
             val currentSettings = settingsRepository.getSettings().first()
             settingsRepository.saveSettings(
-                currentSettings.copy(showReceiverLocations = enabled)
+                currentSettings.copy(showReceiverLocations = enabled),
             )
         }
     }

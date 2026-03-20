@@ -11,7 +11,6 @@ import org.koin.core.annotation.Single
 
 @Single(binds = [MapStateRepository::class])
 class MapStateRepositoryImpl(val dataStore: DataStore<Preferences>) : MapStateRepository {
-
     private val settings by lazy {
         DataStoreSettings(dataStore)
     }
@@ -23,12 +22,17 @@ class MapStateRepositoryImpl(val dataStore: DataStore<Preferences>) : MapStateRe
         private const val KEY_ZOOM = "map_zoom"
 
         // Define a default location (e.g., center of the US)
-        val DEFAULT_STATE = MapState(scrollX = 0.5, scrollY = 0.5, zoom = 4.0)    }
+        val DEFAULT_STATE = MapState(scrollX = 0.5, scrollY = 0.5, zoom = 4.0)
+    }
 
     /**
      * Saves the map's current state to persistent settings.
      */
-    override suspend fun saveMapState(scrollX: Double, scrollY: Double, zoom: Double) {
+    override suspend fun saveMapState(
+        scrollX: Double,
+        scrollY: Double,
+        zoom: Double,
+    ) {
         withContext(Dispatchers.IO) {
             settings.putDouble(KEY_SCROLL_X, scrollX)
             settings.putDouble(KEY_SCROLL_Y, scrollY)

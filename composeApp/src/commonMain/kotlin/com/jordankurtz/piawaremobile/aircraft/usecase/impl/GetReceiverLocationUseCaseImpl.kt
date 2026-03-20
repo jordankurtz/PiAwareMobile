@@ -14,18 +14,21 @@ class GetReceiverLocationUseCaseImpl(
     private val aircraftRepo: AircraftRepo,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : GetReceiverLocationUseCase {
-    override suspend operator fun invoke(server: String): Location? = withContext(ioDispatcher) {
-        (aircraftRepo.getReceiverInfo(
-            host = server,
-            receiverType = ReceiverType.DUMP_1090,
-        ) ?: aircraftRepo.getReceiverInfo(
-            host = server,
-            receiverType = ReceiverType.DUMP_978,
-        ))?.let {
-            Location(
-                latitude = it.latitude.toDouble(),
-                longitude = it.longitude.toDouble(),
-            )
+    override suspend operator fun invoke(server: String): Location? =
+        withContext(ioDispatcher) {
+            (
+                aircraftRepo.getReceiverInfo(
+                    host = server,
+                    receiverType = ReceiverType.DUMP_1090,
+                ) ?: aircraftRepo.getReceiverInfo(
+                    host = server,
+                    receiverType = ReceiverType.DUMP_978,
+                )
+            )?.let {
+                Location(
+                    latitude = it.latitude.toDouble(),
+                    longitude = it.longitude.toDouble(),
+                )
+            }
         }
-    }
 }

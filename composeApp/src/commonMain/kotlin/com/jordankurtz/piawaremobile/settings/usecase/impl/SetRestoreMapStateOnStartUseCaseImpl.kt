@@ -11,13 +11,13 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [SetRestoreMapStateOnStartUseCase::class])
 class SetRestoreMapStateOnStartUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SetRestoreMapStateOnStartUseCase {
     override suspend operator fun invoke(enabled: Boolean) {
         withContext(ioDispatcher) {
             val currentSettings = settingsRepository.getSettings().first()
             settingsRepository.saveSettings(
-                currentSettings.copy(restoreMapStateOnStart = enabled)
+                currentSettings.copy(restoreMapStateOnStart = enabled),
             )
         }
     }

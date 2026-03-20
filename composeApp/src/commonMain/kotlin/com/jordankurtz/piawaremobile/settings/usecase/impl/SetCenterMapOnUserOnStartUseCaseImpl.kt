@@ -11,13 +11,13 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [SetCenterMapOnUserOnStartUseCase::class])
 class SetCenterMapOnUserOnStartUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SetCenterMapOnUserOnStartUseCase {
     override suspend operator fun invoke(enabled: Boolean) {
         withContext(ioDispatcher) {
             val currentSettings = settingsRepository.getSettings().first()
             settingsRepository.saveSettings(
-                currentSettings.copy(centerMapOnUserOnStart = enabled)
+                currentSettings.copy(centerMapOnUserOnStart = enabled),
             )
         }
     }

@@ -12,19 +12,24 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [AddServerUseCase::class])
 class AddServerUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : AddServerUseCase {
-    override suspend operator fun invoke(name: String, address: String) {
+    override suspend operator fun invoke(
+        name: String,
+        address: String,
+    ) {
         withContext(ioDispatcher) {
             val settings = settingsRepository.getSettings().first()
             val currentServers = settings.servers
             settingsRepository.saveSettings(
                 settings.copy(
-                    servers = currentServers + Server(
-                        name = name,
-                        address = address
-                    )
-                )
+                    servers =
+                        currentServers +
+                            Server(
+                                name = name,
+                                address = address,
+                            ),
+                ),
             )
         }
     }

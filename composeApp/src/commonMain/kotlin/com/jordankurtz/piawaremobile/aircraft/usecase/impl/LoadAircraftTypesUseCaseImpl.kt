@@ -12,7 +12,8 @@ class LoadAircraftTypesUseCaseImpl(
     private val aircraftRepo: AircraftRepo,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : LoadAircraftTypesUseCase {
-    override suspend operator fun invoke(servers: List<String>) = withContext(ioDispatcher) {
-        aircraftRepo.loadAircraftTypes(servers)
-    }
+    override suspend operator fun invoke(servers: List<String>) =
+        withContext(ioDispatcher) {
+            aircraftRepo.loadAircraftTypes(servers)
+        }
 }

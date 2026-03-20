@@ -11,13 +11,13 @@ import org.koin.core.annotation.Factory
 @Factory(binds = [SetShowUserLocationOnMapUseCase::class])
 class SetShowUserLocationOnMapUseCaseImpl(
     private val settingsRepository: SettingsRepository,
-    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SetShowUserLocationOnMapUseCase {
     override suspend operator fun invoke(enabled: Boolean) {
         withContext(ioDispatcher) {
             val currentSettings = settingsRepository.getSettings().first()
             settingsRepository.saveSettings(
-                currentSettings.copy(showUserLocationOnMap = enabled)
+                currentSettings.copy(showUserLocationOnMap = enabled),
             )
         }
     }

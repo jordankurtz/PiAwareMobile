@@ -16,5 +16,5 @@ data class FlightAirportRef(
     val name: String?,
     val city: String?,
     @SerialName("airport_info_url")
-    val airportInfoUrl: String?
+    val airportInfoUrl: String?,
 )

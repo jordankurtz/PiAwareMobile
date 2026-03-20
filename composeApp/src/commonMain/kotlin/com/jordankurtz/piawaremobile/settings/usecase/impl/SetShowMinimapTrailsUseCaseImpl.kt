@@ -6,7 +6,7 @@ import org.koin.core.annotation.Factory
 
 @Factory(binds = [SetShowMinimapTrailsUseCase::class])
 class SetShowMinimapTrailsUseCaseImpl(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
 ) : SetShowMinimapTrailsUseCase {
     override suspend fun invoke(showMinimapTrails: Boolean) {
         settingsRepository.setShowMinimapTrails(showMinimapTrails)

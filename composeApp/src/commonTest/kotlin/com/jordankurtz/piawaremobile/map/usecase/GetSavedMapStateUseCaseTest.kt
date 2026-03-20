@@ -15,7 +15,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class GetSavedMapStateUseCaseTest {
-
     private lateinit var mapStateRepository: MapStateRepository
     private lateinit var getSavedMapStateUseCase: GetSavedMapStateUseCase
     private val testDispatcher = StandardTestDispatcher()
@@ -27,16 +26,17 @@ class GetSavedMapStateUseCaseTest {
     }
 
     @Test
-    fun `invoke should return map state from repository`() = runTest(testDispatcher) {
-        // Given
-        val expectedMapState = MapState(scrollX = 0.5, scrollY = 0.5, zoom = 4.0)
-        everySuspend { mapStateRepository.getSavedMapState() } returns expectedMapState
+    fun `invoke should return map state from repository`() =
+        runTest(testDispatcher) {
+            // Given
+            val expectedMapState = MapState(scrollX = 0.5, scrollY = 0.5, zoom = 4.0)
+            everySuspend { mapStateRepository.getSavedMapState() } returns expectedMapState
 
-        // When
-        val result = getSavedMapStateUseCase()
+            // When
+            val result = getSavedMapStateUseCase()
 
-        // Then
-        assertEquals(expected = expectedMapState, actual = result)
-        verifySuspend(exactly(1)) { mapStateRepository.getSavedMapState() }
-    }
+            // Then
+            assertEquals(expected = expectedMapState, actual = result)
+            verifySuspend(exactly(1)) { mapStateRepository.getSavedMapState() }
+        }
 }

@@ -10,9 +10,8 @@ import org.koin.core.annotation.Single
 
 @Single(binds = [LoadHistoryUseCase::class])
 class LoadHistoryUseCaseImpl(
-    private val aircraftRepo: AircraftRepo
+    private val aircraftRepo: AircraftRepo,
 ) : LoadHistoryUseCase {
-
     override suspend fun invoke(servers: List<String>) {
         if (servers.isEmpty()) return
 

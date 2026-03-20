@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Aircraft (
+data class Aircraft(
     val hex: String,
     val lat: Double = 0.0,
     val lon: Double = 0.0,
@@ -41,5 +41,5 @@ data class Aircraft (
     val silType: String? = null,
     val messages: Int? = null,
     val seen: Float? = null,
-    val rssi: Float? = null
+    val rssi: Float? = null,
 )

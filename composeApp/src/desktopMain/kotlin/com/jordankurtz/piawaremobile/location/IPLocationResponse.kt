@@ -8,5 +8,5 @@ data class IPLocationResponse(
     val lat: Double,
     val lon: Double,
     val city: String? = null,
-    val country: String? = null
+    val country: String? = null,
 )

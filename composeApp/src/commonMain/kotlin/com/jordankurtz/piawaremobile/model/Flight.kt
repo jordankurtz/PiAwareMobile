@@ -99,5 +99,5 @@ data class Flight(
     @SerialName("actual_in")
     val actualIn: Instant?,
     @SerialName("foresight_predictions_available")
-    val foresightPredictionsAvailable: Boolean
+    val foresightPredictionsAvailable: Boolean,
 )

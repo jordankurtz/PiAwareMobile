@@ -11,7 +11,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SettingsRepositoryImplTest {
-
     private lateinit var dataStore: DataStore<Preferences>
     private lateinit var repository: SettingsRepository
 
@@ -22,34 +21,40 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
-    fun `getSettings should return default settings when nothing is saved`() = runTest {
-        val settings = repository.getSettings().first()
+    fun `getSettings should return default settings when nothing is saved`() =
+        runTest {
+            val settings = repository.getSettings().first()
 
-        assertEquals(Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = false
-        ), settings)
-    }
+            assertEquals(
+                Settings(
+                    servers = emptyList(),
+                    refreshInterval = 5,
+                    centerMapOnUserOnStart = false,
+                    restoreMapStateOnStart = false,
+                    showReceiverLocations = false,
+                    showUserLocationOnMap = false,
+                ),
+                settings,
+            )
+        }
 
     @Test
-    fun `saveSettings should store the settings`() = runTest {
-        val newSettings = Settings(
-            servers = listOf(),
-            refreshInterval = 30,
-            centerMapOnUserOnStart = true,
-            restoreMapStateOnStart = true,
-            showReceiverLocations = true,
-            showUserLocationOnMap = true
-        )
+    fun `saveSettings should store the settings`() =
+        runTest {
+            val newSettings =
+                Settings(
+                    servers = listOf(),
+                    refreshInterval = 30,
+                    centerMapOnUserOnStart = true,
+                    restoreMapStateOnStart = true,
+                    showReceiverLocations = true,
+                    showUserLocationOnMap = true,
+                )
 
-        repository.saveSettings(newSettings)
+            repository.saveSettings(newSettings)
 
-        val savedSettings = repository.getSettings().first()
+            val savedSettings = repository.getSettings().first()
 
-        assertEquals(newSettings, savedSettings)
-    }
+            assertEquals(newSettings, savedSettings)
+        }
 }

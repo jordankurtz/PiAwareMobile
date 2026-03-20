@@ -8,9 +8,12 @@ import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
-    fun getSettings() : Flow<Settings>
+    fun getSettings(): Flow<Settings>
+
     suspend fun saveSettings(settings: Settings)
+
     suspend fun setTrailDisplayMode(trailDisplayMode: TrailDisplayMode)
+
     suspend fun setShowMinimapTrails(showMinimapTrails: Boolean)
 
     companion object {

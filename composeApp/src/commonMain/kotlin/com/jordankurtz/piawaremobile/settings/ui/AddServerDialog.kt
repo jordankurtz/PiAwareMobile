@@ -27,7 +27,7 @@ import androidx.compose.ui.window.Dialog
 @Composable
 fun AddServerDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, address: String) -> Unit
+    onConfirm: (name: String, address: String) -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
@@ -39,12 +39,14 @@ fun AddServerDialog(
             shape = RoundedCornerShape(8.dp),
             color = MaterialTheme.colorScheme.surface,
             shadowElevation = 8.dp,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
-            Column(modifier = Modifier
-                .padding(24.dp)
-                .width(IntrinsicSize.Min)) {
-
+            Column(
+                modifier =
+                    Modifier
+                        .padding(24.dp)
+                        .width(IntrinsicSize.Min),
+            ) {
                 Text(text = "Enter Details", style = MaterialTheme.typography.headlineSmall)
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -55,14 +57,14 @@ fun AddServerDialog(
                     label = { Text("Name*") },
                     isError = name.isBlank(),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 if (name.isBlank()) {
                     Text(
                         text = "Name is required",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 16.dp)
+                        modifier = Modifier.padding(start = 16.dp),
                     )
                 }
 
@@ -74,14 +76,14 @@ fun AddServerDialog(
                     label = { Text("Address*") },
                     isError = address.isBlank(),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 if (address.isBlank()) {
                     Text(
                         text = "Address is required",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 16.dp)
+                        modifier = Modifier.padding(start = 16.dp),
                     )
                 }
 
@@ -89,7 +91,7 @@ fun AddServerDialog(
 
                 Row(
                     horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     TextButton(onClick = onDismiss) {
                         Text("Cancel")
@@ -97,7 +99,7 @@ fun AddServerDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
                         onClick = { onConfirm(name.trim(), address.trim()) },
-                        enabled = isValid
+                        enabled = isValid,
                     ) {
                         Text("OK")
                     }
