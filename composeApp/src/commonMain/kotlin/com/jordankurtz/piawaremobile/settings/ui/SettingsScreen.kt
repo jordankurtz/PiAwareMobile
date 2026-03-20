@@ -23,8 +23,9 @@ fun SettingsScreen() {
             transitionSpec = { slideInHorizontally() togetherWith slideOutHorizontally() },
         ) { screen ->
             when (screen) {
-                SettingsScreens.Main -> MainScreen { currentScreen = SettingsScreens.Servers }
-                SettingsScreens.Servers -> ServersScreen {}
+                SettingsScreens.Main ->
+                    MainScreen(onServersClicked = { currentScreen = SettingsScreens.Servers })
+                SettingsScreens.Servers -> ServersScreen(onBack = {})
             }
         }
     }

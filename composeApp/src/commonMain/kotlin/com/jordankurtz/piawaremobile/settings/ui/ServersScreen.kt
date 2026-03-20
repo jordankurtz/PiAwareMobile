@@ -32,10 +32,11 @@ import piawaremobile.composeapp.generated.resources.servers_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ServersScreen(onBack: () -> Unit) {
+fun ServersScreen(
+    onBack: () -> Unit,
+    viewModel: SettingsViewModel = koinViewModel(),
+) {
     var showDialog by remember { mutableStateOf(false) }
-
-    val viewModel = koinViewModel<SettingsViewModel>()
     val settingsState by viewModel.settings.collectAsState()
     val settings = settingsState
 
