@@ -10,6 +10,7 @@ import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadAircraftTypesUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LookupFlightUseCase
+import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
@@ -59,6 +60,7 @@ class AircraftViewModel(
     private val loadHistoryUseCase: LoadHistoryUseCase,
     private val getAllAircraftTrailsUseCase: GetAllAircraftTrailsUseCase,
     private val urlHandler: UrlHandler,
+    @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     var settings: Settings? = null
@@ -81,7 +83,7 @@ class AircraftViewModel(
     private var isFirstResume = true
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             loadSettingsUseCase().collect {
                 when (it) {
                     is Async.Success -> {
@@ -139,7 +141,7 @@ class AircraftViewModel(
         }
         val servers = settings?.servers?.map { it.address } ?: return
         Logger.v("Refreshing trail history on resume")
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             loadHistoryUseCase(servers)
         }
     }

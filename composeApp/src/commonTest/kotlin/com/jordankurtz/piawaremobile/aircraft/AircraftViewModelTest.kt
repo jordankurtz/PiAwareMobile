@@ -96,6 +96,7 @@ class AircraftViewModelTest {
             loadHistoryUseCase = loadHistoryUseCase,
             getAllAircraftTrailsUseCase = getAllAircraftTrailsUseCase,
             urlHandler = urlHandler,
+            ioDispatcher = testDispatcher,
             mainDispatcher = testDispatcher,
         )
     }
