@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.mokkery)
     alias(libs.plugins.ksp)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.kover)
 }
 
 kotlin {
@@ -179,6 +180,41 @@ buildkonfig {
         }
         create("desktop") {
             buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.desktop").getOrElse(""))
+        }
+    }
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                // DI modules and annotations — wiring only, no logic
+                packages("com.jordankurtz.piawaremobile.di")
+                // Compose UI — tested via UI/instrumented tests, not unit-coverable
+                packages("com.jordankurtz.piawaremobile.ui")
+                packages("com.jordankurtz.piawaremobile.settings.ui")
+                // Data classes / serialization models — no logic
+                packages("com.jordankurtz.piawaremobile.model")
+                // Generated code
+                packages("org.koin.ksp.generated")
+                packages("piawaremobile.composeapp.generated")
+                classes("com.jordankurtz.piawaremobile.BuildConfig")
+                // Platform expect/actual declarations
+                classes("com.jordankurtz.piawaremobile.Platform*")
+                // Compose top-level scaffolding
+                classes(
+                    "com.jordankurtz.piawaremobile.AppKt",
+                    "com.jordankurtz.piawaremobile.OverlayKt",
+                    "com.jordankurtz.piawaremobile.MainKt",
+                )
+                // Map UI composables
+                classes(
+                    "com.jordankurtz.piawaremobile.map.FlightDetailsBottomSheetKt",
+                    "com.jordankurtz.piawaremobile.map.MapScreenKt",
+                    "com.jordankurtz.piawaremobile.map.MapHelpersKt",
+                    "com.jordankurtz.piawaremobile.map.OpenStreetMapKt",
+                )
+            }
         }
     }
 }
