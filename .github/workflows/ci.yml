@@ -33,7 +33,12 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew :composeApp:testDebugUnitTest
+      - run: ./gradlew :composeApp:koverXmlReportDebug
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: composeApp/build/reports/kover/
 
   # test-ios disabled: Sentry KMP framework not found during test linking
   # commonTest coverage is provided by the Android/JVM unit test job
