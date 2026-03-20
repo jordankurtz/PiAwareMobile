@@ -3,6 +3,8 @@ package com.jordankurtz.piawaremobile.settings
 import app.cash.turbine.test
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.DeleteServerUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.EditServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
@@ -38,6 +40,8 @@ class SettingsViewModelTest {
 
     private lateinit var loadSettingsUseCase: LoadSettingsUseCase
     private lateinit var addServerUseCase: AddServerUseCase
+    private lateinit var editServerUseCase: EditServerUseCase
+    private lateinit var deleteServerUseCase: DeleteServerUseCase
     private lateinit var setRefreshIntervalUseCase: SetRefreshIntervalUseCase
     private lateinit var setCenterMapOnUserOnStartUseCase: SetCenterMapOnUserOnStartUseCase
     private lateinit var setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase
@@ -56,6 +60,8 @@ class SettingsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         loadSettingsUseCase = mock()
         addServerUseCase = mock()
+        editServerUseCase = mock()
+        deleteServerUseCase = mock()
         setRefreshIntervalUseCase = mock()
         setCenterMapOnUserOnStartUseCase = mock()
         setRestoreMapStateOnStartUseCase = mock()
@@ -85,6 +91,8 @@ class SettingsViewModelTest {
             SettingsViewModel(
                 loadSettingsUseCase = loadSettingsUseCase,
                 addServerUseCase = addServerUseCase,
+                editServerUseCase = editServerUseCase,
+                deleteServerUseCase = deleteServerUseCase,
                 setRefreshIntervalUseCase = setRefreshIntervalUseCase,
                 setCenterMapOnUserOnStartUseCase = setCenterMapOnUserOnStartUseCase,
                 setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
@@ -124,6 +132,8 @@ class SettingsViewModelTest {
                 SettingsViewModel(
                     loadSettingsUseCase = loadSettingsUseCase,
                     addServerUseCase = addServerUseCase,
+                    editServerUseCase = editServerUseCase,
+                    deleteServerUseCase = deleteServerUseCase,
                     setRefreshIntervalUseCase = setRefreshIntervalUseCase,
                     setCenterMapOnUserOnStartUseCase = setCenterMapOnUserOnStartUseCase,
                     setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,

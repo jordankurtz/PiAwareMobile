@@ -11,6 +11,8 @@ import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.ui.ServersScreen
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.DeleteServerUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.EditServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
@@ -42,6 +44,8 @@ class ServersScreenTest {
         return SettingsViewModel(
             loadSettingsUseCase = loadSettingsUseCase,
             addServerUseCase = mock<AddServerUseCase>(),
+            editServerUseCase = mock<EditServerUseCase>(),
+            deleteServerUseCase = mock<DeleteServerUseCase>(),
             setRefreshIntervalUseCase = mock<SetRefreshIntervalUseCase>(),
             setCenterMapOnUserOnStartUseCase = mock<SetCenterMapOnUserOnStartUseCase>(),
             setRestoreMapStateOnStartUseCase = mock<SetRestoreMapStateOnStartUseCase>(),
@@ -99,10 +103,42 @@ class ServersScreenTest {
             setContent {
                 ServersScreen(onBack = {}, viewModel = createViewModel())
             }
-            onNodeWithContentDescription("Add Server").performClick()
-            onNodeWithText("Enter Details").assertIsDisplayed()
-            onNodeWithText("Name*").assertIsDisplayed()
-            onNodeWithText("Address*").assertIsDisplayed()
+            onNodeWithContentDescription("Add server").performClick()
+            onNodeWithText("Add Server").assertIsDisplayed()
+            onNodeWithText("Name").assertIsDisplayed()
+            onNodeWithText("Address").assertIsDisplayed()
+        }
+
+    @Test
+    fun editButtonOpensEditDialog() =
+        runComposeUiTest {
+            val settings =
+                mockSettings(
+                    servers = listOf(mockServer(name = "My PiAware", address = "piaware.local")),
+                )
+            setContent {
+                ServersScreen(onBack = {}, viewModel = createViewModel(settings))
+            }
+            onNodeWithContentDescription("Edit server").performClick()
+            onNodeWithText("Edit Server").assertIsDisplayed()
+            // Name appears both in the list and as the edit field value
+            onNodeWithText("Name").assertIsDisplayed()
+            onNodeWithText("Address").assertIsDisplayed()
+        }
+
+    @Test
+    fun deleteButtonShowsConfirmation() =
+        runComposeUiTest {
+            val settings =
+                mockSettings(
+                    servers = listOf(mockServer(name = "My PiAware", address = "piaware.local")),
+                )
+            setContent {
+                ServersScreen(onBack = {}, viewModel = createViewModel(settings))
+            }
+            onNodeWithContentDescription("Delete server").performClick()
+            onNodeWithText("Delete Server").assertIsDisplayed()
+            onNodeWithText("Are you sure you want to delete \"My PiAware\"?").assertIsDisplayed()
         }
 
     @Test

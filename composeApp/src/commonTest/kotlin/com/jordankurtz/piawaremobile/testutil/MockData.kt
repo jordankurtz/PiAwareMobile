@@ -38,11 +38,12 @@ fun mockSettings(
     )
 
 fun mockServer(
+    id: Uuid = Uuid.random(),
     name: String = "Test PiAware",
     address: String = "piaware.local",
 ): Server =
     Server(
-        id = Uuid.parse("00000000-0000-0000-0000-000000000001"),
+        id = id,
         name = name,
         address = address,
     )

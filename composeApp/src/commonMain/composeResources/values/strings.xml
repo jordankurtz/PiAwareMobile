@@ -29,6 +29,23 @@
     <string name="enable_flightaware_api_description">Use the FlightAware API to get more information about flights</string>
     <string name="flightaware_api_key_title">FlightAware API Key</string>
 
+    <!-- Server management -->
+    <string name="server_dialog_add_title">Add Server</string>
+    <string name="server_dialog_edit_title">Edit Server</string>
+    <string name="server_dialog_name_label">Name</string>
+    <string name="server_dialog_address_label">Address</string>
+    <string name="server_dialog_name_required">Name is required</string>
+    <string name="server_dialog_address_required">Address is required</string>
+    <string name="server_dialog_cancel">Cancel</string>
+    <string name="server_dialog_save">Save</string>
+    <string name="server_add">Add server</string>
+    <string name="server_edit">Edit server</string>
+    <string name="server_delete">Delete server</string>
+    <string name="server_delete_confirm_title">Delete Server</string>
+    <string name="server_delete_confirm_message">Are you sure you want to delete "%1$s"?</string>
+    <string name="server_delete_confirm">Delete</string>
+    <string name="navigate_back">Back</string>
+
     <string name="flight_details_error">Error: %1$s</string>
     <string name="flight_details_flight_number">Flight %1$s</string>
     <string name="flight_details_departure">Departure</string>

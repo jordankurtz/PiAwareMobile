@@ -23,14 +23,55 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.jordankurtz.piawaremobile.settings.Server
+import org.jetbrains.compose.resources.stringResource
+import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.server_dialog_add_title
+import piawaremobile.composeapp.generated.resources.server_dialog_address_label
+import piawaremobile.composeapp.generated.resources.server_dialog_address_required
+import piawaremobile.composeapp.generated.resources.server_dialog_cancel
+import piawaremobile.composeapp.generated.resources.server_dialog_edit_title
+import piawaremobile.composeapp.generated.resources.server_dialog_name_label
+import piawaremobile.composeapp.generated.resources.server_dialog_name_required
+import piawaremobile.composeapp.generated.resources.server_dialog_save
 
 @Composable
 fun AddServerDialog(
     onDismiss: () -> Unit,
     onConfirm: (name: String, address: String) -> Unit,
 ) {
-    var name by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
+    ServerDialog(
+        title = stringResource(Res.string.server_dialog_add_title),
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+    )
+}
+
+@Composable
+fun EditServerDialog(
+    server: Server,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, address: String) -> Unit,
+) {
+    ServerDialog(
+        title = stringResource(Res.string.server_dialog_edit_title),
+        initialName = server.name,
+        initialAddress = server.address,
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+    )
+}
+
+@Composable
+private fun ServerDialog(
+    title: String,
+    initialName: String = "",
+    initialAddress: String = "",
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, address: String) -> Unit,
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var address by remember { mutableStateOf(initialAddress) }
 
     val isValid = name.isNotBlank() && address.isNotBlank()
 
@@ -47,21 +88,21 @@ fun AddServerDialog(
                         .padding(24.dp)
                         .width(IntrinsicSize.Min),
             ) {
-                Text(text = "Enter Details", style = MaterialTheme.typography.headlineSmall)
+                Text(text = title, style = MaterialTheme.typography.headlineSmall)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name*") },
+                    label = { Text(stringResource(Res.string.server_dialog_name_label)) },
                     isError = name.isBlank(),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (name.isBlank()) {
                     Text(
-                        text = "Name is required",
+                        text = stringResource(Res.string.server_dialog_name_required),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 16.dp),
@@ -73,14 +114,14 @@ fun AddServerDialog(
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
-                    label = { Text("Address*") },
+                    label = { Text(stringResource(Res.string.server_dialog_address_label)) },
                     isError = address.isBlank(),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (address.isBlank()) {
                     Text(
-                        text = "Address is required",
+                        text = stringResource(Res.string.server_dialog_address_required),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 16.dp),
@@ -94,14 +135,14 @@ fun AddServerDialog(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(Res.string.server_dialog_cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
                         onClick = { onConfirm(name.trim(), address.trim()) },
                         enabled = isValid,
                     ) {
-                        Text("OK")
+                        Text(stringResource(Res.string.server_dialog_save))
                     }
                 }
             }
