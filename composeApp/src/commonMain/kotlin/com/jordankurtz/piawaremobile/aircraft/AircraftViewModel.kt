@@ -22,12 +22,11 @@ import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,7 +40,16 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.core.annotation.Factory
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+
+fun defaultTickerFlow(interval: Duration): Flow<Unit> =
+    flow {
+        while (true) {
+            emit(Unit)
+            delay(interval)
+        }
+    }
 
 private val dateFormatter =
     LocalDateTime.Format {
@@ -62,6 +70,7 @@ class AircraftViewModel(
     private val urlHandler: UrlHandler,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
+    private val tickerFlow: (Duration) -> Flow<Unit> = ::defaultTickerFlow,
 ) : ViewModel() {
     var settings: Settings? = null
 
@@ -170,22 +179,19 @@ class AircraftViewModel(
 
         val infoHost = servers.first()
 
-        return flow {
+        return viewModelScope.launch(ioDispatcher) {
             loadAircraftTypesUseCase(servers)
 
-            while (true) {
-                emit(Unit)
-                delay(refreshInterval.seconds)
-            }
-        }.onEach {
-            Logger.d("Refreshing")
-            val aircraftList = getAircraftWithDetailsUseCase(servers, infoHost)
-
-            _numberOfPlanes.value = aircraftList.count()
-            _aircraft.value = aircraftList
+            tickerFlow(refreshInterval.seconds)
+                .onEach {
+                    Logger.d("Refreshing")
+                    val aircraftList = getAircraftWithDetailsUseCase(servers, infoHost)
+                    _numberOfPlanes.value = aircraftList.count()
+                    _aircraft.value = aircraftList
+                }
+                .flowOn(ioDispatcher)
+                .launchIn(this)
         }
-            .flowOn(Dispatchers.IO)
-            .launchIn(viewModelScope)
     }
 
     fun openFlightInformation(selectedAircraft: String?) {
