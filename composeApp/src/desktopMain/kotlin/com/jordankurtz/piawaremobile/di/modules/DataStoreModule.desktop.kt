@@ -12,7 +12,7 @@ actual class DataStoreModule {
     @Single
     actual fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences> {
         return PreferenceDataStoreFactory.createWithPath {
-            ("settings").toPath()
+            ("settings.preferences_pb").toPath()
         }
     }
 }
