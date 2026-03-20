@@ -147,6 +147,43 @@ class AircraftViewModelTest {
         }
 
     @Test
+    fun `empty server list does not start polling or load history`() =
+        runTest {
+            val emptySettings = settings.copy(servers = emptyList())
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(emptySettings))
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(0, viewModel.numberOfPlanes.value)
+
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                loadHistoryUseCase(listOf())
+            }
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                loadAircraftTypesUseCase(listOf())
+            }
+        }
+
+    @Test
+    fun `onResume with empty server list does not reload history`() =
+        runTest {
+            val emptySettings = settings.copy(servers = emptyList())
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(emptySettings))
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.onResume() // skip first
+            viewModel.onResume() // should not crash or call loadHistory
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                loadHistoryUseCase(listOf())
+            }
+        }
+
+    @Test
     fun `polling updates aircraft count`() =
         runTest {
             val viewModel = createViewModel()
