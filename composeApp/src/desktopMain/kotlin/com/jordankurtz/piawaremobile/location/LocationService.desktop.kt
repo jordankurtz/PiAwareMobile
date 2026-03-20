@@ -9,7 +9,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Factory
 import java.io.BufferedReader
@@ -77,9 +76,3 @@ actual class LocationServiceImpl actual constructor(private val contextWrapper: 
     }
 }
 
-@Serializable
-data class IPLocationResponse(
-    val status: String,
-    val lat: Double,
-    val lon: Double
-)
