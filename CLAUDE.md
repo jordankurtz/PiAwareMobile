@@ -45,3 +45,41 @@ When picking up a GitHub issue, treat the issue as the source of truth for all i
 ### When closing
 - Ensure the issue has a final comment summarizing what was done (or link to the merged PR)
 - If an issue is closed without being fully resolved, explain why and create follow-up issues if needed
+
+## Test Requirements
+
+All PRs that add or modify functionality should include corresponding tests. The project has three test layers:
+
+### Unit Tests (`commonTest`)
+- Business logic, ViewModels, use cases, repositories, API clients
+- Use Mokkery for mocking interfaces
+- Use `StandardTestDispatcher` + `runTest` for coroutine testing
+- Inject `ioDispatcher`/`mainDispatcher` via test dispatcher; use `MutableSharedFlow` for `tickerFlow`
+- Test pure functions and extension functions directly (no mocking needed)
+
+### Desktop UI Tests (`desktopTest`)
+- Compose UI components rendered headlessly via `runComposeUiTest { setContent { ... } }`
+- Test composables that don't depend on platform APIs (no map rendering, no GPS)
+- Pass mock data directly to composable parameters — avoid needing full DI
+- Use `onNodeWithText()`, `onNodeWithContentDescription()`, `performClick()` for assertions
+- Use `@OptIn(ExperimentalTestApi::class)` annotation
+
+### Android Instrumented Tests (`androidTest`)
+- Smoke tests that verify components render on real Android devices/emulators
+- Use `createComposeRule()` from `androidx.compose.ui.test.junit4`
+- Test the same components as desktop tests to catch platform-specific rendering issues
+- CI runs these on phone (`pixel_6`) and tablet (`pixel_tablet`) emulator profiles
+
+### Before submitting
+- `./gradlew ktlintCheck` — must pass (run `ktlintFormat` to auto-fix)
+- `./gradlew detekt` — must pass
+- `./gradlew :composeApp:testDebugUnitTest` — all unit tests pass
+- `./gradlew :composeApp:desktopTest` — all desktop UI tests pass
+- Instrumented tests run in CI on emulators (no local requirement)
+
+### What to test
+- New composable screens/components: desktop UI test + Android instrumented test
+- New ViewModel logic: unit test with mocked dependencies
+- New use cases/repositories: unit test
+- Pure utility functions and extensions: unit test
+- Existing flaky tests: fix the root cause (replace `Thread.sleep` with deterministic control)

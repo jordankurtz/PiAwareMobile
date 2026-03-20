@@ -7,12 +7,13 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
+import com.jordankurtz.piawaremobile.settings.Server
 import kotlinx.coroutines.flow.StateFlow
 
 interface AircraftRepo {
-    suspend fun getAircraft(servers: List<String>): List<Aircraft>
+    suspend fun getAircraftWithServers(servers: List<Server>): Map<Aircraft, Set<Server>>
 
-    suspend fun loadAircraftTypes(servers: List<String>)
+    suspend fun loadAircraftTypes(servers: List<Server>)
 
     suspend fun findAircraftInfo(
         host: String,

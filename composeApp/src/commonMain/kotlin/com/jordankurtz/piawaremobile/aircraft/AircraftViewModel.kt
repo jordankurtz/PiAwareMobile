@@ -12,9 +12,8 @@ import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
 import com.jordankurtz.piawaremobile.aircraft.usecase.LookupFlightUseCase
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
-import com.jordankurtz.piawaremobile.model.Aircraft
-import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.AircraftTrail
+import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.Location
@@ -74,8 +73,8 @@ class AircraftViewModel(
 ) : ViewModel() {
     var settings: Settings? = null
 
-    private val _aircraft = MutableStateFlow<List<Pair<Aircraft, AircraftInfo?>>>(emptyList())
-    val aircraft: StateFlow<List<Pair<Aircraft, AircraftInfo?>>> = _aircraft.asStateFlow()
+    private val _aircraft = MutableStateFlow<List<AircraftWithServers>>(emptyList())
+    val aircraft: StateFlow<List<AircraftWithServers>> = _aircraft.asStateFlow()
 
     private val _flightDetails = MutableStateFlow<Async<Flight>>(Async.NotStarted)
     val flightDetails: StateFlow<Async<Flight>> = _flightDetails.asStateFlow()
@@ -85,6 +84,9 @@ class AircraftViewModel(
 
     private val _numberOfPlanes = MutableStateFlow(0)
     val numberOfPlanes: StateFlow<Int> = _numberOfPlanes.asStateFlow()
+
+    private val _selectedAircraftHex = MutableStateFlow<String?>(null)
+    val selectedAircraftHex: StateFlow<String?> = _selectedAircraftHex.asStateFlow()
 
     val aircraftTrails: StateFlow<Map<String, AircraftTrail>> = getAllAircraftTrailsUseCase()
 
@@ -131,6 +133,15 @@ class AircraftViewModel(
         resetLookup()
     }
 
+    fun selectAircraft(hex: String?) {
+        _selectedAircraftHex.value = hex
+        if (hex == null) {
+            resetLookup()
+        } else {
+            openFlightInformation(hex)
+        }
+    }
+
     private fun startPolling(
         servers: List<Server>,
         refreshInterval: Int,
@@ -138,7 +149,7 @@ class AircraftViewModel(
         pollingJob?.cancel()
         pollingJob =
             pollServers(
-                servers = servers.map { it.address },
+                servers = servers,
                 refreshInterval = refreshInterval,
             )
     }
@@ -172,12 +183,12 @@ class AircraftViewModel(
     }
 
     private fun pollServers(
-        servers: List<String>,
+        servers: List<Server>,
         refreshInterval: Int,
     ): Job? {
         if (servers.isEmpty() || refreshInterval <= 0) return null
 
-        val infoHost = servers.first()
+        val infoHost = servers.first().address
 
         return viewModelScope.launch(ioDispatcher) {
             loadAircraftTypesUseCase(servers)
@@ -199,20 +210,25 @@ class AircraftViewModel(
             resetLookup()
             return
         }
-        val aircraft = _aircraft.value.firstOrNull { it.first.hex == selectedAircraft }?.first
+        val aircraft = _aircraft.value.firstOrNull { it.aircraft.hex == selectedAircraft }?.aircraft
         if (aircraft?.flight.isNullOrBlank()) {
             _flightDetails.value = Async.Error("Flight information not available for this aircraft.")
             return
         }
         if (settings?.enableFlightAwareApi == true && settings?.flightAwareApiKey?.isNotEmpty() == true) {
             lookupFlight(aircraft.flight)
-        } else {
-            openFlightPage(aircraft.flight)
+        }
+        // If API not enabled, do nothing - user can manually tap "Open in FlightAware"
+    }
+
+    fun openFlightPage(selectedAircraft: String?) {
+        val aircraft = _aircraft.value.firstOrNull { it.aircraft.hex == selectedAircraft }?.aircraft
+        if (!aircraft?.flight.isNullOrBlank()) {
+            openFlightPageInternal(aircraft.flight)
         }
     }
 
-    private fun openFlightPage(flight: String) {
-        // todo add toast that we can't look it up
+    private fun openFlightPageInternal(flight: String) {
         viewModelScope.launch(mainDispatcher) {
             val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val url = "https://www.flightaware.com/live/flight/$flight/history/${

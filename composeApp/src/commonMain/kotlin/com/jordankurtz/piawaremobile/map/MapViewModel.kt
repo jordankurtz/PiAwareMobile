@@ -13,9 +13,9 @@ import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
-import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.AircraftTrail
+import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
@@ -37,6 +37,7 @@ import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.onMarkerClick
+import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.removeMarker
 import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scale
@@ -83,23 +84,19 @@ class MapViewModel(
 
             onMarkerClick { id, _, _ ->
                 if (previousAircraftMarkerIds.contains(id)) {
-                    if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
-                        if (_trailSelectedAircraft.value == id) {
-                            _selectedAircraft.value = id
-                        } else {
-                            _selectedAircraft.value = null
-                            _trailSelectedAircraft.value = id
-                            onAircraftTrailsUpdated(lastTrails)
-                        }
-                    } else {
-                        val newSelection = if (_selectedAircraft.value == id) null else id
-                        if (_selectedAircraft.value != newSelection) {
-                            _selectedAircraft.value = newSelection
-                            if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
-                                onAircraftTrailsUpdated(lastTrails)
-                            }
-                        }
-                    }
+                    val newSelection = if (_selectedAircraft.value == id) null else id
+                    _selectedAircraft.value = newSelection
+                    _trailSelectedAircraft.value = newSelection
+                    onAircraftTrailsUpdated(lastTrails)
+                }
+            }
+
+            onTap { _, _ ->
+                // Deselect when tapping on empty space
+                if (_selectedAircraft.value != null) {
+                    _selectedAircraft.value = null
+                    _trailSelectedAircraft.value = null
+                    onAircraftTrailsUpdated(lastTrails)
                 }
             }
         }
@@ -126,8 +123,18 @@ class MapViewModel(
 
     fun onAircraftDeselected() {
         _selectedAircraft.value = null
-        if (settings?.trailDisplayMode == TrailDisplayMode.SELECTED) {
-            _trailSelectedAircraft.value = null
+        _trailSelectedAircraft.value = null
+        onAircraftTrailsUpdated(lastTrails)
+    }
+
+    /**
+     * Sync selection from external source (e.g., tablet list panel).
+     * Used to keep map and list selections in sync.
+     */
+    fun syncSelection(hex: String?) {
+        if (_selectedAircraft.value != hex) {
+            _selectedAircraft.value = hex
+            _trailSelectedAircraft.value = hex
             onAircraftTrailsUpdated(lastTrails)
         }
     }
@@ -207,11 +214,12 @@ class MapViewModel(
         }
     }
 
-    fun onAircraftUpdated(aircraft: List<Pair<Aircraft, Any?>>) {
+    fun onAircraftUpdated(aircraft: List<AircraftWithServers>) {
         previousAircraftMarkerIds.forEach(state::removeMarker)
         previousAircraftMarkerIds.clear()
 
-        aircraft.forEach { (plane, _) ->
+        aircraft.forEach { item ->
+            val plane = item.aircraft
             val location = doProjection(plane.lat, plane.lon)
 
             state.addMarker(

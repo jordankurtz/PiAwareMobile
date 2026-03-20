@@ -9,6 +9,7 @@ import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
+import com.jordankurtz.piawaremobile.settings.Server
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
 import dev.mokkery.everySuspend
@@ -31,6 +32,8 @@ class AircraftRepoImplTest {
     private lateinit var aeroApi: AeroApi
     private lateinit var repo: AircraftRepoImpl
 
+    private val server1 = Server(name = "Server 1", address = "server1")
+    private val server2 = Server(name = "Server 2", address = "server2")
     private val mockAircraft1 = Aircraft(hex = "a8b2c3", flight = "SWA123", lat = 32.7, lon = -96.8)
     private val mockAircraft2 = Aircraft(hex = "a1b2c3", flight = "DAL456", lat = 32.8, lon = -96.9)
     private val mockAircraftNoLocation = Aircraft(hex = "d4e5f6", flight = "UAL789", lat = 0.0, lon = 0.0)
@@ -52,35 +55,52 @@ class AircraftRepoImplTest {
     }
 
     @Test
-    fun `getAircraft returns merged aircraft list from multiple servers`() =
+    fun `getAircraftWithServers returns merged aircraft from multiple servers with server tracking`() =
         runTest {
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
             everySuspend { piAwareApi.getAircraft("server2") } returns listOf(mockAircraft2)
 
-            val result = repo.getAircraft(listOf("server1", "server2"))
+            val result = repo.getAircraftWithServers(listOf(server1, server2))
 
-            assertEquals(listOf(mockAircraft1, mockAircraft2), result)
+            assertEquals(2, result.size)
+            assertEquals(setOf(server1), result[mockAircraft1])
+            assertEquals(setOf(server2), result[mockAircraft2])
         }
 
     @Test
-    fun `getAircraft handles one server failing`() =
+    fun `getAircraftWithServers tracks multiple servers for same aircraft`() =
+        runTest {
+            everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
+            everySuspend { piAwareApi.getAircraft("server2") } returns listOf(mockAircraft1)
+
+            val result = repo.getAircraftWithServers(listOf(server1, server2))
+
+            assertEquals(1, result.size)
+            assertEquals(setOf(server1, server2), result[mockAircraft1])
+        }
+
+    @Test
+    fun `getAircraftWithServers handles one server failing`() =
         runTest {
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
             everySuspend { piAwareApi.getAircraft("server2") } throws Exception("Network error")
 
-            val result = repo.getAircraft(listOf("server1", "server2"))
+            val result = repo.getAircraftWithServers(listOf(server1, server2))
 
-            assertEquals(listOf(mockAircraft1), result)
+            assertEquals(1, result.size)
+            assertEquals(setOf(server1), result[mockAircraft1])
         }
 
     @Test
-    fun `getAircraft filters out aircraft with no location`() =
+    fun `getAircraftWithServers filters out aircraft with no location`() =
         runTest {
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1, mockAircraftNoLocation)
 
-            val result = repo.getAircraft(listOf("server1"))
+            val result = repo.getAircraftWithServers(listOf(server1))
 
-            assertEquals(listOf(mockAircraft1), result)
+            assertEquals(1, result.size)
+            assertTrue(result.containsKey(mockAircraft1))
+            assertTrue(!result.containsKey(mockAircraftNoLocation))
         }
 
     @Test
@@ -123,7 +143,7 @@ class AircraftRepoImplTest {
             everySuspend { piAwareApi.getAircraftTypes("server2") } returns mockAircraftTypes2
             everySuspend { piAwareApi.getAircraftInfo(any(), any()) } returns null // To simplify the test
 
-            repo.loadAircraftTypes(listOf("server1", "server2"))
+            repo.loadAircraftTypes(listOf(server1, server2))
         }
 
     @Test
@@ -134,7 +154,7 @@ class AircraftRepoImplTest {
                 piAwareApi.getAircraftInfo("server1", "A")
             } returns buildJsonObject { put("8B2C3", mockAircraftInfo) }
 
-            repo.loadAircraftTypes(listOf("server1"))
+            repo.loadAircraftTypes(listOf(server1))
             val result = repo.findAircraftInfo("server1", "A8B2C3")
 
             assertNotNull(result)
@@ -155,7 +175,7 @@ class AircraftRepoImplTest {
                 piAwareApi.getAircraftInfo("server1", "A8")
             } returns buildJsonObject { put("B2C3", mockAircraftInfo) }
 
-            repo.loadAircraftTypes(listOf("server1"))
+            repo.loadAircraftTypes(listOf(server1))
             val result = repo.findAircraftInfo("server1", "A8B2C3")
 
             assertNotNull(result)
@@ -176,7 +196,7 @@ class AircraftRepoImplTest {
                 piAwareApi.getAircraftInfo("server1", "A8")
             } returns buildJsonObject { put("B2C3", mockAircraftInfo) }
 
-            repo.loadAircraftTypes(listOf("server1"))
+            repo.loadAircraftTypes(listOf(server1))
             val result = repo.lookupAircraftInfoRecursive("server1", "A8B2C3")
 
             assertNotNull(result)
@@ -193,7 +213,7 @@ class AircraftRepoImplTest {
                 piAwareApi.getAircraftInfo("server1", "A")
             } returns buildJsonObject { put("8B2C3", mockAircraftInfo) }
 
-            repo.loadAircraftTypes(listOf("server1"))
+            repo.loadAircraftTypes(listOf(server1))
             val result = repo.lookupAircraftInfoRecursive("server1", "a8b2c3")
 
             assertNotNull(result)
@@ -229,11 +249,11 @@ class AircraftRepoImplTest {
     // Trails tests
 
     @Test
-    fun `getAircraft adds positions to trails`() =
+    fun `getAircraftWithServers adds positions to trails`() =
         runTest {
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1, mockAircraft2)
 
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             val trails = repo.aircraftTrails.value
             assertEquals(2, trails.size)
@@ -244,12 +264,12 @@ class AircraftRepoImplTest {
         }
 
     @Test
-    fun `getAircraft does not add duplicate positions to trails`() =
+    fun `getAircraftWithServers does not add duplicate positions to trails`() =
         runTest {
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
 
-            repo.getAircraft(listOf("server1"))
-            repo.getAircraft(listOf("server1")) // Same position again
+            repo.getAircraftWithServers(listOf(server1))
+            repo.getAircraftWithServers(listOf(server1)) // Same position again
 
             val trails = repo.aircraftTrails.value
             // Should still only have 1 position since position didn't change
@@ -257,29 +277,29 @@ class AircraftRepoImplTest {
         }
 
     @Test
-    fun `getAircraft adds new positions to trails when location changes`() =
+    fun `getAircraftWithServers adds new positions to trails when location changes`() =
         runTest {
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             val movedAircraft = mockAircraft1.copy(lat = 33.0, lon = -97.0)
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(movedAircraft)
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             val trails = repo.aircraftTrails.value
             assertEquals(2, trails[mockAircraft1.hex]?.positions?.size)
         }
 
     @Test
-    fun `getAircraft only includes current aircraft in trails`() =
+    fun `getAircraftWithServers only includes current aircraft in trails`() =
         runTest {
             // First update with aircraft1 and aircraft2
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1, mockAircraft2)
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             // Second update with only aircraft1 (aircraft2 is no longer visible)
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1)
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             val trails = repo.aircraftTrails.value
             // Only current aircraft (aircraft1) should be in the emitted trails
@@ -292,7 +312,7 @@ class AircraftRepoImplTest {
     fun `clearTrails removes all trail data`() =
         runTest {
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(mockAircraft1, mockAircraft2)
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             repo.clearTrails()
 
@@ -320,10 +340,10 @@ class AircraftRepoImplTest {
 
             repo.fetchAndMergeHistory("server1")
 
-            // After fetching history, getAircraft needs to be called to see the trails
+            // After fetching history, getAircraftWithServers needs to be called to see the trails
             // The trails are stored but not emitted until currentAircraftHex includes them
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft)
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             val trails = repo.aircraftTrails.value
             assertTrue(trails.containsKey(historyAircraft.hex))
@@ -378,7 +398,7 @@ class AircraftRepoImplTest {
 
             // Should still work with partial data
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft)
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
             val trails = repo.aircraftTrails.value
             assertTrue(trails.containsKey(historyAircraft.hex))
         }
@@ -405,11 +425,11 @@ class AircraftRepoImplTest {
             repo.fetchAndMergeHistory("server1") // Second fetch with same data
 
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft)
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             val trails = repo.aircraftTrails.value
             val positions = trails[historyAircraft.hex]!!.positions
-            // 2 deduped history positions + 1 current from getAircraft = 3
+            // 2 deduped history positions + 1 current from getAircraftWithServers = 3
             // Without dedup this would be 4 history + 1 current = 5
             assertEquals(3, positions.size)
         }
@@ -444,7 +464,7 @@ class AircraftRepoImplTest {
             repo.fetchAndMergeHistory("server1")
 
             everySuspend { piAwareApi.getAircraft("server1") } returns listOf(historyAircraft.copy(lat = 32.7))
-            repo.getAircraft(listOf("server1"))
+            repo.getAircraftWithServers(listOf(server1))
 
             val trails = repo.aircraftTrails.value
             val positions = trails[historyAircraft.hex]!!.positions

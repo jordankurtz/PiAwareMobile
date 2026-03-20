@@ -24,6 +24,7 @@ import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.mock
 import kotlinx.coroutines.flow.flowOf
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -80,6 +81,6 @@ class SettingsScreenAndroidTest {
             MainScreen(onServersClicked = { clicked = true }, viewModel = createViewModel())
         }
         composeTestRule.onNodeWithText("Servers").performClick()
-        assert(clicked)
+        assertTrue(clicked)
     }
 }

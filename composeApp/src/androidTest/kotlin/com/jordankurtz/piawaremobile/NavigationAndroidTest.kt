@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.jordankurtz.piawaremobile.model.Screen
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -47,6 +48,6 @@ class NavigationAndroidTest {
             )
         }
         composeTestRule.onNodeWithText("Settings").performClick()
-        assert(selectedScreen == Screen.Settings)
+        assertTrue(selectedScreen == Screen.Settings)
     }
 }

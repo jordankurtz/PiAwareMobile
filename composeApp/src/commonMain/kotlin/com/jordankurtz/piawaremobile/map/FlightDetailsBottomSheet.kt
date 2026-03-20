@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -35,8 +36,11 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.FlightAirportRef
 import com.jordankurtz.piawaremobile.model.Location
-import com.jordankurtz.piawaremobile.model.bearingTo
-import com.jordankurtz.piawaremobile.model.distanceTo
+import com.jordankurtz.piawaremobile.ui.AircraftLocationDetails
+import com.jordankurtz.piawaremobile.ui.AircraftPrimaryDetails
+import com.jordankurtz.piawaremobile.ui.AircraftSecondaryDetails
+import com.jordankurtz.piawaremobile.ui.AircraftSignalDetails
+import com.jordankurtz.piawaremobile.ui.FlightAircraftDetails
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -56,7 +60,7 @@ import piawaremobile.composeapp.generated.resources.flight_details_on_time
 import piawaremobile.composeapp.generated.resources.flight_details_remaining_time
 import piawaremobile.composeapp.generated.resources.flight_details_scheduled
 import piawaremobile.composeapp.generated.resources.ic_arrow_downward
-import kotlin.math.roundToInt
+import piawaremobile.composeapp.generated.resources.open_in_flightaware
 import kotlin.time.Instant
 
 @Composable
@@ -64,6 +68,7 @@ fun FlightDetailsBottomSheet(
     aircraft: Aircraft?,
     flightDetails: Async<Flight>,
     onDismissRequest: () -> Unit,
+    onOpenFlightPage: () -> Unit,
     sheetState: SheetState =
         rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
@@ -99,6 +104,14 @@ fun FlightDetailsBottomSheet(
                             text = stringResource(Res.string.flight_details_flight_number, flight.ident),
                             style = MaterialTheme.typography.headlineSmall,
                         )
+
+                        if (!aircraft?.flight.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(onClick = onOpenFlightPage) {
+                                Text(stringResource(Res.string.open_in_flightaware))
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
 
                         TabRow(selectedTabIndex = tabIndex) {
@@ -139,62 +152,11 @@ private fun DetailsTab(
             userLocation = userLocation,
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            aircraft?.altBaro?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Altitude", style = MaterialTheme.typography.labelSmall)
-                    Text("$it ft", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-            aircraft?.track?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Heading", style = MaterialTheme.typography.labelSmall)
-                    Text("$it°", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-            aircraft?.gs?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Speed", style = MaterialTheme.typography.labelSmall)
-                    Text("$it kts", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            aircraft?.lat?.let { lat ->
-                aircraft.lon?.let { lon ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Location", style = MaterialTheme.typography.labelSmall)
-                        Text("(${lat.round(4)}, ${lon.round(4)})", style = MaterialTheme.typography.bodyLarge)
-                    }
-                    userLocation?.let {
-                        val aircraftLocation = Location(lat, lon)
-                        val distance = it.distanceTo(aircraftLocation)
-                        val bearing = it.bearingTo(aircraftLocation)
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Distance", style = MaterialTheme.typography.labelSmall)
-                            Text("${distance.roundToInt()} km", style = MaterialTheme.typography.bodyLarge)
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Direction", style = MaterialTheme.typography.labelSmall)
-                            Text(
-                                "${bearing.roundToInt()}° ${bearing.toCardinalDirection()}",
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
-                    }
-                }
-            }
+        aircraft?.let {
+            AircraftPrimaryDetails(aircraft = it)
+            Spacer(modifier = Modifier.height(8.dp))
+            AircraftLocationDetails(aircraft = it, userLocation = userLocation)
         }
     }
 }
@@ -206,7 +168,13 @@ private fun AircraftTab(
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(16.dp))
-        MoreDetails(aircraft, flight)
+        FlightAircraftDetails(flight = flight)
+        Spacer(modifier = Modifier.height(8.dp))
+        aircraft?.let {
+            AircraftSecondaryDetails(aircraft = it)
+            Spacer(modifier = Modifier.height(8.dp))
+            AircraftSignalDetails(aircraft = it)
+        }
     }
 }
 
@@ -253,64 +221,6 @@ fun MiniMap(
             state = miniMapViewModel.state,
             modifier = Modifier.height(height = 200.dp),
         )
-    }
-}
-
-@Composable
-private fun MoreDetails(
-    aircraft: Aircraft?,
-    flight: Flight,
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            aircraft?.baroRate?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Vertical Speed", style = MaterialTheme.typography.labelSmall)
-                    Text("$it fpm", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-            aircraft?.squawk?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Squawk", style = MaterialTheme.typography.labelSmall)
-                    Text(it, style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-            flight.aircraftType?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Aircraft Type", style = MaterialTheme.typography.labelSmall)
-                    Text(it, style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-            flight.registration?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Registration", style = MaterialTheme.typography.labelSmall)
-                    Text(it, style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            aircraft?.rssi?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Signal Strength", style = MaterialTheme.typography.labelSmall)
-                    Text("$it dBm", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-            aircraft?.seen?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Last Seen", style = MaterialTheme.typography.labelSmall)
-                    Text("$it s ago", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-        }
     }
 }
 
@@ -424,16 +334,4 @@ private fun formatSecondsToHoursMinutes(seconds: Int): String {
         minutes > 0 -> stringResource(Res.string.flight_details_minutes_short, minutes)
         else -> ""
     }
-}
-
-private fun Double.round(decimals: Int): Double {
-    var multiplier = 1.0
-    repeat(decimals) { multiplier *= 10 }
-    return kotlin.math.round(this * multiplier) / multiplier
-}
-
-private fun Double.toCardinalDirection(): String {
-    val directions = listOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
-    val index = ((this / 45) + 0.5).toInt() % 8
-    return directions[index]
 }

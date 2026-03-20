@@ -60,7 +60,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(selectedAircraftHex) {
-        aircraftViewModel.openFlightInformation(selectedAircraftHex)
+        aircraftViewModel.selectAircraft(selectedAircraftHex)
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -77,13 +77,14 @@ fun MapScreen(
 
     val selectedAircraft =
         selectedAircraftHex?.let { hex ->
-            aircraft.firstOrNull { it.first.hex == hex }?.first
+            aircraft.firstOrNull { it.aircraft.hex == hex }?.aircraft
         }
 
     FlightDetailsBottomSheet(
         aircraft = selectedAircraft,
         flightDetails = flightDetails,
         onDismissRequest = { mapViewModel.onAircraftDeselected() },
+        onOpenFlightPage = { aircraftViewModel.openFlightPage(selectedAircraftHex) },
         sheetState = sheetState,
     )
 }
