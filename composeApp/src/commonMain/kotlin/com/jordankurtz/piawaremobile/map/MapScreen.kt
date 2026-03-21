@@ -2,7 +2,11 @@ package com.jordankurtz.piawaremobile.map
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +20,12 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.jordankurtz.piawaremobile.Overlay
 import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.location.LocationViewModel
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.fit_to_aircraft
+import piawaremobile.composeapp.generated.resources.ic_plane
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +78,22 @@ fun MapScreen(
 
     Box {
         OpenStreetMap(state = mapViewModel.state)
+        if (aircraft.isNotEmpty()) {
+            FloatingActionButton(
+                onClick = { mapViewModel.fitToAircraft(aircraft) },
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp),
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_plane),
+                    contentDescription = stringResource(Res.string.fit_to_aircraft),
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
         Overlay(
             numberOfPlanes,
             modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),

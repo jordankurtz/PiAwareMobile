@@ -1,5 +1,7 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.snapshotFlow
@@ -33,6 +35,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.annotation.Factory
+import ovh.plrapps.mapcompose.api.BoundingBox
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
@@ -194,6 +197,35 @@ class MapViewModel(
             val (x, y) = location.projected
             Logger.d("Scrolling map to $x, $y")
             state.scrollTo(x, y)
+        }
+    }
+
+    fun fitToAircraft(aircraft: List<AircraftWithServers>) {
+        if (aircraft.isEmpty()) return
+
+        if (aircraft.size == 1) {
+            val plane = aircraft.first().aircraft
+            val (x, y) = doProjection(plane.lat, plane.lon)
+            viewModelScope.launch {
+                state.scrollTo(x, y, animationSpec = SpringSpec(stiffness = Spring.StiffnessLow))
+            }
+            return
+        }
+
+        val projected = aircraft.map { doProjection(it.aircraft.lat, it.aircraft.lon) }
+        val boundingBox =
+            BoundingBox(
+                xLeft = projected.minOf { it.first },
+                yTop = projected.minOf { it.second },
+                xRight = projected.maxOf { it.first },
+                yBottom = projected.maxOf { it.second },
+            )
+        viewModelScope.launch {
+            state.scrollTo(
+                area = boundingBox,
+                padding = Offset(x = 0.15f, y = 0.15f),
+                animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
+            )
         }
     }
 
