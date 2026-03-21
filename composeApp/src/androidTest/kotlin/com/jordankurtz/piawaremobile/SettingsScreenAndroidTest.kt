@@ -9,6 +9,8 @@ import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.ui.MainScreen
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.DeleteServerUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.EditServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
@@ -41,6 +43,8 @@ class SettingsScreenAndroidTest {
         return SettingsViewModel(
             loadSettingsUseCase = loadSettingsUseCase,
             addServerUseCase = mock<AddServerUseCase>(),
+            editServerUseCase = mock<EditServerUseCase>(),
+            deleteServerUseCase = mock<DeleteServerUseCase>(),
             setRefreshIntervalUseCase = mock<SetRefreshIntervalUseCase>(),
             setCenterMapOnUserOnStartUseCase = mock<SetCenterMapOnUserOnStartUseCase>(),
             setRestoreMapStateOnStartUseCase = mock<SetRestoreMapStateOnStartUseCase>(),

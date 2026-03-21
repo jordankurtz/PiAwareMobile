@@ -18,20 +18,20 @@ class AddServerDialogTest {
             setContent {
                 AddServerDialog(onDismiss = {}, onConfirm = { _, _ -> })
             }
-            onNodeWithText("Enter Details").assertIsDisplayed()
-            onNodeWithText("Name*").assertIsDisplayed()
-            onNodeWithText("Address*").assertIsDisplayed()
+            onNodeWithText("Add Server").assertIsDisplayed()
+            onNodeWithText("Name").assertIsDisplayed()
+            onNodeWithText("Address").assertIsDisplayed()
             onNodeWithText("Cancel").assertIsDisplayed()
-            onNodeWithText("OK").assertIsDisplayed()
+            onNodeWithText("Save").assertIsDisplayed()
         }
 
     @Test
-    fun okButtonDisabledWhenFieldsEmpty() =
+    fun saveButtonDisabledWhenFieldsEmpty() =
         runComposeUiTest {
             setContent {
                 AddServerDialog(onDismiss = {}, onConfirm = { _, _ -> })
             }
-            onNodeWithText("OK").assertIsNotEnabled()
+            onNodeWithText("Save").assertIsNotEnabled()
         }
 
     @Test

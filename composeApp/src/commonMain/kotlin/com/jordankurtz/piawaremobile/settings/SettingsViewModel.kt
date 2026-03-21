@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.extensions.stateIn
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.DeleteServerUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.EditServerUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
 import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
@@ -19,11 +21,15 @@ import com.jordankurtz.piawaremobile.settings.usecase.SetTrailDisplayModeUseCase
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
+import kotlin.uuid.Uuid
 
+@Suppress("LongParameterList")
 @Factory
 class SettingsViewModel(
     loadSettingsUseCase: LoadSettingsUseCase,
     private val addServerUseCase: AddServerUseCase,
+    private val editServerUseCase: EditServerUseCase,
+    private val deleteServerUseCase: DeleteServerUseCase,
     private val setRefreshIntervalUseCase: SetRefreshIntervalUseCase,
     private val setCenterMapOnUserOnStartUseCase: SetCenterMapOnUserOnStartUseCase,
     private val setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase,
@@ -45,6 +51,16 @@ class SettingsViewModel(
     ) = viewModelScope.launch {
         addServerUseCase(name, address)
     }
+
+    fun editServer(server: Server) =
+        viewModelScope.launch {
+            editServerUseCase(server)
+        }
+
+    fun deleteServer(id: Uuid) =
+        viewModelScope.launch {
+            deleteServerUseCase(id)
+        }
 
     fun updateRefreshInterval(refreshInterval: Int) =
         viewModelScope.launch {
