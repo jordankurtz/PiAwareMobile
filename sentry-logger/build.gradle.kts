@@ -48,6 +48,11 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+    testOptions {
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
+    }
+    lint {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
     }
     compileOptions {
