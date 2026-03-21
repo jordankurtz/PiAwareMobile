@@ -1,6 +1,8 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,7 +27,9 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.fit_to_aircraft
+import piawaremobile.composeapp.generated.resources.follow_user_location
 import piawaremobile.composeapp.generated.resources.ic_plane
+import piawaremobile.composeapp.generated.resources.ic_user_location
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +44,7 @@ fun MapScreen(
     val numberOfPlanes by aircraftViewModel.numberOfPlanes.collectAsState()
     val selectedAircraftHex by mapViewModel.selectedAircraft.collectAsState()
     val followingAircraftHex by mapViewModel.followingAircraft.collectAsState()
+    val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val sheetState =
@@ -79,18 +84,37 @@ fun MapScreen(
 
     Box {
         OpenStreetMap(state = mapViewModel.state)
-        if (aircraft.isNotEmpty()) {
+        Column(
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (aircraft.isNotEmpty()) {
+                FloatingActionButton(
+                    onClick = { mapViewModel.fitToAircraft(aircraft) },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_plane),
+                        contentDescription = stringResource(Res.string.fit_to_aircraft),
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
             FloatingActionButton(
-                onClick = { mapViewModel.fitToAircraft(aircraft) },
-                modifier =
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                onClick = { mapViewModel.toggleFollowUserLocation() },
+                containerColor =
+                    if (isFollowingUser) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer
+                    },
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_plane),
-                    contentDescription = stringResource(Res.string.fit_to_aircraft),
+                    painter = painterResource(Res.drawable.ic_user_location),
+                    contentDescription = stringResource(Res.string.follow_user_location),
                     modifier = Modifier.size(24.dp),
                 )
             }

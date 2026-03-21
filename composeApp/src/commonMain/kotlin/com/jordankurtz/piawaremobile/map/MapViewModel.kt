@@ -81,6 +81,9 @@ class MapViewModel(
     private val _followingAircraft = MutableStateFlow<String?>(null)
     val followingAircraft: StateFlow<String?> = _followingAircraft
 
+    private val _followingUserLocation = MutableStateFlow(false)
+    val followingUserLocation: StateFlow<Boolean> = _followingUserLocation
+
     private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
     val state =
@@ -246,7 +249,14 @@ class MapViewModel(
         }
     }
 
+    fun toggleFollowUserLocation() {
+        _followingUserLocation.value = !_followingUserLocation.value
+    }
+
     fun onUserLocationChanged(location: Location) {
+        if (_followingUserLocation.value) {
+            recenterOnLocation(location)
+        }
         val (x, y) = location.projected
         state.removeMarker(USER_LOCATION_MARKER_ID)
         state.addMarker(
