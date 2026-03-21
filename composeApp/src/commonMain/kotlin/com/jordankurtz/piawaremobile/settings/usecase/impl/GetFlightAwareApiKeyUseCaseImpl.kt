@@ -1,15 +1,14 @@
 package com.jordankurtz.piawaremobile.settings.usecase.impl
 
-import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import com.jordankurtz.piawaremobile.settings.usecase.GetFlightAwareApiKeyUseCase
-import kotlinx.coroutines.flow.first
+import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import org.koin.core.annotation.Factory
 
 @Factory(binds = [GetFlightAwareApiKeyUseCase::class])
 class GetFlightAwareApiKeyUseCaseImpl(
-    private val settingsRepository: SettingsRepository,
+    private val settingsService: SettingsService,
 ) : GetFlightAwareApiKeyUseCase {
     override suspend operator fun invoke(): String {
-        return settingsRepository.getSettings().first().flightAwareApiKey
+        return settingsService.getFlightAwareApiKey()
     }
 }
