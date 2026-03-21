@@ -29,6 +29,10 @@
     <string name="show_minimap_trails_description">Display trails on the flight detail mini-map</string>
     <string name="open_urls_externally_title">Open URLs externally</string>
     <string name="open_urls_externally_description">Open aircraft and receiver URLs in an external browser</string>
+    <string name="default_zoom_level_title">Default Zoom Level</string>
+    <string name="min_zoom_level_title">Min Zoom Level</string>
+    <string name="max_zoom_level_title">Max Zoom Level</string>
+    <string name="zoom_section_title">Zoom</string>
     <string name="enable_flightaware_api_title">Enable FlightAware API</string>
     <string name="enable_flightaware_api_description">Use the FlightAware API to get more information about flights</string>
     <string name="flightaware_api_key_title">FlightAware API Key</string>

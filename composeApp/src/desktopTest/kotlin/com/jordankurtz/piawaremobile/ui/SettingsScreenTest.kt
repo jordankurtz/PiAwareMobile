@@ -2,8 +2,11 @@ package com.jordankurtz.piawaremobile.ui
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.runComposeUiTest
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
@@ -63,11 +66,14 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
-            onNodeWithText("Show receiver locations").assertIsDisplayed()
-            onNodeWithText("Show User Location on Map").assertIsDisplayed()
-            onNodeWithText("Show Minimap Trails").assertIsDisplayed()
             onNodeWithText("Center map on user").assertIsDisplayed()
             onNodeWithText("Restore map position").assertIsDisplayed()
+            onNodeWithTag("settings_list").performScrollToNode(hasText("Show receiver locations"))
+            onNodeWithText("Show receiver locations").assertIsDisplayed()
+            onNodeWithTag("settings_list").performScrollToNode(hasText("Show User Location on Map"))
+            onNodeWithText("Show User Location on Map").assertIsDisplayed()
+            onNodeWithTag("settings_list").performScrollToNode(hasText("Show Minimap Trails"))
+            onNodeWithText("Show Minimap Trails").assertIsDisplayed()
         }
 
     @Test
@@ -94,6 +100,21 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
+            onNodeWithTag("settings_list").performScrollToNode(hasText("Enable FlightAware API"))
             onNodeWithText("Enable FlightAware API").assertIsDisplayed()
+        }
+
+    @Test
+    fun displaysZoomSettings() =
+        runComposeUiTest {
+            setContent {
+                MainScreen(onServersClicked = {}, viewModel = createViewModel())
+            }
+            onNodeWithTag("settings_list").performScrollToNode(hasText("Default Zoom Level"))
+            onNodeWithText("Default Zoom Level").assertIsDisplayed()
+            onNodeWithTag("settings_list").performScrollToNode(hasText("Min Zoom Level"))
+            onNodeWithText("Min Zoom Level").assertIsDisplayed()
+            onNodeWithTag("settings_list").performScrollToNode(hasText("Max Zoom Level"))
+            onNodeWithText("Max Zoom Level").assertIsDisplayed()
         }
 }

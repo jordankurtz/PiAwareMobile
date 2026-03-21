@@ -33,8 +33,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
@@ -44,10 +46,13 @@ import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.center_map_on_user_description
 import piawaremobile.composeapp.generated.resources.center_map_on_user_title
+import piawaremobile.composeapp.generated.resources.default_zoom_level_title
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_description
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
 import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
+import piawaremobile.composeapp.generated.resources.max_zoom_level_title
+import piawaremobile.composeapp.generated.resources.min_zoom_level_title
 import piawaremobile.composeapp.generated.resources.open_urls_externally_description
 import piawaremobile.composeapp.generated.resources.open_urls_externally_title
 import piawaremobile.composeapp.generated.resources.preferences_title
@@ -64,6 +69,7 @@ import piawaremobile.composeapp.generated.resources.show_user_location_descripti
 import piawaremobile.composeapp.generated.resources.show_user_location_title
 import piawaremobile.composeapp.generated.resources.trail_display_mode_description
 import piawaremobile.composeapp.generated.resources.trail_display_mode_title
+import piawaremobile.composeapp.generated.resources.zoom_section_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +93,7 @@ fun MainScreen(
         },
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier.padding(paddingValues).testTag("settings_list"),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
             item {
@@ -133,6 +139,34 @@ fun MainScreen(
                     description = stringResource(Res.string.restore_map_position_description),
                     checked = settings.getValue()?.restoreMapStateOnStart ?: true,
                     onCheckedChange = viewModel::updateRestoreMapStateOnStart,
+                )
+            }
+
+            item {
+                SettingsSection(title = stringResource(Res.string.zoom_section_title))
+            }
+
+            item {
+                SettingsNumberInput(
+                    title = stringResource(Res.string.default_zoom_level_title),
+                    value = settings.getValue()?.defaultZoomLevel ?: Settings.DEFAULT_ZOOM_LEVEL,
+                    onValueChange = viewModel::updateDefaultZoomLevel,
+                )
+            }
+
+            item {
+                SettingsNumberInput(
+                    title = stringResource(Res.string.min_zoom_level_title),
+                    value = settings.getValue()?.minZoomLevel ?: Settings.MIN_ZOOM_LEVEL,
+                    onValueChange = viewModel::updateMinZoomLevel,
+                )
+            }
+
+            item {
+                SettingsNumberInput(
+                    title = stringResource(Res.string.max_zoom_level_title),
+                    value = settings.getValue()?.maxZoomLevel ?: Settings.MAX_ZOOM_LEVEL,
+                    onValueChange = viewModel::updateMaxZoomLevel,
                 )
             }
 

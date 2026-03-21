@@ -165,6 +165,8 @@ class MapViewModel(
         }
     }
 
+    private var hasAppliedInitialZoom = false
+
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
         _showUserLocationOnMap.value = settings.showUserLocationOnMap
@@ -174,16 +176,28 @@ class MapViewModel(
         onAircraftTrailsUpdated(lastTrails)
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
-            loadMapState()
+            loadMapState(settings)
             startSaveMapStateJob()
+        } else if (!hasAppliedInitialZoom) {
+            applyDefaultZoom(settings)
         }
     }
 
-    private suspend fun loadMapState() {
+    private suspend fun loadMapState(settings: Settings) {
         val savedState = getSavedMapStateUseCase()
         Logger.d("Restored map state $savedState")
         state.setScroll(savedState.scrollX, savedState.scrollY)
-        state.scale = savedState.zoom
+        val minScale = scaleForZoomLevel(settings.minZoomLevel)
+        val maxScale = scaleForZoomLevel(settings.maxZoomLevel)
+        val effectiveMin = minOf(minScale, maxScale)
+        val effectiveMax = maxOf(minScale, maxScale)
+        state.scale = savedState.zoom.coerceIn(effectiveMin, effectiveMax)
+        hasAppliedInitialZoom = true
+    }
+
+    private fun applyDefaultZoom(settings: Settings) {
+        state.scale = scaleForZoomLevel(settings.defaultZoomLevel)
+        hasAppliedInitialZoom = true
     }
 
     private fun startSaveMapStateJob() {

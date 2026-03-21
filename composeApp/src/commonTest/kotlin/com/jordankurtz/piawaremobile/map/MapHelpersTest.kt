@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.map
 
 import androidx.compose.ui.graphics.Color
+import kotlin.math.pow
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -185,5 +186,25 @@ class MapHelpersTest {
             )
         val result = computeFitTarget(coordinates)
         assertIs<FitTarget.BoundingRegion>(result)
+    }
+
+    // --- scaleForZoomLevel tests ---
+
+    @Test
+    fun scaleForZoomLevelAtMaxLevelReturnsOne() {
+        assertEquals(1.0, scaleForZoomLevel(MAX_LEVEL))
+    }
+
+    @Test
+    fun scaleForZoomLevelAtMinLevelReturnsMinimumScale() {
+        val expected = 1.0 / 2.0.pow((MAX_LEVEL - MIN_LEVEL).toDouble())
+        assertEquals(expected, scaleForZoomLevel(MIN_LEVEL))
+    }
+
+    @Test
+    fun scaleForZoomLevelIncreasesWithLevel() {
+        val scale5 = scaleForZoomLevel(5)
+        val scale10 = scaleForZoomLevel(10)
+        assertTrue(scale10 > scale5)
     }
 }

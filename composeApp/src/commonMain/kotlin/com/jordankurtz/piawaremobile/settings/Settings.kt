@@ -14,4 +14,13 @@ data class Settings(
     val openUrlsExternally: Boolean = false,
     val enableFlightAwareApi: Boolean = false,
     val flightAwareApiKey: String = "",
-)
+    val defaultZoomLevel: Int = DEFAULT_ZOOM_LEVEL,
+    val minZoomLevel: Int = MIN_ZOOM_LEVEL,
+    val maxZoomLevel: Int = MAX_ZOOM_LEVEL,
+) {
+    companion object {
+        const val MIN_ZOOM_LEVEL = 1
+        const val MAX_ZOOM_LEVEL = 16
+        const val DEFAULT_ZOOM_LEVEL = 8
+    }
+}

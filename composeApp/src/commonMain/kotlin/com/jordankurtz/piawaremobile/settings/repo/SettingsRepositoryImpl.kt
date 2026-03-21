@@ -37,6 +37,15 @@ class SettingsRepositoryImpl(
                 openUrlsExternally = preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] ?: false,
                 enableFlightAwareApi = preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] ?: false,
                 flightAwareApiKey = preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] ?: "",
+                defaultZoomLevel =
+                    preferences[SettingsRepository.DEFAULT_ZOOM_LEVEL]
+                        ?: Settings.DEFAULT_ZOOM_LEVEL,
+                minZoomLevel =
+                    preferences[SettingsRepository.MIN_ZOOM_LEVEL]
+                        ?: Settings.MIN_ZOOM_LEVEL,
+                maxZoomLevel =
+                    preferences[SettingsRepository.MAX_ZOOM_LEVEL]
+                        ?: Settings.MAX_ZOOM_LEVEL,
             )
         }
     }
@@ -54,6 +63,9 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] = settings.openUrlsExternally
             preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] = settings.enableFlightAwareApi
             preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] = settings.flightAwareApiKey
+            preferences[SettingsRepository.DEFAULT_ZOOM_LEVEL] = settings.defaultZoomLevel
+            preferences[SettingsRepository.MIN_ZOOM_LEVEL] = settings.minZoomLevel
+            preferences[SettingsRepository.MAX_ZOOM_LEVEL] = settings.maxZoomLevel
         }
     }
 

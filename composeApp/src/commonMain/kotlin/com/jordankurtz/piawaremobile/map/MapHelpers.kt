@@ -16,6 +16,8 @@ val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = TILE_SIZE)
 
 const val GROUND_ALTITUDE = "ground"
 
+fun scaleForZoomLevel(level: Int): Double = 1.0 / 2.0.pow(MAX_LEVEL - level)
+
 fun mapSizeAtLevel(
     wmtsLevel: Int,
     tileSize: Int,

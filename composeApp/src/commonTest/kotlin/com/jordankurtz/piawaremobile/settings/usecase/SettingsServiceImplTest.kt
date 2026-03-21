@@ -282,4 +282,82 @@ class SettingsServiceImplTest {
             val flow = settingsService.loadSettings()
             assertNotNull(flow)
         }
+
+    // Zoom level tests
+
+    @Test
+    fun `setDefaultZoomLevel saves updated value`() =
+        runTest(testDispatcher) {
+            mockSettings()
+            val slot = captureSettings()
+
+            settingsService.setDefaultZoomLevel(10)
+
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertEquals(10, saved.defaultZoomLevel)
+        }
+
+    @Test
+    fun `setMinZoomLevel saves updated value`() =
+        runTest(testDispatcher) {
+            mockSettings()
+            val slot = captureSettings()
+
+            settingsService.setMinZoomLevel(3)
+
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertEquals(3, saved.minZoomLevel)
+        }
+
+    @Test
+    fun `setMaxZoomLevel saves updated value`() =
+        runTest(testDispatcher) {
+            mockSettings()
+            val slot = captureSettings()
+
+            settingsService.setMaxZoomLevel(14)
+
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertEquals(14, saved.maxZoomLevel)
+        }
+
+    @Test
+    fun `setDefaultZoomLevel preserves other settings`() =
+        runTest(testDispatcher) {
+            val customSettings = defaultSettings.copy(refreshInterval = 15, minZoomLevel = 2, maxZoomLevel = 12)
+            mockSettings(customSettings)
+            val slot = captureSettings()
+
+            settingsService.setDefaultZoomLevel(7)
+
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertEquals(7, saved.defaultZoomLevel)
+            assertEquals(15, saved.refreshInterval)
+            assertEquals(2, saved.minZoomLevel)
+            assertEquals(12, saved.maxZoomLevel)
+        }
+
+    @Test
+    fun `setMinZoomLevel at boundary value`() =
+        runTest(testDispatcher) {
+            mockSettings()
+            val slot = captureSettings()
+
+            settingsService.setMinZoomLevel(1)
+
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertEquals(1, saved.minZoomLevel)
+        }
+
+    @Test
+    fun `setMaxZoomLevel at boundary value`() =
+        runTest(testDispatcher) {
+            mockSettings()
+            val slot = captureSettings()
+
+            settingsService.setMaxZoomLevel(16)
+
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertEquals(16, saved.maxZoomLevel)
+        }
 }

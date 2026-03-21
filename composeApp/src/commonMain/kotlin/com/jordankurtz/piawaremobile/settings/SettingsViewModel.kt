@@ -84,4 +84,19 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsService.setFlightAwareApiKey(apiKey)
         }
+
+    fun updateDefaultZoomLevel(level: Int) =
+        viewModelScope.launch {
+            settingsService.setDefaultZoomLevel(level)
+        }
+
+    fun updateMinZoomLevel(level: Int) =
+        viewModelScope.launch {
+            settingsService.setMinZoomLevel(level)
+        }
+
+    fun updateMaxZoomLevel(level: Int) =
+        viewModelScope.launch {
+            settingsService.setMaxZoomLevel(level)
+        }
 }

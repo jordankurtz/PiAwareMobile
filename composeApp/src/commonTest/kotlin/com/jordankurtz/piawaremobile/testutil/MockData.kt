@@ -22,6 +22,9 @@ fun mockSettings(
     openUrlsExternally: Boolean = false,
     enableFlightAwareApi: Boolean = false,
     flightAwareApiKey: String = "",
+    defaultZoomLevel: Int = Settings.DEFAULT_ZOOM_LEVEL,
+    minZoomLevel: Int = Settings.MIN_ZOOM_LEVEL,
+    maxZoomLevel: Int = Settings.MAX_ZOOM_LEVEL,
 ): Settings =
     Settings(
         servers = servers,
@@ -35,6 +38,9 @@ fun mockSettings(
         openUrlsExternally = openUrlsExternally,
         enableFlightAwareApi = enableFlightAwareApi,
         flightAwareApiKey = flightAwareApiKey,
+        defaultZoomLevel = defaultZoomLevel,
+        minZoomLevel = minZoomLevel,
+        maxZoomLevel = maxZoomLevel,
     )
 
 fun mockServer(

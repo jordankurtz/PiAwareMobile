@@ -43,4 +43,10 @@ interface SettingsService {
     suspend fun setEnableFlightAwareApi(enabled: Boolean)
 
     suspend fun setFlightAwareApiKey(apiKey: String)
+
+    suspend fun setDefaultZoomLevel(level: Int)
+
+    suspend fun setMinZoomLevel(level: Int)
+
+    suspend fun setMaxZoomLevel(level: Int)
 }

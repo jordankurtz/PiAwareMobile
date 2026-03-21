@@ -62,6 +62,9 @@ class SettingsViewModelTest {
         everySuspend { settingsService.setOpenUrlsExternally(any()) } returns Unit
         everySuspend { settingsService.setEnableFlightAwareApi(any()) } returns Unit
         everySuspend { settingsService.setFlightAwareApiKey(any()) } returns Unit
+        everySuspend { settingsService.setDefaultZoomLevel(any()) } returns Unit
+        everySuspend { settingsService.setMinZoomLevel(any()) } returns Unit
+        everySuspend { settingsService.setMaxZoomLevel(any()) } returns Unit
 
         viewModel = SettingsViewModel(settingsService)
     }
@@ -177,5 +180,32 @@ class SettingsViewModelTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setOpenUrlsExternally(true) }
+        }
+
+    @Test
+    fun `updateDefaultZoomLevel delegates to settings service`() =
+        runTest {
+            viewModel.updateDefaultZoomLevel(10)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setDefaultZoomLevel(10) }
+        }
+
+    @Test
+    fun `updateMinZoomLevel delegates to settings service`() =
+        runTest {
+            viewModel.updateMinZoomLevel(3)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setMinZoomLevel(3) }
+        }
+
+    @Test
+    fun `updateMaxZoomLevel delegates to settings service`() =
+        runTest {
+            viewModel.updateMaxZoomLevel(14)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setMaxZoomLevel(14) }
         }
 }
