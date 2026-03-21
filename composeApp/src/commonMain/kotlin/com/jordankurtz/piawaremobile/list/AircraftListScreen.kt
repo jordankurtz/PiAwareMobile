@@ -100,7 +100,7 @@ fun AircraftListScreen(
         }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        ListHeader(aircraft = aircraft)
+        ListHeader(aircraft = aircraft, filteredCount = filteredAircraft.size)
         AircraftSearchBar(
             query = searchQuery,
             onQueryChange = { searchQuery = it },
@@ -141,7 +141,10 @@ fun AircraftListScreen(
 }
 
 @Composable
-internal fun ListHeader(aircraft: List<AircraftWithServers>) {
+internal fun ListHeader(
+    aircraft: List<AircraftWithServers>,
+    filteredCount: Int? = null,
+) {
     val unitFeet = stringResource(Res.string.unit_feet)
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -159,9 +162,15 @@ internal fun ListHeader(aircraft: List<AircraftWithServers>) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
             ) {
+                val trackedValue =
+                    if (filteredCount != null && filteredCount != aircraft.size) {
+                        "$filteredCount / ${aircraft.size}"
+                    } else {
+                        aircraft.size.toString()
+                    }
                 StatItem(
                     label = stringResource(Res.string.aircraft_list_stat_tracked),
-                    value = aircraft.size.toString(),
+                    value = trackedValue,
                 )
 
                 val withPosition = aircraft.count { it.aircraft.hasPosition }

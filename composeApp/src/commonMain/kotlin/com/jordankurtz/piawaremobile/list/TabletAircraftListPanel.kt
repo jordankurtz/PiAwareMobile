@@ -48,7 +48,7 @@ fun TabletAircraftListPanel(
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Header with stats
-        ListHeader(aircraft = aircraft)
+        ListHeader(aircraft = aircraft, filteredCount = filteredAircraft.size)
 
         if (selectedAircraft != null) {
             // Show selected aircraft details (no minimap)
