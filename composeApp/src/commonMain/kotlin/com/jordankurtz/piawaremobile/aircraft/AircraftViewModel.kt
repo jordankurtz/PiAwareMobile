@@ -221,8 +221,9 @@ class AircraftViewModel(
         }
         if (settings?.enableFlightAwareApi == true && settings?.flightAwareApiKey?.isNotEmpty() == true) {
             lookupFlight(aircraft.flight)
+        } else {
+            _flightDetails.value = Async.Error("FlightAware API is not configured.")
         }
-        // If API not enabled, do nothing - user can manually tap "Open in FlightAware"
     }
 
     fun openFlightPage(selectedAircraft: String?) {
@@ -233,6 +234,7 @@ class AircraftViewModel(
     }
 
     private fun openFlightPageInternal(flight: String) {
+        _flightDetails.value = Async.Error("FlightAware API is not configured. Opening on flightaware.com instead.")
         viewModelScope.launch(mainDispatcher) {
             val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val url = "https://www.flightaware.com/live/flight/$flight/history/${
