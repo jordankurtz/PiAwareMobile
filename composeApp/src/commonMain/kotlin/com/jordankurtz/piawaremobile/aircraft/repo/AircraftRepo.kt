@@ -2,13 +2,11 @@ package com.jordankurtz.piawaremobile.aircraft.repo
 
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
-import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
 import com.jordankurtz.piawaremobile.settings.Server
-import kotlinx.coroutines.flow.StateFlow
 
 interface AircraftRepo {
     suspend fun getAircraftWithServers(servers: List<Server>): Map<Aircraft, Set<Server>>
@@ -27,9 +25,5 @@ interface AircraftRepo {
 
     suspend fun lookupFlight(ident: String): Async<FlightResponse>
 
-    val aircraftTrails: StateFlow<Map<String, AircraftTrail>>
-
     suspend fun fetchAndMergeHistory(host: String)
-
-    suspend fun clearTrails()
 }
