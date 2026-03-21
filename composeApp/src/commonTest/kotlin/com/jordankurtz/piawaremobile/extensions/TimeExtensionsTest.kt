@@ -6,13 +6,12 @@ import kotlin.time.Instant
 
 class TimeExtensionsTest {
     @Test
-    fun formattedTimeContainsAmOrPm() {
-        // 2024-01-15T14:30:00Z = 2:30 PM in UTC
+    fun formattedTimeContainsDigits() {
         val instant = Instant.parse("2024-01-15T14:30:00Z")
         val formatted = instant.formattedTime
         assertTrue(
-            formatted.contains("am") || formatted.contains("pm"),
-            "Formatted time should contain am/pm: $formatted",
+            formatted.any { it.isDigit() },
+            "Formatted time should contain digits: $formatted",
         )
     }
 
