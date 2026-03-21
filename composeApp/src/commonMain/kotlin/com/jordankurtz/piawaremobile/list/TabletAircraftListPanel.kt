@@ -15,6 +15,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,6 +39,12 @@ fun TabletAircraftListPanel(
     onOpenFlightPage: () -> Unit,
 ) {
     val selectedAircraft = aircraft.find { it.aircraft.hex == selectedHex }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredAircraft =
+        remember(aircraft, searchQuery) {
+            filterAircraft(aircraft, searchQuery)
+        }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Header with stats
@@ -50,10 +60,14 @@ fun TabletAircraftListPanel(
                 onOpenFlightPage = onOpenFlightPage,
             )
         } else {
+            AircraftSearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+            )
             // Show aircraft list
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(
-                    items = aircraft,
+                    items = filteredAircraft,
                     key = { it.aircraft.hex },
                 ) { item ->
                     TabletAircraftListItem(

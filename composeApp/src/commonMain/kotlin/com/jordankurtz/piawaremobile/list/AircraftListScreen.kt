@@ -20,9 +20,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,19 +53,24 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.aircraft_list_clear_search
 import piawaremobile.composeapp.generated.resources.aircraft_list_collapse
 import piawaremobile.composeapp.generated.resources.aircraft_list_empty
 import piawaremobile.composeapp.generated.resources.aircraft_list_expand
 import piawaremobile.composeapp.generated.resources.aircraft_list_loading_flight_details
+import piawaremobile.composeapp.generated.resources.aircraft_list_no_results
 import piawaremobile.composeapp.generated.resources.aircraft_list_progress_percent
 import piawaremobile.composeapp.generated.resources.aircraft_list_retry_flight_details
 import piawaremobile.composeapp.generated.resources.aircraft_list_route_arrow
+import piawaremobile.composeapp.generated.resources.aircraft_list_search_hint
 import piawaremobile.composeapp.generated.resources.aircraft_list_stat_avg_altitude
 import piawaremobile.composeapp.generated.resources.aircraft_list_stat_tracked
 import piawaremobile.composeapp.generated.resources.aircraft_list_stat_with_position
 import piawaremobile.composeapp.generated.resources.aircraft_list_title
+import piawaremobile.composeapp.generated.resources.ic_clear
 import piawaremobile.composeapp.generated.resources.ic_expand_less
 import piawaremobile.composeapp.generated.resources.ic_expand_more
+import piawaremobile.composeapp.generated.resources.ic_search
 import piawaremobile.composeapp.generated.resources.label_flight
 import piawaremobile.composeapp.generated.resources.label_operator
 import piawaremobile.composeapp.generated.resources.label_registration
@@ -85,16 +92,28 @@ fun AircraftListScreen(
     val userLocation by locationViewModel.currentLocation.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     var selectedFlightHex by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredAircraft =
+        remember(aircraft, searchQuery) {
+            filterAircraft(aircraft, searchQuery)
+        }
 
     Column(modifier = Modifier.fillMaxSize()) {
         ListHeader(aircraft = aircraft)
+        AircraftSearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+        )
 
         if (aircraft.isEmpty()) {
             EmptyAircraftList()
+        } else if (filteredAircraft.isEmpty()) {
+            NoSearchResults()
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(
-                    items = aircraft,
+                    items = filteredAircraft,
                     key = { it.aircraft.hex },
                 ) { aircraftWithServers ->
                     AircraftListItem(
@@ -499,5 +518,66 @@ internal fun FlightInfo(flight: Flight) {
                 }
             }
         }
+    }
+}
+
+@Composable
+internal fun AircraftSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        placeholder = { Text(stringResource(Res.string.aircraft_list_search_hint)) },
+        leadingIcon = {
+            Icon(
+                painter = painterResource(Res.drawable.ic_search),
+                contentDescription = null,
+            )
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_clear),
+                        contentDescription = stringResource(Res.string.aircraft_list_clear_search),
+                    )
+                }
+            }
+        },
+        singleLine = true,
+    )
+}
+
+@Composable
+private fun NoSearchResults() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = stringResource(Res.string.aircraft_list_no_results),
+            style = MaterialTheme.typography.titleMedium,
+        )
+    }
+}
+
+internal fun filterAircraft(
+    aircraft: List<AircraftWithServers>,
+    query: String,
+): List<AircraftWithServers> {
+    if (query.isBlank()) return aircraft
+    val trimmed = query.trim().lowercase()
+    return aircraft.filter { item ->
+        item.aircraft.flight?.trim()?.lowercase()?.contains(trimmed) == true ||
+            item.aircraft.hex.lowercase().contains(trimmed) ||
+            item.info?.registration?.lowercase()?.contains(trimmed) == true ||
+            item.info?.typeDescription?.lowercase()?.contains(trimmed) == true ||
+            item.info?.icaoType?.lowercase()?.contains(trimmed) == true ||
+            item.aircraft.squawk?.contains(trimmed) == true
     }
 }
