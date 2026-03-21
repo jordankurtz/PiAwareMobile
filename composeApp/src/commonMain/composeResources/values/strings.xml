@@ -46,7 +46,7 @@
     <string name="server_delete_confirm">Delete</string>
     <string name="navigate_back">Back</string>
 
-    <string name="flight_details_error">Error: %1$s</string>
+    <string name="flight_details_error">%1$s</string>
     <string name="flight_details_flight_number">Flight %1$s</string>
     <string name="flight_details_departure">Departure</string>
     <string name="flight_details_destination">Destination</string>

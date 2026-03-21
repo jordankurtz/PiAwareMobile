@@ -35,6 +35,8 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlin.time.Duration
 
 @ExperimentalCoroutinesApi
@@ -228,6 +230,55 @@ class AircraftViewModelTest {
             verifySuspend(mode = VerifyMode.exactly(1)) {
                 lookupFlightUseCase("UAL123")
             }
+        }
+
+    @Test
+    fun `selectAircraft sets error when aircraft has no flight number`() =
+        runTest {
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = null)),
+                )
+            everySuspend {
+                getAircraftWithDetailsUseCase(servers, "server1.local")
+            } returns aircraftList
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            pollTicker.emit(Unit)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.selectAircraft("ABC123")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertIs<Async.Error>(viewModel.flightDetails.value)
+        }
+
+    @Test
+    fun `selectAircraft shows feedback when API not configured`() =
+        runTest {
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = "TST101")),
+                )
+            everySuspend {
+                getAircraftWithDetailsUseCase(servers, "server1.local")
+            } returns aircraftList
+            everySuspend { urlHandler.openUrlInternally(any()) } returns Unit
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            pollTicker.emit(Unit)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.selectAircraft("ABC123")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val details = viewModel.flightDetails.value
+            assertIs<Async.Error>(details)
+            assertTrue(details.message.contains("not configured"))
         }
 
     @Test
