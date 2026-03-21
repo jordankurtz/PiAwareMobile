@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,6 +23,7 @@ import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.fit_to_aircraft
@@ -34,6 +36,12 @@ fun MapScreen(
     locationViewModel: LocationViewModel = koinViewModel(),
     aircraftViewModel: AircraftViewModel = koinViewModel(),
 ) {
+    val tileProvider = koinInject<OpenStreetMapProvider>()
+    val isDarkTheme = isSystemInDarkTheme()
+    LaunchedEffect(isDarkTheme) {
+        tileProvider.useDarkTiles = isDarkTheme
+    }
+
     val aircraft by aircraftViewModel.aircraft.collectAsState()
     val receiverLocations by aircraftViewModel.receiverLocations.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
@@ -97,6 +105,7 @@ fun MapScreen(
         }
         Overlay(
             numberOfPlanes,
+            isDarkTheme = isDarkTheme,
             modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
         )
     }

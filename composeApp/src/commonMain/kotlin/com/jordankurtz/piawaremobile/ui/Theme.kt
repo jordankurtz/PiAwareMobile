@@ -6,12 +6,10 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun Theme(
-    // Checks if your system is in dark theme mode.
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    // it would be nice to have a dark mode but we don't currently have dark map tiles
-    val colorScheme = if (!darkTheme) LightColorScheme else LightColorScheme
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     MaterialTheme(
         colorScheme = colorScheme,
         content = content,

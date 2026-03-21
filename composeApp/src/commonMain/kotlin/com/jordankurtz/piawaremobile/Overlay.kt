@@ -17,12 +17,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.cartodb_copyright
 import piawaremobile.composeapp.generated.resources.openstreetmap_copyright
 import piawaremobile.composeapp.generated.resources.planes_count
 
 @Composable
 fun Overlay(
     numberOfPlanes: Int,
+    isDarkTheme: Boolean = false,
     modifier: Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -34,11 +36,23 @@ fun Overlay(
             style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
         )
 
+        val copyrightText =
+            if (isDarkTheme) {
+                stringResource(Res.string.cartodb_copyright)
+            } else {
+                stringResource(Res.string.openstreetmap_copyright)
+            }
+        val copyrightUrl =
+            if (isDarkTheme) {
+                "https://carto.com/attributions"
+            } else {
+                "https://www.openstreetmap.org/copyright"
+            }
         val annotatedString =
             buildAnnotatedString {
                 withStyle(style = SpanStyle(fontSize = 12.sp)) {
-                    pushLink(LinkAnnotation.Url("https://www.openstreetmap.org/copyright"))
-                    append(stringResource(Res.string.openstreetmap_copyright))
+                    pushLink(LinkAnnotation.Url(copyrightUrl))
+                    append(copyrightText)
                     pop()
                 }
             }
