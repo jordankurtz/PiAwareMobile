@@ -39,6 +39,7 @@ fun MapScreen(
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val numberOfPlanes by aircraftViewModel.numberOfPlanes.collectAsState()
     val selectedAircraftHex by mapViewModel.selectedAircraft.collectAsState()
+    val followingAircraftHex by mapViewModel.followingAircraft.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val sheetState =
@@ -108,8 +109,16 @@ fun MapScreen(
     FlightDetailsBottomSheet(
         aircraft = selectedAircraft,
         flightDetails = flightDetails,
+        isFollowing = followingAircraftHex != null,
         onDismissRequest = { mapViewModel.onAircraftDeselected() },
         onOpenFlightPage = { aircraftViewModel.openFlightPage(selectedAircraftHex) },
+        onFollowToggle = {
+            if (followingAircraftHex != null) {
+                mapViewModel.unfollowAircraft()
+            } else {
+                mapViewModel.followSelectedAircraft()
+            }
+        },
         sheetState = sheetState,
     )
 }

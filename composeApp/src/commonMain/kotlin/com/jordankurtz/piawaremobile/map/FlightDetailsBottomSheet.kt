@@ -59,16 +59,21 @@ import piawaremobile.composeapp.generated.resources.flight_details_minutes_short
 import piawaremobile.composeapp.generated.resources.flight_details_on_time
 import piawaremobile.composeapp.generated.resources.flight_details_remaining_time
 import piawaremobile.composeapp.generated.resources.flight_details_scheduled
+import piawaremobile.composeapp.generated.resources.follow_aircraft
 import piawaremobile.composeapp.generated.resources.ic_arrow_downward
 import piawaremobile.composeapp.generated.resources.open_in_flightaware
+import piawaremobile.composeapp.generated.resources.unfollow_aircraft
 import kotlin.time.Instant
 
+@Suppress("LongParameterList")
 @Composable
 fun FlightDetailsBottomSheet(
     aircraft: Aircraft?,
     flightDetails: Async<Flight>,
+    isFollowing: Boolean = false,
     onDismissRequest: () -> Unit,
     onOpenFlightPage: () -> Unit,
+    onFollowToggle: () -> Unit = {},
     sheetState: SheetState =
         rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
@@ -105,10 +110,23 @@ fun FlightDetailsBottomSheet(
                             style = MaterialTheme.typography.headlineSmall,
                         )
 
-                        if (!aircraft?.flight.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedButton(onClick = onOpenFlightPage) {
-                                Text(stringResource(Res.string.open_in_flightaware))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            OutlinedButton(onClick = onFollowToggle) {
+                                Text(
+                                    if (isFollowing) {
+                                        stringResource(Res.string.unfollow_aircraft)
+                                    } else {
+                                        stringResource(Res.string.follow_aircraft)
+                                    },
+                                )
+                            }
+                            if (!aircraft?.flight.isNullOrBlank()) {
+                                OutlinedButton(onClick = onOpenFlightPage) {
+                                    Text(stringResource(Res.string.open_in_flightaware))
+                                }
                             }
                         }
 

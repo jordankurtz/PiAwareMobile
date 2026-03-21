@@ -60,6 +60,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 private const val USER_LOCATION_MARKER_ID = "user_location"
 
+@Suppress("TooManyFunctions")
 @OptIn(FlowPreview::class)
 @Factory
 class MapViewModel(
@@ -76,6 +77,9 @@ class MapViewModel(
 
     private val _selectedAircraft = MutableStateFlow<String?>(null)
     val selectedAircraft: StateFlow<String?> = _selectedAircraft
+
+    private val _followingAircraft = MutableStateFlow<String?>(null)
+    val followingAircraft: StateFlow<String?> = _followingAircraft
 
     private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
@@ -98,6 +102,7 @@ class MapViewModel(
                 // Deselect when tapping on empty space
                 if (_selectedAircraft.value != null) {
                     _selectedAircraft.value = null
+                    _followingAircraft.value = null
                     _trailSelectedAircraft.value = null
                     onAircraftTrailsUpdated(lastTrails)
                 }
@@ -126,8 +131,17 @@ class MapViewModel(
 
     fun onAircraftDeselected() {
         _selectedAircraft.value = null
+        _followingAircraft.value = null
         _trailSelectedAircraft.value = null
         onAircraftTrailsUpdated(lastTrails)
+    }
+
+    fun followSelectedAircraft() {
+        _followingAircraft.value = _selectedAircraft.value
+    }
+
+    fun unfollowAircraft() {
+        _followingAircraft.value = null
     }
 
     /**
@@ -253,9 +267,16 @@ class MapViewModel(
         previousAircraftMarkerIds.forEach(state::removeMarker)
         previousAircraftMarkerIds.clear()
 
+        var followedAircraftPosition: Pair<Double, Double>? = null
+        val followingHex = _followingAircraft.value
+
         aircraft.forEach { item ->
             val plane = item.aircraft
             val location = doProjection(plane.lat, plane.lon)
+
+            if (followingHex != null && plane.hex == followingHex) {
+                followedAircraftPosition = location
+            }
 
             state.addMarker(
                 id = plane.hex.also { previousAircraftMarkerIds.add(it) },
@@ -273,6 +294,16 @@ class MapViewModel(
                     colorFilter = ColorFilter.tint(getColorForAltitude(plane.altBaro)),
                 )
             }
+        }
+
+        followedAircraftPosition?.let { (x, y) ->
+            viewModelScope.launch {
+                state.scrollTo(x, y)
+            }
+        }
+
+        if (followingHex != null && followedAircraftPosition == null) {
+            _followingAircraft.value = null
         }
     }
 
