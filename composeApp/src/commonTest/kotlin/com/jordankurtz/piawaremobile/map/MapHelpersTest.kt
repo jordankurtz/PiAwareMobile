@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MapHelpersTest {
@@ -105,5 +107,83 @@ class MapHelpersTest {
         assertFailsWith<IllegalStateException> {
             doProjection(null, 0.0)
         }
+    }
+
+    // --- computeFitTarget tests ---
+
+    @Test
+    fun computeFitTargetEmptyListReturnsNull() {
+        assertNull(computeFitTarget(emptyList()))
+    }
+
+    @Test
+    fun computeFitTargetSingleAircraftReturnsSinglePoint() {
+        val result = computeFitTarget(listOf(40.0 to -74.0))
+        assertIs<FitTarget.SinglePoint>(result)
+        // Verify projected coordinates match doProjection
+        val (expectedX, expectedY) = doProjection(40.0, -74.0)
+        assertEquals(expectedX, result.x, 0.0001)
+        assertEquals(expectedY, result.y, 0.0001)
+    }
+
+    @Test
+    fun computeFitTargetMultipleAircraftReturnsBoundingRegion() {
+        val coordinates =
+            listOf(
+                40.0 to -74.0,
+                34.0 to -118.0,
+                41.0 to -87.0,
+            )
+        val result = computeFitTarget(coordinates)
+        assertIs<FitTarget.BoundingRegion>(result)
+
+        // Compute expected projected values
+        val projected = coordinates.map { (lat, lon) -> doProjection(lat, lon) }
+        assertEquals(projected.minOf { it.first }, result.xLeft, 0.0001)
+        assertEquals(projected.minOf { it.second }, result.yTop, 0.0001)
+        assertEquals(projected.maxOf { it.first }, result.xRight, 0.0001)
+        assertEquals(projected.maxOf { it.second }, result.yBottom, 0.0001)
+    }
+
+    @Test
+    fun computeFitTargetTwoAircraftSameLocationReturnsDegenerateBoundingRegion() {
+        val coordinates =
+            listOf(
+                40.0 to -74.0,
+                40.0 to -74.0,
+            )
+        val result = computeFitTarget(coordinates)
+        assertIs<FitTarget.BoundingRegion>(result)
+
+        // Degenerate bounding box: all edges are the same point
+        assertEquals(result.xLeft, result.xRight, 0.0001)
+        assertEquals(result.yTop, result.yBottom, 0.0001)
+    }
+
+    @Test
+    fun computeFitTargetBoundingRegionHasCorrectOrientation() {
+        // North-west to south-east: xLeft < xRight, yTop < yBottom
+        val coordinates =
+            listOf(
+                50.0 to -10.0,
+                30.0 to 20.0,
+            )
+        val result = computeFitTarget(coordinates)
+        assertIs<FitTarget.BoundingRegion>(result)
+
+        assertTrue(result.xLeft < result.xRight, "xLeft should be less than xRight")
+        assertTrue(result.yTop < result.yBottom, "yTop should be less than yBottom (north is smaller y)")
+    }
+
+    @Test
+    fun computeFitTargetTwoAircraftReturnsBoundingRegionNotSinglePoint() {
+        // Even with just 2 aircraft, we should get a BoundingRegion, not SinglePoint
+        val coordinates =
+            listOf(
+                40.0 to -74.0,
+                34.0 to -118.0,
+            )
+        val result = computeFitTarget(coordinates)
+        assertIs<FitTarget.BoundingRegion>(result)
     }
 }

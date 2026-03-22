@@ -201,31 +201,34 @@ class MapViewModel(
     }
 
     fun fitToAircraft(aircraft: List<AircraftWithServers>) {
-        if (aircraft.isEmpty()) return
-
-        if (aircraft.size == 1) {
-            val plane = aircraft.first().aircraft
-            val (x, y) = doProjection(plane.lat, plane.lon)
-            viewModelScope.launch {
-                state.scrollTo(x, y, animationSpec = SpringSpec(stiffness = Spring.StiffnessLow))
+        val coordinates = aircraft.map { it.aircraft.lat to it.aircraft.lon }
+        when (val target = computeFitTarget(coordinates)) {
+            null -> return
+            is FitTarget.SinglePoint -> {
+                viewModelScope.launch {
+                    state.scrollTo(
+                        target.x,
+                        target.y,
+                        animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
+                    )
+                }
             }
-            return
-        }
-
-        val projected = aircraft.map { doProjection(it.aircraft.lat, it.aircraft.lon) }
-        val boundingBox =
-            BoundingBox(
-                xLeft = projected.minOf { it.first },
-                yTop = projected.minOf { it.second },
-                xRight = projected.maxOf { it.first },
-                yBottom = projected.maxOf { it.second },
-            )
-        viewModelScope.launch {
-            state.scrollTo(
-                area = boundingBox,
-                padding = Offset(x = 0.15f, y = 0.15f),
-                animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
-            )
+            is FitTarget.BoundingRegion -> {
+                val boundingBox =
+                    BoundingBox(
+                        xLeft = target.xLeft,
+                        yTop = target.yTop,
+                        xRight = target.xRight,
+                        yBottom = target.yBottom,
+                    )
+                viewModelScope.launch {
+                    state.scrollTo(
+                        area = boundingBox,
+                        padding = Offset(x = 0.15f, y = 0.15f),
+                        animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
+                    )
+                }
+            }
         }
     }
 

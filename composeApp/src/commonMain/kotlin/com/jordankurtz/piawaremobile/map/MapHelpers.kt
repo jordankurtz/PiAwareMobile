@@ -54,6 +54,43 @@ fun getColorForAltitude(altitude: String?): Color {
     }
 }
 
+/**
+ * Result of computing the fit-to-aircraft target.
+ */
+sealed class FitTarget {
+    data class SinglePoint(val x: Double, val y: Double) : FitTarget()
+
+    data class BoundingRegion(
+        val xLeft: Double,
+        val yTop: Double,
+        val xRight: Double,
+        val yBottom: Double,
+    ) : FitTarget()
+}
+
+/**
+ * Given a list of (lat, lon) pairs, compute the fit target:
+ * - null if the list is empty
+ * - SinglePoint if there is exactly one coordinate
+ * - BoundingRegion for two or more coordinates
+ */
+fun computeFitTarget(coordinates: List<Pair<Double, Double>>): FitTarget? {
+    if (coordinates.isEmpty()) return null
+
+    val projected = coordinates.map { (lat, lon) -> doProjection(lat, lon) }
+
+    if (projected.size == 1) {
+        return FitTarget.SinglePoint(projected.first().first, projected.first().second)
+    }
+
+    return FitTarget.BoundingRegion(
+        xLeft = projected.minOf { it.first },
+        yTop = projected.minOf { it.second },
+        xRight = projected.maxOf { it.first },
+        yBottom = projected.maxOf { it.second },
+    )
+}
+
 val Location.projected: Pair<Double, Double>
     get() = doProjection(latitude, longitude)
 
