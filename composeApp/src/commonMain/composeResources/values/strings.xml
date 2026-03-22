@@ -67,6 +67,9 @@
     <string name="aircraft_list_stat_with_position">With Position</string>
     <string name="aircraft_list_stat_avg_altitude">Avg Alt</string>
     <string name="aircraft_list_empty">No aircraft detected</string>
+    <string name="aircraft_list_search_hint">Search flight, hex, registration…</string>
+    <string name="aircraft_list_clear_search">Clear search</string>
+    <string name="aircraft_list_no_results">No aircraft match your search</string>
     <string name="aircraft_list_expand">Expand</string>
     <string name="aircraft_list_collapse">Collapse</string>
     <string name="aircraft_list_load_flight_details">Load Flight Details</string>
