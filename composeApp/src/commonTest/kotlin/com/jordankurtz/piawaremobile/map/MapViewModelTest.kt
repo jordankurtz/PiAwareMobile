@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
@@ -12,6 +13,7 @@ import dev.mokkery.every
 import dev.mokkery.mock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -62,6 +64,8 @@ class MapViewModelTest {
 
     @AfterTest
     fun tearDown() {
+        viewModel.state.shutdown()
+        viewModel.viewModelScope.cancel()
         Dispatchers.resetMain()
     }
 
