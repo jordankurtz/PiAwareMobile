@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
 import kotlin.uuid.Uuid
 
+@Suppress("TooManyFunctions")
 @Factory
 class SettingsViewModel(
     private val settingsService: SettingsService,
