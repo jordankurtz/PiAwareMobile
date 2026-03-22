@@ -87,6 +87,9 @@ class MapViewModel(
     private val _showUserLocationOnMap = MutableStateFlow(false)
     val showUserLocationOnMap: StateFlow<Boolean> = _showUserLocationOnMap
 
+    /** Exposes the last location passed to [recenterOnLocation] for test verification. */
+    internal val lastRecenteredLocation = MutableStateFlow<Location?>(null)
+
     private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
     val state =
@@ -217,6 +220,7 @@ class MapViewModel(
         }
 
     fun recenterOnLocation(location: Location) {
+        lastRecenteredLocation.value = location
         viewModelScope.launch {
             val (x, y) = location.projected
             Logger.d("Scrolling map to $x, $y")

@@ -227,7 +227,7 @@ class MapViewModelTest {
         }
 
     @Test
-    fun `onUserLocationChanged does not throw when not following`() =
+    fun `onUserLocationChanged does not recenter when not following`() =
         runTest {
             val vm = createViewModel()
             advanceUntilIdle()
@@ -235,10 +235,12 @@ class MapViewModelTest {
             assertFalse(vm.followingUserLocation.value)
             vm.onUserLocationChanged(Location(40.0, -100.0))
             advanceUntilIdle()
+
+            assertNull(vm.lastRecenteredLocation.value)
         }
 
     @Test
-    fun `onUserLocationChanged does not throw when following`() =
+    fun `onUserLocationChanged recenters map when following`() =
         runTest {
             val vm = createViewModel()
             advanceUntilIdle()
@@ -246,8 +248,11 @@ class MapViewModelTest {
             vm.toggleFollowUserLocation()
             assertTrue(vm.followingUserLocation.value)
 
-            vm.onUserLocationChanged(Location(40.0, -100.0))
+            val location = Location(40.0, -100.0)
+            vm.onUserLocationChanged(location)
             advanceUntilIdle()
+
+            assertEquals(location, vm.lastRecenteredLocation.value)
         }
 
     @Test
