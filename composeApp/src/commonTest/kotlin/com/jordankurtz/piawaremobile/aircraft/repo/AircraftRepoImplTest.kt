@@ -306,4 +306,75 @@ class AircraftRepoImplTest {
                 trailManager.mergeHistoryResponses(any())
             }
         }
+
+    @Test
+    fun `fetchAndMergeHistory handles zero history count`() =
+        runTest {
+            everySuspend { piAwareApi.getDump1090ReceiverInfo("server1") } returns
+                mockReceiver1090.copy(history = 0)
+
+            repo.fetchAndMergeHistory("server1")
+
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                trailManager.mergeHistoryResponses(any())
+            }
+        }
+
+    @Test
+    fun `getAircraftWithServers keeps fresher aircraft data when seen from multiple servers`() =
+        runTest {
+            val staleAircraft = mockAircraft1.copy(seen = 10f, altBaro = "10000")
+            val freshAircraft = mockAircraft1.copy(seen = 1f, altBaro = "20000")
+            everySuspend { piAwareApi.getAircraft("server1") } returns listOf(staleAircraft)
+            everySuspend { piAwareApi.getAircraft("server2") } returns listOf(freshAircraft)
+
+            val result = repo.getAircraftWithServers(listOf(server1, server2))
+
+            assertEquals(1, result.size)
+            val aircraft = result.keys.first()
+            assertEquals("20000", aircraft.altBaro)
+            assertEquals(setOf(server1, server2), result[aircraft])
+        }
+
+    @Test
+    fun `getAircraftWithServers returns empty map for empty server list`() =
+        runTest {
+            val result = repo.getAircraftWithServers(emptyList())
+
+            assertTrue(result.isEmpty())
+        }
+
+    @Test
+    fun `findAircraftInfo returns cached result on second call`() =
+        runTest {
+            everySuspend { piAwareApi.getAircraftTypes("server1") } returns mockAircraftTypes1
+            everySuspend {
+                piAwareApi.getAircraftInfo("server1", "A")
+            } returns buildJsonObject { put("8B2C3", mockAircraftInfo) }
+
+            repo.loadAircraftTypes(listOf(server1))
+            val first = repo.findAircraftInfo("server1", "A8B2C3")
+            val second = repo.findAircraftInfo("server1", "A8B2C3")
+
+            assertNotNull(first)
+            assertNotNull(second)
+            assertEquals(first, second)
+            // API should only be called once due to caching
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                piAwareApi.getAircraftInfo("server1", "A")
+            }
+        }
+
+    @Test
+    fun `loadAircraftTypes only loads once`() =
+        runTest {
+            everySuspend { piAwareApi.getAircraftTypes("server1") } returns mockAircraftTypes1
+
+            repo.loadAircraftTypes(listOf(server1))
+            repo.loadAircraftTypes(listOf(server1))
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                piAwareApi.getAircraftTypes("server1")
+            }
+        }
 }
