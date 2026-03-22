@@ -1,6 +1,6 @@
 package com.jordankurtz.piawaremobile.aircraft.usecase
 
-import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
+import com.jordankurtz.piawaremobile.aircraft.repo.AircraftTrailManager
 import com.jordankurtz.piawaremobile.aircraft.usecase.impl.GetAllAircraftTrailsUseCaseImpl
 import com.jordankurtz.piawaremobile.model.AircraftTrail
 import dev.mokkery.answering.returns
@@ -11,19 +11,19 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class GetAllAircraftTrailsUseCaseTest {
-    private lateinit var aircraftRepo: AircraftRepo
+    private lateinit var trailManager: AircraftTrailManager
 
     private fun createUseCase(): GetAllAircraftTrailsUseCase {
-        return GetAllAircraftTrailsUseCaseImpl(aircraftRepo)
+        return GetAllAircraftTrailsUseCaseImpl(trailManager)
     }
 
     @Test
     fun `invoke returns aircraft trails from repo`() {
-        aircraftRepo = mock()
+        trailManager = mock()
         val trails = mapOf("abc123" to AircraftTrail(hex = "abc123", positions = emptyList()))
         val trailsFlow = MutableStateFlow(trails)
 
-        every { aircraftRepo.aircraftTrails } returns trailsFlow
+        every { trailManager.aircraftTrails } returns trailsFlow
 
         val useCase = createUseCase()
         val result = useCase()
@@ -33,10 +33,10 @@ class GetAllAircraftTrailsUseCaseTest {
 
     @Test
     fun `invoke returns empty map when no trails`() {
-        aircraftRepo = mock()
+        trailManager = mock()
         val trailsFlow = MutableStateFlow<Map<String, AircraftTrail>>(emptyMap())
 
-        every { aircraftRepo.aircraftTrails } returns trailsFlow
+        every { trailManager.aircraftTrails } returns trailsFlow
 
         val useCase = createUseCase()
         val result = useCase()

@@ -1,6 +1,6 @@
 package com.jordankurtz.piawaremobile.aircraft.usecase
 
-import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
+import com.jordankurtz.piawaremobile.aircraft.repo.AircraftTrailManager
 import com.jordankurtz.piawaremobile.aircraft.usecase.impl.GetAircraftTrailUseCaseImpl
 import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.AircraftTrail
@@ -16,16 +16,16 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class GetAircraftTrailUseCaseTest {
-    private lateinit var aircraftRepo: AircraftRepo
+    private lateinit var trailManager: AircraftTrailManager
 
     private fun createUseCase(): GetAircraftTrailUseCase {
-        return GetAircraftTrailUseCaseImpl(aircraftRepo)
+        return GetAircraftTrailUseCaseImpl(trailManager)
     }
 
     @Test
     fun `invoke returns flow that emits trail for aircraft`() =
         runTest {
-            aircraftRepo = mock()
+            trailManager = mock()
             val trail =
                 AircraftTrail(
                     hex = "abc123",
@@ -41,7 +41,7 @@ class GetAircraftTrailUseCaseTest {
                 )
             val trailsFlow = MutableStateFlow(mapOf("abc123" to trail))
 
-            every { aircraftRepo.aircraftTrails } returns trailsFlow
+            every { trailManager.aircraftTrails } returns trailsFlow
 
             val useCase = createUseCase()
             val result = useCase("abc123").first()
@@ -54,10 +54,10 @@ class GetAircraftTrailUseCaseTest {
     @Test
     fun `invoke returns flow that emits null for unknown aircraft`() =
         runTest {
-            aircraftRepo = mock()
+            trailManager = mock()
             val trailsFlow = MutableStateFlow<Map<String, AircraftTrail>>(emptyMap())
 
-            every { aircraftRepo.aircraftTrails } returns trailsFlow
+            every { trailManager.aircraftTrails } returns trailsFlow
 
             val useCase = createUseCase()
             val result = useCase("unknown").first()
@@ -68,7 +68,7 @@ class GetAircraftTrailUseCaseTest {
     @Test
     fun `invoke emits updated trail when trails change`() =
         runTest {
-            aircraftRepo = mock()
+            trailManager = mock()
             val trail1 =
                 AircraftTrail(
                     hex = "abc123",
@@ -103,7 +103,7 @@ class GetAircraftTrailUseCaseTest {
                 )
             val trailsFlow = MutableStateFlow(mapOf("abc123" to trail1))
 
-            every { aircraftRepo.aircraftTrails } returns trailsFlow
+            every { trailManager.aircraftTrails } returns trailsFlow
 
             val useCase = createUseCase()
             val flow = useCase("abc123")
