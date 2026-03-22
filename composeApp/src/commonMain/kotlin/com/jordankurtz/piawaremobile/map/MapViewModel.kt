@@ -1,5 +1,7 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.snapshotFlow
@@ -33,6 +35,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.annotation.Factory
+import ovh.plrapps.mapcompose.api.BoundingBox
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
@@ -194,6 +197,38 @@ class MapViewModel(
             val (x, y) = location.projected
             Logger.d("Scrolling map to $x, $y")
             state.scrollTo(x, y)
+        }
+    }
+
+    fun fitToAircraft(aircraft: List<AircraftWithServers>) {
+        val coordinates = aircraft.map { it.aircraft.lat to it.aircraft.lon }
+        when (val target = computeFitTarget(coordinates)) {
+            null -> return
+            is FitTarget.SinglePoint -> {
+                viewModelScope.launch {
+                    state.scrollTo(
+                        target.x,
+                        target.y,
+                        animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
+                    )
+                }
+            }
+            is FitTarget.BoundingRegion -> {
+                val boundingBox =
+                    BoundingBox(
+                        xLeft = target.xLeft,
+                        yTop = target.yTop,
+                        xRight = target.xRight,
+                        yBottom = target.yBottom,
+                    )
+                viewModelScope.launch {
+                    state.scrollTo(
+                        area = boundingBox,
+                        padding = Offset(x = 0.15f, y = 0.15f),
+                        animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
+                    )
+                }
+            }
         }
     }
 
