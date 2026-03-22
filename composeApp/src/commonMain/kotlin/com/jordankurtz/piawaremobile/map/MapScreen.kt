@@ -45,6 +45,7 @@ fun MapScreen(
     val selectedAircraftHex by mapViewModel.selectedAircraft.collectAsState()
     val followingAircraftHex by mapViewModel.followingAircraft.collectAsState()
     val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
+    val showUserLocationOnMap by mapViewModel.showUserLocationOnMap.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val sheetState =
@@ -103,19 +104,10 @@ fun MapScreen(
                     )
                 }
             }
-            FloatingActionButton(
-                onClick = { mapViewModel.toggleFollowUserLocation() },
-                containerColor =
-                    if (isFollowingUser) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.primaryContainer
-                    },
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_user_location),
-                    contentDescription = stringResource(Res.string.follow_user_location),
-                    modifier = Modifier.size(24.dp),
+            if (showUserLocationOnMap) {
+                FollowUserLocationFab(
+                    isFollowing = isFollowingUser,
+                    onClick = { mapViewModel.toggleFollowUserLocation() },
                 )
             }
         }
@@ -145,4 +137,28 @@ fun MapScreen(
         },
         sheetState = sheetState,
     )
+}
+
+@Composable
+fun FollowUserLocationFab(
+    isFollowing: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier,
+        containerColor =
+            if (isFollowing) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.primaryContainer
+            },
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_user_location),
+            contentDescription = stringResource(Res.string.follow_user_location),
+            modifier = Modifier.size(24.dp),
+        )
+    }
 }

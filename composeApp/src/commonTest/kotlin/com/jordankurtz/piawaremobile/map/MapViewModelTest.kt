@@ -7,7 +7,9 @@ import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
+import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.MapState
+import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.testutil.mockAircraft
 import com.jordankurtz.piawaremobile.testutil.mockServer
@@ -19,6 +21,7 @@ import dev.mokkery.mock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -30,7 +33,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @ExperimentalCoroutinesApi
 class MapViewModelTest {
@@ -40,7 +45,21 @@ class MapViewModelTest {
     private lateinit var getSavedMapStateUseCase: GetSavedMapStateUseCase
     private lateinit var saveMapStateUseCase: SaveMapStateUseCase
     private lateinit var loadSettingsUseCase: LoadSettingsUseCase
-    private lateinit var viewModel: MapViewModel
+    private lateinit var settingsFlow: MutableStateFlow<Async<Settings>>
+    private var viewModel: MapViewModel? = null
+
+    private val settings =
+        Settings(
+            servers = emptyList(),
+            refreshInterval = 5,
+            centerMapOnUserOnStart = false,
+            restoreMapStateOnStart = false,
+            showReceiverLocations = false,
+            showUserLocationOnMap = true,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = "",
+        )
 
     @BeforeTest
     fun setUp() {
@@ -50,44 +69,61 @@ class MapViewModelTest {
         getSavedMapStateUseCase = mock()
         saveMapStateUseCase = mock()
         loadSettingsUseCase = mock()
+        settingsFlow = MutableStateFlow(Async.Success(settings))
 
-        everySuspend { getSavedMapStateUseCase() } returns MapState(0.5, 0.5, 1.0)
-        everySuspend { saveMapStateUseCase(0.5, 0.5, 1.0) } returns Unit
-        every { loadSettingsUseCase() } returns flowOf(Async.Success(mockSettings(restoreMapStateOnStart = false)))
-
-        viewModel = MapViewModel(mapProvider, getSavedMapStateUseCase, saveMapStateUseCase, loadSettingsUseCase)
+        every { loadSettingsUseCase.invoke() } returns settingsFlow
+        everySuspend { getSavedMapStateUseCase.invoke() } returns MapState(0.5, 0.5, 1.0)
     }
 
     @AfterTest
     fun tearDown() {
-        viewModel.state.shutdown()
-        viewModel.viewModelScope.cancel()
+        viewModel?.state?.shutdown()
+        viewModel?.viewModelScope?.cancel()
+        viewModel = null
         Dispatchers.resetMain()
+    }
+
+    private fun createViewModel(): MapViewModel {
+        val vm =
+            MapViewModel(
+                mapProvider = mapProvider,
+                getSavedMapStateUseCase = getSavedMapStateUseCase,
+                saveMapStateUseCase = saveMapStateUseCase,
+                loadSettingsUseCase = loadSettingsUseCase,
+            )
+        viewModel = vm
+        return vm
     }
 
     @Test
     fun `fitToAircraft with empty list is a no-op`() =
         runTest {
-            viewModel.fitToAircraft(emptyList())
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.fitToAircraft(emptyList())
             advanceUntilIdle()
         }
 
     @Test
     fun `fitToAircraft with single aircraft scrolls to projected point`() =
         runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
             val aircraft =
                 listOf(
                     AircraftWithServers(
                         aircraft = Aircraft(hex = "abc123", lat = 40.0, lon = -74.0),
                     ),
                 )
-            viewModel.fitToAircraft(aircraft)
+            vm.fitToAircraft(aircraft)
             advanceUntilIdle()
         }
 
     @Test
     fun `fitToAircraft with multiple aircraft computes bounding box`() =
         runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
             val aircraft =
                 listOf(
                     AircraftWithServers(
@@ -100,13 +136,15 @@ class MapViewModelTest {
                         aircraft = Aircraft(hex = "ghi789", lat = 41.0, lon = -87.0),
                     ),
                 )
-            viewModel.fitToAircraft(aircraft)
+            vm.fitToAircraft(aircraft)
             advanceUntilIdle()
         }
 
     @Test
     fun `fitToAircraft with two aircraft at same location handles degenerate bounding box`() =
         runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
             val aircraft =
                 listOf(
                     AircraftWithServers(
@@ -116,17 +154,111 @@ class MapViewModelTest {
                         aircraft = Aircraft(hex = "def456", lat = 40.0, lon = -74.0),
                     ),
                 )
-            viewModel.fitToAircraft(aircraft)
+            vm.fitToAircraft(aircraft)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `followingUserLocation starts as false`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `toggleFollowUserLocation flips state from false to true`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.followingUserLocation.value)
+
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `toggleFollowUserLocation flips state from true to false`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+
+            vm.toggleFollowUserLocation()
+            assertFalse(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `showUserLocationOnMap reflects settings value when true`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            assertTrue(vm.showUserLocationOnMap.value)
+        }
+
+    @Test
+    fun `showUserLocationOnMap reflects settings value when false`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(showUserLocationOnMap = false))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            assertFalse(vm.showUserLocationOnMap.value)
+        }
+
+    @Test
+    fun `disabling showUserLocationOnMap also disables following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+
+            settingsFlow.value = Async.Success(settings.copy(showUserLocationOnMap = false))
+            advanceUntilIdle()
+
+            assertFalse(vm.followingUserLocation.value)
+            assertFalse(vm.showUserLocationOnMap.value)
+        }
+
+    @Test
+    fun `onUserLocationChanged does not throw when not following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            assertFalse(vm.followingUserLocation.value)
+            vm.onUserLocationChanged(Location(40.0, -100.0))
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onUserLocationChanged does not throw when following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+
+            vm.onUserLocationChanged(Location(40.0, -100.0))
             advanceUntilIdle()
         }
 
     @Test
     fun followSelectedAircraftSetsFollowedHexFromSelection() =
         runTest {
-            viewModel.syncSelection("ABC123")
-            viewModel.followSelectedAircraft()
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
 
-            viewModel.followingAircraft.test {
+            vm.followingAircraft.test {
                 assertEquals("ABC123", awaitItem())
             }
         }
@@ -134,11 +266,13 @@ class MapViewModelTest {
     @Test
     fun unfollowAircraftClearsFollowedHex() =
         runTest {
-            viewModel.syncSelection("ABC123")
-            viewModel.followSelectedAircraft()
-            viewModel.unfollowAircraft()
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
+            vm.unfollowAircraft()
 
-            viewModel.followingAircraft.test {
+            vm.followingAircraft.test {
                 assertNull(awaitItem())
             }
         }
@@ -146,14 +280,16 @@ class MapViewModelTest {
     @Test
     fun onAircraftDeselectedClearsFollowedHex() =
         runTest {
-            viewModel.syncSelection("ABC123")
-            viewModel.followSelectedAircraft()
-            viewModel.onAircraftDeselected()
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
+            vm.onAircraftDeselected()
 
-            viewModel.followingAircraft.test {
+            vm.followingAircraft.test {
                 assertNull(awaitItem())
             }
-            viewModel.selectedAircraft.test {
+            vm.selectedAircraft.test {
                 assertNull(awaitItem())
             }
         }
@@ -161,10 +297,12 @@ class MapViewModelTest {
     @Test
     fun followedAircraftClearedWhenDisappearsFromFeed() =
         runTest(testDispatcher) {
-            viewModel.syncSelection("ABC123")
-            viewModel.followSelectedAircraft()
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
 
-            assertEquals("ABC123", viewModel.followingAircraft.value)
+            assertEquals("ABC123", vm.followingAircraft.value)
 
             val aircraftList =
                 listOf(
@@ -174,10 +312,10 @@ class MapViewModelTest {
                         servers = setOf(mockServer()),
                     ),
                 )
-            viewModel.onAircraftUpdated(aircraftList)
+            vm.onAircraftUpdated(aircraftList)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            viewModel.followingAircraft.test {
+            vm.followingAircraft.test {
                 assertNull(awaitItem())
             }
         }
@@ -185,10 +323,12 @@ class MapViewModelTest {
     @Test
     fun followedAircraftNotClearedWhenStillInFeed() =
         runTest(testDispatcher) {
-            viewModel.syncSelection("ABC123")
-            viewModel.followSelectedAircraft()
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
 
-            assertEquals("ABC123", viewModel.followingAircraft.value)
+            assertEquals("ABC123", vm.followingAircraft.value)
 
             val aircraftList =
                 listOf(
@@ -198,10 +338,10 @@ class MapViewModelTest {
                         servers = setOf(mockServer()),
                     ),
                 )
-            viewModel.onAircraftUpdated(aircraftList)
+            vm.onAircraftUpdated(aircraftList)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            viewModel.followingAircraft.test {
+            vm.followingAircraft.test {
                 assertEquals("ABC123", awaitItem())
             }
         }
@@ -209,9 +349,11 @@ class MapViewModelTest {
     @Test
     fun followSelectedAircraftWithNoSelectionSetsNull() =
         runTest {
-            viewModel.followSelectedAircraft()
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.followSelectedAircraft()
 
-            viewModel.followingAircraft.test {
+            vm.followingAircraft.test {
                 assertNull(awaitItem())
             }
         }

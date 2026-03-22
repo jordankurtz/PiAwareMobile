@@ -84,6 +84,9 @@ class MapViewModel(
     private val _followingUserLocation = MutableStateFlow(false)
     val followingUserLocation: StateFlow<Boolean> = _followingUserLocation
 
+    private val _showUserLocationOnMap = MutableStateFlow(false)
+    val showUserLocationOnMap: StateFlow<Boolean> = _showUserLocationOnMap
+
     private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
     val state =
@@ -161,6 +164,10 @@ class MapViewModel(
 
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
+        _showUserLocationOnMap.value = settings.showUserLocationOnMap
+        if (!settings.showUserLocationOnMap) {
+            _followingUserLocation.value = false
+        }
         onAircraftTrailsUpdated(lastTrails)
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
