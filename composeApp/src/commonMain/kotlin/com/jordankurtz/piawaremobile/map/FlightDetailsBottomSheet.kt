@@ -86,73 +86,108 @@ fun FlightDetailsBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
         ) {
-            var tabIndex by remember { mutableStateOf(0) }
-            val tabs = listOf("Details", "Aircraft", "Route")
+            FlightDetailsSheetContent(
+                aircraft = aircraft,
+                flightDetails = flightDetails,
+                isFollowing = isFollowing,
+                userLocation = userLocation,
+                onFollowToggle = onFollowToggle,
+                onOpenFlightPage = onOpenFlightPage,
+            )
+        }
+    }
+}
 
-            Column(
-                modifier =
-                    Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                when (flightDetails) {
-                    is Async.Error ->
-                        Text(
-                            text = stringResource(Res.string.flight_details_error, flightDetails.message),
+@Suppress("LongParameterList")
+@Composable
+fun FlightDetailsSheetContent(
+    aircraft: Aircraft?,
+    flightDetails: Async<Flight>,
+    isFollowing: Boolean = false,
+    userLocation: Location? = null,
+    onFollowToggle: () -> Unit = {},
+    onOpenFlightPage: () -> Unit = {},
+) {
+    var tabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Details", "Aircraft", "Route")
+
+    Column(
+        modifier =
+            Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        when (flightDetails) {
+            is Async.Error ->
+                Text(
+                    text = stringResource(Res.string.flight_details_error, flightDetails.message),
+                )
+            Async.Loading -> CircularProgressIndicator()
+            is Async.Success -> {
+                val flight = flightDetails.data
+
+                Text(
+                    text = stringResource(Res.string.flight_details_flight_number, flight.ident),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                FlightDetailsActionButtons(
+                    aircraft = aircraft,
+                    isFollowing = isFollowing,
+                    onFollowToggle = onFollowToggle,
+                    onOpenFlightPage = onOpenFlightPage,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PrimaryTabRow(selectedTabIndex = tabIndex) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            text = { Text(title) },
+                            selected = tabIndex == index,
+                            onClick = { tabIndex = index },
                         )
-                    Async.Loading -> CircularProgressIndicator()
-                    is Async.Success -> {
-                        val flight = flightDetails.data
-
-                        Text(
-                            text = stringResource(Res.string.flight_details_flight_number, flight.ident),
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            OutlinedButton(onClick = onFollowToggle) {
-                                Text(
-                                    if (isFollowing) {
-                                        stringResource(Res.string.unfollow_aircraft)
-                                    } else {
-                                        stringResource(Res.string.follow_aircraft)
-                                    },
-                                )
-                            }
-                            if (!aircraft?.flight.isNullOrBlank()) {
-                                OutlinedButton(onClick = onOpenFlightPage) {
-                                    Text(stringResource(Res.string.open_in_flightaware))
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        PrimaryTabRow(selectedTabIndex = tabIndex) {
-                            tabs.forEachIndexed { index, title ->
-                                Tab(
-                                    text = { Text(title) },
-                                    selected = tabIndex == index,
-                                    onClick = { tabIndex = index },
-                                )
-                            }
-                        }
-
-                        when (tabIndex) {
-                            0 -> DetailsTab(aircraft, userLocation)
-                            1 -> AircraftTab(aircraft, flight)
-                            2 -> RouteTab(flight)
-                        }
-                    }
-
-                    Async.NotStarted -> {
-                        // Do nothing
                     }
                 }
+
+                when (tabIndex) {
+                    0 -> DetailsTab(aircraft, userLocation)
+                    1 -> AircraftTab(aircraft, flight)
+                    2 -> RouteTab(flight)
+                }
+            }
+
+            Async.NotStarted -> {
+                // Do nothing
+            }
+        }
+    }
+}
+
+@Composable
+fun FlightDetailsActionButtons(
+    aircraft: Aircraft?,
+    isFollowing: Boolean,
+    onFollowToggle: () -> Unit,
+    onOpenFlightPage: () -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        OutlinedButton(onClick = onFollowToggle) {
+            Text(
+                if (isFollowing) {
+                    stringResource(Res.string.unfollow_aircraft)
+                } else {
+                    stringResource(Res.string.follow_aircraft)
+                },
+            )
+        }
+        if (!aircraft?.flight.isNullOrBlank()) {
+            OutlinedButton(onClick = onOpenFlightPage) {
+                Text(stringResource(Res.string.open_in_flightaware))
             }
         }
     }
