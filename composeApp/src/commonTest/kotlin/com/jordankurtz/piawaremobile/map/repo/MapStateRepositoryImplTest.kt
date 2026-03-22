@@ -4,13 +4,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.jordankurtz.piawaremobile.model.MapState
 import com.jordankurtz.piawaremobile.testutil.FakeDataStore
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class MapStateRepositoryImplTest {
     private lateinit var dataStore: DataStore<Preferences>
     private lateinit var repository: MapStateRepository

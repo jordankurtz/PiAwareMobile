@@ -2,26 +2,22 @@ package com.jordankurtz.piawaremobile.map.repo
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.doublePreferencesKey
+import androidx.datastore.preferences.core.edit
 import com.jordankurtz.piawaremobile.model.MapState
-import com.russhwolf.settings.datastore.DataStoreSettings
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import org.koin.core.annotation.Single
 
 @Single(binds = [MapStateRepository::class])
-class MapStateRepositoryImpl(val dataStore: DataStore<Preferences>) : MapStateRepository {
-    private val settings by lazy {
-        DataStoreSettings(dataStore)
-    }
-
-    // Define keys for storing the values
+class MapStateRepositoryImpl(
+    private val dataStore: DataStore<Preferences>,
+) : MapStateRepository {
     companion object Companion {
-        private const val KEY_SCROLL_X = "map_scroll_x"
-        private const val KEY_SCROLL_Y = "map_scroll_y"
-        private const val KEY_ZOOM = "map_zoom"
+        private val KEY_SCROLL_X = doublePreferencesKey("map_scroll_x")
+        private val KEY_SCROLL_Y = doublePreferencesKey("map_scroll_y")
+        private val KEY_ZOOM = doublePreferencesKey("map_zoom")
 
-        // Define a default location (e.g., center of the US)
         val DEFAULT_STATE = MapState(scrollX = 0.5, scrollY = 0.5, zoom = 4.0)
     }
 
@@ -33,10 +29,10 @@ class MapStateRepositoryImpl(val dataStore: DataStore<Preferences>) : MapStateRe
         scrollY: Double,
         zoom: Double,
     ) {
-        withContext(Dispatchers.IO) {
-            settings.putDouble(KEY_SCROLL_X, scrollX)
-            settings.putDouble(KEY_SCROLL_Y, scrollY)
-            settings.putDouble(KEY_ZOOM, zoom)
+        dataStore.edit { preferences ->
+            preferences[KEY_SCROLL_X] = scrollX
+            preferences[KEY_SCROLL_Y] = scrollY
+            preferences[KEY_ZOOM] = zoom
         }
     }
 
@@ -45,16 +41,16 @@ class MapStateRepositoryImpl(val dataStore: DataStore<Preferences>) : MapStateRe
      * Returns a default state if no state has been saved yet.
      */
     override suspend fun getSavedMapState(): MapState {
-        return withContext(Dispatchers.IO) {
-            val scrollX = settings.getDoubleOrNull(KEY_SCROLL_X)
-            val scrollY = settings.getDoubleOrNull(KEY_SCROLL_Y)
-            val zoom = settings.getDoubleOrNull(KEY_ZOOM)
+        return dataStore.data.map { preferences ->
+            val scrollX = preferences[KEY_SCROLL_X]
+            val scrollY = preferences[KEY_SCROLL_Y]
+            val zoom = preferences[KEY_ZOOM]
 
             if (scrollX != null && scrollY != null && zoom != null) {
-                return@withContext MapState(scrollX, scrollY, zoom)
+                MapState(scrollX, scrollY, zoom)
+            } else {
+                DEFAULT_STATE
             }
-
-            DEFAULT_STATE
-        }
+        }.first()
     }
 }
