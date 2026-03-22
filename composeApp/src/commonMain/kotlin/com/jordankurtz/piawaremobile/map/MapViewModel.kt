@@ -196,7 +196,11 @@ class MapViewModel(
     }
 
     private fun applyDefaultZoom(settings: Settings) {
-        state.scale = scaleForZoomLevel(settings.defaultZoomLevel)
+        val minScale = scaleForZoomLevel(settings.minZoomLevel)
+        val maxScale = scaleForZoomLevel(settings.maxZoomLevel)
+        val effectiveMin = minOf(minScale, maxScale)
+        val effectiveMax = maxOf(minScale, maxScale)
+        state.scale = scaleForZoomLevel(settings.defaultZoomLevel).coerceIn(effectiveMin, effectiveMax)
         hasAppliedInitialZoom = true
     }
 

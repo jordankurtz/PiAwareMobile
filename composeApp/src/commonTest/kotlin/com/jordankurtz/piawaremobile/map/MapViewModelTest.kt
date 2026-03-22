@@ -21,11 +21,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -359,5 +361,91 @@ class MapViewModelTest {
             vm.followingAircraft.test {
                 assertNull(awaitItem())
             }
+        }
+
+    @Test
+    fun applyDefaultZoomClampsToMaxWhenDefaultExceedsMax() =
+        runTest {
+            val settings =
+                Settings(
+                    restoreMapStateOnStart = false,
+                    defaultZoomLevel = 14,
+                    minZoomLevel = 3,
+                    maxZoomLevel = 10,
+                )
+            loadSettingsUseCase = mock()
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val expectedScale = scaleForZoomLevel(10)
+            assertEquals(expectedScale, viewModel.state.scale)
+        }
+
+    @Test
+    fun applyDefaultZoomClampsToMinWhenDefaultBelowMin() =
+        runTest {
+            val settings =
+                Settings(
+                    restoreMapStateOnStart = false,
+                    defaultZoomLevel = 1,
+                    minZoomLevel = 5,
+                    maxZoomLevel = 12,
+                )
+            loadSettingsUseCase = mock()
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val expectedScale = scaleForZoomLevel(5)
+            assertEquals(expectedScale, viewModel.state.scale)
+        }
+
+    @Test
+    fun applyDefaultZoomUsesDefaultWhenWithinRange() =
+        runTest {
+            val settings =
+                Settings(
+                    restoreMapStateOnStart = false,
+                    defaultZoomLevel = 8,
+                    minZoomLevel = 3,
+                    maxZoomLevel = 14,
+                )
+            loadSettingsUseCase = mock()
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val expectedScale = scaleForZoomLevel(8)
+            assertEquals(expectedScale, viewModel.state.scale)
+        }
+
+    @Test
+    fun applyDefaultZoomHandlesSwappedMinMax() =
+        runTest {
+            // If min > max in zoom level terms, the effective scale range should still work
+            val settings =
+                Settings(
+                    restoreMapStateOnStart = false,
+                    defaultZoomLevel = 14,
+                    minZoomLevel = 10,
+                    maxZoomLevel = 3,
+                )
+            loadSettingsUseCase = mock()
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            // Default 14 exceeds the effective max (zoom level 10), so should clamp
+            val minScale = scaleForZoomLevel(10)
+            val maxScale = scaleForZoomLevel(3)
+            val effectiveMin = minOf(minScale, maxScale)
+            val effectiveMax = maxOf(minScale, maxScale)
+            assertTrue(viewModel.state.scale <= effectiveMax)
+            assertTrue(viewModel.state.scale >= effectiveMin)
         }
 }
