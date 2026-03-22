@@ -8,20 +8,7 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.ui.MainScreen
-import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.DeleteServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.EditServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetFlightAwareApiKeyUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowMinimapTrailsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetTrailDisplayModeUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.mock
@@ -35,26 +22,13 @@ class SettingsScreenAndroidTest {
     val composeTestRule = createComposeRule()
 
     private fun createViewModel(): SettingsViewModel {
-        val loadSettingsUseCase =
-            mock<LoadSettingsUseCase> {
-                every { invoke() } returns flowOf(Async.Success(Settings()))
+        val settingsService =
+            mock<SettingsService> {
+                every { loadSettings() } returns flowOf(Async.Success(Settings()))
             }
 
         return SettingsViewModel(
-            loadSettingsUseCase = loadSettingsUseCase,
-            addServerUseCase = mock<AddServerUseCase>(),
-            editServerUseCase = mock<EditServerUseCase>(),
-            deleteServerUseCase = mock<DeleteServerUseCase>(),
-            setRefreshIntervalUseCase = mock<SetRefreshIntervalUseCase>(),
-            setCenterMapOnUserOnStartUseCase = mock<SetCenterMapOnUserOnStartUseCase>(),
-            setRestoreMapStateOnStartUseCase = mock<SetRestoreMapStateOnStartUseCase>(),
-            setShowReceiverLocationsUseCase = mock<SetShowReceiverLocationsUseCase>(),
-            setShowUserLocationOnMapUseCase = mock<SetShowUserLocationOnMapUseCase>(),
-            setTrailDisplayModeUseCase = mock<SetTrailDisplayModeUseCase>(),
-            setShowMinimapTrailsUseCase = mock<SetShowMinimapTrailsUseCase>(),
-            setOpenUrlsExternallyUseCase = mock<SetOpenUrlsExternallyUseCase>(),
-            setEnableFlightAwareApiUseCase = mock<SetEnableFlightAwareApiUseCase>(),
-            setFlightAwareApiKeyUseCase = mock<SetFlightAwareApiKeyUseCase>(),
+            settingsService = settingsService,
         )
     }
 

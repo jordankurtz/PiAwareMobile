@@ -2,23 +2,11 @@ package com.jordankurtz.piawaremobile.settings
 
 import app.cash.turbine.test
 import com.jordankurtz.piawaremobile.model.Async
-import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.DeleteServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.EditServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetFlightAwareApiKeyUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowMinimapTrailsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetTrailDisplayModeUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
+import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
@@ -33,77 +21,49 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.uuid.Uuid
 
 @ExperimentalCoroutinesApi
 class SettingsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var loadSettingsUseCase: LoadSettingsUseCase
-    private lateinit var addServerUseCase: AddServerUseCase
-    private lateinit var editServerUseCase: EditServerUseCase
-    private lateinit var deleteServerUseCase: DeleteServerUseCase
-    private lateinit var setRefreshIntervalUseCase: SetRefreshIntervalUseCase
-    private lateinit var setCenterMapOnUserOnStartUseCase: SetCenterMapOnUserOnStartUseCase
-    private lateinit var setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase
-    private lateinit var setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase
-    private lateinit var setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase
-    private lateinit var setTrailDisplayModeUseCase: SetTrailDisplayModeUseCase
-    private lateinit var setShowMinimapTrailsUseCase: SetShowMinimapTrailsUseCase
-    private lateinit var setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase
-    private lateinit var setEnableFlightAwareApiUseCase: SetEnableFlightAwareApiUseCase
-    private lateinit var setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase
-
+    private lateinit var settingsService: SettingsService
     private lateinit var viewModel: SettingsViewModel
+
+    private val settings =
+        Settings(
+            servers = emptyList(),
+            refreshInterval = 5,
+            centerMapOnUserOnStart = false,
+            restoreMapStateOnStart = false,
+            showReceiverLocations = false,
+            showUserLocationOnMap = false,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = "",
+        )
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        loadSettingsUseCase = mock()
-        addServerUseCase = mock()
-        editServerUseCase = mock()
-        deleteServerUseCase = mock()
-        setRefreshIntervalUseCase = mock()
-        setCenterMapOnUserOnStartUseCase = mock()
-        setRestoreMapStateOnStartUseCase = mock()
-        setShowReceiverLocationsUseCase = mock()
-        setShowUserLocationOnMapUseCase = mock()
-        setTrailDisplayModeUseCase = mock()
-        setShowMinimapTrailsUseCase = mock()
-        setOpenUrlsExternallyUseCase = mock()
-        setEnableFlightAwareApiUseCase = mock()
-        setFlightAwareApiKeyUseCase = mock()
+        settingsService = mock()
 
-        val settings =
-            Settings(
-                servers = emptyList(),
-                refreshInterval = 5,
-                centerMapOnUserOnStart = false,
-                restoreMapStateOnStart = false,
-                showReceiverLocations = false,
-                showUserLocationOnMap = false,
-                openUrlsExternally = false,
-                enableFlightAwareApi = false,
-                flightAwareApiKey = "",
-            )
-        every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
+        every { settingsService.loadSettings() } returns flowOf(Async.Success(settings))
+        everySuspend { settingsService.addServer(any(), any()) } returns Unit
+        everySuspend { settingsService.editServer(any()) } returns Unit
+        everySuspend { settingsService.deleteServer(any()) } returns Unit
+        everySuspend { settingsService.setRefreshInterval(any()) } returns Unit
+        everySuspend { settingsService.setCenterMapOnUserOnStart(any()) } returns Unit
+        everySuspend { settingsService.setRestoreMapStateOnStart(any()) } returns Unit
+        everySuspend { settingsService.setShowReceiverLocations(any()) } returns Unit
+        everySuspend { settingsService.setShowUserLocationOnMap(any()) } returns Unit
+        everySuspend { settingsService.setTrailDisplayMode(any()) } returns Unit
+        everySuspend { settingsService.setShowMinimapTrails(any()) } returns Unit
+        everySuspend { settingsService.setOpenUrlsExternally(any()) } returns Unit
+        everySuspend { settingsService.setEnableFlightAwareApi(any()) } returns Unit
+        everySuspend { settingsService.setFlightAwareApiKey(any()) } returns Unit
 
-        viewModel =
-            SettingsViewModel(
-                loadSettingsUseCase = loadSettingsUseCase,
-                addServerUseCase = addServerUseCase,
-                editServerUseCase = editServerUseCase,
-                deleteServerUseCase = deleteServerUseCase,
-                setRefreshIntervalUseCase = setRefreshIntervalUseCase,
-                setCenterMapOnUserOnStartUseCase = setCenterMapOnUserOnStartUseCase,
-                setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
-                setShowReceiverLocationsUseCase = setShowReceiverLocationsUseCase,
-                setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase,
-                setTrailDisplayModeUseCase = setTrailDisplayModeUseCase,
-                setShowMinimapTrailsUseCase = setShowMinimapTrailsUseCase,
-                setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase,
-                setEnableFlightAwareApiUseCase = setEnableFlightAwareApiUseCase,
-                setFlightAwareApiKeyUseCase = setFlightAwareApiKeyUseCase,
-            )
+        viewModel = SettingsViewModel(settingsService)
     }
 
     @AfterTest
@@ -112,132 +72,110 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `settings flow emits settings from use case`() =
+    fun `settings flow emits settings from service`() =
         runTest {
-            val settings =
-                Settings(
-                    servers = emptyList(),
+            val customSettings =
+                settings.copy(
                     refreshInterval = 10,
                     centerMapOnUserOnStart = true,
-                    restoreMapStateOnStart = true,
-                    showReceiverLocations = true,
-                    showUserLocationOnMap = true,
-                    openUrlsExternally = true,
                     enableFlightAwareApi = true,
                     flightAwareApiKey = "test_key",
                 )
-            every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
+            every { settingsService.loadSettings() } returns flowOf(Async.Success(customSettings))
 
-            val newViewModel =
-                SettingsViewModel(
-                    loadSettingsUseCase = loadSettingsUseCase,
-                    addServerUseCase = addServerUseCase,
-                    editServerUseCase = editServerUseCase,
-                    deleteServerUseCase = deleteServerUseCase,
-                    setRefreshIntervalUseCase = setRefreshIntervalUseCase,
-                    setCenterMapOnUserOnStartUseCase = setCenterMapOnUserOnStartUseCase,
-                    setRestoreMapStateOnStartUseCase = setRestoreMapStateOnStartUseCase,
-                    setShowReceiverLocationsUseCase = setShowReceiverLocationsUseCase,
-                    setShowUserLocationOnMapUseCase = setShowUserLocationOnMapUseCase,
-                    setTrailDisplayModeUseCase = setTrailDisplayModeUseCase,
-                    setShowMinimapTrailsUseCase = setShowMinimapTrailsUseCase,
-                    setOpenUrlsExternallyUseCase = setOpenUrlsExternallyUseCase,
-                    setEnableFlightAwareApiUseCase = setEnableFlightAwareApiUseCase,
-                    setFlightAwareApiKeyUseCase = setFlightAwareApiKeyUseCase,
-                )
+            val newViewModel = SettingsViewModel(settingsService)
             newViewModel.settings.test {
                 assertEquals(Async.NotStarted, awaitItem())
-                assertEquals(Async.Success(settings), awaitItem())
+                assertEquals(Async.Success(customSettings), awaitItem())
             }
         }
 
     @Test
-    fun `addServer calls addServerUseCase`() =
+    fun `addServer delegates to settings service`() =
         runTest {
-            val serverName = "Test Server"
-            val serverAddress = "http://test.com"
-            everySuspend { addServerUseCase(name = serverName, address = serverAddress) } returns Unit
-
-            viewModel.addServer(name = serverName, address = serverAddress)
+            viewModel.addServer(name = "Test Server", address = "http://test.com")
             testDispatcher.scheduler.advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(1)) {
-                addServerUseCase(
-                    name = serverName,
-                    address = serverAddress,
-                )
+                settingsService.addServer("Test Server", "http://test.com")
             }
         }
 
     @Test
-    fun `updateRefreshInterval calls setRefreshIntervalUseCase`() =
+    fun `editServer delegates to settings service`() =
         runTest {
-            val interval = 15
-            everySuspend { setRefreshIntervalUseCase(newRefreshInterval = interval) } returns Unit
-
-            viewModel.updateRefreshInterval(refreshInterval = interval)
+            val server = Server(name = "Edited", address = "http://edited.com")
+            viewModel.editServer(server)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            verifySuspend(mode = VerifyMode.exactly(1)) { setRefreshIntervalUseCase(newRefreshInterval = interval) }
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                settingsService.editServer(server)
+            }
         }
 
     @Test
-    fun `updateCenterMapOnUserOnStart calls setCenterMapOnUserOnStartUseCase`() =
+    fun `deleteServer delegates to settings service`() =
         runTest {
-            val enabled = true
-            everySuspend { setCenterMapOnUserOnStartUseCase(enabled = enabled) } returns Unit
-
-            viewModel.updateCenterMapOnUserOnStart(enabled = enabled)
+            val id = Uuid.random()
+            viewModel.deleteServer(id)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            verifySuspend(mode = VerifyMode.exactly(1)) { setCenterMapOnUserOnStartUseCase(enabled = enabled) }
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                settingsService.deleteServer(id)
+            }
         }
 
     @Test
-    fun `updateRestoreMapStateOnStart calls setRestoreMapStateOnStartUseCase`() =
+    fun `updateRefreshInterval delegates to settings service`() =
         runTest {
-            val enabled = true
-            everySuspend { setRestoreMapStateOnStartUseCase(enabled = enabled) } returns Unit
-
-            viewModel.updateRestoreMapStateOnStart(enabled = enabled)
+            viewModel.updateRefreshInterval(15)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            verifySuspend(mode = VerifyMode.exactly(1)) { setRestoreMapStateOnStartUseCase(enabled = enabled) }
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setRefreshInterval(15) }
         }
 
     @Test
-    fun `updateShowReceiverLocations calls setShowReceiverLocationsUseCase`() =
+    fun `updateCenterMapOnUserOnStart delegates to settings service`() =
         runTest {
-            val enabled = true
-            everySuspend { setShowReceiverLocationsUseCase(enabled = enabled) } returns Unit
-
-            viewModel.updateShowReceiverLocations(enabled = enabled)
+            viewModel.updateCenterMapOnUserOnStart(true)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            verifySuspend(mode = VerifyMode.exactly(1)) { setShowReceiverLocationsUseCase(enabled = enabled) }
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setCenterMapOnUserOnStart(true) }
         }
 
     @Test
-    fun `updateShowUserLocationOnMap calls setShowUserLocationOnMapUseCase`() =
+    fun `updateRestoreMapStateOnStart delegates to settings service`() =
         runTest {
-            val enabled = true
-            everySuspend { setShowUserLocationOnMapUseCase(enabled = enabled) } returns Unit
-
-            viewModel.updateShowUserLocationOnMap(enabled = enabled)
+            viewModel.updateRestoreMapStateOnStart(true)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            verifySuspend(mode = VerifyMode.exactly(1)) { setShowUserLocationOnMapUseCase(enabled = enabled) }
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setRestoreMapStateOnStart(true) }
         }
 
     @Test
-    fun `updateOpenUrlsExternally calls setOpenUrlsExternallyUseCase`() =
+    fun `updateShowReceiverLocations delegates to settings service`() =
         runTest {
-            val enabled = true
-            everySuspend { setOpenUrlsExternallyUseCase(enabled = enabled) } returns Unit
-
-            viewModel.updateOpenUrlsExternally(enabled = enabled)
+            viewModel.updateShowReceiverLocations(true)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            verifySuspend(mode = VerifyMode.exactly(1)) { setOpenUrlsExternallyUseCase(enabled = enabled) }
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setShowReceiverLocations(true) }
+        }
+
+    @Test
+    fun `updateShowUserLocationOnMap delegates to settings service`() =
+        runTest {
+            viewModel.updateShowUserLocationOnMap(true)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setShowUserLocationOnMap(true) }
+        }
+
+    @Test
+    fun `updateOpenUrlsExternally delegates to settings service`() =
+        runTest {
+            viewModel.updateOpenUrlsExternally(true)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setOpenUrlsExternally(true) }
         }
 }

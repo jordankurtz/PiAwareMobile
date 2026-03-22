@@ -4,111 +4,84 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.extensions.stateIn
 import com.jordankurtz.piawaremobile.model.Async
-import com.jordankurtz.piawaremobile.settings.usecase.AddServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.DeleteServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.EditServerUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetCenterMapOnUserOnStartUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetEnableFlightAwareApiUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetFlightAwareApiKeyUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetOpenUrlsExternallyUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetRefreshIntervalUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetRestoreMapStateOnStartUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowMinimapTrailsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowReceiverLocationsUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetShowUserLocationOnMapUseCase
-import com.jordankurtz.piawaremobile.settings.usecase.SetTrailDisplayModeUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
 import kotlin.uuid.Uuid
 
-@Suppress("LongParameterList")
 @Factory
 class SettingsViewModel(
-    loadSettingsUseCase: LoadSettingsUseCase,
-    private val addServerUseCase: AddServerUseCase,
-    private val editServerUseCase: EditServerUseCase,
-    private val deleteServerUseCase: DeleteServerUseCase,
-    private val setRefreshIntervalUseCase: SetRefreshIntervalUseCase,
-    private val setCenterMapOnUserOnStartUseCase: SetCenterMapOnUserOnStartUseCase,
-    private val setRestoreMapStateOnStartUseCase: SetRestoreMapStateOnStartUseCase,
-    private val setShowReceiverLocationsUseCase: SetShowReceiverLocationsUseCase,
-    private val setShowUserLocationOnMapUseCase: SetShowUserLocationOnMapUseCase,
-    private val setTrailDisplayModeUseCase: SetTrailDisplayModeUseCase,
-    private val setShowMinimapTrailsUseCase: SetShowMinimapTrailsUseCase,
-    private val setOpenUrlsExternallyUseCase: SetOpenUrlsExternallyUseCase,
-    private val setEnableFlightAwareApiUseCase: SetEnableFlightAwareApiUseCase,
-    private val setFlightAwareApiKeyUseCase: SetFlightAwareApiKeyUseCase,
+    private val settingsService: SettingsService,
 ) : ViewModel() {
     val settings: StateFlow<Async<Settings>>
         get() = _settings
-    private val _settings = loadSettingsUseCase().stateIn(viewModelScope)
+    private val _settings = settingsService.loadSettings().stateIn(viewModelScope)
 
     fun addServer(
         name: String,
         address: String,
     ) = viewModelScope.launch {
-        addServerUseCase(name, address)
+        settingsService.addServer(name, address)
     }
 
     fun editServer(server: Server) =
         viewModelScope.launch {
-            editServerUseCase(server)
+            settingsService.editServer(server)
         }
 
     fun deleteServer(id: Uuid) =
         viewModelScope.launch {
-            deleteServerUseCase(id)
+            settingsService.deleteServer(id)
         }
 
     fun updateRefreshInterval(refreshInterval: Int) =
         viewModelScope.launch {
-            setRefreshIntervalUseCase(refreshInterval)
+            settingsService.setRefreshInterval(refreshInterval)
         }
 
     fun updateCenterMapOnUserOnStart(enabled: Boolean) =
         viewModelScope.launch {
-            setCenterMapOnUserOnStartUseCase(enabled)
+            settingsService.setCenterMapOnUserOnStart(enabled)
         }
 
     fun updateRestoreMapStateOnStart(enabled: Boolean) =
         viewModelScope.launch {
-            setRestoreMapStateOnStartUseCase(enabled)
+            settingsService.setRestoreMapStateOnStart(enabled)
         }
 
     fun updateShowReceiverLocations(enabled: Boolean) =
         viewModelScope.launch {
-            setShowReceiverLocationsUseCase(enabled)
+            settingsService.setShowReceiverLocations(enabled)
         }
 
     fun updateShowUserLocationOnMap(enabled: Boolean) =
         viewModelScope.launch {
-            setShowUserLocationOnMapUseCase(enabled)
+            settingsService.setShowUserLocationOnMap(enabled)
         }
 
     fun updateTrailDisplayMode(trailDisplayMode: TrailDisplayMode) =
         viewModelScope.launch {
-            setTrailDisplayModeUseCase(trailDisplayMode)
+            settingsService.setTrailDisplayMode(trailDisplayMode)
         }
 
     fun updateShowMinimapTrails(enabled: Boolean) =
         viewModelScope.launch {
-            setShowMinimapTrailsUseCase(enabled)
+            settingsService.setShowMinimapTrails(enabled)
         }
 
     fun updateOpenUrlsExternally(enabled: Boolean) =
         viewModelScope.launch {
-            setOpenUrlsExternallyUseCase(enabled)
+            settingsService.setOpenUrlsExternally(enabled)
         }
 
     fun updateEnableFlightAwareApi(enabled: Boolean) =
         viewModelScope.launch {
-            setEnableFlightAwareApiUseCase(enabled)
+            settingsService.setEnableFlightAwareApi(enabled)
         }
 
     fun updateFlightAwareApiKey(apiKey: String) =
         viewModelScope.launch {
-            setFlightAwareApiKeyUseCase(apiKey)
+            settingsService.setFlightAwareApiKey(apiKey)
         }
 }
