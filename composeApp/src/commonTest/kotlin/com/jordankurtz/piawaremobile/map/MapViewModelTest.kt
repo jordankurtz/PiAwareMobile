@@ -1,15 +1,20 @@
 package com.jordankurtz.piawaremobile.map
 
 import androidx.lifecycle.viewModelScope
+import app.cash.turbine.test
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
-import com.jordankurtz.piawaremobile.settings.Settings
+import com.jordankurtz.piawaremobile.model.MapState
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
+import com.jordankurtz.piawaremobile.testutil.mockAircraft
+import com.jordankurtz.piawaremobile.testutil.mockServer
+import com.jordankurtz.piawaremobile.testutil.mockSettings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
+import dev.mokkery.everySuspend
 import dev.mokkery.mock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,40 +29,31 @@ import ovh.plrapps.mapcompose.core.TileStreamProvider
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @ExperimentalCoroutinesApi
 class MapViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var loadSettingsUseCase: LoadSettingsUseCase
+    private lateinit var mapProvider: TileStreamProvider
     private lateinit var getSavedMapStateUseCase: GetSavedMapStateUseCase
     private lateinit var saveMapStateUseCase: SaveMapStateUseCase
-    private lateinit var mapProvider: TileStreamProvider
+    private lateinit var loadSettingsUseCase: LoadSettingsUseCase
     private lateinit var viewModel: MapViewModel
-
-    private val settings =
-        Settings(
-            servers = emptyList(),
-            refreshInterval = 5,
-            centerMapOnUserOnStart = false,
-            restoreMapStateOnStart = false,
-            showReceiverLocations = false,
-            showUserLocationOnMap = false,
-            openUrlsExternally = false,
-            enableFlightAwareApi = false,
-            flightAwareApiKey = "",
-        )
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
-        loadSettingsUseCase = mock()
+        mapProvider = TileStreamProvider { _, _, _ -> null }
         getSavedMapStateUseCase = mock()
         saveMapStateUseCase = mock()
-        mapProvider = TileStreamProvider { _, _, _ -> null }
+        loadSettingsUseCase = mock()
 
-        every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
+        everySuspend { getSavedMapStateUseCase() } returns MapState(0.5, 0.5, 1.0)
+        everySuspend { saveMapStateUseCase(0.5, 0.5, 1.0) } returns Unit
+        every { loadSettingsUseCase() } returns flowOf(Async.Success(mockSettings(restoreMapStateOnStart = false)))
 
         viewModel = MapViewModel(mapProvider, getSavedMapStateUseCase, saveMapStateUseCase, loadSettingsUseCase)
     }
@@ -72,10 +68,8 @@ class MapViewModelTest {
     @Test
     fun `fitToAircraft with empty list is a no-op`() =
         runTest {
-            // Should return immediately without launching any coroutine
             viewModel.fitToAircraft(emptyList())
             advanceUntilIdle()
-            // No crash = pass. The method returns early for empty list.
         }
 
     @Test
@@ -89,7 +83,6 @@ class MapViewModelTest {
                 )
             viewModel.fitToAircraft(aircraft)
             advanceUntilIdle()
-            // No crash = the single-aircraft path executed correctly
         }
 
     @Test
@@ -109,7 +102,6 @@ class MapViewModelTest {
                 )
             viewModel.fitToAircraft(aircraft)
             advanceUntilIdle()
-            // No crash = bounding box was computed and scrollTo was invoked
         }
 
     @Test
@@ -126,6 +118,101 @@ class MapViewModelTest {
                 )
             viewModel.fitToAircraft(aircraft)
             advanceUntilIdle()
-            // No crash = degenerate bounding box (zero area) is handled
+        }
+
+    @Test
+    fun followSelectedAircraftSetsFollowedHexFromSelection() =
+        runTest {
+            viewModel.syncSelection("ABC123")
+            viewModel.followSelectedAircraft()
+
+            viewModel.followingAircraft.test {
+                assertEquals("ABC123", awaitItem())
+            }
+        }
+
+    @Test
+    fun unfollowAircraftClearsFollowedHex() =
+        runTest {
+            viewModel.syncSelection("ABC123")
+            viewModel.followSelectedAircraft()
+            viewModel.unfollowAircraft()
+
+            viewModel.followingAircraft.test {
+                assertNull(awaitItem())
+            }
+        }
+
+    @Test
+    fun onAircraftDeselectedClearsFollowedHex() =
+        runTest {
+            viewModel.syncSelection("ABC123")
+            viewModel.followSelectedAircraft()
+            viewModel.onAircraftDeselected()
+
+            viewModel.followingAircraft.test {
+                assertNull(awaitItem())
+            }
+            viewModel.selectedAircraft.test {
+                assertNull(awaitItem())
+            }
+        }
+
+    @Test
+    fun followedAircraftClearedWhenDisappearsFromFeed() =
+        runTest(testDispatcher) {
+            viewModel.syncSelection("ABC123")
+            viewModel.followSelectedAircraft()
+
+            assertEquals("ABC123", viewModel.followingAircraft.value)
+
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(
+                        aircraft = mockAircraft(hex = "DEF456"),
+                        info = null,
+                        servers = setOf(mockServer()),
+                    ),
+                )
+            viewModel.onAircraftUpdated(aircraftList)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.followingAircraft.test {
+                assertNull(awaitItem())
+            }
+        }
+
+    @Test
+    fun followedAircraftNotClearedWhenStillInFeed() =
+        runTest(testDispatcher) {
+            viewModel.syncSelection("ABC123")
+            viewModel.followSelectedAircraft()
+
+            assertEquals("ABC123", viewModel.followingAircraft.value)
+
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(
+                        aircraft = mockAircraft(hex = "ABC123"),
+                        info = null,
+                        servers = setOf(mockServer()),
+                    ),
+                )
+            viewModel.onAircraftUpdated(aircraftList)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.followingAircraft.test {
+                assertEquals("ABC123", awaitItem())
+            }
+        }
+
+    @Test
+    fun followSelectedAircraftWithNoSelectionSetsNull() =
+        runTest {
+            viewModel.followSelectedAircraft()
+
+            viewModel.followingAircraft.test {
+                assertNull(awaitItem())
+            }
         }
 }
