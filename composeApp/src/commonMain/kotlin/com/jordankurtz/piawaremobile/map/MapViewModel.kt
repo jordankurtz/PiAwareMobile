@@ -81,6 +81,15 @@ class MapViewModel(
     private val _followingAircraft = MutableStateFlow<String?>(null)
     val followingAircraft: StateFlow<String?> = _followingAircraft
 
+    private val _followingUserLocation = MutableStateFlow(false)
+    val followingUserLocation: StateFlow<Boolean> = _followingUserLocation
+
+    private val _showUserLocationOnMap = MutableStateFlow(false)
+    val showUserLocationOnMap: StateFlow<Boolean> = _showUserLocationOnMap
+
+    /** Exposes the last location passed to [recenterOnLocation] for test verification. */
+    internal val lastRecenteredLocation = MutableStateFlow<Location?>(null)
+
     private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
     val state =
@@ -158,6 +167,10 @@ class MapViewModel(
 
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
+        _showUserLocationOnMap.value = settings.showUserLocationOnMap
+        if (!settings.showUserLocationOnMap) {
+            _followingUserLocation.value = false
+        }
         onAircraftTrailsUpdated(lastTrails)
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
@@ -207,6 +220,7 @@ class MapViewModel(
         }
 
     fun recenterOnLocation(location: Location) {
+        lastRecenteredLocation.value = location
         viewModelScope.launch {
             val (x, y) = location.projected
             Logger.d("Scrolling map to $x, $y")
@@ -246,7 +260,14 @@ class MapViewModel(
         }
     }
 
+    fun toggleFollowUserLocation() {
+        _followingUserLocation.value = !_followingUserLocation.value
+    }
+
     fun onUserLocationChanged(location: Location) {
+        if (_followingUserLocation.value) {
+            recenterOnLocation(location)
+        }
         val (x, y) = location.projected
         state.removeMarker(USER_LOCATION_MARKER_ID)
         state.addMarker(

@@ -20,6 +20,7 @@
     <string name="fit_to_aircraft">Fit map to aircraft</string>
     <string name="follow_aircraft">Follow</string>
     <string name="unfollow_aircraft">Unfollow</string>
+    <string name="follow_user_location">Follow my location</string>
     <string name="show_user_location_title">Show User Location on Map</string>
     <string name="show_user_location_description">Show the user's current location on the map</string>
     <string name="trail_display_mode_title">Aircraft Trail Display</string>
