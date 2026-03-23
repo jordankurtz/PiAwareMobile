@@ -13,7 +13,6 @@ import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.testutil.mockAircraft
 import com.jordankurtz.piawaremobile.testutil.mockServer
-import com.jordankurtz.piawaremobile.testutil.mockSettings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -22,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -301,7 +299,7 @@ class MapViewModelTest {
 
     @Test
     fun followedAircraftClearedWhenDisappearsFromFeed() =
-        runTest(testDispatcher) {
+        runTest {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.syncSelection("ABC123")
@@ -318,7 +316,7 @@ class MapViewModelTest {
                     ),
                 )
             vm.onAircraftUpdated(aircraftList)
-            testDispatcher.scheduler.advanceUntilIdle()
+            advanceUntilIdle()
 
             vm.followingAircraft.test {
                 assertNull(awaitItem())
@@ -327,7 +325,7 @@ class MapViewModelTest {
 
     @Test
     fun followedAircraftNotClearedWhenStillInFeed() =
-        runTest(testDispatcher) {
+        runTest {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.syncSelection("ABC123")
@@ -344,7 +342,7 @@ class MapViewModelTest {
                     ),
                 )
             vm.onAircraftUpdated(aircraftList)
-            testDispatcher.scheduler.advanceUntilIdle()
+            advanceUntilIdle()
 
             vm.followingAircraft.test {
                 assertEquals("ABC123", awaitItem())
