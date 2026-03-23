@@ -160,7 +160,7 @@ class MapViewModelTest {
 
     @Test
     fun followedAircraftClearedWhenDisappearsFromFeed() =
-        runTest {
+        runTest(testDispatcher) {
             viewModel.syncSelection("ABC123")
             viewModel.followSelectedAircraft()
 
@@ -184,7 +184,7 @@ class MapViewModelTest {
 
     @Test
     fun followedAircraftNotClearedWhenStillInFeed() =
-        runTest {
+        runTest(testDispatcher) {
             viewModel.syncSelection("ABC123")
             viewModel.followSelectedAircraft()
 
