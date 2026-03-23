@@ -77,8 +77,8 @@ class MapViewModelTest {
 
     @AfterTest
     fun tearDown() {
-        viewModel?.state?.shutdown()
         viewModel?.viewModelScope?.cancel()
+        viewModel?.state?.shutdown()
         viewModel = null
         Dispatchers.resetMain()
     }
