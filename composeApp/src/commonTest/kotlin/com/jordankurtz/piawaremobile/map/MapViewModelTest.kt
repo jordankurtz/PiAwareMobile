@@ -97,7 +97,7 @@ class MapViewModelTest {
 
     @Test
     fun `fitToAircraft with empty list is a no-op`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.fitToAircraft(emptyList())
@@ -106,7 +106,7 @@ class MapViewModelTest {
 
     @Test
     fun `fitToAircraft with single aircraft scrolls to projected point`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             val aircraft =
@@ -121,7 +121,7 @@ class MapViewModelTest {
 
     @Test
     fun `fitToAircraft with multiple aircraft computes bounding box`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             val aircraft =
@@ -142,7 +142,7 @@ class MapViewModelTest {
 
     @Test
     fun `fitToAircraft with two aircraft at same location handles degenerate bounding box`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             val aircraft =
@@ -160,7 +160,7 @@ class MapViewModelTest {
 
     @Test
     fun `followingUserLocation starts as false`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             assertFalse(vm.followingUserLocation.value)
@@ -168,7 +168,7 @@ class MapViewModelTest {
 
     @Test
     fun `toggleFollowUserLocation flips state from false to true`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             assertFalse(vm.followingUserLocation.value)
@@ -179,7 +179,7 @@ class MapViewModelTest {
 
     @Test
     fun `toggleFollowUserLocation flips state from true to false`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -192,7 +192,7 @@ class MapViewModelTest {
 
     @Test
     fun `showUserLocationOnMap reflects settings value when true`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -201,7 +201,7 @@ class MapViewModelTest {
 
     @Test
     fun `showUserLocationOnMap reflects settings value when false`() =
-        runTest {
+        runTest(testDispatcher) {
             settingsFlow.value = Async.Success(settings.copy(showUserLocationOnMap = false))
 
             val vm = createViewModel()
@@ -212,7 +212,7 @@ class MapViewModelTest {
 
     @Test
     fun `disabling showUserLocationOnMap also disables following`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -228,7 +228,7 @@ class MapViewModelTest {
 
     @Test
     fun `onUserLocationChanged does not recenter when not following`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -241,7 +241,7 @@ class MapViewModelTest {
 
     @Test
     fun `onUserLocationChanged recenters map when following`() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
 
@@ -257,7 +257,7 @@ class MapViewModelTest {
 
     @Test
     fun followSelectedAircraftSetsFollowedHexFromSelection() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.syncSelection("ABC123")
@@ -270,7 +270,7 @@ class MapViewModelTest {
 
     @Test
     fun unfollowAircraftClearsFollowedHex() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.syncSelection("ABC123")
@@ -284,7 +284,7 @@ class MapViewModelTest {
 
     @Test
     fun onAircraftDeselectedClearsFollowedHex() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.syncSelection("ABC123")
@@ -301,7 +301,7 @@ class MapViewModelTest {
 
     @Test
     fun followedAircraftClearedWhenDisappearsFromFeed() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.syncSelection("ABC123")
@@ -327,7 +327,7 @@ class MapViewModelTest {
 
     @Test
     fun followedAircraftNotClearedWhenStillInFeed() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.syncSelection("ABC123")
@@ -353,7 +353,7 @@ class MapViewModelTest {
 
     @Test
     fun followSelectedAircraftWithNoSelectionSetsNull() =
-        runTest {
+        runTest(testDispatcher) {
             val vm = createViewModel()
             advanceUntilIdle()
             vm.followSelectedAircraft()
@@ -365,7 +365,7 @@ class MapViewModelTest {
 
     @Test
     fun applyDefaultZoomClampsToMaxWhenDefaultExceedsMax() =
-        runTest {
+        runTest(testDispatcher) {
             val settings =
                 Settings(
                     restoreMapStateOnStart = false,
@@ -385,7 +385,7 @@ class MapViewModelTest {
 
     @Test
     fun applyDefaultZoomClampsToMinWhenDefaultBelowMin() =
-        runTest {
+        runTest(testDispatcher) {
             val settings =
                 Settings(
                     restoreMapStateOnStart = false,
@@ -405,7 +405,7 @@ class MapViewModelTest {
 
     @Test
     fun applyDefaultZoomUsesDefaultWhenWithinRange() =
-        runTest {
+        runTest(testDispatcher) {
             val settings =
                 Settings(
                     restoreMapStateOnStart = false,
@@ -425,7 +425,7 @@ class MapViewModelTest {
 
     @Test
     fun applyDefaultZoomHandlesSwappedMinMax() =
-        runTest {
+        runTest(testDispatcher) {
             // If min > max in zoom level terms, the effective scale range should still work
             val settings =
                 Settings(
