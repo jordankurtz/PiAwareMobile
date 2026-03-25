@@ -70,6 +70,7 @@ class MapViewModel(
     private val loadSettingsUseCase: LoadSettingsUseCase,
 ) : ViewModel() {
     private var saveStateJob: Job? = null
+    private var scaleConstraintJob: Job? = null
     private var settings: Settings? = null
     private val previousAircraftMarkerIds = mutableSetOf<String>()
     private val previousPathIds = mutableSetOf<String>()
@@ -94,6 +95,9 @@ class MapViewModel(
 
     val state =
         MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
+            // Safety net: hardcoded floor so the map always has a lower bound even before
+            // settings load.  The user-configured min/max are enforced reactively by
+            // startScaleConstraintJob(), which clamps scale on every change.
             minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
         }.apply {
             addLayer(mapProvider)
@@ -181,6 +185,9 @@ class MapViewModel(
         } else if (!hasAppliedInitialZoom) {
             applyDefaultZoom(settings)
         }
+        if (scaleConstraintJob == null) {
+            startScaleConstraintJob()
+        }
     }
 
     private suspend fun loadMapState(settings: Settings) {
@@ -215,6 +222,33 @@ class MapViewModel(
                             Logger.d("Saved map state $scroll, $scale")
                         }
                     }.launchIn(this)
+            }
+    }
+
+    /**
+     * Observes [state].scale in real-time and clamps it to the user-configured
+     * min/max zoom range.  Reads [settings] on every emission so that changes
+     * to the zoom-level settings take effect immediately without restarting
+     * the job.
+     *
+     * The `if (clamped != currentScale)` guard prevents an infinite loop:
+     * setting `state.scale` triggers another emission, but the clamped value
+     * will already be in-range so no further write occurs.
+     */
+    private fun startScaleConstraintJob() {
+        scaleConstraintJob =
+            viewModelScope.launch {
+                snapshotFlow { state.scale }.collect { currentScale ->
+                    val currentSettings = settings ?: return@collect
+                    val minScale = scaleForZoomLevel(currentSettings.minZoomLevel)
+                    val maxScale = scaleForZoomLevel(currentSettings.maxZoomLevel)
+                    val effectiveMin = minOf(minScale, maxScale)
+                    val effectiveMax = maxOf(minScale, maxScale)
+                    val clamped = currentScale.coerceIn(effectiveMin, effectiveMax)
+                    if (clamped != currentScale) {
+                        state.scale = clamped
+                    }
+                }
             }
     }
 

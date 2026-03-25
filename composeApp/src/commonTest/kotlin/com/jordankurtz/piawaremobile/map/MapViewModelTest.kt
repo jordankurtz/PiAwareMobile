@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
@@ -447,5 +448,112 @@ class MapViewModelTest {
             val effectiveMax = maxOf(minScale, maxScale)
             assertTrue(viewModel.state.scale <= effectiveMax)
             assertTrue(viewModel.state.scale >= effectiveMin)
+        }
+
+    @Test
+    fun scaleClampedBackWhenSetAboveMaxZoom() =
+        runTest(testDispatcher) {
+            val zoomSettings =
+                Settings(
+                    restoreMapStateOnStart = false,
+                    defaultZoomLevel = 8,
+                    minZoomLevel = 3,
+                    maxZoomLevel = 12,
+                )
+            settingsFlow = MutableStateFlow(Async.Success(zoomSettings))
+            every { loadSettingsUseCase() } returns settingsFlow
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            // Simulate user pinch-zooming past maxZoomLevel
+            Snapshot.withMutableSnapshot { vm.state.scale = scaleForZoomLevel(15) }
+            advanceUntilIdle()
+
+            val maxScale = scaleForZoomLevel(12)
+            assertEquals(maxScale, vm.state.scale)
+        }
+
+    @Test
+    fun scaleClampedBackWhenSetBelowMinZoom() =
+        runTest(testDispatcher) {
+            val zoomSettings =
+                Settings(
+                    restoreMapStateOnStart = false,
+                    defaultZoomLevel = 8,
+                    minZoomLevel = 5,
+                    maxZoomLevel = 14,
+                )
+            settingsFlow = MutableStateFlow(Async.Success(zoomSettings))
+            every { loadSettingsUseCase() } returns settingsFlow
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            // Simulate user pinch-zooming below minZoomLevel
+            Snapshot.withMutableSnapshot { vm.state.scale = scaleForZoomLevel(2) }
+            advanceUntilIdle()
+
+            val minScale = scaleForZoomLevel(5)
+            assertEquals(minScale, vm.state.scale)
+        }
+
+    @Test
+    fun scaleConstraintUpdatesWhenSettingsChange() =
+        runTest(testDispatcher) {
+            val initialSettings =
+                Settings(
+                    restoreMapStateOnStart = false,
+                    defaultZoomLevel = 8,
+                    minZoomLevel = 3,
+                    maxZoomLevel = 14,
+                )
+            settingsFlow = MutableStateFlow(Async.Success(initialSettings))
+            every { loadSettingsUseCase() } returns settingsFlow
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            // Zoom to level 12 — within initial range
+            Snapshot.withMutableSnapshot { vm.state.scale = scaleForZoomLevel(12) }
+            advanceUntilIdle()
+            assertEquals(scaleForZoomLevel(12), vm.state.scale)
+
+            // Now tighten maxZoomLevel to 10 — current scale should be clamped
+            settingsFlow.value =
+                Async.Success(
+                    initialSettings.copy(maxZoomLevel = 10),
+                )
+            advanceUntilIdle()
+
+            // Simulate user zooming slightly — any scale change triggers the
+            // snapshotFlow which now reads the tighter maxZoomLevel=10
+            Snapshot.withMutableSnapshot { vm.state.scale = scaleForZoomLevel(13) }
+            advanceUntilIdle()
+
+            assertEquals(scaleForZoomLevel(10), vm.state.scale)
+        }
+
+    @Test
+    fun scaleWithinRangeIsNotClamped() =
+        runTest(testDispatcher) {
+            val zoomSettings =
+                Settings(
+                    restoreMapStateOnStart = false,
+                    defaultZoomLevel = 8,
+                    minZoomLevel = 3,
+                    maxZoomLevel = 14,
+                )
+            settingsFlow = MutableStateFlow(Async.Success(zoomSettings))
+            every { loadSettingsUseCase() } returns settingsFlow
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val targetScale = scaleForZoomLevel(10)
+            Snapshot.withMutableSnapshot { vm.state.scale = targetScale }
+            advanceUntilIdle()
+
+            assertEquals(targetScale, vm.state.scale)
         }
 }
