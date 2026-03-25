@@ -363,4 +363,27 @@ class MapViewModelTest {
                 assertNull(awaitItem())
             }
         }
+
+    @Test
+    fun `onMapTouchDown cancels follow user location when following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+
+            vm.onMapTouchDown()
+            assertFalse(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `onMapTouchDown does nothing when not following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.followingUserLocation.value)
+
+            vm.onMapTouchDown()
+            assertFalse(vm.followingUserLocation.value)
+        }
 }
