@@ -41,6 +41,7 @@ import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.onTap
+import ovh.plrapps.mapcompose.api.onTouchDown
 import ovh.plrapps.mapcompose.api.removeMarker
 import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scale
@@ -116,6 +117,8 @@ class MapViewModel(
                     onAircraftTrailsUpdated(lastTrails)
                 }
             }
+
+            onTouchDown { onMapTouchDown() }
         }
 
     init {
@@ -262,6 +265,12 @@ class MapViewModel(
 
     fun toggleFollowUserLocation() {
         _followingUserLocation.value = !_followingUserLocation.value
+    }
+
+    internal fun onMapTouchDown() {
+        if (_followingUserLocation.value) {
+            _followingUserLocation.value = false
+        }
     }
 
     fun onUserLocationChanged(location: Location) {
