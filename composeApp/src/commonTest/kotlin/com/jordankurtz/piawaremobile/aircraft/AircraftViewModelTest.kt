@@ -293,4 +293,122 @@ class AircraftViewModelTest {
             assertEquals(null, viewModel.selectedAircraftHex.value)
             assertEquals(Async.NotStarted, viewModel.flightDetails.value)
         }
+
+    @Test
+    fun `openFlightPage opens URL internally when openUrlsExternally is false`() =
+        runTest {
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = "UAL456")),
+                )
+            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { urlHandler.openUrlInternally(any()) } returns Unit
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            pollTicker.emit(Unit)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.openFlightPage("ABC123")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                urlHandler.openUrlInternally(any())
+            }
+        }
+
+    @Test
+    fun `openFlightPage opens URL externally when openUrlsExternally is true`() =
+        runTest {
+            val externalSettings = settings.copy(openUrlsExternally = true)
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(externalSettings))
+
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = "UAL456")),
+                )
+            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { urlHandler.openUrlExternally(any()) } returns Unit
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            pollTicker.emit(Unit)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.openFlightPage("ABC123")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                urlHandler.openUrlExternally(any())
+            }
+        }
+
+    @Test
+    fun `openFlightPage does nothing when aircraft not found`() =
+        runTest {
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.openFlightPage("unknown")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                urlHandler.openUrlInternally(any())
+            }
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                urlHandler.openUrlExternally(any())
+            }
+        }
+
+    @Test
+    fun `openFlightPage does nothing when aircraft has no flight number`() =
+        runTest {
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = null)),
+                )
+            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            pollTicker.emit(Unit)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.openFlightPage("ABC123")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                urlHandler.openUrlInternally(any())
+            }
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                urlHandler.openUrlExternally(any())
+            }
+        }
+
+    @Test
+    fun `openFlightPage sets error message before opening URL`() =
+        runTest {
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = "UAL456")),
+                )
+            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { urlHandler.openUrlInternally(any()) } returns Unit
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            pollTicker.emit(Unit)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.openFlightPage("ABC123")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val details = viewModel.flightDetails.value
+            assertIs<Async.Error>(details)
+            assertTrue(details.message.contains("not configured"))
+        }
 }

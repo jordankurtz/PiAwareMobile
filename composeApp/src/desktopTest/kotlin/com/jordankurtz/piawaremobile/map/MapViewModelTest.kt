@@ -5,11 +5,14 @@ import app.cash.turbine.test
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftPosition
+import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.MapState
 import com.jordankurtz.piawaremobile.settings.Settings
+import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.testutil.mockAircraft
 import com.jordankurtz.piawaremobile.testutil.mockServer
@@ -385,5 +388,106 @@ class MapViewModelTest {
 
             vm.onMapTouchDown()
             assertFalse(vm.followingUserLocation.value)
+        }
+
+    private fun makeTrail(
+        hex: String,
+        lat1: Double = 40.0,
+        lon1: Double = -74.0,
+        lat2: Double = 40.1,
+        lon2: Double = -74.1,
+    ): AircraftTrail =
+        AircraftTrail(
+            hex = hex,
+            positions =
+                listOf(
+                    AircraftPosition(latitude = lat1, longitude = lon1, altitude = "35000", timestamp = 1.0),
+                    AircraftPosition(latitude = lat2, longitude = lon2, altitude = "35000", timestamp = 2.0),
+                ),
+        )
+
+    @Test
+    fun `onAircraftTrailsUpdated with NONE mode draws no trails`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val trails = mapOf("ABC123" to makeTrail("ABC123"))
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onAircraftTrailsUpdated with ALL mode draws trails for all aircraft`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(trailDisplayMode = TrailDisplayMode.ALL))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val trails =
+                mapOf(
+                    "ABC123" to makeTrail("ABC123"),
+                    "DEF456" to makeTrail("DEF456", lat1 = 41.0, lon1 = -75.0, lat2 = 41.1, lon2 = -75.1),
+                )
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onAircraftTrailsUpdated with ALL mode and selected aircraft draws all trails not just selected`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(trailDisplayMode = TrailDisplayMode.ALL))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.syncSelection("ABC123")
+            advanceUntilIdle()
+
+            val trails =
+                mapOf(
+                    "ABC123" to makeTrail("ABC123"),
+                    "DEF456" to makeTrail("DEF456", lat1 = 41.0, lon1 = -75.0, lat2 = 41.1, lon2 = -75.1),
+                )
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onAircraftTrailsUpdated with SELECTED mode and selection draws only selected trail`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(trailDisplayMode = TrailDisplayMode.SELECTED))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.syncSelection("ABC123")
+            advanceUntilIdle()
+
+            val trails =
+                mapOf(
+                    "ABC123" to makeTrail("ABC123"),
+                    "DEF456" to makeTrail("DEF456", lat1 = 41.0, lon1 = -75.0, lat2 = 41.1, lon2 = -75.1),
+                )
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onAircraftTrailsUpdated with SELECTED mode and no selection draws no trails`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(trailDisplayMode = TrailDisplayMode.SELECTED))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val trails =
+                mapOf(
+                    "ABC123" to makeTrail("ABC123"),
+                    "DEF456" to makeTrail("DEF456", lat1 = 41.0, lon1 = -75.0, lat2 = 41.1, lon2 = -75.1),
+                )
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
         }
 }
