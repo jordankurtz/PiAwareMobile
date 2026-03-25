@@ -1,9 +1,9 @@
 package com.jordankurtz.piawaremobile.map.cache
 
-import kotlin.io.path.createTempDirectory
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import java.io.File
+import kotlin.io.path.createTempDirectory
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -145,5 +145,89 @@ class FileTileCacheTest {
             cache.put(zoomLvl = 1, col = 0, row = 0, data = updatedData)
 
             assertContentEquals(updatedData, cache.get(zoomLvl = 1, col = 0, row = 0))
+        }
+
+    @Test
+    fun getReturnsEmptyArrayForZeroByteFile() =
+        runTest(testDispatcher) {
+            val cache = createCache()
+
+            // Simulate a corrupted/interrupted write: create an empty file
+            val file = File(cacheDir, "1/0/0.png")
+            file.parentFile?.mkdirs()
+            file.createNewFile()
+
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+
+            // Empty file is still a valid cache entry (0 bytes), should return empty array
+            assertNotNull(result)
+            assertContentEquals(byteArrayOf(), result)
+        }
+
+    @Test
+    fun getUpdatesLastModifiedTimeForLruTracking() =
+        runTest(testDispatcher) {
+            val cache = createCache()
+            val data = byteArrayOf(1, 2, 3)
+
+            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            val file = File(cacheDir, "1/0/0.png")
+
+            // Set last modified to a known old time
+            val oldTime = System.currentTimeMillis() - 60_000
+            file.setLastModified(oldTime)
+
+            // Reading should update the timestamp
+            cache.get(zoomLvl = 1, col = 0, row = 0)
+
+            assertTrue(
+                file.lastModified() > oldTime,
+                "get() should update lastModified for LRU tracking",
+            )
+        }
+
+    @Test
+    fun recentlyAccessedTileSurvivesEviction() =
+        runTest(testDispatcher) {
+            val cache = createCache(maxCacheBytes = 10L)
+            val data = byteArrayOf(1, 2, 3, 4, 5)
+
+            // Put tile A (5 bytes)
+            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            // Make tile A old
+            File(cacheDir, "1/0/0.png").setLastModified(System.currentTimeMillis() - 10_000)
+
+            // Put tile B (5 bytes) — now at 10 bytes, at limit
+            cache.put(zoomLvl = 1, col = 0, row = 1, data = data)
+            // Make tile B old but more recent than A
+            File(cacheDir, "1/0/1.png").setLastModified(System.currentTimeMillis() - 5_000)
+
+            // Access tile A to make it recently used (updates lastModified to now)
+            cache.get(zoomLvl = 1, col = 0, row = 0)
+
+            // Put tile C — exceeds limit, should evict tile B (the oldest now)
+            cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
+
+            // Tile A should survive because it was recently accessed
+            assertNotNull(
+                cache.get(zoomLvl = 1, col = 0, row = 0),
+                "Recently accessed tile should survive eviction",
+            )
+            // Tile B should be evicted (it was the least recently used)
+            val tileB = File(cacheDir, "1/0/1.png")
+            assertTrue(!tileB.exists(), "Oldest-accessed tile should be evicted")
+        }
+
+    @Test
+    fun emptyByteArrayCanBeCached() =
+        runTest(testDispatcher) {
+            val cache = createCache()
+            val emptyData = byteArrayOf()
+
+            cache.put(zoomLvl = 1, col = 0, row = 0, data = emptyData)
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+
+            assertNotNull(result)
+            assertContentEquals(emptyData, result)
         }
 }
