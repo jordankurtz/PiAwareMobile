@@ -11,6 +11,11 @@ import java.io.File
  * Disk-based tile cache that stores tiles as individual files under a cache directory.
  * Files are organized as `{cacheDir}/{zoom}/{col}/{row}.png`.
  *
+ * Expiration is based on the tile file's last-modified time, which represents when the
+ * tile was originally fetched from the network. A separate `.access` sidecar file tracks
+ * the most recent read time for LRU eviction ordering, so that accessing a tile does not
+ * reset its expiration clock.
+ *
  * @param cacheDir Root directory for cached tiles
  * @param ioDispatcher Dispatcher for file I/O operations
  * @param maxCacheBytes Maximum total cache size in bytes (default 100 MB)
@@ -36,13 +41,15 @@ class FileTileCache(
             val age = System.currentTimeMillis() - file.lastModified()
             if (age > maxAgeMillis) {
                 file.delete()
+                accessFile(zoomLvl, col, row).delete()
                 return@withContext null
             }
 
             try {
                 val bytes = file.readBytes()
-                // Touch the file to update access time for LRU eviction
-                file.setLastModified(System.currentTimeMillis())
+                // Touch the sidecar access file for LRU eviction tracking,
+                // without modifying the tile file's lastModified (used for expiration)
+                touchAccessFile(zoomLvl, col, row)
                 bytes
             } catch (e: Exception) {
                 Logger.e("Failed to read cached tile $zoomLvl/$col/$row", e)
@@ -61,6 +68,8 @@ class FileTileCache(
                 val file = tileFile(zoomLvl, col, row)
                 file.parentFile?.mkdirs()
                 file.writeBytes(data)
+                // Set initial access time to match write time
+                touchAccessFile(zoomLvl, col, row)
             } catch (e: Exception) {
                 Logger.e("Failed to write cached tile $zoomLvl/$col/$row", e)
                 return@withContext
@@ -72,23 +81,29 @@ class FileTileCache(
 
     private suspend fun evictIfNeeded() {
         evictionMutex.withLock {
-            val files =
+            val tileFiles =
                 cacheDir.walkTopDown()
-                    .filter { it.isFile }
+                    .filter { it.isFile && it.extension == "png" }
                     .toMutableList()
 
-            val totalSize = files.sumOf { it.length() }
+            val totalSize = tileFiles.sumOf { it.length() }
             if (totalSize <= maxCacheBytes) return
 
-            // Sort by lastModified ascending (oldest first) for LRU eviction
-            files.sortBy { it.lastModified() }
+            // Sort by last access time ascending (least recently accessed first).
+            // Use the .access sidecar if it exists, otherwise fall back to the tile's lastModified.
+            tileFiles.sortBy { tile ->
+                val access = accessFileForTile(tile)
+                if (access.exists()) access.lastModified() else tile.lastModified()
+            }
 
             var currentSize = totalSize
-            for (file in files) {
+            for (file in tileFiles) {
                 if (currentSize <= maxCacheBytes) break
                 val fileSize = file.length()
                 if (file.delete()) {
                     currentSize -= fileSize
+                    // Also clean up the sidecar
+                    accessFileForTile(file).delete()
                 }
             }
         }
@@ -99,6 +114,30 @@ class FileTileCache(
         col: Int,
         row: Int,
     ): File = File(cacheDir, "$zoomLvl/$col/$row.png")
+
+    private fun accessFile(
+        zoomLvl: Int,
+        col: Int,
+        row: Int,
+    ): File = File(cacheDir, "$zoomLvl/$col/$row.access")
+
+    private fun accessFileForTile(tileFile: File): File {
+        val path = tileFile.path.removeSuffix(".png") + ".access"
+        return File(path)
+    }
+
+    private fun touchAccessFile(
+        zoomLvl: Int,
+        col: Int,
+        row: Int,
+    ) {
+        val file = accessFile(zoomLvl, col, row)
+        file.parentFile?.mkdirs()
+        if (!file.exists()) {
+            file.createNewFile()
+        }
+        file.setLastModified(System.currentTimeMillis())
+    }
 
     companion object {
         const val DEFAULT_MAX_CACHE_BYTES = 100L * 1024 * 1024 // 100 MB

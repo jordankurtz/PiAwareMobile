@@ -15,8 +15,28 @@ actual class TileCacheModule {
         contextWrapper: ContextWrapper,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): TileCache {
-        val userHome = System.getProperty("user.home")
-        val cacheDir = File(userHome, ".cache/piawaremobile/map_tiles")
+        val cacheDir = desktopCacheDir()
         return FileTileCache(cacheDir = cacheDir, ioDispatcher = ioDispatcher)
+    }
+}
+
+internal fun desktopCacheDir(): File {
+    val osName = System.getProperty("os.name").lowercase()
+    val userHome = System.getProperty("user.home")
+    return when {
+        osName.contains("mac") ->
+            File(userHome, "Library/Caches/PiAwareMobile/tiles")
+        osName.contains("win") -> {
+            val localAppData =
+                System.getenv("LOCALAPPDATA")
+                    ?: File(userHome, "AppData/Local").path
+            File(localAppData, "PiAwareMobile/tiles")
+        }
+        else -> {
+            val xdgCacheHome =
+                System.getenv("XDG_CACHE_HOME")
+                    ?: File(userHome, ".cache").path
+            File(xdgCacheHome, "PiAwareMobile/tiles")
+        }
     }
 }

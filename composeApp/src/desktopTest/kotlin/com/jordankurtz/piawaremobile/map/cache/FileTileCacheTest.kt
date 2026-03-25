@@ -103,17 +103,17 @@ class FileTileCacheTest {
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
             cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
-            // Touch with older timestamp
-            File(cacheDir, "1/0/0.png").setLastModified(System.currentTimeMillis() - 5000)
+            // Make the access file older so this tile gets evicted first
+            File(cacheDir, "1/0/0.access").setLastModified(System.currentTimeMillis() - 5000)
 
             cache.put(zoomLvl = 1, col = 0, row = 1, data = data)
 
-            // Third tile should trigger eviction of the oldest (row=0)
+            // Third tile should trigger eviction of the oldest-accessed (row=0)
             cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
 
-            // The oldest tile (row=0) should have been evicted
+            // The oldest-accessed tile (row=0) should have been evicted
             val evictedFile = File(cacheDir, "1/0/0.png")
-            assertTrue(!evictedFile.exists(), "Oldest tile should be evicted")
+            assertTrue(!evictedFile.exists(), "Oldest-accessed tile should be evicted")
 
             // Newer tiles should still be present
             assertNotNull(cache.get(zoomLvl = 1, col = 0, row = 2))
@@ -165,24 +165,24 @@ class FileTileCacheTest {
         }
 
     @Test
-    fun getUpdatesLastModifiedTimeForLruTracking() =
+    fun getUpdatesAccessFileForLruTracking() =
         runTest(testDispatcher) {
             val cache = createCache()
             val data = byteArrayOf(1, 2, 3)
 
             cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
-            val file = File(cacheDir, "1/0/0.png")
+            val accessFile = File(cacheDir, "1/0/0.access")
 
-            // Set last modified to a known old time
+            // Set access file to a known old time
             val oldTime = System.currentTimeMillis() - 60_000
-            file.setLastModified(oldTime)
+            accessFile.setLastModified(oldTime)
 
-            // Reading should update the timestamp
+            // Reading should update the access file timestamp
             cache.get(zoomLvl = 1, col = 0, row = 0)
 
             assertTrue(
-                file.lastModified() > oldTime,
-                "get() should update lastModified for LRU tracking",
+                accessFile.lastModified() > oldTime,
+                "get() should update access file for LRU tracking",
             )
         }
 
@@ -194,18 +194,18 @@ class FileTileCacheTest {
 
             // Put tile A (5 bytes)
             cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
-            // Make tile A old
-            File(cacheDir, "1/0/0.png").setLastModified(System.currentTimeMillis() - 10_000)
+            // Make tile A's access time old
+            File(cacheDir, "1/0/0.access").setLastModified(System.currentTimeMillis() - 10_000)
 
             // Put tile B (5 bytes) — now at 10 bytes, at limit
             cache.put(zoomLvl = 1, col = 0, row = 1, data = data)
-            // Make tile B old but more recent than A
-            File(cacheDir, "1/0/1.png").setLastModified(System.currentTimeMillis() - 5_000)
+            // Make tile B's access time old but more recent than A
+            File(cacheDir, "1/0/1.access").setLastModified(System.currentTimeMillis() - 5_000)
 
-            // Access tile A to make it recently used (updates lastModified to now)
+            // Access tile A to make it recently used (updates .access file to now)
             cache.get(zoomLvl = 1, col = 0, row = 0)
 
-            // Put tile C — exceeds limit, should evict tile B (the oldest now)
+            // Put tile C — exceeds limit, should evict tile B (the least recently accessed)
             cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
 
             // Tile A should survive because it was recently accessed
@@ -229,5 +229,44 @@ class FileTileCacheTest {
 
             assertNotNull(result)
             assertContentEquals(emptyData, result)
+        }
+
+    @Test
+    fun getDoesNotResetExpirationClock() =
+        runTest(testDispatcher) {
+            val cache = createCache(maxAgeMillis = 5000L)
+            val data = byteArrayOf(1, 2, 3)
+
+            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            val tileFile = File(cacheDir, "1/0/0.png")
+
+            // Set the tile's write time to 4 seconds ago (almost expired)
+            val nearlyExpiredTime = System.currentTimeMillis() - 4000
+            tileFile.setLastModified(nearlyExpiredTime)
+
+            // Reading the tile should NOT reset the tile file's lastModified
+            cache.get(zoomLvl = 1, col = 0, row = 0)
+
+            assertTrue(
+                tileFile.lastModified() <= nearlyExpiredTime,
+                "get() must not reset the tile file's lastModified (expiration clock)",
+            )
+        }
+
+    @Test
+    fun expiredTileIsNotServedEvenIfFrequentlyAccessed() =
+        runTest(testDispatcher) {
+            val cache = createCache(maxAgeMillis = 1L)
+            val data = byteArrayOf(1, 2, 3)
+
+            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+
+            // Set tile write time to the past so it is expired
+            val tileFile = File(cacheDir, "1/0/0.png")
+            tileFile.setLastModified(System.currentTimeMillis() - 1000)
+
+            // Even though the access file is recent, the tile should be expired
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+            assertNull(result, "Expired tile should not be served regardless of access time")
         }
 }

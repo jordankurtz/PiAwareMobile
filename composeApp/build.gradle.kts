@@ -46,6 +46,12 @@ kotlin {
     sourceSets {
         val desktopMain by getting
 
+        val jvmMain by creating {
+            dependsOn(commonMain.get())
+        }
+        androidMain.get().dependsOn(jvmMain)
+        desktopMain.dependsOn(jvmMain)
+
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
