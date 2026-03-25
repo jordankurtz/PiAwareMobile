@@ -9,6 +9,7 @@ import org.koin.core.annotation.Module
         NetworkModule::class,
         ContextModule::class,
         DataStoreModule::class,
+        TileCacheModule::class,
     ],
 )
 @ComponentScan("com.jordankurtz.piawaremobile")
