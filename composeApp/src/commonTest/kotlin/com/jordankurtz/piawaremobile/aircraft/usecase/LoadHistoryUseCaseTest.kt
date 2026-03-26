@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.aircraft.usecase
 
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.usecase.impl.LoadHistoryUseCaseImpl
+import com.jordankurtz.piawaremobile.settings.Server
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
 import dev.mokkery.everySuspend
@@ -14,6 +15,10 @@ import kotlin.test.Test
 class LoadHistoryUseCaseTest {
     private lateinit var aircraftRepo: AircraftRepo
 
+    private val server1 = Server(name = "Server 1", address = "server1.local")
+    private val server2 = Server(name = "Server 2", address = "server2.local")
+    private val server3 = Server(name = "Server 3", address = "server3.local")
+
     private fun createUseCase(): LoadHistoryUseCase {
         return LoadHistoryUseCaseImpl(aircraftRepo)
     }
@@ -23,16 +28,16 @@ class LoadHistoryUseCaseTest {
         runTest {
             aircraftRepo = mock()
 
-            val servers = listOf("server1.local", "server2.local")
+            val servers = listOf(server1, server2)
 
-            everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
-            everySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") } returns Unit
+            everySuspend { aircraftRepo.fetchAndMergeHistory(server1) } returns Unit
+            everySuspend { aircraftRepo.fetchAndMergeHistory(server2) } returns Unit
 
             val useCase = createUseCase()
             useCase(servers)
 
-            verifySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") }
-            verifySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory(server1) }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory(server2) }
         }
 
     @Test
@@ -51,15 +56,15 @@ class LoadHistoryUseCaseTest {
         runTest {
             aircraftRepo = mock()
 
-            val servers = listOf("server1.local")
+            val servers = listOf(server1)
 
-            everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
+            everySuspend { aircraftRepo.fetchAndMergeHistory(server1) } returns Unit
 
             val useCase = createUseCase()
             useCase(servers)
             useCase(servers)
 
-            verifySuspend(mode = VerifyMode.exactly(2)) { aircraftRepo.fetchAndMergeHistory("server1.local") }
+            verifySuspend(mode = VerifyMode.exactly(2)) { aircraftRepo.fetchAndMergeHistory(server1) }
         }
 
     @Test
@@ -67,20 +72,20 @@ class LoadHistoryUseCaseTest {
         runTest {
             aircraftRepo = mock()
 
-            val servers = listOf("server1.local", "server2.local", "server3.local")
+            val servers = listOf(server1, server2, server3)
 
-            everySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") } returns Unit
+            everySuspend { aircraftRepo.fetchAndMergeHistory(server1) } returns Unit
             everySuspend {
-                aircraftRepo.fetchAndMergeHistory("server2.local")
+                aircraftRepo.fetchAndMergeHistory(server2)
             } throws RuntimeException("Server unavailable")
-            everySuspend { aircraftRepo.fetchAndMergeHistory("server3.local") } returns Unit
+            everySuspend { aircraftRepo.fetchAndMergeHistory(server3) } returns Unit
 
             val useCase = createUseCase()
             useCase(servers)
 
             // All servers should have been attempted despite the failure
-            verifySuspend { aircraftRepo.fetchAndMergeHistory("server1.local") }
-            verifySuspend { aircraftRepo.fetchAndMergeHistory("server2.local") }
-            verifySuspend { aircraftRepo.fetchAndMergeHistory("server3.local") }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory(server1) }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory(server2) }
+            verifySuspend { aircraftRepo.fetchAndMergeHistory(server3) }
         }
 }

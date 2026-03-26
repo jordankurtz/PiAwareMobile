@@ -6,6 +6,7 @@ import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.FlightAirportRef
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.settings.Server
+import com.jordankurtz.piawaremobile.settings.ServerType
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import kotlin.uuid.Uuid
@@ -41,11 +42,13 @@ fun mockServer(
     id: Uuid = Uuid.random(),
     name: String = "Test PiAware",
     address: String = "piaware.local",
+    type: ServerType = ServerType.PIAWARE,
 ): Server =
     Server(
         id = id,
         name = name,
         address = address,
+        type = type,
     )
 
 fun mockAircraft(

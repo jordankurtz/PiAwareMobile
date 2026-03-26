@@ -39,17 +39,17 @@ class GetAircraftWithDetailsUseCaseTest {
     fun `invoke returns aircraft with details and servers`() =
         runTest(testDispatcher) {
             val servers = listOf(server1, server2)
-            val infoHost = "server1"
+            val infoServer = server1
             val aircraftWithServers =
                 mapOf(
                     mockAircraft1 to setOf(server1, server2),
                     mockAircraft2 to setOf(server1),
                 )
             everySuspend { aircraftRepo.getAircraftWithServers(servers) } returns aircraftWithServers
-            everySuspend { aircraftRepo.findAircraftInfo(infoHost, mockAircraft1.hex) } returns mockAircraftInfo1
-            everySuspend { aircraftRepo.findAircraftInfo(infoHost, mockAircraft2.hex) } returns mockAircraftInfo2
+            everySuspend { aircraftRepo.findAircraftInfo(infoServer, mockAircraft1.hex) } returns mockAircraftInfo1
+            everySuspend { aircraftRepo.findAircraftInfo(infoServer, mockAircraft2.hex) } returns mockAircraftInfo2
 
-            val result = useCase(servers, infoHost)
+            val result = useCase(servers, infoServer)
 
             assertEquals(2, result.size)
             val result1 = result.find { it.aircraft.hex == mockAircraft1.hex }!!
@@ -67,12 +67,12 @@ class GetAircraftWithDetailsUseCaseTest {
     fun `invoke handles case where aircraft info is not found`() =
         runTest(testDispatcher) {
             val servers = listOf(server1, server2)
-            val infoHost = "server1"
+            val infoServer = server1
             val aircraftWithServers = mapOf(mockAircraft1 to setOf(server1))
             everySuspend { aircraftRepo.getAircraftWithServers(servers) } returns aircraftWithServers
-            everySuspend { aircraftRepo.findAircraftInfo(infoHost, mockAircraft1.hex) } returns null
+            everySuspend { aircraftRepo.findAircraftInfo(infoServer, mockAircraft1.hex) } returns null
 
-            val result = useCase(servers, infoHost)
+            val result = useCase(servers, infoServer)
 
             assertEquals(1, result.size)
             assertEquals(AircraftWithServers(mockAircraft1, null, setOf(server1)), result[0])
@@ -84,7 +84,7 @@ class GetAircraftWithDetailsUseCaseTest {
             val servers = listOf(server1)
             everySuspend { aircraftRepo.getAircraftWithServers(servers) } returns emptyMap()
 
-            val result = useCase(servers, "server1")
+            val result = useCase(servers, server1)
 
             assertEquals(0, result.size)
         }
