@@ -23,6 +23,17 @@ kotlin {
         freeCompilerArgs.add("-opt-in=androidx.compose.material3.ExperimentalMaterial3Api")
         freeCompilerArgs.add("-Xopt-in=kotlin.time.ExperimentalTime")
     }
+
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    applyDefaultHierarchyTemplate {
+        common {
+            group("jvm") {
+                withAndroidTarget()
+                withJvm()
+            }
+        }
+    }
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
@@ -45,12 +56,6 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
-
-        val jvmMain by creating {
-            dependsOn(commonMain.get())
-        }
-        androidMain.get().dependsOn(jvmMain)
-        desktopMain.dependsOn(jvmMain)
 
         androidMain.dependencies {
             implementation(compose.preview)
