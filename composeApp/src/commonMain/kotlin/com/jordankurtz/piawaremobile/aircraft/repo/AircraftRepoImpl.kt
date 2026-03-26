@@ -2,7 +2,7 @@ package com.jordankurtz.piawaremobile.aircraft.repo
 
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.aircraft.api.AeroApi
-import com.jordankurtz.piawaremobile.aircraft.api.PiAwareApi
+import com.jordankurtz.piawaremobile.aircraft.api.AircraftDataSourceFactory
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.Async
@@ -25,7 +25,7 @@ import org.koin.core.annotation.Single
 
 @Single(binds = [AircraftRepo::class])
 class AircraftRepoImpl(
-    private val piAwareApi: PiAwareApi,
+    private val dataSourceFactory: AircraftDataSourceFactory,
     private val aeroApi: AeroApi,
     private val trailManager: AircraftTrailManager,
 ) : AircraftRepo {
@@ -41,7 +41,8 @@ class AircraftRepoImpl(
                     servers.map { server ->
                         async {
                             try {
-                                piAwareApi.getAircraft(server.address).map { aircraft -> aircraft to server }
+                                val dataSource = dataSourceFactory.getDataSource(server.type)
+                                dataSource.getAircraft(server).map { aircraft -> aircraft to server }
                             } catch (e: Exception) {
                                 Logger.e("Failed to fetch aircraft from server $server", e)
                                 emptyList()
@@ -76,28 +77,36 @@ class AircraftRepoImpl(
 
     override suspend fun loadAircraftTypes(servers: List<Server>) {
         if (aircraftTypes == null) {
-            aircraftTypes = servers.map { piAwareApi.getAircraftTypes(it.address) }.flatten()
+            aircraftTypes =
+                servers.map { server ->
+                    dataSourceFactory.getDataSource(server.type).getAircraftTypes(server)
+                }.flatten()
         }
     }
 
     override suspend fun findAircraftInfo(
-        host: String,
+        server: Server,
         hex: String,
     ): AircraftInfo? {
         if (aircraftInfoCache.containsKey(hex)) return aircraftInfoCache[hex]
 
-        val info = lookupAircraftInfoRecursive(host, hex.replace("~", ""))
+        val info = lookupAircraftInfoRecursive(server, hex.replace("~", ""))
         info?.let { aircraftInfoCache[hex] = it }
         return info
     }
 
     override suspend fun getReceiverInfo(
-        host: String,
+        server: Server,
         receiverType: ReceiverType,
     ): Receiver? {
+        val dataSource = dataSourceFactory.getDataSource(server.type)
         return when (receiverType) {
-            ReceiverType.DUMP_1090 -> piAwareApi.getDump1090ReceiverInfo(host)
-            ReceiverType.DUMP_978 -> piAwareApi.getDump978ReceiverInfo(host)
+            ReceiverType.DUMP_1090 -> dataSource.getReceiverInfo(server)
+            ReceiverType.DUMP_978 -> {
+                // dump978 receiver info is only available on PiAware servers
+                // For other server types, return null
+                dataSource.getReceiverInfo(server)
+            }
         }
     }
 
@@ -114,8 +123,9 @@ class AircraftRepoImpl(
         }
     }
 
-    override suspend fun fetchAndMergeHistory(host: String) {
-        val receiver = piAwareApi.getDump1090ReceiverInfo(host) ?: return
+    override suspend fun fetchAndMergeHistory(server: Server) {
+        val dataSource = dataSourceFactory.getDataSource(server.type)
+        val receiver = dataSource.getReceiverInfo(server) ?: return
         val historyCount = receiver.history ?: return
         if (historyCount <= 0) return
 
@@ -123,7 +133,7 @@ class AircraftRepoImpl(
             val historyResults =
                 (0 until historyCount).map { index ->
                     async {
-                        fetchHistoryWithRetry(host, index)
+                        fetchHistoryWithRetry(server, index)
                     }
                 }.awaitAll()
 
@@ -132,12 +142,13 @@ class AircraftRepoImpl(
     }
 
     private suspend fun fetchHistoryWithRetry(
-        host: String,
+        server: Server,
         index: Int,
         maxRetries: Int = 3,
     ): PiAwareResponse? {
+        val dataSource = dataSourceFactory.getDataSource(server.type)
         repeat(maxRetries) { attempt ->
-            val result = piAwareApi.getHistoryFile(host, index)
+            val result = dataSource.getHistory(server, index)
             if (result != null) return result
 
             if (attempt < maxRetries - 1) {
@@ -149,7 +160,7 @@ class AircraftRepoImpl(
     }
 
     internal suspend fun lookupAircraftInfoRecursive(
-        host: String,
+        server: Server,
         hex: String,
         level: Int = 1,
     ): AircraftInfo? {
@@ -157,7 +168,8 @@ class AircraftRepoImpl(
         val bkey = uppercaseHex.take(level)
         val dkey = uppercaseHex.drop(level)
 
-        val data = piAwareApi.getAircraftInfo(host, bkey) ?: return null
+        val dataSource = dataSourceFactory.getDataSource(server.type)
+        val data = dataSource.getAircraftInfo(server, bkey) ?: return null
 
         if (data.containsKey(dkey)) {
             val info = data[dkey]!!
@@ -175,7 +187,7 @@ class AircraftRepoImpl(
             if (data["children"]?.let { Json.decodeFromJsonElement<List<String>>(it) }
                     ?.contains(subkey) == true
             ) {
-                return lookupAircraftInfoRecursive(host, hex, level + 1)
+                return lookupAircraftInfoRecursive(server, hex, level + 1)
             }
         }
 

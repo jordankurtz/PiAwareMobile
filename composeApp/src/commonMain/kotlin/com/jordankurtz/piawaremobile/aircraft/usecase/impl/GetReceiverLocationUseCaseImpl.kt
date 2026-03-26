@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.aircraft.usecase.GetReceiverLocationUseCase
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.ReceiverType
+import com.jordankurtz.piawaremobile.settings.Server
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
@@ -14,14 +15,14 @@ class GetReceiverLocationUseCaseImpl(
     private val aircraftRepo: AircraftRepo,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : GetReceiverLocationUseCase {
-    override suspend operator fun invoke(server: String): Location? =
+    override suspend operator fun invoke(server: Server): Location? =
         withContext(ioDispatcher) {
             (
                 aircraftRepo.getReceiverInfo(
-                    host = server,
+                    server = server,
                     receiverType = ReceiverType.DUMP_1090,
                 ) ?: aircraftRepo.getReceiverInfo(
-                    host = server,
+                    server = server,
                     receiverType = ReceiverType.DUMP_978,
                 )
             )?.let {
