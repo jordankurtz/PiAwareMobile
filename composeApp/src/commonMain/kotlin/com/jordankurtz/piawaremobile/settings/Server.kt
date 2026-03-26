@@ -8,4 +8,5 @@ data class Server(
     val id: Uuid = Uuid.random(),
     val name: String,
     val address: String,
+    val type: ServerType = ServerType.PIAWARE,
 )
