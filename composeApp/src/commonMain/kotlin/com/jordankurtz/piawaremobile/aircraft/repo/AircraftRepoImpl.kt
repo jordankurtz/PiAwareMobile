@@ -102,11 +102,7 @@ class AircraftRepoImpl(
         val dataSource = dataSourceFactory.getDataSource(server.type)
         return when (receiverType) {
             ReceiverType.DUMP_1090 -> dataSource.getReceiverInfo(server)
-            ReceiverType.DUMP_978 -> {
-                // dump978 receiver info is only available on PiAware servers
-                // For other server types, return null
-                dataSource.getReceiverInfo(server)
-            }
+            ReceiverType.DUMP_978 -> dataSource.getDump978ReceiverInfo(server)
         }
     }
 
@@ -125,6 +121,7 @@ class AircraftRepoImpl(
 
     override suspend fun fetchAndMergeHistory(server: Server) {
         val dataSource = dataSourceFactory.getDataSource(server.type)
+        if (!dataSource.supportsHistory) return
         val receiver = dataSource.getReceiverInfo(server) ?: return
         val historyCount = receiver.history ?: return
         if (historyCount <= 0) return

@@ -8,9 +8,13 @@ import com.jordankurtz.piawaremobile.settings.Server
 import kotlinx.serialization.json.JsonObject
 
 interface AircraftDataSource {
+    val supportsHistory: Boolean
+
     suspend fun getAircraft(server: Server): List<Aircraft>
 
     suspend fun getReceiverInfo(server: Server): Receiver?
+
+    suspend fun getDump978ReceiverInfo(server: Server): Receiver?
 
     suspend fun getAircraftTypes(server: Server): Map<String, ICAOAircraftType>
 

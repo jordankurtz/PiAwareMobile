@@ -16,6 +16,7 @@ import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class PiAwareDataSourceTest {
     private val piAwareApi: PiAwareApi = mock()
@@ -54,6 +55,33 @@ class PiAwareDataSourceTest {
 
             assertNull(result)
         }
+
+    @Test
+    fun `getDump978ReceiverInfo delegates to PiAwareApi getDump978ReceiverInfo`() =
+        runTest {
+            val expected = Receiver(latitude = 32.7f, longitude = -96.8f)
+            everySuspend { piAwareApi.getDump978ReceiverInfo("test-host") } returns expected
+
+            val result = dataSource.getDump978ReceiverInfo(server)
+
+            assertEquals(expected, result)
+            verifySuspend { piAwareApi.getDump978ReceiverInfo("test-host") }
+        }
+
+    @Test
+    fun `getDump978ReceiverInfo returns null when API returns null`() =
+        runTest {
+            everySuspend { piAwareApi.getDump978ReceiverInfo("test-host") } returns null
+
+            val result = dataSource.getDump978ReceiverInfo(server)
+
+            assertNull(result)
+        }
+
+    @Test
+    fun `supportsHistory returns true`() {
+        assertTrue(dataSource.supportsHistory)
+    }
 
     @Test
     fun `getAircraftTypes delegates to PiAwareApi`() =

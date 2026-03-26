@@ -14,12 +14,18 @@ import org.koin.core.annotation.Single
 class PiAwareDataSource(
     private val piAwareApi: PiAwareApi,
 ) : AircraftDataSource {
+    override val supportsHistory: Boolean = true
+
     override suspend fun getAircraft(server: Server): List<Aircraft> {
         return piAwareApi.getAircraft(server.address)
     }
 
     override suspend fun getReceiverInfo(server: Server): Receiver? {
         return piAwareApi.getDump1090ReceiverInfo(server.address)
+    }
+
+    override suspend fun getDump978ReceiverInfo(server: Server): Receiver? {
+        return piAwareApi.getDump978ReceiverInfo(server.address)
     }
 
     override suspend fun getAircraftTypes(server: Server): Map<String, ICAOAircraftType> {

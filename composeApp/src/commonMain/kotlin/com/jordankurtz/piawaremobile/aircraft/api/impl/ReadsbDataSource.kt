@@ -17,6 +17,8 @@ import org.koin.core.annotation.Single
 class ReadsbDataSource(
     private val httpClient: HttpClient,
 ) : AircraftDataSource {
+    override val supportsHistory: Boolean = false
+
     override suspend fun getAircraft(server: Server): List<Aircraft> {
         return try {
             val response: PiAwareResponse =
@@ -35,6 +37,11 @@ class ReadsbDataSource(
             Logger.e("Error fetching receiver info from readsb server ${server.address}", e)
             null
         }
+    }
+
+    override suspend fun getDump978ReceiverInfo(server: Server): Receiver? {
+        // readsb does not support dump978 UAT receivers
+        return null
     }
 
     override suspend fun getAircraftTypes(server: Server): Map<String, ICAOAircraftType> {

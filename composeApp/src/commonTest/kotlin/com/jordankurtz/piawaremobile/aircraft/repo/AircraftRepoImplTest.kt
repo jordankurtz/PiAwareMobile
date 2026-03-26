@@ -14,6 +14,7 @@ import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.ServerType
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
+import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
@@ -58,6 +59,7 @@ class AircraftRepoImplTest {
         dataSourceFactory = mock()
         aeroApi = mock()
         trailManager = mock()
+        every { dataSource.supportsHistory } returns true
         everySuspend { trailManager.updateTrailsFromAircraft(any()) } returns Unit
         everySuspend { trailManager.mergeHistoryResponses(any()) } returns Unit
         everySuspend { dataSourceFactory.getDataSource(any()) } returns dataSource
@@ -143,6 +145,28 @@ class AircraftRepoImplTest {
             val result1090 = repo.getReceiverInfo(server1, ReceiverType.DUMP_1090)
 
             assertNull(result1090)
+        }
+
+    @Test
+    fun `getReceiverInfo returns dump978 receiver info`() =
+        runTest {
+            val mockReceiver978 = Receiver(latitude = 33.0f, longitude = -97.0f)
+            everySuspend { dataSource.getDump978ReceiverInfo(server1) } returns mockReceiver978
+
+            val result = repo.getReceiverInfo(server1, ReceiverType.DUMP_978)
+
+            assertEquals(mockReceiver978, result)
+            verifySuspend { dataSource.getDump978ReceiverInfo(server1) }
+        }
+
+    @Test
+    fun `getReceiverInfo returns null for dump978 when not available`() =
+        runTest {
+            everySuspend { dataSource.getDump978ReceiverInfo(server1) } returns null
+
+            val result = repo.getReceiverInfo(server1, ReceiverType.DUMP_978)
+
+            assertNull(result)
         }
 
     @Test
@@ -406,18 +430,19 @@ class AircraftRepoImplTest {
         }
 
     @Test
-    fun `fetchAndMergeHistory skips when datasource returns null history`() =
+    fun `fetchAndMergeHistory skips entirely when supportsHistory is false`() =
         runTest {
             val readsbServer = Server(name = "Readsb", address = "readsb.local", type = ServerType.READSB)
             val readsbDs: AircraftDataSource = mock()
+            every { readsbDs.supportsHistory } returns false
             everySuspend { dataSourceFactory.getDataSource(ServerType.READSB) } returns readsbDs
-            everySuspend { readsbDs.getReceiverInfo(readsbServer) } returns
-                Receiver(latitude = 32.7f, longitude = -96.8f, history = 2)
-            everySuspend { readsbDs.getHistory(readsbServer, any()) } returns null
 
             repo.fetchAndMergeHistory(readsbServer)
 
-            verifySuspend(mode = VerifyMode.exactly(1)) {
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                readsbDs.getReceiverInfo(readsbServer)
+            }
+            verifySuspend(mode = VerifyMode.exactly(0)) {
                 trailManager.mergeHistoryResponses(any())
             }
         }
