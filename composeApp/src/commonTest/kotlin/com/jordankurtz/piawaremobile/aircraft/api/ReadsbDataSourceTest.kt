@@ -18,8 +18,10 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class ReadsbDataSourceTest {
@@ -145,6 +147,42 @@ class ReadsbDataSourceTest {
             val result = dataSource.getAircraftTypes(server)
 
             assertEquals(emptyMap(), result)
+        }
+
+    @Test
+    fun `getAircraftInfo returns json on success`() =
+        runTest {
+            val mockJson = """{"i":"N12345","t":"A320"}"""
+
+            val mockEngine =
+                MockEngine { request ->
+                    assertEquals("http://readsb-host/db/A8.json", request.url.toString())
+                    respond(
+                        content = mockJson,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+            val dataSource = createDataSource(mockEngine)
+
+            val result = dataSource.getAircraftInfo(server, "A8")
+
+            assertNotNull(result)
+            assertEquals("N12345", result["i"]?.let { Json.decodeFromJsonElement(it) })
+        }
+
+    @Test
+    fun `getAircraftInfo returns null on error`() =
+        runTest {
+            val mockEngine =
+                MockEngine {
+                    respond(content = "Error", status = HttpStatusCode.InternalServerError)
+                }
+            val dataSource = createDataSource(mockEngine)
+
+            val result = dataSource.getAircraftInfo(server, "A8")
+
+            assertNull(result)
         }
 
     @Test

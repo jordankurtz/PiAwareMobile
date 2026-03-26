@@ -382,4 +382,43 @@ class AircraftRepoImplTest {
             assertEquals(1, result.size)
             verifySuspend { dataSourceFactory.getDataSource(ServerType.READSB) }
         }
+
+    @Test
+    fun `getAircraftWithServers merges aircraft from mixed server types`() =
+        runTest {
+            val piAwareServer = Server(name = "PiAware", address = "piaware.local", type = ServerType.PIAWARE)
+            val readsbServer = Server(name = "Readsb", address = "readsb.local", type = ServerType.READSB)
+            val piAwareDs: AircraftDataSource = mock()
+            val readsbDs: AircraftDataSource = mock()
+
+            everySuspend { dataSourceFactory.getDataSource(ServerType.PIAWARE) } returns piAwareDs
+            everySuspend { dataSourceFactory.getDataSource(ServerType.READSB) } returns readsbDs
+            everySuspend { piAwareDs.getAircraft(piAwareServer) } returns listOf(mockAircraft1)
+            everySuspend { readsbDs.getAircraft(readsbServer) } returns listOf(mockAircraft2)
+
+            val result = repo.getAircraftWithServers(listOf(piAwareServer, readsbServer))
+
+            assertEquals(2, result.size)
+            assertEquals(setOf(piAwareServer), result[mockAircraft1])
+            assertEquals(setOf(readsbServer), result[mockAircraft2])
+            verifySuspend { dataSourceFactory.getDataSource(ServerType.PIAWARE) }
+            verifySuspend { dataSourceFactory.getDataSource(ServerType.READSB) }
+        }
+
+    @Test
+    fun `fetchAndMergeHistory skips when datasource returns null history`() =
+        runTest {
+            val readsbServer = Server(name = "Readsb", address = "readsb.local", type = ServerType.READSB)
+            val readsbDs: AircraftDataSource = mock()
+            everySuspend { dataSourceFactory.getDataSource(ServerType.READSB) } returns readsbDs
+            everySuspend { readsbDs.getReceiverInfo(readsbServer) } returns
+                Receiver(latitude = 32.7f, longitude = -96.8f, history = 2)
+            everySuspend { readsbDs.getHistory(readsbServer, any()) } returns null
+
+            repo.fetchAndMergeHistory(readsbServer)
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                trailManager.mergeHistoryResponses(any())
+            }
+        }
 }
