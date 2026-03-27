@@ -49,7 +49,7 @@ class SettingsViewModelTest {
         settingsService = mock()
 
         every { settingsService.loadSettings() } returns flowOf(Async.Success(settings))
-        everySuspend { settingsService.addServer(any(), any()) } returns Unit
+        everySuspend { settingsService.addServer(any(), any(), any()) } returns Unit
         everySuspend { settingsService.editServer(any()) } returns Unit
         everySuspend { settingsService.deleteServer(any()) } returns Unit
         everySuspend { settingsService.setRefreshInterval(any()) } returns Unit
@@ -93,11 +93,30 @@ class SettingsViewModelTest {
     @Test
     fun `addServer delegates to settings service`() =
         runTest {
-            viewModel.addServer(name = "Test Server", address = "http://test.com")
+            viewModel.addServer(
+                name = "Test Server",
+                address = "http://test.com",
+                type = ServerType.PIAWARE,
+            )
             testDispatcher.scheduler.advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(1)) {
-                settingsService.addServer("Test Server", "http://test.com")
+                settingsService.addServer("Test Server", "http://test.com", ServerType.PIAWARE)
+            }
+        }
+
+    @Test
+    fun `addServer with readsb type delegates to settings service`() =
+        runTest {
+            viewModel.addServer(
+                name = "Readsb Server",
+                address = "http://readsb.local",
+                type = ServerType.READSB,
+            )
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                settingsService.addServer("Readsb Server", "http://readsb.local", ServerType.READSB)
             }
         }
 

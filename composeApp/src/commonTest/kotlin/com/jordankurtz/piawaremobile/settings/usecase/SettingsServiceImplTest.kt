@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.settings.usecase
 
 import com.jordankurtz.piawaremobile.settings.Server
+import com.jordankurtz.piawaremobile.settings.ServerType
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
@@ -64,7 +65,7 @@ class SettingsServiceImplTest {
     // Server management tests
 
     @Test
-    fun `addServer appends server to list`() =
+    fun `addServer appends server to list with default piaware type`() =
         runTest(testDispatcher) {
             mockSettings()
             val slot = captureSettings()
@@ -76,6 +77,22 @@ class SettingsServiceImplTest {
             assertEquals(1, saved.servers.size)
             assertEquals("Test Server", saved.servers[0].name)
             assertEquals("http://192.168.1.100", saved.servers[0].address)
+            assertEquals(ServerType.PIAWARE, saved.servers[0].type)
+        }
+
+    @Test
+    fun `addServer with readsb type saves correct server type`() =
+        runTest(testDispatcher) {
+            mockSettings()
+            val slot = captureSettings()
+
+            settingsService.addServer("Readsb Server", "http://192.168.1.200", ServerType.READSB)
+
+            verifySuspend(VerifyMode.exactly(1)) { settingsRepository.saveSettings(any()) }
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertEquals(1, saved.servers.size)
+            assertEquals("Readsb Server", saved.servers[0].name)
+            assertEquals(ServerType.READSB, saved.servers[0].type)
         }
 
     @Test

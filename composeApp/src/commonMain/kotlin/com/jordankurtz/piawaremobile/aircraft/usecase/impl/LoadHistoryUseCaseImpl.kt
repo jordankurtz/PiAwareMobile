@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.aircraft.usecase.impl
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
+import com.jordankurtz.piawaremobile.settings.Server
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -12,7 +13,7 @@ import org.koin.core.annotation.Single
 class LoadHistoryUseCaseImpl(
     private val aircraftRepo: AircraftRepo,
 ) : LoadHistoryUseCase {
-    override suspend fun invoke(servers: List<String>) {
+    override suspend fun invoke(servers: List<Server>) {
         if (servers.isEmpty()) return
 
         coroutineScope {

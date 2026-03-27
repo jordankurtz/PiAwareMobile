@@ -54,8 +54,8 @@ fun ServersScreen(
     if (showAddDialog) {
         AddServerDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, address ->
-                viewModel.addServer(name, address)
+            onConfirm = { name, address, type ->
+                viewModel.addServer(name, address, type)
                 showAddDialog = false
             },
         )
@@ -65,8 +65,8 @@ fun ServersScreen(
         EditServerDialog(
             server = server,
             onDismiss = { editingServer = null },
-            onConfirm = { name, address ->
-                viewModel.editServer(server.copy(name = name, address = address))
+            onConfirm = { name, address, type ->
+                viewModel.editServer(server.copy(name = name, address = address, type = type))
                 editingServer = null
             },
         )

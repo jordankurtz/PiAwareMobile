@@ -18,7 +18,7 @@ class GetAircraftWithDetailsUseCaseImpl(
 ) : GetAircraftWithDetailsUseCase {
     override suspend operator fun invoke(
         servers: List<Server>,
-        infoHost: String,
+        infoServer: Server,
     ): List<AircraftWithServers> =
         withContext(ioDispatcher) {
             val aircraftWithServers = aircraftRepo.getAircraftWithServers(servers)
@@ -27,7 +27,7 @@ class GetAircraftWithDetailsUseCaseImpl(
                 async {
                     val aircraftInfo =
                         aircraftRepo.findAircraftInfo(
-                            host = infoHost,
+                            server = infoServer,
                             hex = aircraft.hex,
                         )
                     AircraftWithServers(
