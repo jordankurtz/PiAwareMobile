@@ -31,7 +31,7 @@ class FileTileCacheTest {
         maxAgeMillis: Long = FileTileCache.DEFAULT_MAX_AGE_MILLIS,
     ): FileTileCache =
         FileTileCache(
-            cacheDir = cacheDir,
+            cacheFileSystem = JvmCacheFileSystem(cacheDir),
             ioDispatcher = testDispatcher,
             maxCacheBytes = maxCacheBytes,
             maxAgeMillis = maxAgeMillis,
@@ -125,7 +125,7 @@ class FileTileCacheTest {
             val nestedCacheDir = File(cacheDir, "nested/deep/cache")
             val cache =
                 FileTileCache(
-                    cacheDir = nestedCacheDir,
+                    cacheFileSystem = JvmCacheFileSystem(nestedCacheDir),
                     ioDispatcher = testDispatcher,
                 )
 

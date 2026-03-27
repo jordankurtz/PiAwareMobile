@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.di.modules
 
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.cache.FileTileCache
+import com.jordankurtz.piawaremobile.map.cache.JvmCacheFileSystem
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.core.annotation.Module
@@ -16,7 +17,8 @@ actual class TileCacheModule {
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): TileCache {
         val cacheDir = desktopCacheDir()
-        return FileTileCache(cacheDir = cacheDir, ioDispatcher = ioDispatcher)
+        val cacheFileSystem = JvmCacheFileSystem(cacheDir)
+        return FileTileCache(cacheFileSystem = cacheFileSystem, ioDispatcher = ioDispatcher)
     }
 }
 

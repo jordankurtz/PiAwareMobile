@@ -5,7 +5,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.io.File
+import kotlinx.datetime.Clock
 
 /**
  * Disk-based tile cache that stores tiles as individual files under a cache directory.
@@ -16,13 +16,15 @@ import java.io.File
  * the most recent read time for LRU eviction ordering, so that accessing a tile does not
  * reset its expiration clock.
  *
- * @param cacheDir Root directory for cached tiles
+ * All file I/O is delegated to [cacheFileSystem], keeping this class platform-independent.
+ *
+ * @param cacheFileSystem Abstraction over raw file operations
  * @param ioDispatcher Dispatcher for file I/O operations
  * @param maxCacheBytes Maximum total cache size in bytes (default 100 MB)
  * @param maxAgeMillis Maximum age of a cached tile in milliseconds (default 7 days)
  */
 class FileTileCache(
-    private val cacheDir: File,
+    private val cacheFileSystem: CacheFileSystem,
     private val ioDispatcher: CoroutineDispatcher,
     private val maxCacheBytes: Long = DEFAULT_MAX_CACHE_BYTES,
     private val maxAgeMillis: Long = DEFAULT_MAX_AGE_MILLIS,
@@ -35,21 +37,27 @@ class FileTileCache(
         row: Int,
     ): ByteArray? =
         withContext(ioDispatcher) {
-            val file = tileFile(zoomLvl, col, row)
-            if (!file.exists()) return@withContext null
+            val tileKey = tileKey(zoomLvl, col, row)
+            val accessKey = accessKey(zoomLvl, col, row)
 
-            val age = System.currentTimeMillis() - file.lastModified()
+            val lastMod = cacheFileSystem.lastModified(tileKey)
+            if (lastMod == -1L) return@withContext null
+
+            val age = Clock.System.now().toEpochMilliseconds() - lastMod
             if (age > maxAgeMillis) {
-                file.delete()
-                accessFile(zoomLvl, col, row).delete()
+                cacheFileSystem.delete(tileKey)
+                cacheFileSystem.delete(accessKey)
                 return@withContext null
             }
 
             try {
-                val bytes = file.readBytes()
+                val bytes = cacheFileSystem.read(tileKey) ?: return@withContext null
                 // Touch the sidecar access file for LRU eviction tracking,
                 // without modifying the tile file's lastModified (used for expiration)
-                touchAccessFile(zoomLvl, col, row)
+                cacheFileSystem.setLastModified(
+                    accessKey,
+                    Clock.System.now().toEpochMilliseconds(),
+                )
                 bytes
             } catch (e: Exception) {
                 Logger.e("Failed to read cached tile $zoomLvl/$col/$row", e)
@@ -65,11 +73,14 @@ class FileTileCache(
     ) {
         withContext(ioDispatcher) {
             try {
-                val file = tileFile(zoomLvl, col, row)
-                file.parentFile?.mkdirs()
-                file.writeBytes(data)
+                val tileKey = tileKey(zoomLvl, col, row)
+                val accessKey = accessKey(zoomLvl, col, row)
+                cacheFileSystem.write(tileKey, data)
                 // Set initial access time to match write time
-                touchAccessFile(zoomLvl, col, row)
+                cacheFileSystem.setLastModified(
+                    accessKey,
+                    Clock.System.now().toEpochMilliseconds(),
+                )
             } catch (e: Exception) {
                 Logger.e("Failed to write cached tile $zoomLvl/$col/$row", e)
                 return@withContext
@@ -81,63 +92,42 @@ class FileTileCache(
 
     private suspend fun evictIfNeeded() {
         evictionMutex.withLock {
-            val tileFiles =
-                cacheDir.walkTopDown()
-                    .filter { it.isFile && it.extension == "png" }
-                    .toMutableList()
-
-            val totalSize = tileFiles.sumOf { it.length() }
+            val totalSize = cacheFileSystem.sizeBytes()
             if (totalSize <= maxCacheBytes) return
+
+            // Collect all .png tile keys with their access times for LRU sorting
+            val tileKeys =
+                cacheFileSystem.list()
+                    .filter { it.endsWith(".png") }
+                    .toMutableList()
 
             // Sort by last access time ascending (least recently accessed first).
             // Use the .access sidecar if it exists, otherwise fall back to the tile's lastModified.
-            tileFiles.sortBy { tile ->
-                val access = accessFileForTile(tile)
-                if (access.exists()) access.lastModified() else tile.lastModified()
+            tileKeys.sortBy { key ->
+                val accessKey = key.removeSuffix(".png") + ".access"
+                val accessTime = cacheFileSystem.lastModified(accessKey)
+                if (accessTime != -1L) accessTime else cacheFileSystem.lastModified(key)
             }
 
             var currentSize = totalSize
-            for (file in tileFiles) {
+            for (key in tileKeys) {
                 if (currentSize <= maxCacheBytes) break
-                val fileSize = file.length()
-                if (file.delete()) {
-                    currentSize -= fileSize
-                    // Also clean up the sidecar
-                    accessFileForTile(file).delete()
-                }
+                // We need to read the file size before deleting.
+                // Re-check total after each deletion via tracking.
+                val accessKey = key.removeSuffix(".png") + ".access"
+                cacheFileSystem.delete(key)
+                cacheFileSystem.delete(accessKey)
+                // Recalculate after deletion
+                currentSize = cacheFileSystem.sizeBytes()
             }
         }
     }
 
-    private fun tileFile(
-        zoomLvl: Int,
-        col: Int,
-        row: Int,
-    ): File = File(cacheDir, "$zoomLvl/$col/$row.png")
+    private fun tileKey(zoomLvl: Int, col: Int, row: Int): String =
+        "$zoomLvl/$col/$row.png"
 
-    private fun accessFile(
-        zoomLvl: Int,
-        col: Int,
-        row: Int,
-    ): File = File(cacheDir, "$zoomLvl/$col/$row.access")
-
-    private fun accessFileForTile(tileFile: File): File {
-        val path = tileFile.path.removeSuffix(".png") + ".access"
-        return File(path)
-    }
-
-    private fun touchAccessFile(
-        zoomLvl: Int,
-        col: Int,
-        row: Int,
-    ) {
-        val file = accessFile(zoomLvl, col, row)
-        file.parentFile?.mkdirs()
-        if (!file.exists()) {
-            file.createNewFile()
-        }
-        file.setLastModified(System.currentTimeMillis())
-    }
+    private fun accessKey(zoomLvl: Int, col: Int, row: Int): String =
+        "$zoomLvl/$col/$row.access"
 
     companion object {
         const val DEFAULT_MAX_CACHE_BYTES = 100L * 1024 * 1024 // 100 MB
