@@ -159,6 +159,34 @@ class IosCacheFileSystemTest {
     }
 
     @Test
+    fun listExcludesDirectoriesFromResults() {
+        fs.write("1/0/0.png", byteArrayOf(1))
+        fs.write("2/1/1.png", byteArrayOf(2))
+
+        val keys = fs.list()
+        // Directories like "1", "1/0", "2", "2/1" should be excluded
+        for (key in keys) {
+            assertTrue(
+                key.contains('.'),
+                "list() should only return files with extensions, but got '$key'",
+            )
+        }
+    }
+
+    @Test
+    fun setLastModifiedCreatesFileWhenParentDirAlreadyExists() {
+        // First write creates the parent directory structure
+        fs.write("1/0/0.png", byteArrayOf(1, 2, 3))
+
+        // Now setLastModified on a sibling .access file — parent dir already exists
+        val now = 1700000000000L
+        fs.setLastModified("1/0/0.access", now)
+
+        val result = fs.lastModified("1/0/0.access")
+        assertTrue(result > 0, "setLastModified should create sidecar when parent dir already exists")
+    }
+
+    @Test
     fun sizeBytesCountsOnlyPngFiles() {
         fs.write("1/0/0.png", byteArrayOf(1, 2, 3, 4, 5))
         fs.write("1/0/0.access", byteArrayOf(0))

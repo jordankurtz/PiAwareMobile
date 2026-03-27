@@ -328,6 +328,47 @@ class FileTileCacheCommonTest {
         }
 
     @Test
+    fun `eviction leaves cache at or below max size after incremental tracking`() =
+        runTest(testDispatcher) {
+            val cache = createCache(maxCacheBytes = 10L)
+
+            // Put 4 tiles of 5 bytes each: total 20 bytes, exceeding 10-byte limit
+            cache.put(zoomLvl = 1, col = 0, row = 0, data = byteArrayOf(1, 2, 3, 4, 5))
+            fakeFs.setModifiedTime("1/0/0.access", Clock.System.now().toEpochMilliseconds() - 20_000)
+
+            cache.put(zoomLvl = 1, col = 0, row = 1, data = byteArrayOf(1, 2, 3, 4, 5))
+            fakeFs.setModifiedTime("1/0/1.access", Clock.System.now().toEpochMilliseconds() - 15_000)
+
+            cache.put(zoomLvl = 1, col = 0, row = 2, data = byteArrayOf(1, 2, 3, 4, 5))
+            fakeFs.setModifiedTime("1/0/2.access", Clock.System.now().toEpochMilliseconds() - 10_000)
+
+            cache.put(zoomLvl = 1, col = 0, row = 3, data = byteArrayOf(1, 2, 3, 4, 5))
+
+            // After eviction, total .png size should be at or below 10 bytes
+            assertTrue(
+                fakeFs.sizeBytes() <= 10L,
+                "Cache size should be at or below maxCacheBytes after eviction, " +
+                    "but was ${fakeFs.sizeBytes()}",
+            )
+        }
+
+    @Test
+    fun `fileSize returns correct size for access sidecar files`() {
+        fakeFs.setLastModified("1/0/0.access", Clock.System.now().toEpochMilliseconds())
+
+        assertTrue(
+            fakeFs.fileSize("1/0/0.access") == 0L,
+            "fileSize should return 0 for an empty sidecar created by setLastModified",
+        )
+
+        fakeFs.write("1/0/0.access", byteArrayOf(1, 2, 3))
+        assertTrue(
+            fakeFs.fileSize("1/0/0.access") == 3L,
+            "fileSize should return the byte count for access sidecar files",
+        )
+    }
+
+    @Test
     fun `CacheFileSystem interface has all eight required methods`() {
         // Compile-time verification that the interface has the expected methods.
         // If any method is missing, this test won't compile.

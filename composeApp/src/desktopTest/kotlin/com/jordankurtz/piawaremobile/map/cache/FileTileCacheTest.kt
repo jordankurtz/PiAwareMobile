@@ -8,6 +8,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -252,6 +253,21 @@ class FileTileCacheTest {
                 "get() must not reset the tile file's lastModified (expiration clock)",
             )
         }
+
+    @Test
+    fun fileSizeReturnsCorrectSizeForExistingFile() {
+        val fs = JvmCacheFileSystem(cacheDir)
+        fs.write("1/0/0.png", byteArrayOf(1, 2, 3, 4, 5))
+
+        assertEquals(5L, fs.fileSize("1/0/0.png"))
+    }
+
+    @Test
+    fun fileSizeReturnsZeroForNonexistentFile() {
+        val fs = JvmCacheFileSystem(cacheDir)
+
+        assertEquals(0L, fs.fileSize("nonexistent.png"))
+    }
 
     @Test
     fun expiredTileIsNotServedEvenIfFrequentlyAccessed() =
