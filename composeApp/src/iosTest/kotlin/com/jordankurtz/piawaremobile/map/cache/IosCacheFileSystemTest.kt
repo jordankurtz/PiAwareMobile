@@ -1,6 +1,10 @@
 package com.jordankurtz.piawaremobile.map.cache
 
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
@@ -208,5 +212,113 @@ class IosCacheFileSystemTest {
         val result = fs.read("1/0/0.png")
         assertNotNull(result)
         assertContentEquals(byteArrayOf(), result)
+    }
+
+    @Test
+    fun concurrentReadsAndWritesToDifferentKeysDoNotCorruptOrDeadlock() {
+        val workerCount = 16
+        val tileData = ByteArray(256) { it.toByte() }
+
+        runBlocking(Dispatchers.Default) {
+            val writeJobs =
+                (0 until workerCount).map { i ->
+                    async {
+                        val key = "$i/0/0.png"
+                        fs.write(key, tileData)
+                    }
+                }
+            writeJobs.awaitAll()
+
+            val readJobs =
+                (0 until workerCount).map { i ->
+                    async {
+                        val key = "$i/0/0.png"
+                        fs.read(key)
+                    }
+                }
+            val results = readJobs.awaitAll()
+
+            for (i in 0 until workerCount) {
+                val result = results[i]
+                assertNotNull(result, "Concurrent read for worker $i returned null")
+                assertContentEquals(tileData, result, "Data corrupted for worker $i")
+            }
+        }
+    }
+
+    @Test
+    fun concurrentReadWriteToSameKeyDoesNotDeadlock() {
+        val key = "1/0/0.png"
+        val iterations = 50
+
+        runBlocking(Dispatchers.Default) {
+            val jobs =
+                (0 until iterations).map { i ->
+                    async {
+                        val data = byteArrayOf(i.toByte())
+                        fs.write(key, data)
+                        fs.read(key)
+                    }
+                }
+            val results = jobs.awaitAll()
+
+            // All operations completed without deadlock
+            assertEquals(iterations, results.size)
+            // Final read should return valid data (one of the written values)
+            val finalData = fs.read(key)
+            assertNotNull(finalData, "Final read after concurrent writes returned null")
+            assertEquals(1, finalData.size, "Final data should be 1 byte")
+        }
+    }
+
+    @Test
+    fun concurrentListWhileWritingDoesNotDeadlock() {
+        val workerCount = 16
+
+        runBlocking(Dispatchers.Default) {
+            val jobs =
+                (0 until workerCount).map { i ->
+                    async {
+                        fs.write("$i/0/0.png", byteArrayOf(i.toByte()))
+                        fs.list()
+                    }
+                }
+            val results = jobs.awaitAll()
+
+            // All operations completed; each list() returned a valid list
+            for (result in results) {
+                assertNotNull(result, "list() returned null during concurrent access")
+            }
+        }
+
+        // After all concurrent operations, all files should be present
+        val finalList = fs.list()
+        assertEquals(workerCount, finalList.size)
+    }
+
+    @Test
+    fun concurrentDeleteWhileReadingDoesNotDeadlock() {
+        val workerCount = 16
+        // Pre-populate cache
+        for (i in 0 until workerCount) {
+            fs.write("$i/0/0.png", byteArrayOf(i.toByte()))
+        }
+
+        runBlocking(Dispatchers.Default) {
+            val jobs =
+                (0 until workerCount).map { i ->
+                    async {
+                        // Half read, half delete
+                        if (i % 2 == 0) {
+                            fs.read("$i/0/0.png")
+                        } else {
+                            fs.delete("$i/0/0.png")
+                            null
+                        }
+                    }
+                }
+            // All operations complete without deadlock
+            jobs.awaitAll()
+        }
     }
 }
