@@ -13,6 +13,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.Buffer
 import kotlinx.io.readByteArray
@@ -40,7 +41,7 @@ class OpenStreetMapProviderTest {
             engine {
                 addHandler {
                     respond(
-                        content = String(responseBytes, Charsets.ISO_8859_1).encodeToByteArray(),
+                        content = ByteReadChannel(responseBytes),
                         status = HttpStatusCode.OK,
                         headers = headersOf(HttpHeaders.ContentType, "image/png"),
                     )

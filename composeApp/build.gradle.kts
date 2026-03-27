@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.kover)
+    alias(libs.plugins.sentry)
 }
 
 kotlin {
