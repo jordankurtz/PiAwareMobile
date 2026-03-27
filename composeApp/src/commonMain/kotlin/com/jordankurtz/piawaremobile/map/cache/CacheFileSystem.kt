@@ -12,7 +12,10 @@ interface CacheFileSystem {
     fun read(key: String): ByteArray?
 
     /** Write [data] to [key], creating parent directories as needed. */
-    fun write(key: String, data: ByteArray)
+    fun write(
+        key: String,
+        data: ByteArray,
+    )
 
     /** Delete the file at [key]. No-op if it does not exist. */
     fun delete(key: String)
@@ -24,7 +27,10 @@ interface CacheFileSystem {
     fun lastModified(key: String): Long
 
     /** Set the last-modified time for [key]. Creates the file if it does not exist. */
-    fun setLastModified(key: String, timeMs: Long)
+    fun setLastModified(
+        key: String,
+        timeMs: Long,
+    )
 
     /** Total size in bytes of all `.png` files in the cache. */
     fun sizeBytes(): Long

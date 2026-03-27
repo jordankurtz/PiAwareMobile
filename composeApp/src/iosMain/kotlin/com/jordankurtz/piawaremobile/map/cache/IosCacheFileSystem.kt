@@ -49,7 +49,10 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
         return data.toByteArray()
     }
 
-    override fun write(key: String, data: ByteArray) {
+    override fun write(
+        key: String,
+        data: ByteArray,
+    ) {
         val path = fullPath(key)
         val parent = parentPath(path)
         fileManager.createDirectoryAtPath(
@@ -72,20 +75,14 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
     override fun list(): List<String> {
         if (!fileManager.fileExistsAtPath(cacheDir)) return emptyList()
         val enumerator = fileManager.enumeratorAtPath(cacheDir) ?: return emptyList()
-        val results = mutableListOf<String>()
-        while (true) {
-            val obj = enumerator.nextObject() ?: break
-            val relativePath = obj.toString()
-            val fullPath = fullPath(relativePath)
-            var isDir: Boolean
-            @Suppress("UNCHECKED_CAST")
-            val attrs = fileManager.attributesOfItemAtPath(fullPath, error = null)
-            // Skip directories
-            val fileType = attrs?.get("NSFileType")
-            if (fileType?.toString() == "NSFileTypeDirectory") continue
-            results.add(relativePath)
-        }
-        return results
+        return generateSequence { enumerator.nextObject()?.toString() }
+            .filter { relativePath ->
+                val path = fullPath(relativePath)
+                val attrs = fileManager.attributesOfItemAtPath(path, error = null)
+                val fileType = attrs?.get("NSFileType")
+                fileType?.toString() != "NSFileTypeDirectory"
+            }
+            .toList()
     }
 
     override fun lastModified(key: String): Long {
@@ -96,7 +93,10 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
         return (date.timeIntervalSince1970 * 1000).toLong()
     }
 
-    override fun setLastModified(key: String, timeMs: Long) {
+    override fun setLastModified(
+        key: String,
+        timeMs: Long,
+    ) {
         val path = fullPath(key)
         if (!fileManager.fileExistsAtPath(path)) {
             // Create the file (and parent dirs) if it doesn't exist
@@ -109,7 +109,9 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
             )
             fileManager.createFileAtPath(path, contents = null, attributes = null)
         }
-        val date = NSDate(timeIntervalSince1970 = timeMs / 1000.0)
+        // NSDate reference date is 2001-01-01, Unix epoch offset is 978307200 seconds
+        val timeIntervalSinceRefDate = (timeMs / 1000.0) - NSDATE_REFERENCE_DATE_OFFSET
+        val date = NSDate(timeIntervalSinceReferenceDate = timeIntervalSinceRefDate)
         val attrs = mapOf<Any?, Any?>(NSFileModificationDate to date)
         fileManager.setAttributes(attrs, ofItemAtPath = path, error = null)
     }
@@ -117,19 +119,19 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
     override fun sizeBytes(): Long {
         if (!fileManager.fileExistsAtPath(cacheDir)) return 0L
         val enumerator = fileManager.enumeratorAtPath(cacheDir) ?: return 0L
-        var total = 0L
-        while (true) {
-            val obj = enumerator.nextObject() ?: break
-            val relativePath = obj.toString()
-            if (!relativePath.endsWith(".png")) continue
-            val fullPath = fullPath(relativePath)
-            val attrs = fileManager.attributesOfItemAtPath(fullPath, error = null) ?: continue
-            val size = attrs[NSFileSize]
-            if (size != null) {
-                total += size.toString().toLongOrNull() ?: 0L
+        return generateSequence { enumerator.nextObject()?.toString() }
+            .filter { it.endsWith(".png") }
+            .sumOf { relativePath ->
+                val path = fullPath(relativePath)
+                val attrs = fileManager.attributesOfItemAtPath(path, error = null)
+                val size = attrs?.get(NSFileSize)
+                size?.toString()?.toLongOrNull() ?: 0L
             }
-        }
-        return total
+    }
+
+    companion object {
+        /** Seconds between Unix epoch (1970-01-01) and NSDate reference date (2001-01-01). */
+        private const val NSDATE_REFERENCE_DATE_OFFSET = 978307200.0
     }
 
     private fun NSData.toByteArray(): ByteArray {

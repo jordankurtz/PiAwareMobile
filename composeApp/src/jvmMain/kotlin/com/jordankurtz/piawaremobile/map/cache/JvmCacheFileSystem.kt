@@ -13,7 +13,10 @@ class JvmCacheFileSystem(private val cacheDir: File) : CacheFileSystem {
         return file.readBytes()
     }
 
-    override fun write(key: String, data: ByteArray) {
+    override fun write(
+        key: String,
+        data: ByteArray,
+    ) {
         val file = File(cacheDir, key)
         file.parentFile?.mkdirs()
         file.writeBytes(data)
@@ -35,7 +38,10 @@ class JvmCacheFileSystem(private val cacheDir: File) : CacheFileSystem {
         return file.lastModified()
     }
 
-    override fun setLastModified(key: String, timeMs: Long) {
+    override fun setLastModified(
+        key: String,
+        timeMs: Long,
+    ) {
         val file = File(cacheDir, key)
         if (!file.exists()) {
             file.parentFile?.mkdirs()

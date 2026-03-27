@@ -20,12 +20,14 @@ actual class TileCacheModule {
         contextWrapper: ContextWrapper,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): TileCache {
-        val cachePaths = NSSearchPathForDirectoriesInDomains(
-            NSCachesDirectory,
-            NSUserDomainMask,
-            true,
-        )
+        val cachePaths =
+            NSSearchPathForDirectoriesInDomains(
+                NSCachesDirectory,
+                NSUserDomainMask,
+                true,
+            )
         val baseCacheDir = cachePaths.first() as String
+
         @Suppress("CAST_NEVER_SUCCEEDS")
         val cacheDir = (baseCacheDir as NSString).stringByAppendingPathComponent("map_tiles")
         val cacheFileSystem = IosCacheFileSystem(cacheDir)

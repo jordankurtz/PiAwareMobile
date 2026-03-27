@@ -1,22 +1,23 @@
 package com.jordankurtz.piawaremobile.map.cache
 
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSString
-import platform.Foundation.NSUserDomainMask
 import platform.Foundation.NSUUID
+import platform.Foundation.NSUserDomainMask
 import platform.Foundation.stringByAppendingPathComponent
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalForeignApi::class)
 class IosCacheFileSystemTest {
     private lateinit var cacheDir: String
     private lateinit var fs: IosCacheFileSystem
@@ -24,16 +25,18 @@ class IosCacheFileSystemTest {
 
     @BeforeTest
     fun setUp() {
-        val cachePaths = NSSearchPathForDirectoriesInDomains(
-            NSCachesDirectory,
-            NSUserDomainMask,
-            true,
-        )
+        val cachePaths =
+            NSSearchPathForDirectoriesInDomains(
+                NSCachesDirectory,
+                NSUserDomainMask,
+                true,
+            )
         val baseCacheDir = cachePaths.first() as String
         @Suppress("CAST_NEVER_SUCCEEDS")
-        cacheDir = (baseCacheDir as NSString).stringByAppendingPathComponent(
-            "ios-cache-fs-test-${NSUUID().UUIDString}",
-        )
+        cacheDir =
+            (baseCacheDir as NSString).stringByAppendingPathComponent(
+                "ios-cache-fs-test-${NSUUID().UUIDString}",
+            )
         fs = IosCacheFileSystem(cacheDir)
     }
 

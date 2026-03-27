@@ -5,7 +5,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Disk-based tile cache that stores tiles as individual files under a cache directory.
@@ -123,11 +123,17 @@ class FileTileCache(
         }
     }
 
-    private fun tileKey(zoomLvl: Int, col: Int, row: Int): String =
-        "$zoomLvl/$col/$row.png"
+    private fun tileKey(
+        zoomLvl: Int,
+        col: Int,
+        row: Int,
+    ): String = "$zoomLvl/$col/$row.png"
 
-    private fun accessKey(zoomLvl: Int, col: Int, row: Int): String =
-        "$zoomLvl/$col/$row.access"
+    private fun accessKey(
+        zoomLvl: Int,
+        col: Int,
+        row: Int,
+    ): String = "$zoomLvl/$col/$row.access"
 
     companion object {
         const val DEFAULT_MAX_CACHE_BYTES = 100L * 1024 * 1024 // 100 MB
