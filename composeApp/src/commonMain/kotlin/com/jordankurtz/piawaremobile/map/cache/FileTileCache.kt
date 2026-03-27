@@ -41,23 +41,32 @@ class FileTileCache(
             val accessKey = accessKey(zoomLvl, col, row)
 
             val lastMod = cacheFileSystem.lastModified(tileKey)
-            if (lastMod == -1L) return@withContext null
+            if (lastMod == -1L) {
+                Logger.d("Cache miss: $tileKey (not found)")
+                return@withContext null
+            }
 
             val age = Clock.System.now().toEpochMilliseconds() - lastMod
             if (age > maxAgeMillis) {
+                Logger.d("Cache miss: $tileKey (expired)")
                 cacheFileSystem.delete(tileKey)
                 cacheFileSystem.delete(accessKey)
                 return@withContext null
             }
 
             try {
-                val bytes = cacheFileSystem.read(tileKey) ?: return@withContext null
+                val bytes =
+                    cacheFileSystem.read(tileKey) ?: run {
+                        Logger.d("Cache miss: $tileKey (not found)")
+                        return@withContext null
+                    }
                 // Touch the sidecar access file for LRU eviction tracking,
                 // without modifying the tile file's lastModified (used for expiration)
                 cacheFileSystem.setLastModified(
                     accessKey,
                     Clock.System.now().toEpochMilliseconds(),
                 )
+                Logger.d("Cache hit: $tileKey")
                 bytes
             } catch (e: Exception) {
                 Logger.e("Failed to read cached tile $zoomLvl/$col/$row", e)
@@ -81,6 +90,7 @@ class FileTileCache(
                     accessKey,
                     Clock.System.now().toEpochMilliseconds(),
                 )
+                Logger.d("Cached tile: $tileKey (${data.size} bytes)")
             } catch (e: Exception) {
                 Logger.e("Failed to write cached tile $zoomLvl/$col/$row", e)
                 return@withContext
@@ -113,6 +123,9 @@ class FileTileCache(
             for (key in tileKeys) {
                 if (currentSize <= maxCacheBytes) break
                 val tileSize = cacheFileSystem.fileSize(key)
+                Logger.d(
+                    "Evicting tile: $key (cache at ${currentSize / 1024}KB / ${maxCacheBytes / 1024}KB)",
+                )
                 val accessKey = key.removeSuffix(".png") + ".access"
                 cacheFileSystem.delete(key)
                 cacheFileSystem.delete(accessKey)
