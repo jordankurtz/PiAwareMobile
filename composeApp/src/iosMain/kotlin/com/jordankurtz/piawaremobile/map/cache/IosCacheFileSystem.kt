@@ -25,7 +25,7 @@ import platform.posix.memcpy
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
-    private val fileManager: NSFileManager get() = NSFileManager.defaultManager
+    private val fileManager: NSFileManager = NSFileManager()
 
     private fun fullPath(key: String): String {
         // Build path by appending each component
