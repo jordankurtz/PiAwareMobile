@@ -7,9 +7,12 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
+import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.ServerType
 import com.jordankurtz.piawaremobile.settings.ui.AddServerDialog
+import com.jordankurtz.piawaremobile.settings.ui.EditServerDialog
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -109,5 +112,72 @@ class AddServerDialogTest {
             onNodeWithText("Address").performTextInput("test.local")
             onNodeWithText("Save").performClick()
             assertTrue(savedType == ServerType.READSB)
+        }
+
+    @Test
+    fun editDialogPreSelectsReadsbType() =
+        runComposeUiTest {
+            val server =
+                Server(
+                    name = "My Readsb",
+                    address = "readsb.local",
+                    type = ServerType.READSB,
+                )
+            setContent {
+                EditServerDialog(
+                    server = server,
+                    onDismiss = {},
+                    onConfirm = { _, _, _ -> },
+                )
+            }
+            // The button text should show the current type
+            onNodeWithText("readsb").assertIsDisplayed()
+            // The description should match readsb
+            onNodeWithText("Alternative decoder with trace API support").assertIsDisplayed()
+        }
+
+    @Test
+    fun editDialogPreSelectsPiawareTypeByDefault() =
+        runComposeUiTest {
+            val server =
+                Server(
+                    name = "My PiAware",
+                    address = "piaware.local",
+                    type = ServerType.PIAWARE,
+                )
+            setContent {
+                EditServerDialog(
+                    server = server,
+                    onDismiss = {},
+                    onConfirm = { _, _, _ -> },
+                )
+            }
+            onNodeWithText("PiAware / dump1090").assertIsDisplayed()
+            onNodeWithText("Standard local receiver").assertIsDisplayed()
+        }
+
+    @Test
+    fun editDialogChangingOnlyTypeSavesCorrectly() =
+        runComposeUiTest {
+            var savedType: ServerType? = null
+            val server =
+                Server(
+                    name = "Test Server",
+                    address = "test.local",
+                    type = ServerType.PIAWARE,
+                )
+            setContent {
+                EditServerDialog(
+                    server = server,
+                    onDismiss = {},
+                    onConfirm = { _, _, type -> savedType = type },
+                )
+            }
+            // Change type to readsb
+            onNodeWithText("PiAware / dump1090").performClick()
+            onNodeWithText("readsb").performClick()
+            // Save without changing name or address
+            onNodeWithText("Save").performClick()
+            assertEquals(ServerType.READSB, savedType)
         }
 }
