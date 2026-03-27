@@ -86,9 +86,9 @@ class AircraftViewModelTest {
 
         every { loadSettingsUseCase() } returns flowOf(Async.Success(settings))
         every { getAllAircraftTrailsUseCase() } returns MutableStateFlow(emptyMap<String, AircraftTrail>())
-        everySuspend { loadHistoryUseCase(listOf("server1.local")) } returns Unit
+        everySuspend { loadHistoryUseCase(servers) } returns Unit
         everySuspend { loadAircraftTypesUseCase(servers) } returns Unit
-        everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns emptyList()
+        everySuspend { getAircraftWithDetailsUseCase(servers, servers.first()) } returns emptyList()
     }
 
     @AfterTest
@@ -127,7 +127,7 @@ class AircraftViewModelTest {
 
             // Once from init + once from second onResume
             verifySuspend(mode = VerifyMode.exactly(2)) {
-                loadHistoryUseCase(listOf("server1.local"))
+                loadHistoryUseCase(servers)
             }
         }
 
@@ -144,7 +144,7 @@ class AircraftViewModelTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(2)) {
-                getAircraftWithDetailsUseCase(servers, "server1.local")
+                getAircraftWithDetailsUseCase(servers, servers.first())
             }
         }
 
@@ -213,7 +213,7 @@ class AircraftViewModelTest {
                 listOf(
                     AircraftWithServers(aircraft = Aircraft(hex = "abc123", flight = "UAL123")),
                 )
-            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { getAircraftWithDetailsUseCase(servers, servers.first()) } returns aircraftList
             everySuspend { lookupFlightUseCase(any()) } returns Async.Error("test")
 
             val viewModel = createViewModel()
@@ -240,7 +240,7 @@ class AircraftViewModelTest {
                     AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = null)),
                 )
             everySuspend {
-                getAircraftWithDetailsUseCase(servers, "server1.local")
+                getAircraftWithDetailsUseCase(servers, servers.first())
             } returns aircraftList
 
             val viewModel = createViewModel()
@@ -263,7 +263,7 @@ class AircraftViewModelTest {
                     AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = "TST101")),
                 )
             everySuspend {
-                getAircraftWithDetailsUseCase(servers, "server1.local")
+                getAircraftWithDetailsUseCase(servers, servers.first())
             } returns aircraftList
             everySuspend { urlHandler.openUrlInternally(any()) } returns Unit
 
@@ -301,7 +301,7 @@ class AircraftViewModelTest {
                 listOf(
                     AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = "UAL456")),
                 )
-            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { getAircraftWithDetailsUseCase(servers, servers.first()) } returns aircraftList
             everySuspend { urlHandler.openUrlInternally(any()) } returns Unit
 
             val viewModel = createViewModel()
@@ -328,7 +328,7 @@ class AircraftViewModelTest {
                 listOf(
                     AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = "UAL456")),
                 )
-            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { getAircraftWithDetailsUseCase(servers, servers.first()) } returns aircraftList
             everySuspend { urlHandler.openUrlExternally(any()) } returns Unit
 
             val viewModel = createViewModel()
@@ -369,7 +369,7 @@ class AircraftViewModelTest {
                 listOf(
                     AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = null)),
                 )
-            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { getAircraftWithDetailsUseCase(servers, servers.first()) } returns aircraftList
 
             val viewModel = createViewModel()
             testDispatcher.scheduler.advanceUntilIdle()
@@ -395,7 +395,7 @@ class AircraftViewModelTest {
                 listOf(
                     AircraftWithServers(aircraft = Aircraft(hex = "ABC123", flight = "UAL456")),
                 )
-            everySuspend { getAircraftWithDetailsUseCase(servers, "server1.local") } returns aircraftList
+            everySuspend { getAircraftWithDetailsUseCase(servers, servers.first()) } returns aircraftList
             everySuspend { urlHandler.openUrlInternally(any()) } returns Unit
 
             val viewModel = createViewModel()

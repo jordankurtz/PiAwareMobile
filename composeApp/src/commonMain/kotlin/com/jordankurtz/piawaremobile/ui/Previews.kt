@@ -136,7 +136,7 @@ private fun AddServerDialogPreview() {
     Theme {
         AddServerDialog(
             onDismiss = {},
-            onConfirm = { _, _ -> },
+            onConfirm = { _, _, _ -> },
         )
     }
 }

@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.aircraft.usecase.impl.GetReceiverLocationUs
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
+import com.jordankurtz.piawaremobile.settings.Server
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
@@ -22,6 +23,8 @@ class GetReceiverLocationUseCaseTest {
     private lateinit var useCase: GetReceiverLocationUseCase
     private val testDispatcher = StandardTestDispatcher()
 
+    private val server = Server(name = "Server 1", address = "server1")
+
     private val mockReceiverInfo =
         Receiver(
             latitude = 32.7f,
@@ -37,7 +40,6 @@ class GetReceiverLocationUseCaseTest {
     @Test
     fun `invoke returns location from dump1090 when available`() =
         runTest(testDispatcher) {
-            val server = "server1"
             everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns mockReceiverInfo
 
             val result = useCase(server)
@@ -49,7 +51,6 @@ class GetReceiverLocationUseCaseTest {
     @Test
     fun `invoke falls back to dump978 when dump1090 is unavailable`() =
         runTest(testDispatcher) {
-            val server = "server1"
             everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns null
             everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_978) } returns mockReceiverInfo
 
@@ -62,7 +63,6 @@ class GetReceiverLocationUseCaseTest {
     @Test
     fun `invoke returns null when no location is available`() =
         runTest(testDispatcher) {
-            val server = "server1"
             everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns null
             everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_978) } returns null
 
@@ -74,7 +74,6 @@ class GetReceiverLocationUseCaseTest {
     @Test
     fun `invoke does not query dump978 when dump1090 is available`() =
         runTest(testDispatcher) {
-            val server = "server1"
             everySuspend { aircraftRepo.getReceiverInfo(server, ReceiverType.DUMP_1090) } returns mockReceiverInfo
 
             useCase(server)

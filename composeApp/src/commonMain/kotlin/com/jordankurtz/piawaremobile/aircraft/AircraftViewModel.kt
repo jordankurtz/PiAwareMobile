@@ -104,7 +104,7 @@ class AircraftViewModel(
                                 stopPolling()
                                 return@collect
                             }
-                            launch { loadHistoryUseCase(servers.map { server -> server.address }) }
+                            launch { loadHistoryUseCase(servers) }
                             if (showReceiverLocations) {
                                 loadReceiverLocations(servers)
                             }
@@ -163,7 +163,7 @@ class AircraftViewModel(
             isFirstResume = false
             return
         }
-        val servers = settings?.servers?.map { it.address }?.takeIf { it.isNotEmpty() } ?: return
+        val servers = settings?.servers?.takeIf { it.isNotEmpty() } ?: return
         Logger.v("Refreshing trail history on resume")
         viewModelScope.launch(ioDispatcher) {
             loadHistoryUseCase(servers)
@@ -178,7 +178,7 @@ class AircraftViewModel(
     private fun loadReceiverLocations(servers: List<Server>) {
         viewModelScope.launch {
             val locations =
-                servers.map { server -> async { server to getReceiverLocationUseCase(server.address) } }
+                servers.map { server -> async { server to getReceiverLocationUseCase(server) } }
                     .awaitAll().filter { it.second != null }
                     .toMap() as Map<Server, Location> // we already filtered out the nulls but type checking doesn't know that
 
@@ -192,7 +192,7 @@ class AircraftViewModel(
     ): Job? {
         if (servers.isEmpty() || refreshInterval <= 0) return null
 
-        val infoHost = servers.first().address
+        val infoServer = servers.first()
 
         return viewModelScope.launch(ioDispatcher) {
             loadAircraftTypesUseCase(servers)
@@ -200,7 +200,7 @@ class AircraftViewModel(
             tickerFlow(refreshInterval.seconds)
                 .onEach {
                     Logger.d("Refreshing")
-                    val aircraftList = getAircraftWithDetailsUseCase(servers, infoHost)
+                    val aircraftList = getAircraftWithDetailsUseCase(servers, infoServer)
                     _numberOfPlanes.value = aircraftList.count()
                     _aircraft.value = aircraftList
                 }

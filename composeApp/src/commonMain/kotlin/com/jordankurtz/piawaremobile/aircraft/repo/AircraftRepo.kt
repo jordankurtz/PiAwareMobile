@@ -14,16 +14,16 @@ interface AircraftRepo {
     suspend fun loadAircraftTypes(servers: List<Server>)
 
     suspend fun findAircraftInfo(
-        host: String,
+        server: Server,
         hex: String,
     ): AircraftInfo?
 
     suspend fun getReceiverInfo(
-        host: String,
+        server: Server,
         receiverType: ReceiverType,
     ): Receiver?
 
     suspend fun lookupFlight(ident: String): Async<FlightResponse>
 
-    suspend fun fetchAndMergeHistory(host: String)
+    suspend fun fetchAndMergeHistory(server: Server)
 }

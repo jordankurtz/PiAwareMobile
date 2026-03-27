@@ -42,6 +42,11 @@
     <string name="server_dialog_address_required">Address is required</string>
     <string name="server_dialog_cancel">Cancel</string>
     <string name="server_dialog_save">Save</string>
+    <string name="server_dialog_type_label">Server Type</string>
+    <string name="server_dialog_type_piaware">PiAware / dump1090</string>
+    <string name="server_dialog_type_readsb">readsb</string>
+    <string name="server_dialog_type_piaware_description">Standard local receiver</string>
+    <string name="server_dialog_type_readsb_description">Alternative decoder with trace API support</string>
     <string name="server_add">Add server</string>
     <string name="server_edit">Edit server</string>
     <string name="server_delete">Delete server</string>
