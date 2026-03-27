@@ -41,7 +41,7 @@ class InteractiveUiTest {
     fun addServerDialogTypingEnablesSaveButton() =
         runComposeUiTest {
             setContent {
-                AddServerDialog(onDismiss = {}, onConfirm = { _, _ -> })
+                AddServerDialog(onDismiss = {}, onConfirm = { _, _, _ -> })
             }
             onNodeWithText("Name").performClick()
             onNodeWithText("Name").performTextInput("My PiAware")
@@ -58,7 +58,7 @@ class InteractiveUiTest {
             setContent {
                 AddServerDialog(
                     onDismiss = {},
-                    onConfirm = { name, address ->
+                    onConfirm = { name, address, _ ->
                         savedName = name
                         savedAddress = address
                     },

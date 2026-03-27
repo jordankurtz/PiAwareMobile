@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.settings.usecase
 
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Server
+import com.jordankurtz.piawaremobile.settings.ServerType
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,7 @@ interface SettingsService {
     suspend fun addServer(
         name: String,
         address: String,
+        type: ServerType = ServerType.PIAWARE,
     )
 
     suspend fun editServer(server: Server)

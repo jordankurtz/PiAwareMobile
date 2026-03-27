@@ -4,6 +4,7 @@ import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.extensions.async
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Server
+import com.jordankurtz.piawaremobile.settings.ServerType
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
@@ -42,12 +43,13 @@ class SettingsServiceImpl(
     override suspend fun addServer(
         name: String,
         address: String,
+        type: ServerType,
     ) {
         withContext(ioDispatcher) {
             val settings = settingsRepository.getSettings().first()
             settingsRepository.saveSettings(
                 settings.copy(
-                    servers = settings.servers + Server(name = name, address = address),
+                    servers = settings.servers + Server(name = name, address = address, type = type),
                 ),
             )
         }

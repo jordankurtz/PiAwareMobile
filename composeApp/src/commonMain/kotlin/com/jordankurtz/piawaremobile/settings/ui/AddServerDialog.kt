@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.settings.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -24,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.jordankurtz.piawaremobile.settings.Server
+import com.jordankurtz.piawaremobile.settings.ServerType
 import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.server_dialog_add_title
@@ -34,11 +38,16 @@ import piawaremobile.composeapp.generated.resources.server_dialog_edit_title
 import piawaremobile.composeapp.generated.resources.server_dialog_name_label
 import piawaremobile.composeapp.generated.resources.server_dialog_name_required
 import piawaremobile.composeapp.generated.resources.server_dialog_save
+import piawaremobile.composeapp.generated.resources.server_dialog_type_label
+import piawaremobile.composeapp.generated.resources.server_dialog_type_piaware
+import piawaremobile.composeapp.generated.resources.server_dialog_type_piaware_description
+import piawaremobile.composeapp.generated.resources.server_dialog_type_readsb
+import piawaremobile.composeapp.generated.resources.server_dialog_type_readsb_description
 
 @Composable
 fun AddServerDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, address: String) -> Unit,
+    onConfirm: (name: String, address: String, type: ServerType) -> Unit,
 ) {
     ServerDialog(
         title = stringResource(Res.string.server_dialog_add_title),
@@ -51,12 +60,13 @@ fun AddServerDialog(
 fun EditServerDialog(
     server: Server,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, address: String) -> Unit,
+    onConfirm: (name: String, address: String, type: ServerType) -> Unit,
 ) {
     ServerDialog(
         title = stringResource(Res.string.server_dialog_edit_title),
         initialName = server.name,
         initialAddress = server.address,
+        initialType = server.type,
         onDismiss = onDismiss,
         onConfirm = onConfirm,
     )
@@ -67,11 +77,13 @@ private fun ServerDialog(
     title: String,
     initialName: String = "",
     initialAddress: String = "",
+    initialType: ServerType = ServerType.PIAWARE,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, address: String) -> Unit,
+    onConfirm: (name: String, address: String, type: ServerType) -> Unit,
 ) {
     var name by remember { mutableStateOf(initialName) }
     var address by remember { mutableStateOf(initialAddress) }
+    var serverType by remember { mutableStateOf(initialType) }
 
     val isValid = name.isNotBlank() && address.isNotBlank()
 
@@ -128,6 +140,13 @@ private fun ServerDialog(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                ServerTypeSelector(
+                    selectedType = serverType,
+                    onTypeSelected = { serverType = it },
+                )
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
@@ -139,7 +158,7 @@ private fun ServerDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
-                        onClick = { onConfirm(name.trim(), address.trim()) },
+                        onClick = { onConfirm(name.trim(), address.trim(), serverType) },
                         enabled = isValid,
                     ) {
                         Text(stringResource(Res.string.server_dialog_save))
@@ -149,3 +168,64 @@ private fun ServerDialog(
         }
     }
 }
+
+@Composable
+private fun ServerTypeSelector(
+    selectedType: ServerType,
+    onTypeSelected: (ServerType) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column {
+        Text(
+            text = stringResource(Res.string.server_dialog_type_label),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Box {
+            TextButton(onClick = { expanded = true }) {
+                Text(serverTypeDisplayName(selectedType))
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.server_dialog_type_piaware)) },
+                    onClick = {
+                        onTypeSelected(ServerType.PIAWARE)
+                        expanded = false
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.server_dialog_type_readsb)) },
+                    onClick = {
+                        onTypeSelected(ServerType.READSB)
+                        expanded = false
+                    },
+                )
+            }
+        }
+
+        Text(
+            text = serverTypeDescription(selectedType),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 12.dp),
+        )
+    }
+}
+
+@Composable
+private fun serverTypeDisplayName(type: ServerType): String =
+    when (type) {
+        ServerType.PIAWARE -> stringResource(Res.string.server_dialog_type_piaware)
+        ServerType.READSB -> stringResource(Res.string.server_dialog_type_readsb)
+    }
+
+@Composable
+private fun serverTypeDescription(type: ServerType): String =
+    when (type) {
+        ServerType.PIAWARE -> stringResource(Res.string.server_dialog_type_piaware_description)
+        ServerType.READSB -> stringResource(Res.string.server_dialog_type_readsb_description)
+    }

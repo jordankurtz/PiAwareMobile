@@ -21,8 +21,9 @@ class SettingsViewModel(
     fun addServer(
         name: String,
         address: String,
+        type: ServerType,
     ) = viewModelScope.launch {
-        settingsService.addServer(name, address)
+        settingsService.addServer(name, address, type)
     }
 
     fun editServer(server: Server) =
