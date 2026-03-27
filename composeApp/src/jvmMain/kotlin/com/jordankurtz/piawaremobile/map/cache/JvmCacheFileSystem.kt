@@ -50,6 +50,12 @@ class JvmCacheFileSystem(private val cacheDir: File) : CacheFileSystem {
         file.setLastModified(timeMs)
     }
 
+    override fun fileSize(key: String): Long {
+        val file = File(cacheDir, key)
+        if (!file.exists()) return 0L
+        return file.length()
+    }
+
     override fun sizeBytes(): Long =
         cacheDir.walkTopDown()
             .filter { it.isFile && it.extension == "png" }

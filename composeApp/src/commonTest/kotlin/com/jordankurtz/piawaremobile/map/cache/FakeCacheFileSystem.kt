@@ -62,6 +62,8 @@ class FakeCacheFileSystem : CacheFileSystem {
         modifiedTimes[key] = timeMs
     }
 
+    override fun fileSize(key: String): Long = files[key]?.size?.toLong() ?: 0L
+
     override fun sizeBytes(): Long =
         files.entries
             .filter { it.key.endsWith(".png") }

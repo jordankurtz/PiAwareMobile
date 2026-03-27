@@ -148,6 +148,17 @@ class IosCacheFileSystemTest {
     }
 
     @Test
+    fun fileSizeReturnsCorrectSizeForExistingFile() {
+        fs.write("1/0/0.png", byteArrayOf(1, 2, 3, 4, 5))
+        assertEquals(5L, fs.fileSize("1/0/0.png"))
+    }
+
+    @Test
+    fun fileSizeReturnsZeroForNonexistentFile() {
+        assertEquals(0L, fs.fileSize("nonexistent.png"))
+    }
+
+    @Test
     fun sizeBytesCountsOnlyPngFiles() {
         fs.write("1/0/0.png", byteArrayOf(1, 2, 3, 4, 5))
         fs.write("1/0/0.access", byteArrayOf(0))

@@ -279,7 +279,56 @@ class FileTileCacheCommonTest {
         }
 
     @Test
-    fun `CacheFileSystem interface has all seven required methods`() {
+    fun `fileSize returns correct size for existing file`() {
+        fakeFs.write("1/0/0.png", byteArrayOf(1, 2, 3, 4, 5))
+
+        assertTrue(fakeFs.fileSize("1/0/0.png") == 5L, "fileSize should return the byte count of the file")
+    }
+
+    @Test
+    fun `fileSize returns zero for missing file`() {
+        assertTrue(fakeFs.fileSize("nonexistent.png") == 0L, "fileSize should return 0 for missing files")
+    }
+
+    @Test
+    fun `eviction uses incremental size tracking`() =
+        runTest(testDispatcher) {
+            // Use a spy-like approach: count sizeBytes calls via a wrapper
+            val callCounts = mutableMapOf("sizeBytes" to 0)
+            val countingFs =
+                object : CacheFileSystem by fakeFs {
+                    override fun sizeBytes(): Long {
+                        callCounts["sizeBytes"] = callCounts.getValue("sizeBytes") + 1
+                        return fakeFs.sizeBytes()
+                    }
+                }
+            val cache =
+                FileTileCache(
+                    cacheFileSystem = countingFs,
+                    ioDispatcher = testDispatcher,
+                    maxCacheBytes = 10L,
+                )
+
+            // Put 3 tiles of 5 bytes each: total 15 bytes, exceeding 10-byte limit on third put
+            cache.put(zoomLvl = 1, col = 0, row = 0, data = byteArrayOf(1, 2, 3, 4, 5))
+            fakeFs.setModifiedTime("1/0/0.access", Clock.System.now().toEpochMilliseconds() - 10_000)
+
+            cache.put(zoomLvl = 1, col = 0, row = 1, data = byteArrayOf(1, 2, 3, 4, 5))
+            fakeFs.setModifiedTime("1/0/1.access", Clock.System.now().toEpochMilliseconds() - 5_000)
+
+            callCounts["sizeBytes"] = 0
+            cache.put(zoomLvl = 1, col = 0, row = 2, data = byteArrayOf(1, 2, 3, 4, 5))
+
+            // sizeBytes should be called exactly once at the start of eviction, not per deletion
+            assertTrue(
+                callCounts.getValue("sizeBytes") == 1,
+                "sizeBytes should be called once per eviction, not per deletion. " +
+                    "Was called ${callCounts["sizeBytes"]} times",
+            )
+        }
+
+    @Test
+    fun `CacheFileSystem interface has all eight required methods`() {
         // Compile-time verification that the interface has the expected methods.
         // If any method is missing, this test won't compile.
         val fs: CacheFileSystem = fakeFs
@@ -289,6 +338,7 @@ class FileTileCacheCommonTest {
         fs.list()
         fs.lastModified("test")
         fs.setLastModified("test", 0L)
+        fs.fileSize("test")
         fs.sizeBytes()
     }
 }

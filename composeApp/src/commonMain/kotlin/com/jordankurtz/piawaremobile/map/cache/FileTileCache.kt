@@ -112,13 +112,11 @@ class FileTileCache(
             var currentSize = totalSize
             for (key in tileKeys) {
                 if (currentSize <= maxCacheBytes) break
-                // We need to read the file size before deleting.
-                // Re-check total after each deletion via tracking.
+                val tileSize = cacheFileSystem.fileSize(key)
                 val accessKey = key.removeSuffix(".png") + ".access"
                 cacheFileSystem.delete(key)
                 cacheFileSystem.delete(accessKey)
-                // Recalculate after deletion
-                currentSize = cacheFileSystem.sizeBytes()
+                currentSize -= tileSize
             }
         }
     }

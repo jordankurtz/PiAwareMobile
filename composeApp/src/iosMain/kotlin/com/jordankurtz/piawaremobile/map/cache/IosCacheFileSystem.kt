@@ -77,10 +77,9 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
         val enumerator = fileManager.enumeratorAtPath(cacheDir) ?: return emptyList()
         return generateSequence { enumerator.nextObject()?.toString() }
             .filter { relativePath ->
-                val path = fullPath(relativePath)
-                val attrs = fileManager.attributesOfItemAtPath(path, error = null)
-                val fileType = attrs?.get("NSFileType")
-                fileType?.toString() != "NSFileTypeDirectory"
+                // Cache files always have extensions (.png or .access);
+                // directories at this depth never do — skip the expensive attributesOfItemAtPath call
+                relativePath.contains('.')
             }
             .toList()
     }
@@ -99,14 +98,16 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
     ) {
         val path = fullPath(key)
         if (!fileManager.fileExistsAtPath(path)) {
-            // Create the file (and parent dirs) if it doesn't exist
+            // Create parent dirs only if they don't already exist
             val parent = parentPath(path)
-            fileManager.createDirectoryAtPath(
-                parent,
-                withIntermediateDirectories = true,
-                attributes = null,
-                error = null,
-            )
+            if (!fileManager.fileExistsAtPath(parent)) {
+                fileManager.createDirectoryAtPath(
+                    parent,
+                    withIntermediateDirectories = true,
+                    attributes = null,
+                    error = null,
+                )
+            }
             fileManager.createFileAtPath(path, contents = null, attributes = null)
         }
         // NSDate reference date is 2001-01-01, Unix epoch offset is 978307200 seconds
@@ -114,6 +115,13 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
         val date = NSDate(timeIntervalSinceReferenceDate = timeIntervalSinceRefDate)
         val attrs = mapOf<Any?, Any?>(NSFileModificationDate to date)
         fileManager.setAttributes(attrs, ofItemAtPath = path, error = null)
+    }
+
+    override fun fileSize(key: String): Long {
+        val path = fullPath(key)
+        if (!fileManager.fileExistsAtPath(path)) return 0L
+        val attrs = fileManager.attributesOfItemAtPath(path, error = null) ?: return 0L
+        return attrs[NSFileSize]?.toString()?.toLongOrNull() ?: 0L
     }
 
     override fun sizeBytes(): Long {

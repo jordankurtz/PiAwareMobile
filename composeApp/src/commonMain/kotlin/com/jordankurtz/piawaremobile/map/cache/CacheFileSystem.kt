@@ -32,6 +32,9 @@ interface CacheFileSystem {
         timeMs: Long,
     )
 
+    /** Size in bytes of a single file identified by [key], or 0 if the file does not exist. */
+    fun fileSize(key: String): Long
+
     /** Total size in bytes of all `.png` files in the cache. */
     fun sizeBytes(): Long
 }
