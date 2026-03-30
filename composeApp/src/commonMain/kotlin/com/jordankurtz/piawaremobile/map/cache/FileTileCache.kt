@@ -30,6 +30,7 @@ class FileTileCache(
     private val maxAgeMillis: Long = DEFAULT_MAX_AGE_MILLIS,
 ) : TileCache {
     private val evictionMutex = Mutex()
+    private var totalSizeBytes: Long = UNINITIALIZED_SIZE
 
     override suspend fun get(
         zoomLvl: Int,
@@ -81,10 +82,13 @@ class FileTileCache(
         data: ByteArray,
     ) {
         withContext(ioDispatcher) {
+            val sizeChange: Long
             try {
                 val tileKey = tileKey(zoomLvl, col, row)
                 val accessKey = accessKey(zoomLvl, col, row)
+                val previousSize = cacheFileSystem.fileSize(tileKey)
                 cacheFileSystem.write(tileKey, data)
+                sizeChange = data.size.toLong() - previousSize
                 // Set initial access time to match write time
                 cacheFileSystem.setLastModified(
                     accessKey,
@@ -96,14 +100,20 @@ class FileTileCache(
                 return@withContext
             }
 
-            evictIfNeeded()
+            evictIfNeeded(addedBytes = sizeChange)
         }
     }
 
-    private suspend fun evictIfNeeded() {
+    private suspend fun evictIfNeeded(addedBytes: Long) {
         evictionMutex.withLock {
-            val totalSize = cacheFileSystem.sizeBytes()
-            if (totalSize <= maxCacheBytes) return
+            if (totalSizeBytes == UNINITIALIZED_SIZE) {
+                // First eviction check: read the actual FS size which already
+                // includes the tile that was just written, so skip addedBytes.
+                totalSizeBytes = cacheFileSystem.sizeBytes()
+            } else {
+                totalSizeBytes += addedBytes
+            }
+            if (totalSizeBytes <= maxCacheBytes) return
 
             // Collect all .png tile keys with their access times for LRU sorting
             val tileKeys =
@@ -119,7 +129,7 @@ class FileTileCache(
                 if (accessTime != -1L) accessTime else cacheFileSystem.lastModified(key)
             }
 
-            var currentSize = totalSize
+            var currentSize = totalSizeBytes
             for (key in tileKeys) {
                 if (currentSize <= maxCacheBytes) break
                 val tileSize = cacheFileSystem.fileSize(key)
@@ -131,6 +141,7 @@ class FileTileCache(
                 cacheFileSystem.delete(accessKey)
                 currentSize -= tileSize
             }
+            totalSizeBytes = currentSize
         }
     }
 
@@ -149,5 +160,6 @@ class FileTileCache(
     companion object {
         const val DEFAULT_MAX_CACHE_BYTES = 100L * 1024 * 1024 // 100 MB
         const val DEFAULT_MAX_AGE_MILLIS = 7L * 24 * 60 * 60 * 1000 // 7 days
+        private const val UNINITIALIZED_SIZE = -1L
     }
 }

@@ -316,13 +316,13 @@ class FileTileCacheCommonTest {
             cache.put(zoomLvl = 1, col = 0, row = 1, data = byteArrayOf(1, 2, 3, 4, 5))
             fakeFs.setModifiedTime("1/0/1.access", Clock.System.now().toEpochMilliseconds() - 5_000)
 
-            callCounts["sizeBytes"] = 0
             cache.put(zoomLvl = 1, col = 0, row = 2, data = byteArrayOf(1, 2, 3, 4, 5))
 
-            // sizeBytes should be called exactly once at the start of eviction, not per deletion
+            // sizeBytes should be called exactly once for lazy initialization on the first put,
+            // then never again — subsequent puts use in-memory incremental tracking
             assertTrue(
                 callCounts.getValue("sizeBytes") == 1,
-                "sizeBytes should be called once per eviction, not per deletion. " +
+                "sizeBytes should be called once for initialization, not per put. " +
                     "Was called ${callCounts["sizeBytes"]} times",
             )
         }
