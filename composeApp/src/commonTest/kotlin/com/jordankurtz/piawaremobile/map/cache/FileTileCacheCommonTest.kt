@@ -1,6 +1,9 @@
 package com.jordankurtz.piawaremobile.map.cache
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -11,6 +14,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class FileTileCacheCommonTest {
     private lateinit var fakeFs: FakeCacheFileSystem
     private val testDispatcher = StandardTestDispatcher()
@@ -23,13 +27,24 @@ class FileTileCacheCommonTest {
     private fun createCache(
         maxCacheBytes: Long = FileTileCache.DEFAULT_MAX_CACHE_BYTES,
         maxAgeMillis: Long = FileTileCache.DEFAULT_MAX_AGE_MILLIS,
+        cacheScope: TestScope? = null,
     ): FileTileCache =
-        FileTileCache(
-            cacheFileSystem = fakeFs,
-            ioDispatcher = testDispatcher,
-            maxCacheBytes = maxCacheBytes,
-            maxAgeMillis = maxAgeMillis,
-        )
+        if (cacheScope != null) {
+            FileTileCache(
+                cacheFileSystem = fakeFs,
+                ioDispatcher = testDispatcher,
+                maxCacheBytes = maxCacheBytes,
+                maxAgeMillis = maxAgeMillis,
+                cacheScope = cacheScope,
+            )
+        } else {
+            FileTileCache(
+                cacheFileSystem = fakeFs,
+                ioDispatcher = testDispatcher,
+                maxCacheBytes = maxCacheBytes,
+                maxAgeMillis = maxAgeMillis,
+            )
+        }
 
     @Test
     fun `get returns null for tile that has never been cached`() =
@@ -143,7 +158,7 @@ class FileTileCacheCommonTest {
     @Test
     fun `evicts least recently accessed tiles when cache exceeds max size`() =
         runTest(testDispatcher) {
-            val cache = createCache(maxCacheBytes = 10L)
+            val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
             cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
@@ -154,6 +169,7 @@ class FileTileCacheCommonTest {
 
             // Third tile pushes cache to 15 bytes, exceeding 10-byte limit
             cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
+            advanceUntilIdle()
 
             // The oldest-accessed tile (row=0) should be evicted
             assertFalse(fakeFs.exists("1/0/0.png"), "Oldest-accessed tile should be evicted")
@@ -165,7 +181,7 @@ class FileTileCacheCommonTest {
     @Test
     fun `recently accessed tile survives eviction over less recently accessed tile`() =
         runTest(testDispatcher) {
-            val cache = createCache(maxCacheBytes = 10L)
+            val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
             // Put tile A (5 bytes)
@@ -181,6 +197,7 @@ class FileTileCacheCommonTest {
 
             // Put tile C -- exceeds limit, should evict tile B (least recently accessed)
             cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
+            advanceUntilIdle()
 
             // Tile A should survive because it was recently accessed
             assertNotNull(
@@ -233,11 +250,12 @@ class FileTileCacheCommonTest {
     @Test
     fun `eviction does not run when cache size is within limit`() =
         runTest(testDispatcher) {
-            val cache = createCache(maxCacheBytes = 1000L)
+            val cache = createCache(maxCacheBytes = 1000L, cacheScope = this)
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
             cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
             cache.put(zoomLvl = 1, col = 0, row = 1, data = data)
+            advanceUntilIdle()
 
             // Both tiles should still exist (total 10 bytes, well under 1000 limit)
             assertTrue(fakeFs.exists("1/0/0.png"), "Tile should not be evicted when under limit")
@@ -265,7 +283,7 @@ class FileTileCacheCommonTest {
     @Test
     fun `eviction deletes both png and access sidecar files`() =
         runTest(testDispatcher) {
-            val cache = createCache(maxCacheBytes = 5L)
+            val cache = createCache(maxCacheBytes = 5L, cacheScope = this)
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
             cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
@@ -273,6 +291,7 @@ class FileTileCacheCommonTest {
 
             // Put second tile to trigger eviction of first
             cache.put(zoomLvl = 1, col = 0, row = 1, data = data)
+            advanceUntilIdle()
 
             assertFalse(fakeFs.exists("1/0/0.png"), "Evicted tile file should be deleted")
             assertFalse(fakeFs.exists("1/0/0.access"), "Evicted access sidecar should be deleted")
@@ -307,6 +326,7 @@ class FileTileCacheCommonTest {
                     cacheFileSystem = countingFs,
                     ioDispatcher = testDispatcher,
                     maxCacheBytes = 10L,
+                    cacheScope = this,
                 )
 
             // Put 3 tiles of 5 bytes each: total 15 bytes, exceeding 10-byte limit on third put
@@ -317,6 +337,7 @@ class FileTileCacheCommonTest {
             fakeFs.setModifiedTime("1/0/1.access", Clock.System.now().toEpochMilliseconds() - 5_000)
 
             cache.put(zoomLvl = 1, col = 0, row = 2, data = byteArrayOf(1, 2, 3, 4, 5))
+            advanceUntilIdle()
 
             // sizeBytes should be called exactly once for lazy initialization on the first put,
             // then never again — subsequent puts use in-memory incremental tracking
@@ -330,7 +351,7 @@ class FileTileCacheCommonTest {
     @Test
     fun `eviction leaves cache at or below max size after incremental tracking`() =
         runTest(testDispatcher) {
-            val cache = createCache(maxCacheBytes = 10L)
+            val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
 
             // Put 4 tiles of 5 bytes each: total 20 bytes, exceeding 10-byte limit
             cache.put(zoomLvl = 1, col = 0, row = 0, data = byteArrayOf(1, 2, 3, 4, 5))
@@ -343,6 +364,7 @@ class FileTileCacheCommonTest {
             fakeFs.setModifiedTime("1/0/2.access", Clock.System.now().toEpochMilliseconds() - 10_000)
 
             cache.put(zoomLvl = 1, col = 0, row = 3, data = byteArrayOf(1, 2, 3, 4, 5))
+            advanceUntilIdle()
 
             // After eviction, total .png size should be at or below 10 bytes
             assertTrue(

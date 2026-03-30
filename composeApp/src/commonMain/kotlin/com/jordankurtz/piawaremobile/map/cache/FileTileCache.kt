@@ -2,6 +2,9 @@ package com.jordankurtz.piawaremobile.map.cache
 
 import com.jordankurtz.logger.Logger
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -22,15 +25,19 @@ import kotlin.time.Clock
  * @param ioDispatcher Dispatcher for file I/O operations
  * @param maxCacheBytes Maximum total cache size in bytes (default 100 MB)
  * @param maxAgeMillis Maximum age of a cached tile in milliseconds (default 7 days)
+ * @param cacheScope Scope for background eviction jobs; uses a [SupervisorJob] so that
+ *   cancellation of individual tile workers does not cancel eviction
  */
 class FileTileCache(
     private val cacheFileSystem: CacheFileSystem,
     private val ioDispatcher: CoroutineDispatcher,
     private val maxCacheBytes: Long = DEFAULT_MAX_CACHE_BYTES,
     private val maxAgeMillis: Long = DEFAULT_MAX_AGE_MILLIS,
+    private val cacheScope: CoroutineScope = CoroutineScope(ioDispatcher + SupervisorJob()),
 ) : TileCache {
     private val evictionMutex = Mutex()
     private var totalSizeBytes: Long = UNINITIALIZED_SIZE
+    private var evictionScheduled = false
 
     override suspend fun get(
         zoomLvl: Int,
@@ -100,19 +107,36 @@ class FileTileCache(
                 return@withContext
             }
 
-            evictIfNeeded(addedBytes = sizeChange)
+            // Fast O(1) size update under mutex — never blocks on filesystem I/O
+            val shouldSchedule =
+                evictionMutex.withLock {
+                    if (totalSizeBytes == UNINITIALIZED_SIZE) {
+                        // First put: read the actual FS size which already
+                        // includes the tile that was just written, so skip sizeChange.
+                        totalSizeBytes = cacheFileSystem.sizeBytes()
+                    } else {
+                        totalSizeBytes += sizeChange
+                    }
+                    if (totalSizeBytes > maxCacheBytes && !evictionScheduled) {
+                        evictionScheduled = true
+                        true
+                    } else {
+                        false
+                    }
+                }
+            if (shouldSchedule) {
+                cacheScope.launch { evictIfNeeded() }
+            }
         }
     }
 
-    private suspend fun evictIfNeeded(addedBytes: Long) {
+    /**
+     * Evicts least-recently-accessed tiles until [totalSizeBytes] is at or below [maxCacheBytes].
+     * Runs in [cacheScope] so that cancellation of tile workers does not abort eviction.
+     */
+    private suspend fun evictIfNeeded() {
         evictionMutex.withLock {
-            if (totalSizeBytes == UNINITIALIZED_SIZE) {
-                // First eviction check: read the actual FS size which already
-                // includes the tile that was just written, so skip addedBytes.
-                totalSizeBytes = cacheFileSystem.sizeBytes()
-            } else {
-                totalSizeBytes += addedBytes
-            }
+            evictionScheduled = false
             if (totalSizeBytes <= maxCacheBytes) return
 
             // Collect all .png tile keys with their access times for LRU sorting

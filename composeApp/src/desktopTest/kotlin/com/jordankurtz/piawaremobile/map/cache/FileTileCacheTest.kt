@@ -1,6 +1,9 @@
 package com.jordankurtz.piawaremobile.map.cache
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import java.io.File
 import kotlin.io.path.createTempDirectory
@@ -13,6 +16,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class FileTileCacheTest {
     private lateinit var cacheDir: File
     private val testDispatcher = StandardTestDispatcher()
@@ -30,13 +34,24 @@ class FileTileCacheTest {
     private fun createCache(
         maxCacheBytes: Long = FileTileCache.DEFAULT_MAX_CACHE_BYTES,
         maxAgeMillis: Long = FileTileCache.DEFAULT_MAX_AGE_MILLIS,
+        cacheScope: TestScope? = null,
     ): FileTileCache =
-        FileTileCache(
-            cacheFileSystem = JvmCacheFileSystem(cacheDir),
-            ioDispatcher = testDispatcher,
-            maxCacheBytes = maxCacheBytes,
-            maxAgeMillis = maxAgeMillis,
-        )
+        if (cacheScope != null) {
+            FileTileCache(
+                cacheFileSystem = JvmCacheFileSystem(cacheDir),
+                ioDispatcher = testDispatcher,
+                maxCacheBytes = maxCacheBytes,
+                maxAgeMillis = maxAgeMillis,
+                cacheScope = cacheScope,
+            )
+        } else {
+            FileTileCache(
+                cacheFileSystem = JvmCacheFileSystem(cacheDir),
+                ioDispatcher = testDispatcher,
+                maxCacheBytes = maxCacheBytes,
+                maxAgeMillis = maxAgeMillis,
+            )
+        }
 
     @Test
     fun getReturnsNullForMissingTile() =
@@ -98,7 +113,7 @@ class FileTileCacheTest {
     fun evictsOldestFilesWhenCacheExceedsMaxSize() =
         runTest(testDispatcher) {
             // Set a very small max size to force eviction
-            val cache = createCache(maxCacheBytes = 10L)
+            val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
 
             // Each tile is 5 bytes — two tiles = 10 bytes (at limit)
             val data = byteArrayOf(1, 2, 3, 4, 5)
@@ -111,6 +126,7 @@ class FileTileCacheTest {
 
             // Third tile should trigger eviction of the oldest-accessed (row=0)
             cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
+            advanceUntilIdle()
 
             // The oldest-accessed tile (row=0) should have been evicted
             val evictedFile = File(cacheDir, "1/0/0.png")
@@ -190,7 +206,7 @@ class FileTileCacheTest {
     @Test
     fun recentlyAccessedTileSurvivesEviction() =
         runTest(testDispatcher) {
-            val cache = createCache(maxCacheBytes = 10L)
+            val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
             // Put tile A (5 bytes)
@@ -208,6 +224,7 @@ class FileTileCacheTest {
 
             // Put tile C — exceeds limit, should evict tile B (the least recently accessed)
             cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
+            advanceUntilIdle()
 
             // Tile A should survive because it was recently accessed
             assertNotNull(
