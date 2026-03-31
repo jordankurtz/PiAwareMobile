@@ -54,6 +54,9 @@ kotlin {
             baseName = "ComposeApp"
             isStatic = true
         }
+        iosTarget.binaries.all {
+            linkerOpts("-lsqlite3")
+        }
     }
 
     sourceSets {
