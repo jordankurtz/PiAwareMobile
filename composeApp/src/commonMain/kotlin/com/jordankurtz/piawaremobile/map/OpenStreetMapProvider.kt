@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map
 
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.cache.TileCache
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import io.ktor.client.HttpClient
 import kotlinx.io.Buffer
 import kotlinx.io.RawSource
@@ -14,6 +15,7 @@ import kotlin.time.TimeSource
 class OpenStreetMapProvider(
     private val httpClient: HttpClient,
     private val tileCache: TileCache,
+    private val statsTracker: TileCacheStatsTracker,
 ) : TileStreamProvider {
     override suspend fun getTileStream(
         row: Int,
@@ -27,6 +29,7 @@ class OpenStreetMapProvider(
         tileCache.get(zoomLvl, col, row)?.let { cached ->
             val elapsed = mark.elapsedNow().inWholeMilliseconds
             Logger.d("Tile cache hit z=$zoomLvl x=$col y=$row (${elapsed}ms)")
+            statsTracker.recordDiskHit()
             return Buffer().apply { write(cached) }
         }
 
@@ -47,11 +50,13 @@ class OpenStreetMapProvider(
 
             // Store in cache (failures are logged inside TileCache)
             tileCache.put(zoomLvl, col, row, bytes)
+            statsTracker.recordNetworkFetch()
 
             Buffer().apply { write(bytes) }
         } catch (e: Exception) {
             val networkElapsed = networkMark.elapsedNow().inWholeMilliseconds
             Logger.e("Failed to load tile z=$zoomLvl x=$col y=$row (${networkElapsed}ms)", e)
+            statsTracker.recordError()
             null
         }
     }

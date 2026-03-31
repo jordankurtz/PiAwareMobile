@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.map
 
 import com.jordankurtz.piawaremobile.map.cache.TileCache
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -33,6 +34,7 @@ class OpenStreetMapProviderTest {
             OpenStreetMapProvider(
                 httpClient = httpClient,
                 tileCache = tileCache,
+                statsTracker = TileCacheStatsTracker(),
             )
     }
 
