@@ -25,39 +25,4 @@ class JvmCacheFileSystem(private val cacheDir: File) : CacheFileSystem {
     override fun delete(key: String) {
         File(cacheDir, key).delete()
     }
-
-    override fun list(): List<String> =
-        cacheDir.walkTopDown()
-            .filter { it.isFile }
-            .map { it.relativeTo(cacheDir).path }
-            .toList()
-
-    override fun lastModified(key: String): Long {
-        val file = File(cacheDir, key)
-        if (!file.exists()) return -1L
-        return file.lastModified()
-    }
-
-    override fun setLastModified(
-        key: String,
-        timeMs: Long,
-    ) {
-        val file = File(cacheDir, key)
-        if (!file.exists()) {
-            file.parentFile?.mkdirs()
-            file.createNewFile()
-        }
-        file.setLastModified(timeMs)
-    }
-
-    override fun fileSize(key: String): Long {
-        val file = File(cacheDir, key)
-        if (!file.exists()) return 0L
-        return file.length()
-    }
-
-    override fun sizeBytes(): Long =
-        cacheDir.walkTopDown()
-            .filter { it.isFile && it.extension == "png" }
-            .sumOf { it.length() }
 }

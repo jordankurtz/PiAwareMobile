@@ -11,17 +11,15 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 /**
- * Disk-based tile cache that stores tiles as individual files under a cache directory.
+ * Disk-based tile cache that stores tile bytes on the filesystem and tracks
+ * metadata (size, age, LRU order) in a SQLDelight database.
+ *
  * Files are organized as `{cacheDir}/{zoom}/{col}/{row}.png`.
+ * The database stores tile metadata in `tile` and cache membership in `cache_entry`,
+ * enabling O(1) size lookups and O(log n) LRU eviction queries.
  *
- * Expiration is based on the tile file's last-modified time, which represents when the
- * tile was originally fetched from the network. A separate `.access` sidecar file tracks
- * the most recent read time for LRU eviction ordering, so that accessing a tile does not
- * reset its expiration clock.
- *
- * All file I/O is delegated to [cacheFileSystem], keeping this class platform-independent.
- *
- * @param cacheFileSystem Abstraction over raw file operations
+ * @param cacheFileSystem Abstraction over raw file operations (read/write/delete only)
+ * @param queries SQLDelight-generated queries for tile metadata
  * @param ioDispatcher Dispatcher for file I/O operations
  * @param maxCacheBytes Maximum total cache size in bytes (default 100 MB)
  * @param maxAgeMillis Maximum age of a cached tile in milliseconds (default 7 days)
@@ -30,13 +28,14 @@ import kotlin.time.Clock
  */
 class FileTileCache(
     private val cacheFileSystem: CacheFileSystem,
+    private val queries: TileCacheQueries,
     private val ioDispatcher: CoroutineDispatcher,
     private val maxCacheBytes: Long = DEFAULT_MAX_CACHE_BYTES,
     private val maxAgeMillis: Long = DEFAULT_MAX_AGE_MILLIS,
-    private val cacheScope: CoroutineScope = CoroutineScope(ioDispatcher + SupervisorJob()),
+    cacheScope: CoroutineScope? = null,
 ) : TileCache {
+    private val scope = cacheScope ?: CoroutineScope(ioDispatcher + SupervisorJob())
     private val evictionMutex = Mutex()
-    private var totalSizeBytes: Long = UNINITIALIZED_SIZE
     private var evictionScheduled = false
 
     override suspend fun get(
@@ -46,40 +45,49 @@ class FileTileCache(
     ): ByteArray? =
         withContext(ioDispatcher) {
             val tileKey = tileKey(zoomLvl, col, row)
-            val accessKey = accessKey(zoomLvl, col, row)
+            val entry =
+                queries.selectCacheEntry(
+                    zoomLvl.toLong(),
+                    col.toLong(),
+                    row.toLong(),
+                ).executeAsOneOrNull()
 
-            val lastMod = cacheFileSystem.lastModified(tileKey)
-            if (lastMod == -1L) {
+            if (entry == null) {
                 Logger.d("Cache miss: $tileKey (not found)")
                 return@withContext null
             }
 
-            val age = Clock.System.now().toEpochMilliseconds() - lastMod
+            val age = Clock.System.now().toEpochMilliseconds() - entry.fetched_at
             if (age > maxAgeMillis) {
                 Logger.d("Cache miss: $tileKey (expired)")
                 cacheFileSystem.delete(tileKey)
-                cacheFileSystem.delete(accessKey)
+                queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
+                queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
                 return@withContext null
             }
 
-            try {
-                val bytes =
-                    cacheFileSystem.read(tileKey) ?: run {
-                        Logger.d("Cache miss: $tileKey (not found)")
-                        return@withContext null
-                    }
-                // Touch the sidecar access file for LRU eviction tracking,
-                // without modifying the tile file's lastModified (used for expiration)
-                cacheFileSystem.setLastModified(
-                    accessKey,
-                    Clock.System.now().toEpochMilliseconds(),
-                )
-                Logger.d("Cache hit: $tileKey")
-                bytes
-            } catch (e: Exception) {
-                Logger.e("Failed to read cached tile $zoomLvl/$col/$row", e)
-                null
+            val bytes =
+                try {
+                    cacheFileSystem.read(tileKey)
+                } catch (e: Exception) {
+                    Logger.e("Failed to read cached tile $zoomLvl/$col/$row", e)
+                    null
+                }
+            if (bytes == null) {
+                Logger.d("Cache miss: $tileKey (missing from disk)")
+                queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
+                queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
+                return@withContext null
             }
+
+            queries.updateLastAccessed(
+                Clock.System.now().toEpochMilliseconds(),
+                zoomLvl.toLong(),
+                col.toLong(),
+                row.toLong(),
+            )
+            Logger.d("Cache hit: $tileKey")
+            bytes
         }
 
     override suspend fun put(
@@ -89,17 +97,22 @@ class FileTileCache(
         data: ByteArray,
     ) {
         withContext(ioDispatcher) {
-            val sizeChange: Long
+            val tileKey = tileKey(zoomLvl, col, row)
             try {
-                val tileKey = tileKey(zoomLvl, col, row)
-                val accessKey = accessKey(zoomLvl, col, row)
-                val previousSize = cacheFileSystem.fileSize(tileKey)
                 cacheFileSystem.write(tileKey, data)
-                sizeChange = data.size.toLong() - previousSize
-                // Set initial access time to match write time
-                cacheFileSystem.setLastModified(
-                    accessKey,
-                    Clock.System.now().toEpochMilliseconds(),
+                val now = Clock.System.now().toEpochMilliseconds()
+                queries.upsertTile(
+                    zoomLvl.toLong(),
+                    col.toLong(),
+                    row.toLong(),
+                    data.size.toLong(),
+                    now,
+                )
+                queries.upsertCacheEntry(
+                    zoomLvl.toLong(),
+                    col.toLong(),
+                    row.toLong(),
+                    now,
                 )
                 Logger.d("Cached tile: $tileKey (${data.size} bytes)")
             } catch (e: Exception) {
@@ -107,17 +120,9 @@ class FileTileCache(
                 return@withContext
             }
 
-            // Fast O(1) size update under mutex — never blocks on filesystem I/O
             val shouldSchedule =
                 evictionMutex.withLock {
-                    if (totalSizeBytes == UNINITIALIZED_SIZE) {
-                        // First put: read the actual FS size which already
-                        // includes the tile that was just written, so skip sizeChange.
-                        totalSizeBytes = cacheFileSystem.sizeBytes()
-                    } else {
-                        totalSizeBytes += sizeChange
-                    }
-                    if (totalSizeBytes > maxCacheBytes && !evictionScheduled) {
+                    if (!evictionScheduled) {
                         evictionScheduled = true
                         true
                     } else {
@@ -125,47 +130,40 @@ class FileTileCache(
                     }
                 }
             if (shouldSchedule) {
-                cacheScope.launch { evictIfNeeded() }
+                scope.launch { evictIfNeeded() }
             }
         }
     }
 
     /**
-     * Evicts least-recently-accessed tiles until [totalSizeBytes] is at or below [maxCacheBytes].
-     * Runs in [cacheScope] so that cancellation of tile workers does not abort eviction.
+     * Evicts least-recently-accessed tiles until total cache size is at or below [maxCacheBytes].
+     * Runs in [scope] so that cancellation of tile workers does not abort eviction.
      */
     private suspend fun evictIfNeeded() {
         evictionMutex.withLock {
             evictionScheduled = false
-            if (totalSizeBytes <= maxCacheBytes) return
+            val totalSize = queries.totalCacheSize().executeAsOne()
+            if (totalSize <= maxCacheBytes) return
 
-            // Collect all .png tile keys with their access times for LRU sorting
-            val tileKeys =
-                cacheFileSystem.list()
-                    .filter { it.endsWith(".png") }
-                    .toMutableList()
-
-            // Sort by last access time ascending (least recently accessed first).
-            // Use the .access sidecar if it exists, otherwise fall back to the tile's lastModified.
-            tileKeys.sortBy { key ->
-                val accessKey = key.removeSuffix(".png") + ".access"
-                val accessTime = cacheFileSystem.lastModified(accessKey)
-                if (accessTime != -1L) accessTime else cacheFileSystem.lastModified(key)
-            }
-
-            var currentSize = totalSizeBytes
-            for (key in tileKeys) {
+            val tiles = queries.selectLruTiles().executeAsList()
+            var currentSize = totalSize
+            for (tile in tiles) {
                 if (currentSize <= maxCacheBytes) break
-                val tileSize = cacheFileSystem.fileSize(key)
+                val tileKey =
+                    tileKey(
+                        tile.zoom_level.toInt(),
+                        tile.col.toInt(),
+                        tile.row.toInt(),
+                    )
                 Logger.d(
-                    "Evicting tile: $key (cache at ${currentSize / 1024}KB / ${maxCacheBytes / 1024}KB)",
+                    "Evicting tile: $tileKey " +
+                        "(cache at ${currentSize / 1024}KB / ${maxCacheBytes / 1024}KB)",
                 )
-                val accessKey = key.removeSuffix(".png") + ".access"
-                cacheFileSystem.delete(key)
-                cacheFileSystem.delete(accessKey)
-                currentSize -= tileSize
+                cacheFileSystem.delete(tileKey)
+                queries.deleteCacheEntry(tile.zoom_level, tile.col, tile.row)
+                queries.deleteTile(tile.zoom_level, tile.col, tile.row)
+                currentSize -= tile.size_bytes
             }
-            totalSizeBytes = currentSize
         }
     }
 
@@ -175,15 +173,8 @@ class FileTileCache(
         row: Int,
     ): String = "$zoomLvl/$col/$row.png"
 
-    private fun accessKey(
-        zoomLvl: Int,
-        col: Int,
-        row: Int,
-    ): String = "$zoomLvl/$col/$row.access"
-
     companion object {
         const val DEFAULT_MAX_CACHE_BYTES = 100L * 1024 * 1024 // 100 MB
         const val DEFAULT_MAX_AGE_MILLIS = 7L * 24 * 60 * 60 * 1000 // 7 days
-        private const val UNINITIALIZED_SIZE = -1L
     }
 }

@@ -1,9 +1,11 @@
 package com.jordankurtz.piawaremobile.di.modules
 
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
+import com.jordankurtz.piawaremobile.map.cache.DatabaseDriverFactory
 import com.jordankurtz.piawaremobile.map.cache.FileTileCache
 import com.jordankurtz.piawaremobile.map.cache.IosCacheFileSystem
 import com.jordankurtz.piawaremobile.map.cache.TileCache
+import com.jordankurtz.piawaremobile.map.cache.TileCacheDatabase
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -31,6 +33,12 @@ actual class TileCacheModule {
         @Suppress("CAST_NEVER_SUCCEEDS")
         val cacheDir = (baseCacheDir as NSString).stringByAppendingPathComponent("map_tiles")
         val cacheFileSystem = IosCacheFileSystem(cacheDir)
-        return FileTileCache(cacheFileSystem = cacheFileSystem, ioDispatcher = ioDispatcher)
+        val driverFactory = DatabaseDriverFactory()
+        val database = TileCacheDatabase(driverFactory.createDriver())
+        return FileTileCache(
+            cacheFileSystem = cacheFileSystem,
+            queries = database.tileCacheQueries,
+            ioDispatcher = ioDispatcher,
+        )
     }
 }

@@ -3,9 +3,11 @@ package com.jordankurtz.piawaremobile.map.cache
 /**
  * Abstraction over file-system operations needed by [FileTileCache].
  *
- * Keys use relative paths with the convention `{zoom}/{col}/{row}.png`
- * for tile data and `{zoom}/{col}/{row}.access` for LRU sidecar files.
+ * Keys use relative paths with the convention `{zoom}/{col}/{row}.png`.
  * Implementations handle directory creation internally on [write].
+ *
+ * Metadata tracking (size, timestamps, LRU order) is handled by the database,
+ * so this interface only provides raw byte operations.
  */
 interface CacheFileSystem {
     /** Read file contents for [key], or null if the file does not exist. */
@@ -19,22 +21,4 @@ interface CacheFileSystem {
 
     /** Delete the file at [key]. No-op if it does not exist. */
     fun delete(key: String)
-
-    /** Return all cache keys (relative paths) for files under the cache root. */
-    fun list(): List<String>
-
-    /** Return the last-modified time in epoch milliseconds for [key], or -1 if not found. */
-    fun lastModified(key: String): Long
-
-    /** Set the last-modified time for [key]. Creates the file if it does not exist. */
-    fun setLastModified(
-        key: String,
-        timeMs: Long,
-    )
-
-    /** Size in bytes of a single file identified by [key], or 0 if the file does not exist. */
-    fun fileSize(key: String): Long
-
-    /** Total size in bytes of all `.png` files in the cache. */
-    fun sizeBytes(): Long
 }

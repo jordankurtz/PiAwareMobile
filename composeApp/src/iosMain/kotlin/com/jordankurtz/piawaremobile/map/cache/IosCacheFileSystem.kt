@@ -5,15 +5,11 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.Foundation.NSData
-import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
-import platform.Foundation.NSFileModificationDate
-import platform.Foundation.NSFileSize
 import platform.Foundation.NSString
 import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfFile
 import platform.Foundation.stringByAppendingPathComponent
-import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.writeToFile
 import platform.posix.memcpy
 
@@ -70,76 +66,6 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
         if (fileManager.fileExistsAtPath(path)) {
             fileManager.removeItemAtPath(path, error = null)
         }
-    }
-
-    override fun list(): List<String> {
-        if (!fileManager.fileExistsAtPath(cacheDir)) return emptyList()
-        val enumerator = fileManager.enumeratorAtPath(cacheDir) ?: return emptyList()
-        return generateSequence { enumerator.nextObject()?.toString() }
-            .filter { relativePath ->
-                // Cache files always have extensions (.png or .access);
-                // directories at this depth never do — skip the expensive attributesOfItemAtPath call
-                relativePath.contains('.')
-            }
-            .toList()
-    }
-
-    override fun lastModified(key: String): Long {
-        val path = fullPath(key)
-        if (!fileManager.fileExistsAtPath(path)) return -1L
-        val attrs = fileManager.attributesOfItemAtPath(path, error = null) ?: return -1L
-        val date = attrs[NSFileModificationDate] as? NSDate ?: return -1L
-        return (date.timeIntervalSince1970 * 1000).toLong()
-    }
-
-    override fun setLastModified(
-        key: String,
-        timeMs: Long,
-    ) {
-        val path = fullPath(key)
-        if (!fileManager.fileExistsAtPath(path)) {
-            // Create parent dirs only if they don't already exist
-            val parent = parentPath(path)
-            if (!fileManager.fileExistsAtPath(parent)) {
-                fileManager.createDirectoryAtPath(
-                    parent,
-                    withIntermediateDirectories = true,
-                    attributes = null,
-                    error = null,
-                )
-            }
-            fileManager.createFileAtPath(path, contents = null, attributes = null)
-        }
-        // NSDate reference date is 2001-01-01, Unix epoch offset is 978307200 seconds
-        val timeIntervalSinceRefDate = (timeMs / 1000.0) - NSDATE_REFERENCE_DATE_OFFSET
-        val date = NSDate(timeIntervalSinceReferenceDate = timeIntervalSinceRefDate)
-        val attrs = mapOf<Any?, Any?>(NSFileModificationDate to date)
-        fileManager.setAttributes(attrs, ofItemAtPath = path, error = null)
-    }
-
-    override fun fileSize(key: String): Long {
-        val path = fullPath(key)
-        if (!fileManager.fileExistsAtPath(path)) return 0L
-        val attrs = fileManager.attributesOfItemAtPath(path, error = null) ?: return 0L
-        return attrs[NSFileSize]?.toString()?.toLongOrNull() ?: 0L
-    }
-
-    override fun sizeBytes(): Long {
-        if (!fileManager.fileExistsAtPath(cacheDir)) return 0L
-        val enumerator = fileManager.enumeratorAtPath(cacheDir) ?: return 0L
-        return generateSequence { enumerator.nextObject()?.toString() }
-            .filter { it.endsWith(".png") }
-            .sumOf { relativePath ->
-                val path = fullPath(relativePath)
-                val attrs = fileManager.attributesOfItemAtPath(path, error = null)
-                val size = attrs?.get(NSFileSize)
-                size?.toString()?.toLongOrNull() ?: 0L
-            }
-    }
-
-    companion object {
-        /** Seconds between Unix epoch (1970-01-01) and NSDate reference date (2001-01-01). */
-        private const val NSDATE_REFERENCE_DATE_OFFSET = 978307200.0
     }
 
     private fun NSData.toByteArray(): ByteArray {
