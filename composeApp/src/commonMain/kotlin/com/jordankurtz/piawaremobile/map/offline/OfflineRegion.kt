@@ -1,4 +1,4 @@
-package com.jordankurtz.piawaremobile.settings.ui
+package com.jordankurtz.piawaremobile.map.offline
 
 data class OfflineRegion(
     val id: String,

@@ -100,4 +100,28 @@ class SettingsScreenTest {
             onNode(hasScrollAction()).performScrollToNode(hasText("Enable FlightAware API"))
             onNodeWithText("Enable FlightAware API").assertIsDisplayed()
         }
+
+    @Test
+    fun displaysOfflineMapsItem() =
+        runComposeUiTest {
+            setContent {
+                MainScreen(onServersClicked = {}, viewModel = createViewModel())
+            }
+            onNodeWithText("Offline Maps").assertIsDisplayed()
+        }
+
+    @Test
+    fun offlineMapsItemFiresCallback() =
+        runComposeUiTest {
+            var clicked = false
+            setContent {
+                MainScreen(
+                    onServersClicked = {},
+                    onOfflineMapsClicked = { clicked = true },
+                    viewModel = createViewModel(),
+                )
+            }
+            onNodeWithText("Offline Maps").performClick()
+            assertTrue(clicked)
+        }
 }

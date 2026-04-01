@@ -3,8 +3,8 @@ package com.jordankurtz.piawaremobile
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import com.jordankurtz.piawaremobile.settings.ui.OfflineMapsScreen
-import com.jordankurtz.piawaremobile.settings.ui.OfflineRegion
 import org.junit.Rule
 import org.junit.Test
 
