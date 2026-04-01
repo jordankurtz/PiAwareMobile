@@ -1,3 +1,3 @@
 package com.jordankurtz.piawaremobile
 
-actual val isDebugBuild: Boolean = true
+actual val isDebugBuild: Boolean = false

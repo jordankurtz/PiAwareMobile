@@ -10,7 +10,7 @@ actual class DatabaseModule {
     @Single
     actual fun provideTileCacheDatabase(contextWrapper: ContextWrapper): TileCacheDatabase {
         val dbDir = desktopDbDir()
-        val driverFactory = DatabaseDriverFactory(dbDir, "tile_cache.db")
+        val driverFactory = DatabaseDriverFactory(dbDir, "piaware_mobile.db")
         return TileCacheDatabase(driverFactory.createDriver())
     }
 }

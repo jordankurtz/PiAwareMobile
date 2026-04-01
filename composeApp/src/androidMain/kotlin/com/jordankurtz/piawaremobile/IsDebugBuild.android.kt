@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile
 
 import android.content.pm.ApplicationInfo
+import com.jordankurtz.logger.Logger
 import org.koin.core.context.GlobalContext
 
 /**
@@ -13,7 +14,7 @@ actual val isDebugBuild: Boolean by lazy {
         val context = GlobalContext.get().get<android.content.Context>()
         context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     } catch (e: Exception) {
-        com.jordankurtz.logger.Logger.e("Failed to detect debug build; defaulting to true", e)
-        true
+        Logger.e("Failed to detect debug build; defaulting to false", e)
+        false
     }
 }
