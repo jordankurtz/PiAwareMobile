@@ -1,5 +1,8 @@
 package com.jordankurtz.piawaremobile.map.debug
 
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -9,9 +12,9 @@ class TileCacheStatsTrackerTest {
         val tracker = TileCacheStatsTracker()
 
         val stats = tracker.stats.value
-        assertEquals(0, stats.diskHits)
-        assertEquals(0, stats.networkFetches)
-        assertEquals(0, stats.errors)
+        assertEquals(0L, stats.diskHits)
+        assertEquals(0L, stats.networkFetches)
+        assertEquals(0L, stats.errors)
     }
 
     @Test
@@ -21,9 +24,9 @@ class TileCacheStatsTrackerTest {
         tracker.recordDiskHit()
 
         val stats = tracker.stats.value
-        assertEquals(1, stats.diskHits)
-        assertEquals(0, stats.networkFetches)
-        assertEquals(0, stats.errors)
+        assertEquals(1L, stats.diskHits)
+        assertEquals(0L, stats.networkFetches)
+        assertEquals(0L, stats.errors)
     }
 
     @Test
@@ -33,9 +36,9 @@ class TileCacheStatsTrackerTest {
         tracker.recordNetworkFetch()
 
         val stats = tracker.stats.value
-        assertEquals(0, stats.diskHits)
-        assertEquals(1, stats.networkFetches)
-        assertEquals(0, stats.errors)
+        assertEquals(0L, stats.diskHits)
+        assertEquals(1L, stats.networkFetches)
+        assertEquals(0L, stats.errors)
     }
 
     @Test
@@ -45,9 +48,9 @@ class TileCacheStatsTrackerTest {
         tracker.recordError()
 
         val stats = tracker.stats.value
-        assertEquals(0, stats.diskHits)
-        assertEquals(0, stats.networkFetches)
-        assertEquals(1, stats.errors)
+        assertEquals(0L, stats.diskHits)
+        assertEquals(0L, stats.networkFetches)
+        assertEquals(1L, stats.errors)
     }
 
     @Test
@@ -62,8 +65,20 @@ class TileCacheStatsTrackerTest {
         tracker.recordError()
 
         val stats = tracker.stats.value
-        assertEquals(3, stats.diskHits)
-        assertEquals(2, stats.networkFetches)
-        assertEquals(1, stats.errors)
+        assertEquals(3L, stats.diskHits)
+        assertEquals(2L, stats.networkFetches)
+        assertEquals(1L, stats.errors)
     }
+
+    @Test
+    fun `concurrent recordDiskHit calls accumulate correctly`() =
+        runTest {
+            val tracker = TileCacheStatsTracker()
+
+            (1..100).map {
+                launch { tracker.recordDiskHit() }
+            }.joinAll()
+
+            assertEquals(100L, tracker.stats.value.diskHits)
+        }
 }

@@ -9,11 +9,11 @@ import kotlin.test.Test
 @OptIn(ExperimentalTestApi::class)
 class TileCacheDebugOverlayTest {
     @Test
-    fun displaysDiscHitsAndNetworkFetches() =
+    fun displaysDiskHitsAndNetworkFetches() =
         runComposeUiTest {
             setContent {
                 TileCacheDebugOverlay(
-                    stats = TileCacheStats(diskHits = 42, networkFetches = 8),
+                    stats = TileCacheStats(diskHits = 42L, networkFetches = 8L),
                 )
             }
             onNodeWithText("Tiles  D:42  N:8  84% cache", substring = false)
@@ -25,7 +25,7 @@ class TileCacheDebugOverlayTest {
         runComposeUiTest {
             setContent {
                 TileCacheDebugOverlay(
-                    stats = TileCacheStats(diskHits = 3, networkFetches = 7),
+                    stats = TileCacheStats(diskHits = 3L, networkFetches = 7L),
                 )
             }
             onNodeWithText("30% cache", substring = true)
@@ -37,7 +37,7 @@ class TileCacheDebugOverlayTest {
         runComposeUiTest {
             setContent {
                 TileCacheDebugOverlay(
-                    stats = TileCacheStats(diskHits = 5, networkFetches = 3, errors = 2),
+                    stats = TileCacheStats(diskHits = 5L, networkFetches = 3L, errors = 2L),
                 )
             }
             onNodeWithText("E:2", substring = true)
@@ -49,7 +49,7 @@ class TileCacheDebugOverlayTest {
         runComposeUiTest {
             setContent {
                 TileCacheDebugOverlay(
-                    stats = TileCacheStats(diskHits = 5, networkFetches = 3, errors = 0),
+                    stats = TileCacheStats(diskHits = 5L, networkFetches = 3L, errors = 0L),
                 )
             }
             onNodeWithText("Tiles  D:5  N:3  62% cache", substring = false)
