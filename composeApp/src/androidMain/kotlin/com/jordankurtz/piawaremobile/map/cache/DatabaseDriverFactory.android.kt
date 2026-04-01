@@ -5,5 +5,5 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 
 actual class DatabaseDriverFactory(private val context: Context) {
-    actual fun createDriver(): SqlDriver = AndroidSqliteDriver(TileCacheDatabase.Schema, context, "tile_cache.db")
+    actual fun createDriver(): SqlDriver = AndroidSqliteDriver(TileCacheDatabase.Schema, context, "piaware_mobile.db")
 }
