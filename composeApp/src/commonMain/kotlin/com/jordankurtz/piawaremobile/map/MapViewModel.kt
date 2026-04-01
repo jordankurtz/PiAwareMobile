@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStats
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.AircraftPosition
@@ -69,6 +71,7 @@ class MapViewModel(
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
+    private val tileCacheStatsTracker: TileCacheStatsTracker,
 ) : ViewModel() {
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
@@ -87,6 +90,8 @@ class MapViewModel(
 
     private val _showUserLocationOnMap = MutableStateFlow(false)
     val showUserLocationOnMap: StateFlow<Boolean> = _showUserLocationOnMap
+
+    val tileStats: StateFlow<TileCacheStats> = tileCacheStatsTracker.stats
 
     /** Exposes the last location passed to [recenterOnLocation] for test verification. */
     internal val lastRecenteredLocation = MutableStateFlow<Location?>(null)

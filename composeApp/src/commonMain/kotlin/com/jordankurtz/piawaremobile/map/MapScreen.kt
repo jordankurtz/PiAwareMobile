@@ -21,7 +21,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.jordankurtz.piawaremobile.Overlay
 import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
+import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.location.LocationViewModel
+import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -46,6 +48,7 @@ fun MapScreen(
     val followingAircraftHex by mapViewModel.followingAircraft.collectAsState()
     val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
     val showUserLocationOnMap by mapViewModel.showUserLocationOnMap.collectAsState()
+    val tileStats by mapViewModel.tileStats.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val sheetState =
@@ -115,6 +118,12 @@ fun MapScreen(
             numberOfPlanes,
             modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
         )
+        if (isDebugBuild) {
+            TileCacheDebugOverlay(
+                stats = tileStats,
+                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            )
+        }
     }
 
     val selectedAircraft =

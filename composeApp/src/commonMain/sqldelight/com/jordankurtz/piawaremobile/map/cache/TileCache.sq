@@ -1,0 +1,61 @@
+CREATE TABLE tile (
+    zoom_level INTEGER NOT NULL,
+    col INTEGER NOT NULL,
+    row INTEGER NOT NULL,
+    size_bytes INTEGER NOT NULL,
+    fetched_at INTEGER NOT NULL,
+    PRIMARY KEY (zoom_level, col, row)
+);
+
+CREATE TABLE cache_entry (
+    zoom_level INTEGER NOT NULL,
+    col INTEGER NOT NULL,
+    row INTEGER NOT NULL,
+    last_accessed INTEGER NOT NULL,
+    PRIMARY KEY (zoom_level, col, row),
+    FOREIGN KEY (zoom_level, col, row) REFERENCES tile(zoom_level, col, row) ON DELETE CASCADE
+);
+
+CREATE INDEX cache_entry_lru ON cache_entry(last_accessed ASC);
+
+-- Used by get(): check if tile is cached and get its age
+selectCacheEntry:
+SELECT t.fetched_at, t.size_bytes
+FROM tile t
+INNER JOIN cache_entry c ON t.zoom_level = c.zoom_level AND t.col = c.col AND t.row = c.row
+WHERE t.zoom_level = ? AND t.col = ? AND t.row = ?;
+
+-- Used by put(): insert or update tile metadata
+upsertTile:
+INSERT OR REPLACE INTO tile (zoom_level, col, row, size_bytes, fetched_at)
+VALUES (?, ?, ?, ?, ?);
+
+-- Used by put(): insert or update cache membership
+upsertCacheEntry:
+INSERT OR REPLACE INTO cache_entry (zoom_level, col, row, last_accessed)
+VALUES (?, ?, ?, ?);
+
+-- Used by get(): touch LRU timestamp on cache hit
+updateLastAccessed:
+UPDATE cache_entry SET last_accessed = ? WHERE zoom_level = ? AND col = ? AND row = ?;
+
+-- Used by eviction: total bytes currently in cache
+totalCacheSize:
+SELECT COALESCE(SUM(t.size_bytes), 0) AS total
+FROM tile t
+INNER JOIN cache_entry c ON t.zoom_level = c.zoom_level AND t.col = c.col AND t.row = c.row;
+
+-- Used by eviction: tiles ordered by LRU (oldest first)
+selectLruTiles:
+SELECT tile.zoom_level, tile.col, tile.row, tile.size_bytes
+FROM cache_entry
+JOIN tile USING (zoom_level, col, row)
+ORDER BY cache_entry.last_accessed ASC
+LIMIT :limit;
+
+-- Used by eviction and expiry: remove tile from cache and disk tracking
+deleteCacheEntry:
+DELETE FROM cache_entry WHERE zoom_level = ? AND col = ? AND row = ?;
+
+deleteTile:
+DELETE FROM tile WHERE zoom_level = ? AND col = ? AND row = ?;

@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map
 
 import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.Aircraft
@@ -94,6 +95,7 @@ class MapViewModelTest {
                 getSavedMapStateUseCase = getSavedMapStateUseCase,
                 saveMapStateUseCase = saveMapStateUseCase,
                 loadSettingsUseCase = loadSettingsUseCase,
+                tileCacheStatsTracker = TileCacheStatsTracker(),
             )
         viewModel = vm
         return vm

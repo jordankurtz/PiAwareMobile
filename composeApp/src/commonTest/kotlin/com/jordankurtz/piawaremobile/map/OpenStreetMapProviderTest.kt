@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.map
 
 import com.jordankurtz.piawaremobile.map.cache.TileCache
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -19,20 +20,24 @@ import kotlinx.io.Buffer
 import kotlinx.io.readByteArray
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class OpenStreetMapProviderTest {
     private val tileBytes = byteArrayOf(89, 80, 78, 71, 13, 10, 26, 10) // fake PNG header
     private lateinit var tileCache: TileCache
+    private lateinit var statsTracker: TileCacheStatsTracker
     private lateinit var provider: OpenStreetMapProvider
 
     private fun createProvider(httpClient: HttpClient) {
         tileCache = mock()
+        statsTracker = TileCacheStatsTracker()
         provider =
             OpenStreetMapProvider(
                 httpClient = httpClient,
                 tileCache = tileCache,
+                statsTracker = statsTracker,
             )
     }
 
@@ -115,5 +120,72 @@ class OpenStreetMapProviderTest {
             provider.getTileStream(row = 42, col = 7, zoomLvl = 12)
 
             verifySuspend { tileCache.get(12, 7, 42) }
+        }
+
+    @Test
+    fun recordsDiskHitStatOnCacheHit() =
+        runTest {
+            createProvider(mockHttpClient())
+            everySuspend { tileCache.get(any(), any(), any()) } returns tileBytes
+
+            provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertEquals(1L, statsTracker.stats.value.diskHits)
+            assertEquals(0L, statsTracker.stats.value.networkFetches)
+            assertEquals(0L, statsTracker.stats.value.errors)
+        }
+
+    @Test
+    fun recordsNetworkFetchStatOnCacheMiss() =
+        runTest {
+            createProvider(mockHttpClient())
+            everySuspend { tileCache.get(any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
+
+            provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertEquals(0L, statsTracker.stats.value.diskHits)
+            assertEquals(1L, statsTracker.stats.value.networkFetches)
+            assertEquals(0L, statsTracker.stats.value.errors)
+        }
+
+    @Test
+    fun returnsNullOnNon200HttpResponseAndRecordsError() =
+        runTest {
+            val notFoundClient =
+                HttpClient(MockEngine) {
+                    engine {
+                        addHandler {
+                            respond(
+                                content = ByteReadChannel(ByteArray(0)),
+                                status = HttpStatusCode.NotFound,
+                                headers = headersOf(HttpHeaders.ContentType, "text/plain"),
+                            )
+                        }
+                    }
+                }
+            createProvider(notFoundClient)
+            everySuspend { tileCache.get(any(), any(), any()) } returns null
+
+            val result = provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertNull(result)
+            verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any()) }
+            assertEquals(1L, statsTracker.stats.value.errors)
+        }
+
+    @Test
+    fun recordsErrorStatOnNetworkFailure() =
+        runTest {
+            val failingClient =
+                HttpClient(MockEngine) {
+                    engine { addHandler { throw RuntimeException("Network error") } }
+                }
+            createProvider(failingClient)
+            everySuspend { tileCache.get(any(), any(), any()) } returns null
+
+            provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertEquals(1L, statsTracker.stats.value.errors)
         }
 }
