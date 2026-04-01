@@ -2,8 +2,11 @@ package com.jordankurtz.piawaremobile.ui
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.runComposeUiTest
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
@@ -94,6 +97,7 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
+            onNode(hasScrollAction()).performScrollToNode(hasText("Enable FlightAware API"))
             onNodeWithText("Enable FlightAware API").assertIsDisplayed()
         }
 }

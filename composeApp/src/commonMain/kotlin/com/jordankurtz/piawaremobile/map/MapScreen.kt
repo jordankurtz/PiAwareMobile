@@ -1,5 +1,8 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -113,6 +116,14 @@ fun MapScreen(
                     onClick = { mapViewModel.toggleFollowUserLocation() },
                 )
             }
+        }
+        AnimatedVisibility(
+            visible = false,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
+        ) {
+            OfflineIndicator()
         }
         Overlay(
             numberOfPlanes,
