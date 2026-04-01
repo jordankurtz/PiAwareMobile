@@ -4,6 +4,7 @@ import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
+import kotlinx.io.IOException
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSString
@@ -51,14 +52,21 @@ class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
     ) {
         val path = fullPath(key)
         val parent = parentPath(path)
-        fileManager.createDirectoryAtPath(
-            parent,
-            withIntermediateDirectories = true,
-            attributes = null,
-            error = null,
-        )
+        val dirCreated =
+            fileManager.createDirectoryAtPath(
+                parent,
+                withIntermediateDirectories = true,
+                attributes = null,
+                error = null,
+            )
+        if (!dirCreated) {
+            throw IOException("Failed to create directory: $parent")
+        }
         val nsData = data.toNSData()
-        nsData.writeToFile(path, atomically = true)
+        val written = nsData.writeToFile(path, atomically = true)
+        if (!written) {
+            throw IOException("Failed to write file: $path")
+        }
     }
 
     override fun delete(key: String) {

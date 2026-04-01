@@ -145,7 +145,9 @@ class FileTileCache(
             val totalSize = queries.totalCacheSize().executeAsOne()
             if (totalSize <= maxCacheBytes) return
 
-            val tiles = queries.selectLruTiles().executeAsList()
+            val excess = totalSize - maxCacheBytes
+            val limit = ((excess / EVICTION_MIN_TILE_BYTES) * 1.2).toLong().coerceAtLeast(10L)
+            val tiles = queries.selectLruTiles(limit).executeAsList()
             var currentSize = totalSize
             for (tile in tiles) {
                 if (currentSize <= maxCacheBytes) break
@@ -176,5 +178,6 @@ class FileTileCache(
     companion object {
         const val DEFAULT_MAX_CACHE_BYTES = 100L * 1024 * 1024 // 100 MB
         const val DEFAULT_MAX_AGE_MILLIS = 7L * 24 * 60 * 60 * 1000 // 7 days
+        private const val EVICTION_MIN_TILE_BYTES = 1024L
     }
 }

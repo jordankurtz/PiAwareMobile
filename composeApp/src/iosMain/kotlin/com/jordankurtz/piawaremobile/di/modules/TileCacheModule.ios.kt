@@ -1,7 +1,6 @@
 package com.jordankurtz.piawaremobile.di.modules
 
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
-import com.jordankurtz.piawaremobile.map.cache.DatabaseDriverFactory
 import com.jordankurtz.piawaremobile.map.cache.FileTileCache
 import com.jordankurtz.piawaremobile.map.cache.IosCacheFileSystem
 import com.jordankurtz.piawaremobile.map.cache.TileCache
@@ -20,6 +19,7 @@ actual class TileCacheModule {
     @Single
     actual fun provideTileCache(
         contextWrapper: ContextWrapper,
+        database: TileCacheDatabase,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): TileCache {
         val cachePaths =
@@ -33,8 +33,6 @@ actual class TileCacheModule {
         @Suppress("CAST_NEVER_SUCCEEDS")
         val cacheDir = (baseCacheDir as NSString).stringByAppendingPathComponent("map_tiles")
         val cacheFileSystem = IosCacheFileSystem(cacheDir)
-        val driverFactory = DatabaseDriverFactory()
-        val database = TileCacheDatabase(driverFactory.createDriver())
         return FileTileCache(
             cacheFileSystem = cacheFileSystem,
             queries = database.tileCacheQueries,

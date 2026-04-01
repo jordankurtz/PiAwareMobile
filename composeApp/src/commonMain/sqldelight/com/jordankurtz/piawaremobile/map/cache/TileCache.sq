@@ -47,10 +47,11 @@ INNER JOIN cache_entry c ON t.zoom_level = c.zoom_level AND t.col = c.col AND t.
 
 -- Used by eviction: tiles ordered by LRU (oldest first)
 selectLruTiles:
-SELECT t.zoom_level, t.col, t.row, t.size_bytes
-FROM tile t
-INNER JOIN cache_entry c ON t.zoom_level = c.zoom_level AND t.col = c.col AND t.row = c.row
-ORDER BY c.last_accessed ASC;
+SELECT tile.zoom_level, tile.col, tile.row, tile.size_bytes
+FROM cache_entry
+JOIN tile USING (zoom_level, col, row)
+ORDER BY cache_entry.last_accessed ASC
+LIMIT :limit;
 
 -- Used by eviction and expiry: remove tile from cache and disk tracking
 deleteCacheEntry:

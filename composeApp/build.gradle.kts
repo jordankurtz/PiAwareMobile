@@ -98,7 +98,7 @@ kotlin {
             implementation(libs.datastore.preferences)
             implementation(libs.multiplatform.settings.datastore)
             implementation(libs.multiplatform.settings.coroutines)
-            implementation(libs.sqldelight.coroutines)
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
