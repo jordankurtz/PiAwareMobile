@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
+import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -74,5 +75,43 @@ class DownloadRegionDialogTest {
             onNodeWithText("Region name").performTextInput("Airport Area")
             onNodeWithText("Download").performClick()
             assertEquals("Airport Area", confirmedName)
+        }
+
+    @Test
+    fun selectOnMapButtonIsVisible() =
+        runComposeUiTest {
+            setContent {
+                DownloadRegionDialog(onDismiss = {}, onConfirm = { _, _, _ -> })
+            }
+            onNodeWithText("Select on map").assertIsDisplayed()
+        }
+
+    @Test
+    fun selectOnMapButtonFiresCallback() =
+        runComposeUiTest {
+            var selectOnMapCalled = false
+            setContent {
+                DownloadRegionDialog(
+                    onDismiss = {},
+                    onConfirm = { _, _, _ -> },
+                    onSelectOnMap = { selectOnMapCalled = true },
+                )
+            }
+            onNodeWithText("Select on map").performClick()
+            assertTrue(selectOnMapCalled)
+        }
+
+    @Test
+    fun boundsTextShownWhenSelectedBoundsNonNull() =
+        runComposeUiTest {
+            val bounds = BoundingBox(minLat = 37.0, maxLat = 38.0, minLon = -122.5, maxLon = -121.5)
+            setContent {
+                DownloadRegionDialog(
+                    onDismiss = {},
+                    onConfirm = { _, _, _ -> },
+                    selectedBounds = bounds,
+                )
+            }
+            onNodeWithText("Selected bounds: 37.0000, -122.5000 – 38.0000, -121.5000").assertIsDisplayed()
         }
 }

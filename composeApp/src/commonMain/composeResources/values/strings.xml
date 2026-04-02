@@ -149,5 +149,9 @@
     <string name="offline_maps_dialog_estimate">Estimated size depends on zoom levels and area</string>
     <string name="offline_maps_dialog_cancel">Cancel</string>
     <string name="offline_maps_dialog_download">Download</string>
+    <string name="offline_maps_dialog_select_on_map">Select on map</string>
+    <string name="offline_maps_dialog_bounds_label">Selected bounds: %1$s, %2$s – %3$s, %4$s</string>
+    <string name="offline_maps_picker_confirm">Confirm</string>
+    <string name="offline_maps_picker_cancel">Cancel</string>
     <string name="offline_indicator_label">Offline</string>
 </resources>

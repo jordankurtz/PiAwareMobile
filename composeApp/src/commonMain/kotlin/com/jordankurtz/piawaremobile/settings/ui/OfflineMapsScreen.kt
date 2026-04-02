@@ -26,6 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jordankurtz.piawaremobile.map.offline.BoundingBox
+import com.jordankurtz.piawaremobile.map.offline.MapRegionPickerScreen
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -50,11 +52,39 @@ fun OfflineMapsScreen(
     onDeleteRegion: (OfflineRegion) -> Unit = {},
 ) {
     var showDownloadDialog by remember { mutableStateOf(false) }
+    var showMapPicker by remember { mutableStateOf(false) }
+    var pendingBounds by remember { mutableStateOf<BoundingBox?>(null) }
+
+    if (showMapPicker) {
+        MapRegionPickerScreen(
+            onRegionSelected = { bounds ->
+                pendingBounds = bounds
+                showMapPicker = false
+                showDownloadDialog = true
+            },
+            onDismiss = {
+                showMapPicker = false
+                showDownloadDialog = true
+            },
+        )
+        return
+    }
 
     if (showDownloadDialog) {
         DownloadRegionDialog(
-            onDismiss = { showDownloadDialog = false },
-            onConfirm = { _, _, _ -> showDownloadDialog = false },
+            onDismiss = {
+                showDownloadDialog = false
+                pendingBounds = null
+            },
+            onConfirm = { _, _, _ ->
+                showDownloadDialog = false
+                pendingBounds = null
+            },
+            selectedBounds = pendingBounds,
+            onSelectOnMap = {
+                showDownloadDialog = false
+                showMapPicker = true
+            },
         )
     }
 

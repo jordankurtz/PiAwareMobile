@@ -25,25 +25,42 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.offline_maps_dialog_bounds_label
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_cancel
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_download
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_estimate
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_max_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_min_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_name_label
+import piawaremobile.composeapp.generated.resources.offline_maps_dialog_select_on_map
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_title
+import kotlin.math.abs
+import kotlin.math.round
 
 private const val DEFAULT_MIN_ZOOM = 8f
 private const val DEFAULT_MAX_ZOOM = 14f
 private const val MIN_ZOOM_LIMIT = 1f
 private const val MAX_ZOOM_LIMIT = 18f
+private const val COORD_DECIMAL_PLACES = 4
+private const val COORD_SCALE = 10_000.0
+
+private fun formatCoord(value: Double): String {
+    val rounded = round(abs(value) * COORD_SCALE) / COORD_SCALE
+    val sign = if (value < 0.0) "-" else ""
+    val intPart = rounded.toLong()
+    val fracPart = round((rounded - intPart) * COORD_SCALE).toLong()
+    return "$sign$intPart.${fracPart.toString().padStart(COORD_DECIMAL_PLACES, '0')}"
+}
 
 @Composable
 fun DownloadRegionDialog(
     onDismiss: () -> Unit,
     onConfirm: (name: String, minZoom: Int, maxZoom: Int) -> Unit,
+    selectedBounds: BoundingBox? = null,
+    onSelectOnMap: () -> Unit = {},
 ) {
     var name by remember { mutableStateOf("") }
     var minZoom by remember { mutableFloatStateOf(DEFAULT_MIN_ZOOM) }
@@ -78,6 +95,31 @@ fun DownloadRegionDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(
+                    onClick = onSelectOnMap,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(Res.string.offline_maps_dialog_select_on_map))
+                }
+
+                if (selectedBounds != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text =
+                            stringResource(
+                                Res.string.offline_maps_dialog_bounds_label,
+                                formatCoord(selectedBounds.minLat),
+                                formatCoord(selectedBounds.minLon),
+                                formatCoord(selectedBounds.maxLat),
+                                formatCoord(selectedBounds.maxLon),
+                            ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
