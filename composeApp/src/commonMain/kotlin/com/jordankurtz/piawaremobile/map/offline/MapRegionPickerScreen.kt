@@ -1,7 +1,6 @@
 package com.jordankurtz.piawaremobile.map.offline
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +15,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
@@ -68,11 +67,7 @@ internal fun MapRegionPickerContent(
     onDismiss: () -> Unit,
     mapLayer: @Composable () -> Unit = {},
 ) {
-    var boxLeft by remember { mutableFloatStateOf(0f) }
-    var boxTop by remember { mutableFloatStateOf(0f) }
-    var boxRight by remember { mutableFloatStateOf(0f) }
-    var boxBottom by remember { mutableFloatStateOf(0f) }
-
+    var bounds by remember { mutableStateOf(BoxBounds(0f, 0f, 0f, 0f)) }
     var initialized by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -87,10 +82,13 @@ internal fun MapRegionPickerContent(
                         val h = size.toSize().height
                         if (!initialized && w > 0f && h > 0f) {
                             val margin = (1f - INITIAL_BOX_FRACTION) / 2f
-                            boxLeft = w * margin
-                            boxTop = h * margin
-                            boxRight = w * (1f - margin)
-                            boxBottom = h * (1f - margin)
+                            bounds =
+                                BoxBounds(
+                                    left = w * margin,
+                                    top = h * margin,
+                                    right = w * (1f - margin),
+                                    bottom = h * (1f - margin),
+                                )
                             initialized = true
                         }
                     }
@@ -98,62 +96,64 @@ internal fun MapRegionPickerContent(
                         val minSidePx = MIN_SIDE_LENGTH_DP.toPx()
                         val hitPx = HANDLE_HIT_TARGET_DP.toPx()
 
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            val x = change.position.x - dragAmount.x
-                            val y = change.position.y - dragAmount.y
-                            val dx = dragAmount.x
-                            val dy = dragAmount.y
+                        // Track which handle is being dragged and the last pointer position so we
+                        // can compute deltas across move events.
+                        var activeHandle: HandleType? = null
+                        var lastPosition: Offset = Offset.Zero
 
-                            val midX = (boxLeft + boxRight) / 2f
-                            val midY = (boxTop + boxBottom) / 2f
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                val change = event.changes.firstOrNull() ?: continue
+                                val position = change.position
 
-                            val handlePositions =
-                                listOf(
-                                    Offset(boxLeft, boxTop) to HandleType.CORNER_TL,
-                                    Offset(boxRight, boxTop) to HandleType.CORNER_TR,
-                                    Offset(boxLeft, boxBottom) to HandleType.CORNER_BL,
-                                    Offset(boxRight, boxBottom) to HandleType.CORNER_BR,
-                                    Offset(midX, boxTop) to HandleType.EDGE_TOP,
-                                    Offset(midX, boxBottom) to HandleType.EDGE_BOTTOM,
-                                    Offset(boxLeft, midY) to HandleType.EDGE_LEFT,
-                                    Offset(boxRight, midY) to HandleType.EDGE_RIGHT,
-                                )
+                                val midX = (bounds.left + bounds.right) / 2f
+                                val midY = (bounds.top + bounds.bottom) / 2f
 
-                            val hit =
-                                handlePositions.firstOrNull { (pos, _) ->
-                                    abs(x - pos.x) < hitPx && abs(y - pos.y) < hitPx
-                                }
+                                val handlePositions =
+                                    listOf(
+                                        Offset(bounds.left, bounds.top) to HandleType.CORNER_TL,
+                                        Offset(bounds.right, bounds.top) to HandleType.CORNER_TR,
+                                        Offset(bounds.left, bounds.bottom) to HandleType.CORNER_BL,
+                                        Offset(bounds.right, bounds.bottom) to HandleType.CORNER_BR,
+                                        Offset(midX, bounds.top) to HandleType.EDGE_TOP,
+                                        Offset(midX, bounds.bottom) to HandleType.EDGE_BOTTOM,
+                                        Offset(bounds.left, midY) to HandleType.EDGE_LEFT,
+                                        Offset(bounds.right, midY) to HandleType.EDGE_RIGHT,
+                                    )
 
-                            if (hit != null) {
-                                when (hit.second) {
-                                    HandleType.CORNER_TL -> {
-                                        boxLeft = (boxLeft + dx).coerceAtMost(boxRight - minSidePx)
-                                        boxTop = (boxTop + dy).coerceAtMost(boxBottom - minSidePx)
+                                when {
+                                    // Pointer down — check if it lands on a handle.
+                                    change.pressed && !change.previousPressed -> {
+                                        val hit =
+                                            handlePositions.firstOrNull { (pos, _) ->
+                                                abs(position.x - pos.x) < hitPx &&
+                                                    abs(position.y - pos.y) < hitPx
+                                            }
+                                        if (hit != null) {
+                                            activeHandle = hit.second
+                                            lastPosition = position
+                                            event.changes.forEach { it.consume() }
+                                        }
+                                        // No hit — don't consume; map receives the down event.
                                     }
-                                    HandleType.CORNER_TR -> {
-                                        boxRight = (boxRight + dx).coerceAtLeast(boxLeft + minSidePx)
-                                        boxTop = (boxTop + dy).coerceAtMost(boxBottom - minSidePx)
+
+                                    // Pointer move — only handle if we grabbed a handle on down.
+                                    change.pressed && activeHandle != null -> {
+                                        val dx = position.x - lastPosition.x
+                                        val dy = position.y - lastPosition.y
+                                        lastPosition = position
+                                        bounds = applyHandleDrag(activeHandle!!, bounds, dx, dy, minSidePx)
+                                        event.changes.forEach { it.consume() }
                                     }
-                                    HandleType.CORNER_BL -> {
-                                        boxLeft = (boxLeft + dx).coerceAtMost(boxRight - minSidePx)
-                                        boxBottom = (boxBottom + dy).coerceAtLeast(boxTop + minSidePx)
-                                    }
-                                    HandleType.CORNER_BR -> {
-                                        boxRight = (boxRight + dx).coerceAtLeast(boxLeft + minSidePx)
-                                        boxBottom = (boxBottom + dy).coerceAtLeast(boxTop + minSidePx)
-                                    }
-                                    HandleType.EDGE_TOP -> {
-                                        boxTop = (boxTop + dy).coerceAtMost(boxBottom - minSidePx)
-                                    }
-                                    HandleType.EDGE_BOTTOM -> {
-                                        boxBottom = (boxBottom + dy).coerceAtLeast(boxTop + minSidePx)
-                                    }
-                                    HandleType.EDGE_LEFT -> {
-                                        boxLeft = (boxLeft + dx).coerceAtMost(boxRight - minSidePx)
-                                    }
-                                    HandleType.EDGE_RIGHT -> {
-                                        boxRight = (boxRight + dx).coerceAtLeast(boxLeft + minSidePx)
+
+                                    // Pointer up — release the active handle.
+                                    !change.pressed && change.previousPressed -> {
+                                        if (activeHandle != null) {
+                                            event.changes.forEach { it.consume() }
+                                            activeHandle = null
+                                        }
+                                        // No active handle — don't consume; map receives the up event.
                                     }
                                 }
                             }
@@ -168,46 +168,48 @@ internal fun MapRegionPickerContent(
             val handleFillColor = Color.White
             val strokeWidth = 2.dp.toPx()
 
+            val b = bounds
+
             // Semi-transparent overlay outside the selection rectangle
             drawRect(
                 color = overlayColor,
                 topLeft = Offset(0f, 0f),
-                size = Size(size.width, boxTop),
+                size = Size(size.width, b.top),
             )
             drawRect(
                 color = overlayColor,
-                topLeft = Offset(0f, boxBottom),
-                size = Size(size.width, size.height - boxBottom),
+                topLeft = Offset(0f, b.bottom),
+                size = Size(size.width, size.height - b.bottom),
             )
             drawRect(
                 color = overlayColor,
-                topLeft = Offset(0f, boxTop),
-                size = Size(boxLeft, boxBottom - boxTop),
+                topLeft = Offset(0f, b.top),
+                size = Size(b.left, b.bottom - b.top),
             )
             drawRect(
                 color = overlayColor,
-                topLeft = Offset(boxRight, boxTop),
-                size = Size(size.width - boxRight, boxBottom - boxTop),
+                topLeft = Offset(b.right, b.top),
+                size = Size(size.width - b.right, b.bottom - b.top),
             )
 
             // Selection rectangle border
             drawRect(
                 color = strokeColor,
-                topLeft = Offset(boxLeft, boxTop),
-                size = Size(boxRight - boxLeft, boxBottom - boxTop),
+                topLeft = Offset(b.left, b.top),
+                size = Size(b.right - b.left, b.bottom - b.top),
                 style = Stroke(width = strokeWidth),
             )
 
-            val midX = (boxLeft + boxRight) / 2f
-            val midY = (boxTop + boxBottom) / 2f
+            val midX = (b.left + b.right) / 2f
+            val midY = (b.top + b.bottom) / 2f
 
             // Corner handles
             val corners =
                 listOf(
-                    Offset(boxLeft, boxTop),
-                    Offset(boxRight, boxTop),
-                    Offset(boxLeft, boxBottom),
-                    Offset(boxRight, boxBottom),
+                    Offset(b.left, b.top),
+                    Offset(b.right, b.top),
+                    Offset(b.left, b.bottom),
+                    Offset(b.right, b.bottom),
                 )
             corners.forEach { center ->
                 drawCircle(color = handleFillColor, radius = handleRadiusPx, center = center)
@@ -222,10 +224,10 @@ internal fun MapRegionPickerContent(
             // Edge midpoint handles
             val edgeMids =
                 listOf(
-                    Offset(midX, boxTop),
-                    Offset(midX, boxBottom),
-                    Offset(boxLeft, midY),
-                    Offset(boxRight, midY),
+                    Offset(midX, b.top),
+                    Offset(midX, b.bottom),
+                    Offset(b.left, midY),
+                    Offset(b.right, midY),
                 )
             edgeMids.forEach { center ->
                 drawCircle(color = handleFillColor, radius = handleRadiusPx, center = center)
@@ -289,3 +291,48 @@ private enum class HandleType {
     EDGE_LEFT,
     EDGE_RIGHT,
 }
+
+private data class BoxBounds(
+    val left: Float,
+    val top: Float,
+    val right: Float,
+    val bottom: Float,
+)
+
+private fun applyHandleDrag(
+    handle: HandleType,
+    bounds: BoxBounds,
+    dx: Float,
+    dy: Float,
+    minSidePx: Float,
+): BoxBounds =
+    when (handle) {
+        HandleType.CORNER_TL ->
+            bounds.copy(
+                left = (bounds.left + dx).coerceAtMost(bounds.right - minSidePx),
+                top = (bounds.top + dy).coerceAtMost(bounds.bottom - minSidePx),
+            )
+        HandleType.CORNER_TR ->
+            bounds.copy(
+                right = (bounds.right + dx).coerceAtLeast(bounds.left + minSidePx),
+                top = (bounds.top + dy).coerceAtMost(bounds.bottom - minSidePx),
+            )
+        HandleType.CORNER_BL ->
+            bounds.copy(
+                left = (bounds.left + dx).coerceAtMost(bounds.right - minSidePx),
+                bottom = (bounds.bottom + dy).coerceAtLeast(bounds.top + minSidePx),
+            )
+        HandleType.CORNER_BR ->
+            bounds.copy(
+                right = (bounds.right + dx).coerceAtLeast(bounds.left + minSidePx),
+                bottom = (bounds.bottom + dy).coerceAtLeast(bounds.top + minSidePx),
+            )
+        HandleType.EDGE_TOP ->
+            bounds.copy(top = (bounds.top + dy).coerceAtMost(bounds.bottom - minSidePx))
+        HandleType.EDGE_BOTTOM ->
+            bounds.copy(bottom = (bounds.bottom + dy).coerceAtLeast(bounds.top + minSidePx))
+        HandleType.EDGE_LEFT ->
+            bounds.copy(left = (bounds.left + dx).coerceAtMost(bounds.right - minSidePx))
+        HandleType.EDGE_RIGHT ->
+            bounds.copy(right = (bounds.right + dx).coerceAtLeast(bounds.left + minSidePx))
+    }
