@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map.offline
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -53,5 +54,53 @@ class MapRegionPickerScreenTest {
             }
             onNodeWithText("Confirm").performClick()
             assertNotNull(selectedBounds)
+        }
+
+    @Test
+    fun modeToggleButtonRendersInBoxModeByDefault() =
+        runComposeUiTest {
+            setContent {
+                MapRegionPickerContent(
+                    onRegionSelected = {},
+                    onDismiss = {},
+                    mapLayer = {},
+                )
+            }
+            // Default mode is BOX — button should offer switching to map mode
+            onNodeWithContentDescription("Switch to map mode").assertIsDisplayed()
+            onNodeWithText("Editing region").assertIsDisplayed()
+        }
+
+    @Test
+    fun modeToggleButtonSwitchesToMapMode() =
+        runComposeUiTest {
+            setContent {
+                MapRegionPickerContent(
+                    onRegionSelected = {},
+                    onDismiss = {},
+                    mapLayer = {},
+                )
+            }
+            // Click toggle: BOX -> MAP
+            onNodeWithContentDescription("Switch to map mode").performClick()
+            onNodeWithContentDescription("Switch to box mode").assertIsDisplayed()
+            onNodeWithText("Moving map").assertIsDisplayed()
+        }
+
+    @Test
+    fun modeToggleButtonRoundTrips() =
+        runComposeUiTest {
+            setContent {
+                MapRegionPickerContent(
+                    onRegionSelected = {},
+                    onDismiss = {},
+                    mapLayer = {},
+                )
+            }
+            // BOX -> MAP -> BOX
+            onNodeWithContentDescription("Switch to map mode").performClick()
+            onNodeWithContentDescription("Switch to box mode").performClick()
+            onNodeWithContentDescription("Switch to map mode").assertIsDisplayed()
+            onNodeWithText("Editing region").assertIsDisplayed()
         }
 }

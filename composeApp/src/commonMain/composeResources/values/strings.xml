@@ -153,5 +153,9 @@
     <string name="offline_maps_dialog_bounds_label">Selected bounds: %1$s, %2$s – %3$s, %4$s</string>
     <string name="offline_maps_picker_confirm">Confirm</string>
     <string name="offline_maps_picker_cancel">Cancel</string>
+    <string name="offline_maps_picker_mode_map">Moving map</string>
+    <string name="offline_maps_picker_mode_box">Editing region</string>
+    <string name="offline_maps_picker_switch_to_map_mode">Switch to map mode</string>
+    <string name="offline_maps_picker_switch_to_box_mode">Switch to box mode</string>
     <string name="offline_indicator_label">Offline</string>
 </resources>
