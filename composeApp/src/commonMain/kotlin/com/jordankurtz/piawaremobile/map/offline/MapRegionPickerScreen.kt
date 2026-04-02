@@ -400,14 +400,14 @@ private enum class HandleType {
     EDGE_RIGHT,
 }
 
-private data class BoxBounds(
+internal data class BoxBounds(
     val left: Float,
     val top: Float,
     val right: Float,
     val bottom: Float,
 )
 
-private fun isInsideBox(
+internal fun isInsideBox(
     position: Offset,
     bounds: BoxBounds,
 ): Boolean =
@@ -416,7 +416,7 @@ private fun isInsideBox(
         position.y > bounds.top &&
         position.y < bounds.bottom
 
-private fun BoxBounds.translate(
+internal fun BoxBounds.translate(
     dx: Float,
     dy: Float,
     screenWidth: Float,
