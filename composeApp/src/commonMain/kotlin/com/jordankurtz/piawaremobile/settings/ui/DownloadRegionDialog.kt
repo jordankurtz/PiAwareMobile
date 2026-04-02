@@ -48,10 +48,11 @@ private const val COORD_DECIMAL_PLACES = 4
 private const val COORD_SCALE = 10_000.0
 
 private fun formatCoord(value: Double): String {
-    val rounded = round(abs(value) * COORD_SCALE) / COORD_SCALE
-    val sign = if (value < 0.0) "-" else ""
-    val intPart = rounded.toLong()
-    val fracPart = round((rounded - intPart) * COORD_SCALE).toLong()
+    val rounded = round(value * COORD_SCALE) / COORD_SCALE
+    val sign = if (rounded < 0.0) "-" else ""
+    val abs = abs(rounded)
+    val intPart = abs.toLong()
+    val fracPart = round((abs - intPart) * COORD_SCALE).toLong()
     return "$sign$intPart.${fracPart.toString().padStart(COORD_DECIMAL_PLACES, '0')}"
 }
 

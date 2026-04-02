@@ -9,6 +9,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import com.jordankurtz.piawaremobile.settings.ui.OfflineMapsScreen
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -181,7 +182,7 @@ class OfflineMapsScreenTest {
                 )
             }
             onNodeWithContentDescription("Delete region").performClick()
-            assertTrue(deletedRegion == region)
+            assertEquals(region, deletedRegion)
         }
 
     @Test

@@ -114,4 +114,17 @@ class DownloadRegionDialogTest {
             }
             onNodeWithText("Selected bounds: 37.0000, -122.5000 – 38.0000, -121.5000").assertIsDisplayed()
         }
+
+    @Test
+    fun boundsTextNotShownWhenSelectedBoundsNull() =
+        runComposeUiTest {
+            setContent {
+                DownloadRegionDialog(
+                    onDismiss = {},
+                    onConfirm = { _, _, _ -> },
+                    selectedBounds = null,
+                )
+            }
+            onNodeWithText("Selected bounds", substring = true).assertDoesNotExist()
+        }
 }

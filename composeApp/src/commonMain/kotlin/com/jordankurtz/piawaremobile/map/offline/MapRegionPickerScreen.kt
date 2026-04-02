@@ -65,7 +65,7 @@ fun MapRegionPickerScreen(
 internal fun MapRegionPickerContent(
     onRegionSelected: (BoundingBox) -> Unit,
     onDismiss: () -> Unit,
-    mapLayer: @Composable () -> Unit = {},
+    mapLayer: @Composable () -> Unit,
 ) {
     var bounds by remember { mutableStateOf(BoxBounds(0f, 0f, 0f, 0f)) }
     var initialized by remember { mutableStateOf(false) }
