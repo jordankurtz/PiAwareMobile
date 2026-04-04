@@ -29,12 +29,18 @@ class OfflineMapsScreenAndroidTest {
         val regions =
             listOf(
                 OfflineRegion(
-                    id = "1",
+                    id = 1L,
                     name = "Test Region",
                     minZoom = 8,
                     maxZoom = 14,
-                    storageSizeMb = 50,
-                    downloadDate = "2026-03-01",
+                    minLat = 37.2,
+                    maxLat = 38.1,
+                    minLon = -122.5,
+                    maxLon = -121.8,
+                    providerId = "osm",
+                    createdAt = 1700000000000L,
+                    tileCount = 2400L,
+                    sizeBytes = 50L * 1024 * 1024,
                 ),
             )
         composeTestRule.setContent {
