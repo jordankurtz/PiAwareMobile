@@ -24,8 +24,15 @@ fun SettingsScreen() {
         ) { screen ->
             when (screen) {
                 SettingsScreens.Main ->
-                    MainScreen(onServersClicked = { currentScreen = SettingsScreens.Servers })
+                    MainScreen(
+                        onServersClicked = { currentScreen = SettingsScreens.Servers },
+                        onOfflineMapsClicked = { currentScreen = SettingsScreens.OfflineMaps },
+                    )
                 SettingsScreens.Servers -> ServersScreen(onBack = {})
+                SettingsScreens.OfflineMaps ->
+                    OfflineMapsScreen(
+                        onBack = { currentScreen = SettingsScreens.Main },
+                    )
             }
         }
     }
