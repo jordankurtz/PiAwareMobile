@@ -312,32 +312,6 @@ class FileTileCacheCommonTest {
         }
 
     @Test
-    fun `pinned tiles are not evicted`() =
-        runTest(testDispatcher) {
-            val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
-
-            // Put a tile and pin it
-            val data = byteArrayOf(1, 2, 3, 4, 5)
-            cache.put(zoomLvl = 5, col = 1, row = 1, data = data)
-            // FK enforcement is off in JVM SQLite tests
-            queries.insertPinnedTile(
-                zoom_level = 5L,
-                col = 1L,
-                row = 1L,
-                region_id = 1L,
-            )
-
-            // Put more tiles to exceed the 10-byte limit and trigger eviction
-            cache.put(zoomLvl = 5, col = 2, row = 1, data = data)
-            cache.put(zoomLvl = 5, col = 3, row = 1, data = data)
-            advanceUntilIdle()
-
-            // The pinned tile should NOT be evicted
-            val result = cache.get(zoomLvl = 5, col = 1, row = 1)
-            assertNotNull(result, "Pinned tile should not be evicted")
-        }
-
-    @Test
     fun `get cleans up db when file is missing from disk`() =
         runTest(testDispatcher) {
             val cache = createCache()
@@ -356,39 +330,6 @@ class FileTileCacheCommonTest {
                 queries.selectCacheEntry(1L, 0L, 0L).executeAsOneOrNull(),
                 "DB entry should be cleaned up when file is missing",
             )
-        }
-
-    @Test
-    fun `expired pinned tile is still served and not deleted`() =
-        runTest(testDispatcher) {
-            val cache = createCache(maxAgeMillis = 1L)
-            val data = byteArrayOf(1, 2, 3)
-
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
-
-            // Pin the tile
-            // FK enforcement is off in JVM SQLite tests
-            queries.insertPinnedTile(
-                zoom_level = 1L,
-                col = 0L,
-                row = 0L,
-                region_id = 1L,
-            )
-
-            // Backdate fetched_at to simulate expiration
-            queries.upsertTile(
-                1L,
-                0L,
-                0L,
-                data.size.toLong(),
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 1000,
-            )
-
-            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
-
-            assertNotNull(result, "Pinned tile should be served even after TTL expires")
-            assertContentEquals(data, result)
-            assertTrue(fakeFs.exists("1/0/0.png"), "Pinned tile file should not be deleted on expiry")
         }
 
     @Test

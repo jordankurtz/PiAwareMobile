@@ -19,7 +19,7 @@ fun TileCacheDebugOverlay(
     val hitPct = (stats.hitRate * 100).toInt()
     val label =
         buildString {
-            append("Tiles  D:${stats.diskHits}  O:${stats.offlineHits}  N:${stats.networkFetches}")
+            append("Tiles  D:${stats.diskHits}  N:${stats.networkFetches}")
             if (stats.errors > 0) append("  E:${stats.errors}")
             append("  $hitPct% cache")
         }

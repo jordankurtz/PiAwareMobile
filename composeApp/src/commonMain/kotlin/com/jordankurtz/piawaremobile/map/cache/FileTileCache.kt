@@ -59,22 +59,11 @@ class FileTileCache(
 
             val age = Clock.System.now().toEpochMilliseconds() - entry.fetched_at
             if (age > maxAgeMillis) {
-                val pinned =
-                    queries.isPinned(
-                        zoom_level = zoomLvl.toLong(),
-                        col = col.toLong(),
-                        row = row.toLong(),
-                    ).executeAsOne() > 0L
-                if (pinned) {
-                    Logger.d("Cache hit (pinned, skipping expiry check): $tileKey")
-                    // fall through to serve the tile below
-                } else {
-                    Logger.d("Cache miss: $tileKey (expired)")
-                    cacheFileSystem.delete(tileKey)
-                    queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
-                    queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
-                    return@withContext null
-                }
+                Logger.d("Cache miss: $tileKey (expired)")
+                cacheFileSystem.delete(tileKey)
+                queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
+                queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
+                return@withContext null
             }
 
             val bytes =
@@ -143,19 +132,6 @@ class FileTileCache(
             if (shouldSchedule) {
                 scope.launch { evictIfNeeded() }
             }
-        }
-    }
-
-    override suspend fun delete(
-        zoomLvl: Int,
-        col: Int,
-        row: Int,
-    ) {
-        withContext(ioDispatcher) {
-            val tileKey = tileKey(zoomLvl, col, row)
-            cacheFileSystem.delete(tileKey)
-            queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
-            queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
         }
     }
 
