@@ -199,20 +199,15 @@ private fun OfflineRegionItem(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = stringResource(Res.string.offline_maps_region_size, region.storageSizeMb),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = region.downloadDate,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text =
+                    stringResource(
+                        Res.string.offline_maps_region_size,
+                        (region.sizeBytes / (1024 * 1024)).toInt(),
+                    ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         IconButton(onClick = onDelete) {
             Icon(

@@ -45,20 +45,32 @@ class OfflineMapsScreenTest {
             val regions =
                 listOf(
                     OfflineRegion(
-                        id = "1",
+                        id = 1L,
                         name = "Home Area",
                         minZoom = 8,
                         maxZoom = 14,
-                        storageSizeMb = 42,
-                        downloadDate = "2026-03-01",
+                        minLat = 37.2,
+                        maxLat = 38.1,
+                        minLon = -122.5,
+                        maxLon = -121.8,
+                        providerId = "osm",
+                        createdAt = 1700000000000L,
+                        tileCount = 2400L,
+                        sizeBytes = 42L * 1024 * 1024,
                     ),
                     OfflineRegion(
-                        id = "2",
+                        id = 2L,
                         name = "Airport Region",
                         minZoom = 10,
                         maxZoom = 16,
-                        storageSizeMb = 128,
-                        downloadDate = "2026-03-15",
+                        minLat = 37.2,
+                        maxLat = 38.1,
+                        minLon = -122.5,
+                        maxLon = -121.8,
+                        providerId = "osm",
+                        createdAt = 1700000000000L,
+                        tileCount = 5000L,
+                        sizeBytes = 128L * 1024 * 1024,
                     ),
                 )
             setContent {
@@ -77,20 +89,32 @@ class OfflineMapsScreenTest {
             val regions =
                 listOf(
                     OfflineRegion(
-                        id = "1",
+                        id = 1L,
                         name = "Home Area",
                         minZoom = 8,
                         maxZoom = 14,
-                        storageSizeMb = 42,
-                        downloadDate = "2026-03-01",
+                        minLat = 37.2,
+                        maxLat = 38.1,
+                        minLon = -122.5,
+                        maxLon = -121.8,
+                        providerId = "osm",
+                        createdAt = 1700000000000L,
+                        tileCount = 2400L,
+                        sizeBytes = 42L * 1024 * 1024,
                     ),
                     OfflineRegion(
-                        id = "2",
+                        id = 2L,
                         name = "Airport Region",
                         minZoom = 10,
                         maxZoom = 16,
-                        storageSizeMb = 128,
-                        downloadDate = "2026-03-15",
+                        minLat = 37.2,
+                        maxLat = 38.1,
+                        minLon = -122.5,
+                        maxLon = -121.8,
+                        providerId = "osm",
+                        createdAt = 1700000000000L,
+                        tileCount = 5000L,
+                        sizeBytes = 128L * 1024 * 1024,
                     ),
                 )
             setContent {
@@ -109,12 +133,18 @@ class OfflineMapsScreenTest {
             val regions =
                 listOf(
                     OfflineRegion(
-                        id = "1",
+                        id = 1L,
                         name = "Home Area",
                         minZoom = 8,
                         maxZoom = 14,
-                        storageSizeMb = 42,
-                        downloadDate = "2026-03-01",
+                        minLat = 37.2,
+                        maxLat = 38.1,
+                        minLon = -122.5,
+                        maxLon = -121.8,
+                        providerId = "osm",
+                        createdAt = 1700000000000L,
+                        tileCount = 2400L,
+                        sizeBytes = 42L * 1024 * 1024,
                     ),
                 )
             setContent {
@@ -144,12 +174,18 @@ class OfflineMapsScreenTest {
             val regions =
                 listOf(
                     OfflineRegion(
-                        id = "1",
+                        id = 1L,
                         name = "Home Area",
                         minZoom = 8,
                         maxZoom = 14,
-                        storageSizeMb = 42,
-                        downloadDate = "2026-03-01",
+                        minLat = 37.2,
+                        maxLat = 38.1,
+                        minLon = -122.5,
+                        maxLon = -121.8,
+                        providerId = "osm",
+                        createdAt = 1700000000000L,
+                        tileCount = 2400L,
+                        sizeBytes = 42L * 1024 * 1024,
                     ),
                 )
             setContent {
@@ -167,12 +203,18 @@ class OfflineMapsScreenTest {
             var deletedRegion: OfflineRegion? = null
             val region =
                 OfflineRegion(
-                    id = "1",
+                    id = 1L,
                     name = "Home Area",
                     minZoom = 8,
                     maxZoom = 14,
-                    storageSizeMb = 42,
-                    downloadDate = "2026-03-01",
+                    minLat = 37.2,
+                    maxLat = 38.1,
+                    minLon = -122.5,
+                    maxLon = -121.8,
+                    providerId = "osm",
+                    createdAt = 1700000000000L,
+                    tileCount = 2400L,
+                    sizeBytes = 42L * 1024 * 1024,
                 )
             setContent {
                 OfflineMapsScreen(

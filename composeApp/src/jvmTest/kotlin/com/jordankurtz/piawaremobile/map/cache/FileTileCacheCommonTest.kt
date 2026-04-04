@@ -312,6 +312,32 @@ class FileTileCacheCommonTest {
         }
 
     @Test
+    fun `pinned tiles are not evicted`() =
+        runTest(testDispatcher) {
+            val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
+
+            // Put a tile and pin it
+            val data = byteArrayOf(1, 2, 3, 4, 5)
+            cache.put(zoomLvl = 5, col = 1, row = 1, data = data)
+            // FK enforcement is off in JVM SQLite tests
+            queries.insertPinnedTile(
+                zoom_level = 5L,
+                col = 1L,
+                row = 1L,
+                region_id = 1L,
+            )
+
+            // Put more tiles to exceed the 10-byte limit and trigger eviction
+            cache.put(zoomLvl = 5, col = 2, row = 1, data = data)
+            cache.put(zoomLvl = 5, col = 3, row = 1, data = data)
+            advanceUntilIdle()
+
+            // The pinned tile should NOT be evicted
+            val result = cache.get(zoomLvl = 5, col = 1, row = 1)
+            assertNotNull(result, "Pinned tile should not be evicted")
+        }
+
+    @Test
     fun `get cleans up db when file is missing from disk`() =
         runTest(testDispatcher) {
             val cache = createCache()
