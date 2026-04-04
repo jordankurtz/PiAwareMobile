@@ -121,3 +121,6 @@ WHERE zoom_level = ? AND col = ? AND row = ?;
 
 selectPinnedTilesByRegion:
 SELECT zoom_level, col, row FROM pinned_tile WHERE region_id = ?;
+
+deletePinnedTilesByRegion:
+DELETE FROM pinned_tile WHERE region_id = ?;

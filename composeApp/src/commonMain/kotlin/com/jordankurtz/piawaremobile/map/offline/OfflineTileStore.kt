@@ -9,12 +9,6 @@ interface OfflineTileStore {
 
     suspend fun deleteRegion(id: Long)
 
-    suspend fun updateRegionStats(
-        id: Long,
-        tileCount: Long,
-        sizeBytes: Long,
-    )
-
     suspend fun pinTile(
         zoomLevel: Int,
         col: Int,
@@ -28,17 +22,5 @@ interface OfflineTileStore {
         row: Int,
     ): Boolean
 
-    suspend fun getPinnedTilesForRegion(regionId: Long): List<TileCoord>
-
-    suspend fun updateDownloadStatus(
-        id: Long,
-        status: DownloadStatus,
-        downloadedTileCount: Long = 0L,
-    )
-
-    suspend fun getExclusiveTilesForRegion(id: Long): List<TileCoord>
-
-    suspend fun getFreedBytesForRegion(id: Long): Long
-
-    suspend fun resetStuckDownloads()
+    suspend fun getPinnedTilesForRegion(regionId: Long): List<Triple<Int, Int, Int>>
 }
