@@ -29,4 +29,10 @@ interface OfflineTileStore {
     ): Boolean
 
     suspend fun getPinnedTilesForRegion(regionId: Long): List<Triple<Int, Int, Int>>
+
+    suspend fun updateDownloadStatus(
+        id: Long,
+        status: DownloadStatus,
+        downloadedTileCount: Long = 0L,
+    )
 }

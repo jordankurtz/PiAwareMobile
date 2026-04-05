@@ -168,4 +168,27 @@ class SqlDelightOfflineTileStoreTest {
             assertEquals(42L, region?.tileCount)
             assertEquals(630_000L, region?.sizeBytes)
         }
+
+    @Test
+    fun `updateDownloadStatus persists status and downloaded tile count`() =
+        runTest(testDispatcher) {
+            val id =
+                store.saveRegion(
+                    OfflineRegion(
+                        name = "Status",
+                        minZoom = 8,
+                        maxZoom = 12,
+                        minLat = 0.0,
+                        maxLat = 1.0,
+                        minLon = 0.0,
+                        maxLon = 1.0,
+                        providerId = "osm",
+                        createdAt = 1000L,
+                    ),
+                )
+            store.updateDownloadStatus(id, DownloadStatus.DOWNLOADING, 5L)
+            val region = store.getRegion(id)
+            assertEquals(DownloadStatus.DOWNLOADING, region?.status)
+            assertEquals(5L, region?.downloadedTileCount)
+        }
 }

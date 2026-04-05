@@ -83,6 +83,7 @@ class OfflineDownloadEngineTest {
             everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
             everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
             val engine = createEngine(successHttpClient())
             val events = mutableListOf<DownloadProgress>()
@@ -105,6 +106,7 @@ class OfflineDownloadEngineTest {
             everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
             val engine = createEngine(successHttpClient())
             val events = mutableListOf<DownloadProgress>()
@@ -126,6 +128,7 @@ class OfflineDownloadEngineTest {
             everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
             val engine = createEngine(successHttpClient())
             engine.download(testRegion, config).collect {}
@@ -143,6 +146,7 @@ class OfflineDownloadEngineTest {
             everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
             val engine = createEngine(successHttpClient())
             engine.download(testRegion, config).collect {}
@@ -166,6 +170,7 @@ class OfflineDownloadEngineTest {
             everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
             val engine = createEngine(failingClient)
 

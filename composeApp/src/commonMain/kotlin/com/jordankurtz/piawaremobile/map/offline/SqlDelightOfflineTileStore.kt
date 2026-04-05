@@ -92,6 +92,19 @@ class SqlDelightOfflineTileStore(
                 Triple(it.zoom_level.toInt(), it.col.toInt(), it.row.toInt())
             }
         }
+
+    override suspend fun updateDownloadStatus(
+        id: Long,
+        status: DownloadStatus,
+        downloadedTileCount: Long,
+    ): Unit =
+        withContext(ioDispatcher) {
+            queries.updateRegionStatus(
+                status = status.name,
+                downloaded_tile_count = downloadedTileCount,
+                id = id,
+            )
+        }
 }
 
 private fun Offline_region.toOfflineRegion() =
@@ -108,4 +121,6 @@ private fun Offline_region.toOfflineRegion() =
         createdAt = created_at,
         tileCount = tile_count,
         sizeBytes = size_bytes,
+        status = DownloadStatus.entries.find { it.name == status } ?: DownloadStatus.COMPLETE,
+        downloadedTileCount = downloaded_tile_count,
     )

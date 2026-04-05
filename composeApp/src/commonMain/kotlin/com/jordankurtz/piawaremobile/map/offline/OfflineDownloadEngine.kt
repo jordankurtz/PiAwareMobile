@@ -33,75 +33,90 @@ class OfflineDownloadEngine(
         config: TileProviderConfig,
     ): Flow<DownloadProgress> =
         flow {
-            val tiles =
-                tilesForRegion(
-                    bounds =
-                        BoundingBox(
-                            minLat = region.minLat,
-                            maxLat = region.maxLat,
-                            minLon = region.minLon,
-                            maxLon = region.maxLon,
-                        ),
-                    minZoom = region.minZoom,
-                    maxZoom = region.maxZoom,
-                ).toList()
-            val total = tiles.size.toLong()
-            var downloaded = 0L
-            var stored = 0L
-            var totalBytes = 0L
+            try {
+                withContext(ioDispatcher) {
+                    offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.DOWNLOADING, 0L)
+                }
 
-            for (tile in tiles) {
-                val alreadyPinned =
-                    withContext(ioDispatcher) {
-                        offlineTileStore.isPinned(
-                            zoomLevel = tile.zoom,
-                            col = tile.col,
-                            row = tile.row,
-                        )
-                    }
+                val tiles =
+                    tilesForRegion(
+                        bounds =
+                            BoundingBox(
+                                minLat = region.minLat,
+                                maxLat = region.maxLat,
+                                minLon = region.minLon,
+                                maxLon = region.maxLon,
+                            ),
+                        minZoom = region.minZoom,
+                        maxZoom = region.maxZoom,
+                    ).toList()
+                val total = tiles.size.toLong()
+                var downloaded = 0L
+                var stored = 0L
+                var totalBytes = 0L
 
-                if (!alreadyPinned) {
-                    val bytes =
-                        fetchTile(
-                            zoom = tile.zoom,
-                            col = tile.col,
-                            row = tile.row,
-                            urlTemplate = config.urlTemplate,
-                            userAgent = config.userAgent,
-                        )
-                    if (bytes != null) {
+                for (tile in tiles) {
+                    val alreadyPinned =
                         withContext(ioDispatcher) {
-                            tileCache.put(
-                                zoomLvl = tile.zoom,
-                                col = tile.col,
-                                row = tile.row,
-                                data = bytes,
-                            )
-                            offlineTileStore.pinTile(
+                            offlineTileStore.isPinned(
                                 zoomLevel = tile.zoom,
                                 col = tile.col,
                                 row = tile.row,
-                                regionId = region.id,
                             )
                         }
-                        totalBytes += bytes.size
-                        stored++
-                        if (config.requestDelayMs > 0L) {
-                            delay(config.requestDelayMs)
+
+                    if (!alreadyPinned) {
+                        val bytes =
+                            fetchTile(
+                                zoom = tile.zoom,
+                                col = tile.col,
+                                row = tile.row,
+                                urlTemplate = config.urlTemplate,
+                                userAgent = config.userAgent,
+                            )
+                        if (bytes != null) {
+                            withContext(ioDispatcher) {
+                                tileCache.put(
+                                    zoomLvl = tile.zoom,
+                                    col = tile.col,
+                                    row = tile.row,
+                                    data = bytes,
+                                )
+                                offlineTileStore.pinTile(
+                                    zoomLevel = tile.zoom,
+                                    col = tile.col,
+                                    row = tile.row,
+                                    regionId = region.id,
+                                )
+                            }
+                            totalBytes += bytes.size
+                            stored++
+                            if (config.requestDelayMs > 0L) {
+                                delay(config.requestDelayMs)
+                            }
                         }
                     }
+
+                    downloaded++
+                    emit(DownloadProgress(regionId = region.id, downloaded = downloaded, total = total))
                 }
 
-                downloaded++
-                emit(DownloadProgress(regionId = region.id, downloaded = downloaded, total = total))
-            }
-
-            withContext(ioDispatcher) {
-                offlineTileStore.updateRegionStats(
-                    id = region.id,
-                    tileCount = stored,
-                    sizeBytes = totalBytes,
-                )
+                withContext(ioDispatcher) {
+                    offlineTileStore.updateRegionStats(
+                        id = region.id,
+                        tileCount = stored,
+                        sizeBytes = totalBytes,
+                    )
+                }
+                withContext(ioDispatcher) {
+                    offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.COMPLETE, downloaded)
+                }
+            } catch (e: Exception) {
+                Logger.e("Download failed for region ${region.id}", e)
+                withContext(ioDispatcher) {
+                    offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.FAILED, 0L)
+                }
+                throw e
             }
         }
 
