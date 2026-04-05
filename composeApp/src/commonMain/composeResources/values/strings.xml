@@ -160,4 +160,6 @@
     <string name="offline_indicator_label">Offline</string>
     <string name="offline_maps_dialog_estimate_no_bounds">Select a region on the map to see an estimate</string>
     <string name="offline_maps_dialog_estimate_computed">~%1$d MB (%2$d tiles)</string>
+    <string name="offline_maps_region_downloading">Downloading</string>
+    <string name="offline_maps_region_download_failed">Download failed</string>
 </resources>

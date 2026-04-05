@@ -26,9 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.DownloadProgress
+import com.jordankurtz.piawaremobile.map.offline.DownloadStatus
 import com.jordankurtz.piawaremobile.map.offline.MapRegionPickerScreen
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import org.jetbrains.compose.resources.painterResource
@@ -42,6 +45,8 @@ import piawaremobile.composeapp.generated.resources.offline_maps_add_region
 import piawaremobile.composeapp.generated.resources.offline_maps_empty_message
 import piawaremobile.composeapp.generated.resources.offline_maps_empty_title
 import piawaremobile.composeapp.generated.resources.offline_maps_region_delete
+import piawaremobile.composeapp.generated.resources.offline_maps_region_download_failed
+import piawaremobile.composeapp.generated.resources.offline_maps_region_downloading
 import piawaremobile.composeapp.generated.resources.offline_maps_region_size
 import piawaremobile.composeapp.generated.resources.offline_maps_region_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_title
@@ -214,22 +219,59 @@ private fun OfflineRegionItem(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text =
-                    stringResource(
-                        Res.string.offline_maps_region_size,
-                        (region.sizeBytes / (1024 * 1024)).toInt(),
-                    ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            when (region.status) {
+                DownloadStatus.DOWNLOADING -> {
+                    val fraction =
+                        if (region.tileCount > 0L) {
+                            region.downloadedTileCount.toFloat() / region.tileCount.toFloat()
+                        } else {
+                            0f
+                        }
+                    val downloadingDesc = stringResource(Res.string.offline_maps_region_downloading)
+                    LinearProgressIndicator(
+                        progress = { fraction },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                                .semantics {
+                                    contentDescription = downloadingDesc
+                                },
+                    )
+                    Text(
+                        text = "${region.downloadedTileCount} / ${region.tileCount} tiles",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                DownloadStatus.FAILED -> {
+                    Text(
+                        text = stringResource(Res.string.offline_maps_region_download_failed),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                DownloadStatus.COMPLETE -> {
+                    Text(
+                        text =
+                            stringResource(
+                                Res.string.offline_maps_region_size,
+                                (region.sizeBytes / (1024 * 1024)).toInt(),
+                            ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
-        IconButton(onClick = onDelete) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_delete),
-                contentDescription = stringResource(Res.string.offline_maps_region_delete),
-                tint = MaterialTheme.colorScheme.error,
-            )
+        if (region.status != DownloadStatus.DOWNLOADING) {
+            IconButton(onClick = onDelete) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_delete),
+                    contentDescription = stringResource(Res.string.offline_maps_region_delete),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }

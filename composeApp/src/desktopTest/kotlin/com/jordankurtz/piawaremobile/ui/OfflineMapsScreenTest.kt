@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
+import com.jordankurtz.piawaremobile.map.offline.DownloadStatus
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import com.jordankurtz.piawaremobile.settings.ui.OfflineMapsScreen
 import kotlin.test.Test
@@ -239,5 +240,34 @@ class OfflineMapsScreenTest {
             }
             onNodeWithContentDescription("Back").performClick()
             assertTrue(backClicked)
+        }
+
+    @Test
+    fun downloadingRegionShowsProgressIndicator() =
+        runComposeUiTest {
+            val region =
+                OfflineRegion(
+                    id = 1L,
+                    name = "My Region",
+                    minZoom = 8,
+                    maxZoom = 14,
+                    minLat = 37.0,
+                    maxLat = 38.0,
+                    minLon = -122.0,
+                    maxLon = -121.0,
+                    providerId = "osm",
+                    createdAt = 1000L,
+                    tileCount = 100L,
+                    sizeBytes = 1_500_000L,
+                    status = DownloadStatus.DOWNLOADING,
+                    downloadedTileCount = 40L,
+                )
+            setContent {
+                OfflineMapsScreen(
+                    onBack = {},
+                    regions = listOf(region),
+                )
+            }
+            onNodeWithContentDescription("Downloading", substring = true).assertExists()
         }
 }
