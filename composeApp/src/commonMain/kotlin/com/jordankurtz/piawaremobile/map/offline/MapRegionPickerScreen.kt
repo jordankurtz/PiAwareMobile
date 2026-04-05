@@ -38,11 +38,11 @@ import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMap
 import com.jordankurtz.piawaremobile.map.invertProjection
 import com.jordankurtz.piawaremobile.map.mapSize
-import ovh.plrapps.mapcompose.api.scale
-import ovh.plrapps.mapcompose.api.scroll
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ovh.plrapps.mapcompose.api.scale
+import ovh.plrapps.mapcompose.api.scroll
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_edit
 import piawaremobile.composeapp.generated.resources.ic_map
@@ -295,14 +295,16 @@ internal fun MapRegionPickerContent(
                         // state.scroll gives the top-left corner in scaled pixels.
                         // normX = (scrollX + screenX) / (mapSize * scale)
                         val scaledMapSize = mapSize * scale
-                        val (topLat, leftLon) = invertProjection(
-                            normX = (scrollX + b.left) / scaledMapSize,
-                            normY = (scrollY + b.top) / scaledMapSize,
-                        )
-                        val (bottomLat, rightLon) = invertProjection(
-                            normX = (scrollX + b.right) / scaledMapSize,
-                            normY = (scrollY + b.bottom) / scaledMapSize,
-                        )
+                        val (topLat, leftLon) =
+                            invertProjection(
+                                normX = (scrollX + b.left) / scaledMapSize,
+                                normY = (scrollY + b.top) / scaledMapSize,
+                            )
+                        val (bottomLat, rightLon) =
+                            invertProjection(
+                                normX = (scrollX + b.right) / scaledMapSize,
+                                normY = (scrollY + b.bottom) / scaledMapSize,
+                            )
                         onRegionSelected(
                             BoundingBox(
                                 minLat = bottomLat,

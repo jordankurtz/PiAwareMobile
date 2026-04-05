@@ -105,6 +105,18 @@ class SqlDelightOfflineTileStore(
                 id = id,
             )
         }
+
+    override suspend fun getExclusiveTilesForRegion(id: Long): List<Triple<Int, Int, Int>> =
+        withContext(ioDispatcher) {
+            queries.selectExclusivelyPinnedTilesByRegion(id).executeAsList().map {
+                Triple(it.zoom_level.toInt(), it.col.toInt(), it.row.toInt())
+            }
+        }
+
+    override suspend fun getFreedBytesForRegion(id: Long): Long =
+        withContext(ioDispatcher) {
+            queries.sizeOfExclusivelyPinnedTilesByRegion(id).executeAsOne()
+        }
 }
 
 private fun Offline_region.toOfflineRegion() =

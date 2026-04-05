@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map.offline
 
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -33,6 +34,7 @@ class OfflineMapsViewModelTest {
 
     private lateinit var store: OfflineTileStore
     private lateinit var engine: DownloadEngine
+    private lateinit var tileCache: TileCache
     private lateinit var vm: OfflineMapsViewModel
 
     private val savedRegion =
@@ -54,6 +56,7 @@ class OfflineMapsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         store = mock()
         engine = mock()
+        tileCache = mock()
     }
 
     @AfterTest
@@ -66,23 +69,25 @@ class OfflineMapsViewModelTest {
         runTest {
             everySuspend { store.getRegions() } returns listOf(savedRegion)
 
-            vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
+            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             assertEquals(listOf(savedRegion), vm.regions.value)
         }
 
     @Test
-    fun `deleteRegion removes region and refreshes list`() =
+    fun `confirmDelete removes region and refreshes list`() =
         runTest {
             everySuspend { store.getRegions() } returns listOf(savedRegion)
             everySuspend { store.deleteRegion(any()) } returns Unit
+            everySuspend { store.getExclusiveTilesForRegion(any()) } returns emptyList()
 
-            vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
+            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             everySuspend { store.getRegions() } returns emptyList()
-            vm.deleteRegion(savedRegion.id)
+            vm.requestDeleteRegion(savedRegion)
+            vm.confirmDelete()
             advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(1)) { store.deleteRegion(savedRegion.id) }
@@ -99,7 +104,7 @@ class OfflineMapsViewModelTest {
             everySuspend { store.saveRegion(any()) } returns 2L
             every { engine.download(any(), any()) } returns flowOf(progress1, progress2)
 
-            vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
+            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
@@ -120,7 +125,7 @@ class OfflineMapsViewModelTest {
             val progress = DownloadProgress(regionId = 1L, downloaded = 5L, total = 10L)
             every { engine.download(any(), any()) } returns flowOf(progress)
 
-            val vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
+            val vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             val collected = mutableListOf<DownloadProgress?>()
@@ -152,7 +157,7 @@ class OfflineMapsViewModelTest {
             everySuspend { store.saveRegion(any()) } returns 2L
             every { engine.download(any(), any()) } returns flowOf()
 
-            vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
+            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)

@@ -146,6 +146,19 @@ class FileTileCache(
         }
     }
 
+    override suspend fun delete(
+        zoomLvl: Int,
+        col: Int,
+        row: Int,
+    ) {
+        withContext(ioDispatcher) {
+            val tileKey = tileKey(zoomLvl, col, row)
+            cacheFileSystem.delete(tileKey)
+            queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
+            queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
+        }
+    }
+
     /**
      * Evicts least-recently-accessed tiles until total cache size is at or below [maxCacheBytes].
      * Runs in [scope] so that cancellation of tile workers does not abort eviction.

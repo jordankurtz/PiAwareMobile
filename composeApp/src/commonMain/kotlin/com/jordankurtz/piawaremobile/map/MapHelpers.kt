@@ -129,7 +129,10 @@ private fun normalize(
  * @param normY Normalized y coordinate in [0,1] (increases southward, 0 = north pole)
  * @return Pair of (latitude, longitude) in degrees
  */
-fun invertProjection(normX: Double, normY: Double): Pair<Double, Double> {
+fun invertProjection(
+    normX: Double,
+    normY: Double,
+): Pair<Double, Double> {
     val halfRange = -X0 // 20037508.342789248
     val xMerc = normX * (2.0 * halfRange) - halfRange
     val lon = xMerc / 6378137.0 * (180.0 / PI)

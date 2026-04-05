@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,7 @@ import kotlin.time.Clock
 class OfflineMapsViewModel(
     private val store: OfflineTileStore,
     private val engine: DownloadEngine,
+    private val tileCache: TileCache,
     private val downloadScopeHolder: DownloadScopeHolder,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -36,10 +38,27 @@ class OfflineMapsViewModel(
         }
     }
 
-    fun deleteRegion(id: Long) {
+    private val _pendingDeleteRegion = MutableStateFlow<OfflineRegion?>(null)
+    val pendingDeleteRegion: StateFlow<OfflineRegion?> = _pendingDeleteRegion.asStateFlow()
+
+    fun requestDeleteRegion(region: OfflineRegion) {
         if (_isDownloading.value) return
+        _pendingDeleteRegion.value = region
+    }
+
+    fun cancelDelete() {
+        _pendingDeleteRegion.value = null
+    }
+
+    fun confirmDelete() {
+        val region = _pendingDeleteRegion.value ?: return
+        _pendingDeleteRegion.value = null
         viewModelScope.launch(ioDispatcher) {
-            store.deleteRegion(id)
+            val exclusiveTiles = store.getExclusiveTilesForRegion(region.id)
+            for ((zoom, col, row) in exclusiveTiles) {
+                tileCache.delete(zoom, col, row)
+            }
+            store.deleteRegion(region.id)
             _regions.value = store.getRegions()
         }
     }

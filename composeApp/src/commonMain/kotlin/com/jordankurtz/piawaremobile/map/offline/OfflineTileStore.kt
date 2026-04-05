@@ -35,4 +35,8 @@ interface OfflineTileStore {
         status: DownloadStatus,
         downloadedTileCount: Long = 0L,
     )
+
+    suspend fun getExclusiveTilesForRegion(id: Long): List<Triple<Int, Int, Int>>
+
+    suspend fun getFreedBytesForRegion(id: Long): Long
 }

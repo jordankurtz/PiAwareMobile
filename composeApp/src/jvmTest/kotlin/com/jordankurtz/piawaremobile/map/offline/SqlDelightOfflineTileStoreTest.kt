@@ -191,4 +191,43 @@ class SqlDelightOfflineTileStoreTest {
             assertEquals(DownloadStatus.DOWNLOADING, region?.status)
             assertEquals(5L, region?.downloadedTileCount)
         }
+
+    @Test
+    fun `getExclusiveTilesForRegion excludes shared tiles`() =
+        runTest(testDispatcher) {
+            val region1Id = store.saveRegion(baseRegion("R1"))
+            val region2Id = store.saveRegion(baseRegion("R2"))
+
+            // Tile (8, 10, 20) pinned by both regions
+            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = region1Id)
+            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = region2Id)
+            // Tile (8, 11, 20) exclusively pinned by region1
+            store.pinTile(zoomLevel = 8, col = 11, row = 20, regionId = region1Id)
+
+            val exclusive = store.getExclusiveTilesForRegion(region1Id)
+            assertEquals(1, exclusive.size)
+            assertEquals(Triple(8, 11, 20), exclusive[0])
+        }
+
+    @Test
+    fun `getFreedBytesForRegion returns 0 when no tiles in cache`() =
+        runTest(testDispatcher) {
+            val id = store.saveRegion(baseRegion("R"))
+            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = id)
+            val freed = store.getFreedBytesForRegion(id)
+            assertEquals(0L, freed)
+        }
+
+    private fun baseRegion(name: String) =
+        OfflineRegion(
+            name = name,
+            minZoom = 8,
+            maxZoom = 12,
+            minLat = 0.0,
+            maxLat = 1.0,
+            minLon = 0.0,
+            maxLon = 1.0,
+            providerId = "osm",
+            createdAt = 1000L,
+        )
 }

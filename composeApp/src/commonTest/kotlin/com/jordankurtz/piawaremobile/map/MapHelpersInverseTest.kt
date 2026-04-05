@@ -13,7 +13,7 @@ class MapHelpersInverseTest {
         val diff = abs(expected - actual)
         if (diff > delta) {
             throw AssertionError(
-                "$message expected=$expected actual=$actual diff=$diff (tolerance=$delta)"
+                "$message expected=$expected actual=$actual diff=$diff (tolerance=$delta)",
             )
         }
     }
@@ -48,12 +48,16 @@ class MapHelpersInverseTest {
 
     @Test
     fun `screenToLatLon returns scroll center when screen center passed`() {
-        val (lat, lon) = screenToLatLon(
-            screenX = 500f, screenY = 400f,
-            screenWidth = 1000f, screenHeight = 800f,
-            scrollX = 0.5, scrollY = 0.5,
-            scale = 1f,
-        )
+        val (lat, lon) =
+            screenToLatLon(
+                screenX = 500f,
+                screenY = 400f,
+                screenWidth = 1000f,
+                screenHeight = 800f,
+                scrollX = 0.5,
+                scrollY = 0.5,
+                scale = 1f,
+            )
         assertNearlyEqual(0.0, lat, delta = 1e-4, message = "lat at center")
         assertNearlyEqual(0.0, lon, delta = 1e-4, message = "lon at center")
     }

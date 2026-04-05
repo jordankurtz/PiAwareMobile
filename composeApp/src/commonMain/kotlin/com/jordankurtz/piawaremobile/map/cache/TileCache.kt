@@ -24,4 +24,14 @@ interface TileCache {
         row: Int,
         data: ByteArray,
     )
+
+    /**
+     * Remove a tile from the cache (both disk and database metadata).
+     * No-op if the tile is not cached.
+     */
+    suspend fun delete(
+        zoomLvl: Int,
+        col: Int,
+        row: Int,
+    )
 }
