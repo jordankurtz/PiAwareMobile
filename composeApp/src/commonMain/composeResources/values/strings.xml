@@ -158,4 +158,6 @@
     <string name="offline_maps_picker_switch_to_map_mode">Switch to map mode</string>
     <string name="offline_maps_picker_switch_to_box_mode">Switch to box mode</string>
     <string name="offline_indicator_label">Offline</string>
+    <string name="offline_maps_dialog_estimate_no_bounds">Select a region on the map to see an estimate</string>
+    <string name="offline_maps_dialog_estimate_computed">~%1$d MB (%2$d tiles)</string>
 </resources>

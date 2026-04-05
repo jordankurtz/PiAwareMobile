@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map.offline
 
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import dev.mokkery.answering.returns
+import dev.mokkery.answering.throws
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
@@ -19,6 +20,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -182,6 +184,49 @@ class OfflineDownloadEngineTest {
             // No tiles should be cached on network error
             verifySuspend(VerifyMode.exactly(0)) {
                 tileCache.put(any(), any(), any(), any())
+            }
+        }
+
+    @Test
+    fun `download sets DOWNLOADING at start then COMPLETE on success`() =
+        runTest(testDispatcher) {
+            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
+            everySuspend { tileCache.get(any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
+
+            val engine = createEngine(successHttpClient())
+            engine.download(testRegion, config).collect {}
+
+            verifySuspend(VerifyMode.exactly(1)) {
+                offlineStore.updateDownloadStatus(testRegion.id, DownloadStatus.DOWNLOADING, 0L)
+            }
+            verifySuspend(VerifyMode.exactly(1)) {
+                offlineStore.updateDownloadStatus(testRegion.id, DownloadStatus.COMPLETE, 4L)
+            }
+        }
+
+    @Test
+    fun `download sets FAILED and rethrows on store error`() =
+        runTest(testDispatcher) {
+            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
+            everySuspend { tileCache.get(any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
+            // pinTile throws on first call
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } throws RuntimeException("DB error")
+            everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
+
+            val engine = createEngine(successHttpClient())
+
+            assertFailsWith<RuntimeException> {
+                engine.download(testRegion, config).collect {}
+            }
+
+            verifySuspend(VerifyMode.exactly(1)) {
+                offlineStore.updateDownloadStatus(testRegion.id, DownloadStatus.FAILED, any())
             }
         }
 }

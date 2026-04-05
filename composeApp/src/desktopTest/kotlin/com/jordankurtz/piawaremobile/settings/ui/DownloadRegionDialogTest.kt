@@ -25,7 +25,7 @@ class DownloadRegionDialogTest {
             onNodeWithText("Region name").assertIsDisplayed()
             onNodeWithText("Min zoom: 8").assertIsDisplayed()
             onNodeWithText("Max zoom: 14").assertIsDisplayed()
-            onNodeWithText("Estimated size depends on zoom levels and area").assertIsDisplayed()
+            onNodeWithText("Select a region on the map to see an estimate").assertIsDisplayed()
             onNodeWithText("Cancel").assertIsDisplayed()
             onNodeWithText("Download").assertIsDisplayed()
         }
@@ -126,5 +126,32 @@ class DownloadRegionDialogTest {
                 )
             }
             onNodeWithText("Selected bounds", substring = true).assertDoesNotExist()
+        }
+
+    @Test
+    fun estimateShowsTileCountAndMbWhenBoundsAreSet() =
+        runComposeUiTest {
+            val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
+            setContent {
+                DownloadRegionDialog(
+                    onDismiss = {},
+                    onConfirm = { _, _, _ -> },
+                    selectedBounds = bounds,
+                )
+            }
+            onNodeWithText("tiles", substring = true).assertExists()
+        }
+
+    @Test
+    fun estimateShowsNoBoundsMessageWhenBoundsNull() =
+        runComposeUiTest {
+            setContent {
+                DownloadRegionDialog(
+                    onDismiss = {},
+                    onConfirm = { _, _, _ -> },
+                    selectedBounds = null,
+                )
+            }
+            onNodeWithText("Select a region on the map to see an estimate").assertExists()
         }
 }

@@ -121,6 +121,6 @@ private fun Offline_region.toOfflineRegion() =
         createdAt = created_at,
         tileCount = tile_count,
         sizeBytes = size_bytes,
-        status = DownloadStatus.entries.find { it.name == status } ?: DownloadStatus.COMPLETE,
+        status = DownloadStatus.entries.find { it.name == status } ?: DownloadStatus.FAILED,
         downloadedTileCount = downloaded_tile_count,
     )

@@ -33,6 +33,7 @@ class OfflineDownloadEngine(
         config: TileProviderConfig,
     ): Flow<DownloadProgress> =
         flow {
+            var downloaded = 0L
             try {
                 withContext(ioDispatcher) {
                     offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.DOWNLOADING, 0L)
@@ -51,7 +52,6 @@ class OfflineDownloadEngine(
                         maxZoom = region.maxZoom,
                     ).toList()
                 val total = tiles.size.toLong()
-                var downloaded = 0L
                 var stored = 0L
                 var totalBytes = 0L
 
@@ -114,7 +114,7 @@ class OfflineDownloadEngine(
             } catch (e: Exception) {
                 Logger.e("Download failed for region ${region.id}", e)
                 withContext(ioDispatcher) {
-                    offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.FAILED, 0L)
+                    offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.FAILED, downloaded)
                 }
                 throw e
             }

@@ -26,12 +26,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
+import com.jordankurtz.piawaremobile.map.offline.tileCount
 import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_bounds_label
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_cancel
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_download
-import piawaremobile.composeapp.generated.resources.offline_maps_dialog_estimate
+import piawaremobile.composeapp.generated.resources.offline_maps_dialog_estimate_computed
+import piawaremobile.composeapp.generated.resources.offline_maps_dialog_estimate_no_bounds
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_max_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_min_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_name_label
@@ -46,6 +48,7 @@ private const val MIN_ZOOM_LIMIT = 1f
 private const val MAX_ZOOM_LIMIT = 18f
 private const val COORD_DECIMAL_PLACES = 4
 private const val COORD_SCALE = 10_000.0
+private const val AVG_TILE_BYTES = 15_360L // ~15 KB average per OSM tile
 
 private fun formatCoord(value: Double): String {
     val rounded = round(value * COORD_SCALE) / COORD_SCALE
@@ -66,6 +69,17 @@ fun DownloadRegionDialog(
     var name by remember { mutableStateOf("") }
     var minZoom by remember { mutableFloatStateOf(DEFAULT_MIN_ZOOM) }
     var maxZoom by remember { mutableFloatStateOf(DEFAULT_MAX_ZOOM) }
+
+    val estimatePair =
+        remember(selectedBounds, minZoom, maxZoom) {
+            if (selectedBounds == null) {
+                null
+            } else {
+                val count = tileCount(selectedBounds, minZoom.toInt(), maxZoom.toInt())
+                val mb = (count * AVG_TILE_BYTES / (1024L * 1024L)).toInt()
+                Pair(mb, count)
+            }
+        }
 
     val isValid = name.isNotBlank()
 
@@ -162,11 +176,25 @@ fun DownloadRegionDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = stringResource(Res.string.offline_maps_dialog_estimate),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                val pair = estimatePair
+                if (pair == null) {
+                    Text(
+                        text = stringResource(Res.string.offline_maps_dialog_estimate_no_bounds),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    Text(
+                        text =
+                            stringResource(
+                                Res.string.offline_maps_dialog_estimate_computed,
+                                pair.first,
+                                pair.second,
+                            ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
