@@ -9,6 +9,12 @@ interface OfflineTileStore {
 
     suspend fun deleteRegion(id: Long)
 
+    suspend fun updateRegionStats(
+        id: Long,
+        tileCount: Long,
+        sizeBytes: Long,
+    )
+
     suspend fun pinTile(
         zoomLevel: Int,
         col: Int,
