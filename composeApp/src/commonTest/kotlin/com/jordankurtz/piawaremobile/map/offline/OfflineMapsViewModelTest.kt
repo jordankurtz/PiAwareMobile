@@ -1,0 +1,171 @@
+package com.jordankurtz.piawaremobile.map.offline
+
+import dev.mokkery.answering.returns
+import dev.mokkery.every
+import dev.mokkery.everySuspend
+import dev.mokkery.matcher.any
+import dev.mokkery.matcher.matching
+import dev.mokkery.mock
+import dev.mokkery.verify.VerifyMode
+import dev.mokkery.verifySuspend
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class OfflineMapsViewModelTest {
+    private val testDispatcher = StandardTestDispatcher()
+
+    private lateinit var store: OfflineTileStore
+    private lateinit var engine: DownloadEngine
+    private lateinit var vm: OfflineMapsViewModel
+
+    private val savedRegion =
+        OfflineRegion(
+            id = 1L,
+            name = "Home",
+            minZoom = 8,
+            maxZoom = 10,
+            minLat = 40.0,
+            maxLat = 41.0,
+            minLon = -75.0,
+            maxLon = -74.0,
+            providerId = "openstreetmap",
+            createdAt = 1000L,
+        )
+
+    @BeforeTest
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+        store = mock()
+        engine = mock()
+    }
+
+    @AfterTest
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `regions are loaded on construction`() =
+        runTest {
+            everySuspend { store.getRegions() } returns listOf(savedRegion)
+
+            vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            advanceUntilIdle()
+
+            assertEquals(listOf(savedRegion), vm.regions.value)
+        }
+
+    @Test
+    fun `deleteRegion removes region and refreshes list`() =
+        runTest {
+            everySuspend { store.getRegions() } returns listOf(savedRegion)
+            everySuspend { store.deleteRegion(any()) } returns Unit
+
+            vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            advanceUntilIdle()
+
+            everySuspend { store.getRegions() } returns emptyList()
+            vm.deleteRegion(savedRegion.id)
+            advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { store.deleteRegion(savedRegion.id) }
+            assertEquals(emptyList(), vm.regions.value)
+        }
+
+    @Test
+    fun `isDownloading is true while download is in progress`() =
+        runTest {
+            val progress1 = DownloadProgress(regionId = 2L, downloaded = 1L, total = 2L)
+            val progress2 = DownloadProgress(regionId = 2L, downloaded = 2L, total = 2L)
+
+            everySuspend { store.getRegions() } returns emptyList()
+            everySuspend { store.saveRegion(any()) } returns 2L
+            every { engine.download(any(), any()) } returns flowOf(progress1, progress2)
+
+            vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            advanceUntilIdle()
+
+            val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
+            vm.startDownload("Airport area", bounds, minZoom = 8, maxZoom = 12)
+
+            assertTrue(vm.isDownloading.value)
+
+            advanceUntilIdle()
+
+            assertFalse(vm.isDownloading.value)
+        }
+
+    @Test
+    fun `downloadProgress reflects latest progress event`() =
+        runTest(testDispatcher) {
+            everySuspend { store.getRegions() } returns emptyList()
+            everySuspend { store.saveRegion(any()) } returns 1L
+            val progress = DownloadProgress(regionId = 1L, downloaded = 5L, total = 10L)
+            every { engine.download(any(), any()) } returns flowOf(progress)
+
+            val vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            advanceUntilIdle()
+
+            val collected = mutableListOf<DownloadProgress?>()
+            val collectorJob =
+                launch {
+                    vm.downloadProgress.collect { collected.add(it) }
+                }
+
+            assertNull(vm.downloadProgress.value)
+
+            vm.startDownload(
+                name = "Test",
+                bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0),
+                minZoom = 8,
+                maxZoom = 10,
+            )
+            advanceUntilIdle()
+
+            // Progress should have been emitted and then cleared
+            assertTrue(collected.any { it != null })
+            assertNull(vm.downloadProgress.value)
+            collectorJob.cancel()
+        }
+
+    @Test
+    fun `startDownload creates region with correct fields`() =
+        runTest {
+            everySuspend { store.getRegions() } returns emptyList()
+            everySuspend { store.saveRegion(any()) } returns 2L
+            every { engine.download(any(), any()) } returns flowOf()
+
+            vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            advanceUntilIdle()
+
+            val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
+            vm.startDownload("Airport area", bounds, minZoom = 8, maxZoom = 12)
+            advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                store.saveRegion(
+                    matching<OfflineRegion> { region ->
+                        region.name == "Airport area" &&
+                            region.minZoom == 8 &&
+                            region.maxZoom == 12 &&
+                            region.providerId == "openstreetmap"
+                    },
+                )
+            }
+        }
+}
