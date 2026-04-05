@@ -36,6 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMap
+import com.jordankurtz.piawaremobile.map.invertProjection
+import com.jordankurtz.piawaremobile.map.mapSize
+import ovh.plrapps.mapcompose.api.scale
+import ovh.plrapps.mapcompose.api.scroll
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -66,6 +70,9 @@ fun MapRegionPickerScreen(
     onDismiss: () -> Unit,
     mapViewModel: MapViewModel = koinViewModel(),
 ) {
+    val scrollX = mapViewModel.state.scroll.x
+    val scrollY = mapViewModel.state.scroll.y
+    val scale = mapViewModel.state.scale
     MapRegionPickerContent(
         onRegionSelected = onRegionSelected,
         onDismiss = onDismiss,
@@ -75,6 +82,9 @@ fun MapRegionPickerScreen(
                 modifier = Modifier.fillMaxSize(),
             )
         },
+        scrollX = scrollX,
+        scrollY = scrollY,
+        scale = scale,
     )
 }
 
@@ -83,6 +93,9 @@ internal fun MapRegionPickerContent(
     onRegionSelected: (BoundingBox) -> Unit,
     onDismiss: () -> Unit,
     mapLayer: @Composable () -> Unit,
+    scrollX: Double = 0.0,
+    scrollY: Double = 0.0,
+    scale: Double = 1.0,
 ) {
     var bounds by remember { mutableStateOf(BoxBounds(0f, 0f, 0f, 0f)) }
     var initialized by remember { mutableStateOf(false) }
@@ -278,13 +291,24 @@ internal fun MapRegionPickerContent(
                 Spacer(modifier = Modifier.width(16.dp))
                 Button(
                     onClick = {
-                        // Coordinate conversion is deferred to the backend phase — return mock bounds
+                        val b = bounds
+                        // state.scroll gives the top-left corner in scaled pixels.
+                        // normX = (scrollX + screenX) / (mapSize * scale)
+                        val scaledMapSize = mapSize * scale
+                        val (topLat, leftLon) = invertProjection(
+                            normX = (scrollX + b.left) / scaledMapSize,
+                            normY = (scrollY + b.top) / scaledMapSize,
+                        )
+                        val (bottomLat, rightLon) = invertProjection(
+                            normX = (scrollX + b.right) / scaledMapSize,
+                            normY = (scrollY + b.bottom) / scaledMapSize,
+                        )
                         onRegionSelected(
                             BoundingBox(
-                                minLat = 37.0,
-                                maxLat = 38.0,
-                                minLon = -122.5,
-                                maxLon = -121.5,
+                                minLat = bottomLat,
+                                maxLat = topLat,
+                                minLon = leftLon,
+                                maxLon = rightLon,
                             ),
                         )
                     },
