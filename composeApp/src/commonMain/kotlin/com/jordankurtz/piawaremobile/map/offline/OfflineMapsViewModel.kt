@@ -18,6 +18,7 @@ import kotlin.time.Clock
 class OfflineMapsViewModel(
     private val store: OfflineTileStore,
     private val engine: DownloadEngine,
+    private val downloadScopeHolder: DownloadScopeHolder,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _regions = MutableStateFlow<List<OfflineRegion>>(emptyList())
@@ -50,7 +51,7 @@ class OfflineMapsViewModel(
         maxZoom: Int,
     ) {
         if (!_isDownloading.compareAndSet(expect = false, update = true)) return
-        viewModelScope.launch {
+        downloadScopeHolder.scope.launch {
             try {
                 val region =
                     OfflineRegion(

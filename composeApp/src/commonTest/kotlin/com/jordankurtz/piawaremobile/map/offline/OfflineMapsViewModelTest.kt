@@ -8,6 +8,7 @@ import dev.mokkery.matcher.matching
 import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -28,6 +29,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class OfflineMapsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
+    private val downloadScopeHolder = DownloadScopeHolder(scope = CoroutineScope(testDispatcher))
 
     private lateinit var store: OfflineTileStore
     private lateinit var engine: DownloadEngine
@@ -64,7 +66,7 @@ class OfflineMapsViewModelTest {
         runTest {
             everySuspend { store.getRegions() } returns listOf(savedRegion)
 
-            vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             assertEquals(listOf(savedRegion), vm.regions.value)
@@ -76,7 +78,7 @@ class OfflineMapsViewModelTest {
             everySuspend { store.getRegions() } returns listOf(savedRegion)
             everySuspend { store.deleteRegion(any()) } returns Unit
 
-            vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             everySuspend { store.getRegions() } returns emptyList()
@@ -97,7 +99,7 @@ class OfflineMapsViewModelTest {
             everySuspend { store.saveRegion(any()) } returns 2L
             every { engine.download(any(), any()) } returns flowOf(progress1, progress2)
 
-            vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
@@ -118,7 +120,7 @@ class OfflineMapsViewModelTest {
             val progress = DownloadProgress(regionId = 1L, downloaded = 5L, total = 10L)
             every { engine.download(any(), any()) } returns flowOf(progress)
 
-            val vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            val vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             val collected = mutableListOf<DownloadProgress?>()
@@ -150,7 +152,7 @@ class OfflineMapsViewModelTest {
             everySuspend { store.saveRegion(any()) } returns 2L
             every { engine.download(any(), any()) } returns flowOf()
 
-            vm = OfflineMapsViewModel(store, engine, testDispatcher)
+            vm = OfflineMapsViewModel(store, engine, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
 
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
