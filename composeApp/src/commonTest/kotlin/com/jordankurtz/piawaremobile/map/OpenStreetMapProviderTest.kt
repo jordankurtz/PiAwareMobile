@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map
 
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
+import com.jordankurtz.piawaremobile.map.offline.OfflineTileStore
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -27,18 +28,25 @@ import kotlin.test.assertNull
 class OpenStreetMapProviderTest {
     private val tileBytes = byteArrayOf(89, 80, 78, 71, 13, 10, 26, 10) // fake PNG header
     private lateinit var tileCache: TileCache
+    private lateinit var offlineStore: OfflineTileStore
     private lateinit var statsTracker: TileCacheStatsTracker
     private lateinit var provider: OpenStreetMapProvider
 
-    private fun createProvider(httpClient: HttpClient) {
+    private fun createProvider(
+        httpClient: HttpClient,
+        pinnedResult: Boolean = false,
+    ) {
         tileCache = mock()
+        offlineStore = mock()
         statsTracker = TileCacheStatsTracker()
         provider =
             OpenStreetMapProvider(
                 httpClient = httpClient,
                 tileCache = tileCache,
+                offlineTileStore = offlineStore,
                 statsTracker = statsTracker,
             )
+        everySuspend { offlineStore.isPinned(any(), any(), any()) } returns pinnedResult
     }
 
     private fun mockHttpClient(responseBytes: ByteArray = tileBytes): HttpClient =
@@ -187,5 +195,29 @@ class OpenStreetMapProviderTest {
             provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
 
             assertEquals(1L, statsTracker.stats.value.errors)
+        }
+
+    @Test
+    fun recordsOfflineHitWhenServingPinnedTileFromCache() =
+        runTest {
+            createProvider(mockHttpClient(), pinnedResult = true)
+            everySuspend { tileCache.get(any(), any(), any()) } returns tileBytes
+
+            provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertEquals(1L, statsTracker.stats.value.offlineHits)
+            assertEquals(0L, statsTracker.stats.value.diskHits)
+        }
+
+    @Test
+    fun recordsDiskHitWhenServingUnpinnedTileFromCache() =
+        runTest {
+            createProvider(mockHttpClient(), pinnedResult = false)
+            everySuspend { tileCache.get(any(), any(), any()) } returns tileBytes
+
+            provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertEquals(1L, statsTracker.stats.value.diskHits)
+            assertEquals(0L, statsTracker.stats.value.offlineHits)
         }
 }

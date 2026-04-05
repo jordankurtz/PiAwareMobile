@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.map
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
+import com.jordankurtz.piawaremobile.map.offline.OfflineTileStore
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.prepareGet
@@ -20,6 +21,7 @@ import kotlin.time.TimeSource
 class OpenStreetMapProvider(
     private val httpClient: HttpClient,
     private val tileCache: TileCache,
+    private val offlineTileStore: OfflineTileStore,
     private val statsTracker: TileCacheStatsTracker,
 ) : TileStreamProvider {
     override suspend fun getTileStream(
@@ -34,7 +36,11 @@ class OpenStreetMapProvider(
         tileCache.get(zoomLvl, col, row)?.let { cached ->
             val elapsed = mark.elapsedNow().inWholeMilliseconds
             Logger.d("Tile cache hit z=$zoomLvl x=$col y=$row (${elapsed}ms)")
-            statsTracker.recordDiskHit()
+            if (offlineTileStore.isPinned(zoomLevel = zoomLvl, col = col, row = row)) {
+                statsTracker.recordOfflineHit()
+            } else {
+                statsTracker.recordDiskHit()
+            }
             return Buffer().apply { write(cached) }
         }
 

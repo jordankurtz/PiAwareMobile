@@ -19,6 +19,10 @@ class TileCacheStatsTracker {
         _stats.update { it.copy(networkFetches = it.networkFetches + 1) }
     }
 
+    fun recordOfflineHit() {
+        _stats.update { it.copy(offlineHits = it.offlineHits + 1) }
+    }
+
     fun recordError() {
         _stats.update { it.copy(errors = it.errors + 1) }
     }
