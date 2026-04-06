@@ -28,7 +28,7 @@ interface OfflineTileStore {
         row: Int,
     ): Boolean
 
-    suspend fun getPinnedTilesForRegion(regionId: Long): List<Triple<Int, Int, Int>>
+    suspend fun getPinnedTilesForRegion(regionId: Long): List<TileCoord>
 
     suspend fun updateDownloadStatus(
         id: Long,
@@ -36,7 +36,7 @@ interface OfflineTileStore {
         downloadedTileCount: Long = 0L,
     )
 
-    suspend fun getExclusiveTilesForRegion(id: Long): List<Triple<Int, Int, Int>>
+    suspend fun getExclusiveTilesForRegion(id: Long): List<TileCoord>
 
     suspend fun getFreedBytesForRegion(id: Long): Long
 }

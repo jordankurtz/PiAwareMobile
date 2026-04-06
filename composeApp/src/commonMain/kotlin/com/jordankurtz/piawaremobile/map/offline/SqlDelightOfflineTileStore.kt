@@ -86,10 +86,10 @@ class SqlDelightOfflineTileStore(
             ).executeAsOne() > 0L
         }
 
-    override suspend fun getPinnedTilesForRegion(regionId: Long): List<Triple<Int, Int, Int>> =
+    override suspend fun getPinnedTilesForRegion(regionId: Long): List<TileCoord> =
         withContext(ioDispatcher) {
             queries.selectPinnedTilesByRegion(regionId).executeAsList().map {
-                Triple(it.zoom_level.toInt(), it.col.toInt(), it.row.toInt())
+                TileCoord(zoom = it.zoom_level.toInt(), col = it.col.toInt(), row = it.row.toInt())
             }
         }
 
@@ -106,10 +106,10 @@ class SqlDelightOfflineTileStore(
             )
         }
 
-    override suspend fun getExclusiveTilesForRegion(id: Long): List<Triple<Int, Int, Int>> =
+    override suspend fun getExclusiveTilesForRegion(id: Long): List<TileCoord> =
         withContext(ioDispatcher) {
             queries.selectExclusivelyPinnedTilesByRegion(id).executeAsList().map {
-                Triple(it.zoom_level.toInt(), it.col.toInt(), it.row.toInt())
+                TileCoord(zoom = it.zoom_level.toInt(), col = it.col.toInt(), row = it.row.toInt())
             }
         }
 

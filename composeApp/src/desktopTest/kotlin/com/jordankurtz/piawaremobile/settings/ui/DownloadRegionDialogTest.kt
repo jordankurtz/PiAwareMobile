@@ -43,12 +43,52 @@ class DownloadRegionDialogTest {
         }
 
     @Test
-    fun downloadButtonEnabledWhenNameNonBlank() =
+    fun downloadButtonEnabledWhenNameNonBlankAndBoundsSelected() =
         runComposeUiTest {
+            val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
             setContent {
-                DownloadRegionDialog(name = "My Region", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
+                DownloadRegionDialog(
+                    name = "My Region",
+                    onNameChange = {},
+                    onDismiss = {},
+                    onConfirm = { _, _ -> },
+                    selectedBounds = bounds,
+                )
             }
             onNodeWithText("Download").assertIsEnabled()
+        }
+
+    @Test
+    fun downloadButtonDisabledWhenBoundsNull() =
+        runComposeUiTest {
+            setContent {
+                DownloadRegionDialog(
+                    name = "My Region",
+                    onNameChange = {},
+                    onDismiss = {},
+                    onConfirm = { _, _ -> },
+                    selectedBounds = null,
+                )
+            }
+            onNodeWithText("Download").assertIsNotEnabled()
+        }
+
+    @Test
+    fun downloadButtonDisabledWhenTileCountExceedsLimit() =
+        runComposeUiTest {
+            // World bounds at zoom 1-18 → millions of tiles
+            val bounds = BoundingBox(minLat = -85.0, maxLat = 85.0, minLon = -180.0, maxLon = 180.0)
+            setContent {
+                DownloadRegionDialog(
+                    name = "World",
+                    onNameChange = {},
+                    onDismiss = {},
+                    onConfirm = { _, _ -> },
+                    selectedBounds = bounds,
+                )
+            }
+            onNodeWithText("Download").assertIsNotEnabled()
+            onNodeWithText("Too many tiles", substring = true).assertIsDisplayed()
         }
 
     @Test
@@ -91,12 +131,14 @@ class DownloadRegionDialogTest {
     fun confirmFiresOnConfirmCallback() =
         runComposeUiTest {
             var confirmCalled = false
+            val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
             setContent {
                 DownloadRegionDialog(
                     name = "Airport Area",
                     onNameChange = {},
                     onDismiss = {},
                     onConfirm = { _, _ -> confirmCalled = true },
+                    selectedBounds = bounds,
                 )
             }
             onNodeWithText("Download").performClick()

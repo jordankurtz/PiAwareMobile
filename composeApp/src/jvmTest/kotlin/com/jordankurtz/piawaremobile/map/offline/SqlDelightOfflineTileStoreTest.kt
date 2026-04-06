@@ -141,9 +141,9 @@ class SqlDelightOfflineTileStoreTest {
 
             val tiles = store.getPinnedTilesForRegion(id)
             assertEquals(2, tiles.size)
-            val coords = tiles.map { Triple(it.first, it.second, it.third) }.toSet()
-            assertTrue(Triple(5, 10, 20) in coords)
-            assertTrue(Triple(5, 11, 20) in coords)
+            val coords = tiles.toSet()
+            assertTrue(TileCoord(zoom = 5, col = 10, row = 20) in coords)
+            assertTrue(TileCoord(zoom = 5, col = 11, row = 20) in coords)
         }
 
     @Test
@@ -206,7 +206,7 @@ class SqlDelightOfflineTileStoreTest {
 
             val exclusive = store.getExclusiveTilesForRegion(region1Id)
             assertEquals(1, exclusive.size)
-            assertEquals(Triple(8, 11, 20), exclusive[0])
+            assertEquals(TileCoord(zoom = 8, col = 11, row = 20), exclusive[0])
         }
 
     @Test

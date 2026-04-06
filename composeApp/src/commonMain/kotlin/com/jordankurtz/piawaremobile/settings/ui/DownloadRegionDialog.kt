@@ -38,6 +38,7 @@ import piawaremobile.composeapp.generated.resources.offline_maps_dialog_min_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_name_label
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_select_on_map
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_title
+import piawaremobile.composeapp.generated.resources.offline_maps_dialog_too_many_tiles
 import kotlin.math.abs
 import kotlin.math.round
 
@@ -48,6 +49,7 @@ private const val MAX_ZOOM_LIMIT = 18f
 private const val COORD_DECIMAL_PLACES = 4
 private const val COORD_SCALE = 10_000.0
 private const val AVG_TILE_BYTES = 15_360L // ~15 KB average per OSM tile
+private const val MAX_TILE_COUNT = 50_000
 
 private fun formatCoord(value: Double): String {
     val rounded = round(value * COORD_SCALE) / COORD_SCALE
@@ -81,7 +83,8 @@ fun DownloadRegionDialog(
             }
         }
 
-    val isValid = name.isNotBlank()
+    val tileCount = estimatePair?.second ?: 0
+    val isValid = name.isNotBlank() && selectedBounds != null && tileCount <= MAX_TILE_COUNT
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -177,23 +180,30 @@ fun DownloadRegionDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 val pair = estimatePair
-                if (pair == null) {
-                    Text(
-                        text = stringResource(Res.string.offline_maps_dialog_estimate_no_bounds),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                } else {
-                    Text(
-                        text =
-                            stringResource(
-                                Res.string.offline_maps_dialog_estimate_computed,
-                                pair.first,
-                                pair.second,
-                            ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                when {
+                    pair == null ->
+                        Text(
+                            text = stringResource(Res.string.offline_maps_dialog_estimate_no_bounds),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    pair.second > MAX_TILE_COUNT ->
+                        Text(
+                            text = stringResource(Res.string.offline_maps_dialog_too_many_tiles, pair.second),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    else ->
+                        Text(
+                            text =
+                                stringResource(
+                                    Res.string.offline_maps_dialog_estimate_computed,
+                                    pair.first,
+                                    pair.second,
+                                ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
