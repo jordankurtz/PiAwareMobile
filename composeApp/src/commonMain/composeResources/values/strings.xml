@@ -162,6 +162,7 @@
     <string name="offline_maps_dialog_estimate_computed">~%1$d MB (%2$d tiles)</string>
     <string name="offline_maps_region_downloading">Downloading</string>
     <string name="offline_maps_region_download_failed">Download failed</string>
+    <string name="offline_maps_cancel_download">Cancel download</string>
     <string name="offline_maps_delete_confirm_title">Delete Region?</string>
     <string name="offline_maps_delete_confirm_message">Delete "%1$s"? This will free approximately %2$d MB of storage.</string>
     <string name="offline_maps_delete_confirm_delete">Delete</string>

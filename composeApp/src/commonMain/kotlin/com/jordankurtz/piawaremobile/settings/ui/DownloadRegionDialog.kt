@@ -19,7 +19,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -61,12 +60,13 @@ private fun formatCoord(value: Double): String {
 
 @Composable
 fun DownloadRegionDialog(
+    name: String,
+    onNameChange: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, minZoom: Int, maxZoom: Int) -> Unit,
+    onConfirm: (minZoom: Int, maxZoom: Int) -> Unit,
     selectedBounds: BoundingBox? = null,
     onSelectOnMap: () -> Unit = {},
 ) {
-    var name by remember { mutableStateOf("") }
     var minZoom by remember { mutableFloatStateOf(DEFAULT_MIN_ZOOM) }
     var maxZoom by remember { mutableFloatStateOf(DEFAULT_MAX_ZOOM) }
 
@@ -105,7 +105,7 @@ fun DownloadRegionDialog(
 
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = onNameChange,
                     label = { Text(stringResource(Res.string.offline_maps_dialog_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -207,7 +207,7 @@ fun DownloadRegionDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
-                        onClick = { onConfirm(name.trim(), minZoom.toInt(), maxZoom.toInt()) },
+                        onClick = { onConfirm(minZoom.toInt(), maxZoom.toInt()) },
                         enabled = isValid,
                     ) {
                         Text(stringResource(Res.string.offline_maps_dialog_download))

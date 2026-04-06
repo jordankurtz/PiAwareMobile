@@ -39,9 +39,11 @@ import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_add
 import piawaremobile.composeapp.generated.resources.ic_arrow_back
+import piawaremobile.composeapp.generated.resources.ic_clear
 import piawaremobile.composeapp.generated.resources.ic_delete
 import piawaremobile.composeapp.generated.resources.navigate_back
 import piawaremobile.composeapp.generated.resources.offline_maps_add_region
+import piawaremobile.composeapp.generated.resources.offline_maps_cancel_download
 import piawaremobile.composeapp.generated.resources.offline_maps_empty_message
 import piawaremobile.composeapp.generated.resources.offline_maps_empty_title
 import piawaremobile.composeapp.generated.resources.offline_maps_region_delete
@@ -60,10 +62,13 @@ fun OfflineMapsScreen(
     isDownloading: Boolean = false,
     downloadProgress: DownloadProgress? = null,
     onStartDownload: (name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int) -> Unit = { _, _, _, _ -> },
+    onCancelDownload: () -> Unit = {},
 ) {
     var showDownloadDialog by remember { mutableStateOf(false) }
     var showMapPicker by remember { mutableStateOf(false) }
     var pendingBounds by remember { mutableStateOf<BoundingBox?>(null) }
+    // Hoisted so the name survives round-trips to the map picker
+    var pendingName by remember { mutableStateOf("") }
 
     if (showMapPicker) {
         MapRegionPickerScreen(
@@ -82,16 +87,20 @@ fun OfflineMapsScreen(
 
     if (showDownloadDialog) {
         DownloadRegionDialog(
+            name = pendingName,
+            onNameChange = { pendingName = it },
             onDismiss = {
                 showDownloadDialog = false
                 pendingBounds = null
+                pendingName = ""
             },
-            onConfirm = { name, minZoom, maxZoom ->
+            onConfirm = { minZoom, maxZoom ->
                 val bounds = pendingBounds
                 if (bounds != null) {
-                    onStartDownload(name, bounds, minZoom, maxZoom)
+                    onStartDownload(pendingName, bounds, minZoom, maxZoom)
                     showDownloadDialog = false
                     pendingBounds = null
+                    pendingName = ""
                 }
             },
             selectedBounds = pendingBounds,
@@ -122,13 +131,22 @@ fun OfflineMapsScreen(
                         actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                 actions = {
-                    IconButton(
-                        onClick = { showDownloadDialog = true },
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_add),
-                            contentDescription = stringResource(Res.string.offline_maps_add_region),
-                        )
+                    if (isDownloading) {
+                        IconButton(onClick = onCancelDownload) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_clear),
+                                contentDescription = stringResource(Res.string.offline_maps_cancel_download),
+                            )
+                        }
+                    } else {
+                        IconButton(
+                            onClick = { showDownloadDialog = true },
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_add),
+                                contentDescription = stringResource(Res.string.offline_maps_add_region),
+                            )
+                        }
                     }
                 },
             )

@@ -1,5 +1,9 @@
 package com.jordankurtz.piawaremobile.settings.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -10,7 +14,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -19,7 +22,7 @@ class DownloadRegionDialogTest {
     fun displaysDialogElements() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(onDismiss = {}, onConfirm = { _, _, _ -> })
+                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
             }
             onNodeWithText("Download Region").assertIsDisplayed()
             onNodeWithText("Region name").assertIsDisplayed()
@@ -34,7 +37,7 @@ class DownloadRegionDialogTest {
     fun downloadButtonDisabledWhenNameBlank() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(onDismiss = {}, onConfirm = { _, _, _ -> })
+                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
             }
             onNodeWithText("Download").assertIsNotEnabled()
         }
@@ -43,11 +46,30 @@ class DownloadRegionDialogTest {
     fun downloadButtonEnabledWhenNameNonBlank() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(onDismiss = {}, onConfirm = { _, _, _ -> })
+                DownloadRegionDialog(name = "My Region", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
+            }
+            onNodeWithText("Download").assertIsEnabled()
+        }
+
+    @Test
+    fun typingInNameFieldCallsOnNameChange() =
+        runComposeUiTest {
+            var capturedName = ""
+            setContent {
+                var name by remember { mutableStateOf("") }
+                DownloadRegionDialog(
+                    name = name,
+                    onNameChange = {
+                        name = it
+                        capturedName = it
+                    },
+                    onDismiss = {},
+                    onConfirm = { _, _ -> },
+                )
             }
             onNodeWithText("Region name").performClick()
-            onNodeWithText("Region name").performTextInput("My Region")
-            onNodeWithText("Download").assertIsEnabled()
+            onNodeWithText("Region name").performTextInput("Airport Area")
+            assertTrue(capturedName.isNotBlank())
         }
 
     @Test
@@ -55,33 +77,37 @@ class DownloadRegionDialogTest {
         runComposeUiTest {
             var dismissed = false
             setContent {
-                DownloadRegionDialog(onDismiss = { dismissed = true }, onConfirm = { _, _, _ -> })
+                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = { dismissed = true }, onConfirm = {
+                        _,
+                        _,
+                    ->
+                })
             }
             onNodeWithText("Cancel").performClick()
             assertTrue(dismissed)
         }
 
     @Test
-    fun confirmWithNameCallsOnConfirmWithCorrectName() =
+    fun confirmFiresOnConfirmCallback() =
         runComposeUiTest {
-            var confirmedName: String? = null
+            var confirmCalled = false
             setContent {
                 DownloadRegionDialog(
+                    name = "Airport Area",
+                    onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { name, _, _ -> confirmedName = name },
+                    onConfirm = { _, _ -> confirmCalled = true },
                 )
             }
-            onNodeWithText("Region name").performClick()
-            onNodeWithText("Region name").performTextInput("Airport Area")
             onNodeWithText("Download").performClick()
-            assertEquals("Airport Area", confirmedName)
+            assertTrue(confirmCalled)
         }
 
     @Test
     fun selectOnMapButtonIsVisible() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(onDismiss = {}, onConfirm = { _, _, _ -> })
+                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
             }
             onNodeWithText("Select on map").assertIsDisplayed()
         }
@@ -92,8 +118,10 @@ class DownloadRegionDialogTest {
             var selectOnMapCalled = false
             setContent {
                 DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _ -> },
                     onSelectOnMap = { selectOnMapCalled = true },
                 )
             }
@@ -107,8 +135,10 @@ class DownloadRegionDialogTest {
             val bounds = BoundingBox(minLat = 37.0, maxLat = 38.0, minLon = -122.5, maxLon = -121.5)
             setContent {
                 DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _ -> },
                     selectedBounds = bounds,
                 )
             }
@@ -120,8 +150,10 @@ class DownloadRegionDialogTest {
         runComposeUiTest {
             setContent {
                 DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _ -> },
                     selectedBounds = null,
                 )
             }
@@ -134,8 +166,10 @@ class DownloadRegionDialogTest {
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
             setContent {
                 DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _ -> },
                     selectedBounds = bounds,
                 )
             }
@@ -147,8 +181,10 @@ class DownloadRegionDialogTest {
         runComposeUiTest {
             setContent {
                 DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _ -> },
                     selectedBounds = null,
                 )
             }

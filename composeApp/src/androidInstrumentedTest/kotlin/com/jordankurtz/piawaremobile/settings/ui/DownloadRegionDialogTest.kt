@@ -14,7 +14,7 @@ class DownloadRegionDialogTest {
     @Test
     fun downloadRegionDialogRendersElements() {
         composeTestRule.setContent {
-            DownloadRegionDialog(onDismiss = {}, onConfirm = { _, _, _ -> })
+            DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
         }
         composeTestRule.onNodeWithText("Download Region").assertIsDisplayed()
         composeTestRule.onNodeWithText("Region name").assertIsDisplayed()
@@ -25,7 +25,7 @@ class DownloadRegionDialogTest {
     @Test
     fun downloadButtonDisabledWhenNameBlank() {
         composeTestRule.setContent {
-            DownloadRegionDialog(onDismiss = {}, onConfirm = { _, _, _ -> })
+            DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
         }
         composeTestRule.onNodeWithText("Download").assertIsNotEnabled()
     }

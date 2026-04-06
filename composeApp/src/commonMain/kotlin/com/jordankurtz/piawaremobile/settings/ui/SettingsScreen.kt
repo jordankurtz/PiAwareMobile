@@ -52,6 +52,7 @@ fun SettingsScreen() {
                     val onRequestDelete = remember(vm) { { region: OfflineRegion -> vm.requestDeleteRegion(region) } }
                     val onConfirmDelete = remember(vm) { { vm.confirmDelete() } }
                     val onCancelDelete = remember(vm) { { vm.cancelDelete() } }
+                    val onCancelDownload = remember(vm) { { vm.cancelDownload() } }
                     val onStartDownloadFn =
                         remember(vm) {
                             { name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int ->
@@ -90,6 +91,7 @@ fun SettingsScreen() {
                         isDownloading = isDownloading,
                         downloadProgress = downloadProgress,
                         onStartDownload = onStartDownloadFn,
+                        onCancelDownload = onCancelDownload,
                     )
                 }
             }
