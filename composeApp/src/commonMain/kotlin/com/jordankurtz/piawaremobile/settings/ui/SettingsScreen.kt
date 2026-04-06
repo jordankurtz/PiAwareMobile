@@ -49,6 +49,7 @@ fun SettingsScreen() {
                     val isDownloading by vm.isDownloading.collectAsState()
                     val downloadProgress by vm.downloadProgress.collectAsState()
                     val pendingDelete by vm.pendingDeleteRegion.collectAsState()
+                    val pendingDeleteFreedBytes by vm.pendingDeleteFreedBytes.collectAsState()
                     val onRequestDelete = remember(vm) { { region: OfflineRegion -> vm.requestDeleteRegion(region) } }
                     val onConfirmDelete = remember(vm) { { vm.confirmDelete() } }
                     val onCancelDelete = remember(vm) { { vm.cancelDelete() } }
@@ -68,7 +69,7 @@ fun SettingsScreen() {
                                     stringResource(
                                         Res.string.offline_maps_delete_confirm_message,
                                         region.name,
-                                        (region.sizeBytes / (1024 * 1024)).toInt(),
+                                        (pendingDeleteFreedBytes / (1024 * 1024)).toInt(),
                                     ),
                                 )
                             },

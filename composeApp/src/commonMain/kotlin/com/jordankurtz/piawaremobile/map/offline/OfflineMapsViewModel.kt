@@ -45,6 +45,9 @@ class OfflineMapsViewModel(
     private val _pendingDeleteRegion = MutableStateFlow<OfflineRegion?>(null)
     val pendingDeleteRegion: StateFlow<OfflineRegion?> = _pendingDeleteRegion.asStateFlow()
 
+    private val _pendingDeleteFreedBytes = MutableStateFlow(0L)
+    val pendingDeleteFreedBytes: StateFlow<Long> = _pendingDeleteFreedBytes.asStateFlow()
+
     fun cancelDownload() {
         downloadJob?.cancel()
     }
@@ -52,10 +55,14 @@ class OfflineMapsViewModel(
     fun requestDeleteRegion(region: OfflineRegion) {
         if (_isDownloading.value) return
         _pendingDeleteRegion.value = region
+        viewModelScope.launch(ioDispatcher) {
+            _pendingDeleteFreedBytes.value = store.getFreedBytesForRegion(region.id)
+        }
     }
 
     fun cancelDelete() {
         _pendingDeleteRegion.value = null
+        _pendingDeleteFreedBytes.value = 0L
     }
 
     fun confirmDelete() {

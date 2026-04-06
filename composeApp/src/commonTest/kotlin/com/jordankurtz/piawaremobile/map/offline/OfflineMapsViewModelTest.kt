@@ -81,6 +81,7 @@ class OfflineMapsViewModelTest {
             everySuspend { store.getRegions() } returns listOf(savedRegion)
             everySuspend { store.deleteRegion(any()) } returns Unit
             everySuspend { store.getExclusiveTilesForRegion(any()) } returns emptyList()
+            everySuspend { store.getFreedBytesForRegion(any()) } returns 0L
 
             vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
             advanceUntilIdle()
