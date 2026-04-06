@@ -161,3 +161,6 @@ WHERE EXISTS (
         AND pt2.region_id != pt.region_id
     )
 );
+
+resetStuckDownloads:
+UPDATE offline_region SET status = 'PARTIAL' WHERE status = 'DOWNLOADING';

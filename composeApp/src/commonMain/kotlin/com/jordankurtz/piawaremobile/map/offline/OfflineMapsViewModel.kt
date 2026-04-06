@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.cache.TileCache
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -38,6 +39,7 @@ class OfflineMapsViewModel(
 
     init {
         viewModelScope.launch(ioDispatcher) {
+            store.resetStuckDownloads()
             _regions.value = store.getRegions()
         }
     }
@@ -53,7 +55,7 @@ class OfflineMapsViewModel(
     }
 
     fun requestDeleteRegion(region: OfflineRegion) {
-        if (_isDownloading.value) return
+        if (region.status == DownloadStatus.DOWNLOADING) return
         _pendingDeleteRegion.value = region
         viewModelScope.launch(ioDispatcher) {
             _pendingDeleteFreedBytes.value = store.getFreedBytesForRegion(region.id)
@@ -85,57 +87,91 @@ class OfflineMapsViewModel(
         maxZoom: Int,
     ) {
         if (!_isDownloading.compareAndSet(expect = false, update = true)) return
+        val region =
+            OfflineRegion(
+                name = name,
+                minZoom = minZoom,
+                maxZoom = maxZoom,
+                minLat = bounds.minLat,
+                maxLat = bounds.maxLat,
+                minLon = bounds.minLon,
+                maxLon = bounds.maxLon,
+                providerId = TileProviders.OPENSTREETMAP.id,
+                createdAt = Clock.System.now().toEpochMilliseconds(),
+            )
         downloadJob =
             downloadScopeHolder.scope.launch {
-                try {
-                    val region =
-                        OfflineRegion(
-                            name = name,
-                            minZoom = minZoom,
-                            maxZoom = maxZoom,
-                            minLat = bounds.minLat,
-                            maxLat = bounds.maxLat,
-                            minLon = bounds.minLon,
-                            maxLon = bounds.maxLon,
-                            providerId = TileProviders.OPENSTREETMAP.id,
-                            createdAt = Clock.System.now().toEpochMilliseconds(),
-                        )
-                    val regionId = withContext(ioDispatcher) { store.saveRegion(region) }
-                    val savedRegion = region.copy(id = regionId, status = DownloadStatus.DOWNLOADING)
-
-                    // Show the region immediately in the list before tiles start downloading
-                    _regions.value = _regions.value + savedRegion
-
-                    engine.download(savedRegion, TileProviders.OPENSTREETMAP).collect { progress ->
-                        _downloadProgress.value = progress
-                        // Update in-memory progress so the list item reflects live tile counts
-                        _regions.value =
-                            _regions.value.map { r ->
-                                if (r.id == regionId) {
-                                    r.copy(
-                                        downloadedTileCount = progress.downloaded,
-                                        tileCount = progress.total,
-                                    )
-                                } else {
-                                    r
-                                }
-                            }
-                        // StateFlow is conflated — yield lets collectors observe each progress emission
-                        // before the next assignment overwrites it
-                        yield()
-                    }
-
-                    // Refresh from DB on completion to pick up final stats and COMPLETE status
-                    withContext(ioDispatcher) { _regions.value = store.getRegions() }
-                } catch (e: Exception) {
-                    Logger.e("Download failed for region", e)
-                    // Refresh from DB so the FAILED status written by the engine is reflected
-                    withContext(NonCancellable + ioDispatcher) { _regions.value = store.getRegions() }
-                } finally {
-                    _isDownloading.value = false
-                    _downloadProgress.value = null
-                    downloadJob = null
-                }
+                val regionId = withContext(ioDispatcher) { store.saveRegion(region) }
+                // Show the region immediately in the list before tiles start downloading
+                _regions.value = _regions.value + region.copy(id = regionId, status = DownloadStatus.DOWNLOADING)
+                doDownload(regionId)
             }
+    }
+
+    fun retryDownload(region: OfflineRegion) {
+        if (!_isDownloading.compareAndSet(expect = false, update = true)) return
+        downloadJob =
+            downloadScopeHolder.scope.launch {
+                doDownload(region.id)
+            }
+    }
+
+    private suspend fun doDownload(regionId: Long) {
+        var lastDownloadedCount = 0L
+        try {
+            withContext(ioDispatcher) {
+                store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, 0L)
+            }
+            _regions.value =
+                _regions.value.map { r ->
+                    if (r.id == regionId) r.copy(status = DownloadStatus.DOWNLOADING) else r
+                }
+            val region =
+                _regions.value.find { it.id == regionId } ?: run {
+                    withContext(ioDispatcher) {
+                        store.updateDownloadStatus(regionId, DownloadStatus.FAILED, 0L)
+                    }
+                    return
+                }
+            // Preserve previously downloaded count so cancel-after-retry doesn't regress progress
+            lastDownloadedCount = region.downloadedTileCount
+            engine.download(region, TileProviders.OPENSTREETMAP).collect { progress ->
+                lastDownloadedCount = progress.downloaded
+                withContext(ioDispatcher) {
+                    store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, progress.downloaded)
+                }
+                _downloadProgress.value = progress
+                _regions.value =
+                    _regions.value.map { r ->
+                        if (r.id == regionId) {
+                            r.copy(
+                                downloadedTileCount = progress.downloaded,
+                                tileCount = progress.total,
+                            )
+                        } else {
+                            r
+                        }
+                    }
+                // StateFlow is conflated — yield lets collectors observe each progress emission
+                // before the next assignment overwrites it
+                yield()
+            }
+            // Refresh from DB on completion to pick up final stats and COMPLETE status
+            withContext(ioDispatcher) { _regions.value = store.getRegions() }
+        } catch (e: CancellationException) {
+            withContext(NonCancellable + ioDispatcher) {
+                store.updateDownloadStatus(regionId, DownloadStatus.PARTIAL, lastDownloadedCount)
+                _regions.value = store.getRegions()
+            }
+            throw e
+        } catch (e: Exception) {
+            Logger.e("Download failed for region", e)
+            // Refresh from DB so the FAILED status written by the engine is reflected
+            withContext(NonCancellable + ioDispatcher) { _regions.value = store.getRegions() }
+        } finally {
+            _isDownloading.value = false
+            _downloadProgress.value = null
+            downloadJob = null
+        }
     }
 }

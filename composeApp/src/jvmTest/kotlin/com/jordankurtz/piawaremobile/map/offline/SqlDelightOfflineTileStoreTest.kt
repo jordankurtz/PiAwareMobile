@@ -218,6 +218,36 @@ class SqlDelightOfflineTileStoreTest {
             assertEquals(0L, freed)
         }
 
+    @Test
+    fun `resetStuckDownloads transitions DOWNLOADING to PARTIAL`() =
+        runTest(testDispatcher) {
+            val id = store.saveRegion(baseRegion("R"))
+            store.updateDownloadStatus(id, DownloadStatus.DOWNLOADING, 5L)
+
+            store.resetStuckDownloads()
+
+            val region = store.getRegion(id)
+            assertEquals(DownloadStatus.PARTIAL, region?.status)
+            assertEquals(5L, region?.downloadedTileCount)
+        }
+
+    @Test
+    fun `resetStuckDownloads leaves COMPLETE, FAILED, and PARTIAL regions unchanged`() =
+        runTest(testDispatcher) {
+            val completeId = store.saveRegion(baseRegion("Complete"))
+            val failedId = store.saveRegion(baseRegion("Failed"))
+            val partialId = store.saveRegion(baseRegion("Partial"))
+
+            store.updateDownloadStatus(failedId, DownloadStatus.FAILED, 0L)
+            store.updateDownloadStatus(partialId, DownloadStatus.PARTIAL, 3L)
+
+            store.resetStuckDownloads()
+
+            assertEquals(DownloadStatus.COMPLETE, store.getRegion(completeId)?.status)
+            assertEquals(DownloadStatus.FAILED, store.getRegion(failedId)?.status)
+            assertEquals(DownloadStatus.PARTIAL, store.getRegion(partialId)?.status)
+        }
+
     private fun baseRegion(name: String) =
         OfflineRegion(
             name = name,

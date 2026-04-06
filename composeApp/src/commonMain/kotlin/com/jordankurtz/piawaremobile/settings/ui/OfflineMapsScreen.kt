@@ -41,6 +41,7 @@ import piawaremobile.composeapp.generated.resources.ic_add
 import piawaremobile.composeapp.generated.resources.ic_arrow_back
 import piawaremobile.composeapp.generated.resources.ic_clear
 import piawaremobile.composeapp.generated.resources.ic_delete
+import piawaremobile.composeapp.generated.resources.ic_refresh
 import piawaremobile.composeapp.generated.resources.navigate_back
 import piawaremobile.composeapp.generated.resources.offline_maps_add_region
 import piawaremobile.composeapp.generated.resources.offline_maps_cancel_download
@@ -49,6 +50,8 @@ import piawaremobile.composeapp.generated.resources.offline_maps_empty_title
 import piawaremobile.composeapp.generated.resources.offline_maps_region_delete
 import piawaremobile.composeapp.generated.resources.offline_maps_region_download_failed
 import piawaremobile.composeapp.generated.resources.offline_maps_region_downloading
+import piawaremobile.composeapp.generated.resources.offline_maps_region_partial_progress
+import piawaremobile.composeapp.generated.resources.offline_maps_region_retry
 import piawaremobile.composeapp.generated.resources.offline_maps_region_size
 import piawaremobile.composeapp.generated.resources.offline_maps_region_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_title
@@ -59,6 +62,7 @@ fun OfflineMapsScreen(
     onBack: () -> Unit,
     regions: List<OfflineRegion> = emptyList(),
     onDeleteRegion: (OfflineRegion) -> Unit = {},
+    onRetry: (OfflineRegion) -> Unit = {},
     isDownloading: Boolean = false,
     downloadProgress: DownloadProgress? = null,
     onStartDownload: (name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int) -> Unit = { _, _, _, _ -> },
@@ -170,6 +174,7 @@ fun OfflineMapsScreen(
                     OfflineRegionList(
                         regions = regions,
                         onDeleteRegion = onDeleteRegion,
+                        onRetryRegion = onRetry,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -201,6 +206,7 @@ private fun OfflineMapsEmptyState() {
 private fun OfflineRegionList(
     regions: List<OfflineRegion>,
     onDeleteRegion: (OfflineRegion) -> Unit,
+    onRetryRegion: (OfflineRegion) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier) {
@@ -208,6 +214,7 @@ private fun OfflineRegionList(
             OfflineRegionItem(
                 region = region,
                 onDelete = { onDeleteRegion(region) },
+                onRetry = { onRetryRegion(region) },
             )
             HorizontalDivider()
         }
@@ -218,6 +225,7 @@ private fun OfflineRegionList(
 private fun OfflineRegionItem(
     region: OfflineRegion,
     onDelete: () -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -262,6 +270,18 @@ private fun OfflineRegionItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                DownloadStatus.PARTIAL -> {
+                    Text(
+                        text =
+                            stringResource(
+                                Res.string.offline_maps_region_partial_progress,
+                                region.downloadedTileCount,
+                                region.tileCount,
+                            ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 DownloadStatus.FAILED -> {
                     Text(
                         text = stringResource(Res.string.offline_maps_region_download_failed),
@@ -280,6 +300,14 @@ private fun OfflineRegionItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+            }
+        }
+        if (region.status == DownloadStatus.PARTIAL || region.status == DownloadStatus.FAILED) {
+            IconButton(onClick = onRetry) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_refresh),
+                    contentDescription = stringResource(Res.string.offline_maps_region_retry),
+                )
             }
         }
         if (region.status != DownloadStatus.DOWNLOADING) {

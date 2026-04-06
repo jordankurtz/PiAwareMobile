@@ -39,4 +39,6 @@ interface OfflineTileStore {
     suspend fun getExclusiveTilesForRegion(id: Long): List<TileCoord>
 
     suspend fun getFreedBytesForRegion(id: Long): Long
+
+    suspend fun resetStuckDownloads()
 }

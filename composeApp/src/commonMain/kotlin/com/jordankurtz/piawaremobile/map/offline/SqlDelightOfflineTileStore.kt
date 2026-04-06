@@ -117,6 +117,11 @@ class SqlDelightOfflineTileStore(
         withContext(ioDispatcher) {
             queries.sizeOfExclusivelyPinnedTilesByRegion(id).executeAsOne()
         }
+
+    override suspend fun resetStuckDownloads(): Unit =
+        withContext(ioDispatcher) {
+            queries.resetStuckDownloads()
+        }
 }
 
 private fun Offline_region.toOfflineRegion() =
