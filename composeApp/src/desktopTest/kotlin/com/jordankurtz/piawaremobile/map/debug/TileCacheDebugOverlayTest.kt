@@ -16,7 +16,7 @@ class TileCacheDebugOverlayTest {
                     stats = TileCacheStats(diskHits = 42L, networkFetches = 8L),
                 )
             }
-            onNodeWithText("Tiles  D:42  N:8  84% cache", substring = false)
+            onNodeWithText("Tiles  D:42  O:0  N:8  84% cache", substring = false)
                 .assertIsDisplayed()
         }
 
@@ -52,7 +52,7 @@ class TileCacheDebugOverlayTest {
                     stats = TileCacheStats(diskHits = 5L, networkFetches = 3L, errors = 0L),
                 )
             }
-            onNodeWithText("Tiles  D:5  N:3  62% cache", substring = false)
+            onNodeWithText("Tiles  D:5  O:0  N:3  62% cache", substring = false)
                 .assertIsDisplayed()
         }
 
@@ -64,7 +64,18 @@ class TileCacheDebugOverlayTest {
                     stats = TileCacheStats(),
                 )
             }
-            onNodeWithText("Tiles  D:0  N:0  0% cache", substring = false)
+            onNodeWithText("Tiles  D:0  O:0  N:0  0% cache", substring = false)
                 .assertIsDisplayed()
+        }
+
+    @Test
+    fun displaysOfflineHits() =
+        runComposeUiTest {
+            setContent {
+                TileCacheDebugOverlay(
+                    stats = TileCacheStats(diskHits = 10L, offlineHits = 5L, networkFetches = 3L),
+                )
+            }
+            onNodeWithText("O:5", substring = true).assertIsDisplayed()
         }
 }
