@@ -2,7 +2,6 @@ package com.jordankurtz.piawaremobile.map
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class TileProviderConfigTest {
     @Test
@@ -53,5 +52,4 @@ class TileProviderConfigTest {
         val ids = TileProviders.ALL.map { it.id }
         assertEquals(ids, ids.distinct())
     }
-
 }

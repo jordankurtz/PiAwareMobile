@@ -106,10 +106,11 @@ class ConfigurableTileProviderTest {
     fun usesOsmUrlForOsmProvider() =
         runTest {
             val urls = mutableListOf<String>()
-            val provider = createProvider(
-                config = TileProviders.OPENSTREETMAP,
-                httpClient = mockHttpClient(captureUrls = urls),
-            )
+            val provider =
+                createProvider(
+                    config = TileProviders.OPENSTREETMAP,
+                    httpClient = mockHttpClient(captureUrls = urls),
+                )
             everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
             everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
 
@@ -122,10 +123,11 @@ class ConfigurableTileProviderTest {
     fun esriUrlPlacesRowBeforeCol() =
         runTest {
             val urls = mutableListOf<String>()
-            val provider = createProvider(
-                config = TileProviders.ESRI_SATELLITE,
-                httpClient = mockHttpClient(captureUrls = urls),
-            )
+            val provider =
+                createProvider(
+                    config = TileProviders.ESRI_SATELLITE,
+                    httpClient = mockHttpClient(captureUrls = urls),
+                )
             everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
             everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
 
@@ -139,10 +141,11 @@ class ConfigurableTileProviderTest {
     fun cartoUrlContainsValidSubdomain() =
         runTest {
             val urls = mutableListOf<String>()
-            val provider = createProvider(
-                config = TileProviders.CARTO_DARK_ALL,
-                httpClient = mockHttpClient(captureUrls = urls),
-            )
+            val provider =
+                createProvider(
+                    config = TileProviders.CARTO_DARK_ALL,
+                    httpClient = mockHttpClient(captureUrls = urls),
+                )
             everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
             everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
 

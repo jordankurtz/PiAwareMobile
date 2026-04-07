@@ -66,10 +66,16 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
+            val scrollable = onNode(hasScrollAction())
+            scrollable.performScrollToNode(hasText("Show receiver locations"))
             onNodeWithText("Show receiver locations").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Show User Location on Map"))
             onNodeWithText("Show User Location on Map").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Show Minimap Trails"))
             onNodeWithText("Show Minimap Trails").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Center map on user"))
             onNodeWithText("Center map on user").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Restore map position"))
             onNodeWithText("Restore map position").assertIsDisplayed()
         }
 
