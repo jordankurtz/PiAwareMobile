@@ -7,13 +7,13 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
-import kotlin.time.Clock
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FileTileCacheCommonTest {

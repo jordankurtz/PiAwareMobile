@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
@@ -48,6 +49,9 @@ import piawaremobile.composeapp.generated.resources.enable_flightaware_api_descr
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
 import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
+import piawaremobile.composeapp.generated.resources.map_provider_description
+import piawaremobile.composeapp.generated.resources.map_provider_title
+import piawaremobile.composeapp.generated.resources.map_section_title
 import piawaremobile.composeapp.generated.resources.offline_maps_settings_title
 import piawaremobile.composeapp.generated.resources.open_urls_externally_description
 import piawaremobile.composeapp.generated.resources.open_urls_externally_title
@@ -131,6 +135,23 @@ fun MainScreen(
                         settings.getValue()?.refreshInterval
                             ?: SettingsRepository.DEFAULT_REFRESH_INTERVAL,
                     onValueChange = viewModel::updateRefreshInterval,
+                )
+            }
+
+            item {
+                SettingsSection(title = stringResource(Res.string.map_section_title))
+            }
+
+            item {
+                SettingsDropdown(
+                    title = stringResource(Res.string.map_provider_title),
+                    description = stringResource(Res.string.map_provider_description),
+                    selectedValue =
+                        settings.getValue()?.mapProviderId?.let { TileProviders.findById(it) }
+                            ?: TileProviders.OPENSTREETMAP,
+                    values = TileProviders.ALL.toTypedArray(),
+                    onValueSelected = viewModel::updateMapProvider,
+                    stringFor = { it.displayName },
                 )
             }
 
