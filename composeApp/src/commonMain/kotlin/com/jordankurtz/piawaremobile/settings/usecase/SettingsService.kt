@@ -45,4 +45,6 @@ interface SettingsService {
     suspend fun setEnableFlightAwareApi(enabled: Boolean)
 
     suspend fun setFlightAwareApiKey(apiKey: String)
+
+    suspend fun setMapProviderId(providerId: String)
 }

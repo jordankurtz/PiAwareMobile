@@ -28,6 +28,7 @@ interface SettingsRepository {
         val OPEN_URLS_EXTERNALLY = booleanPreferencesKey("openUrlsExternally")
         val ENABLE_FLIGHT_AWARE_API = booleanPreferencesKey("enableFlightAwareApi")
         val FLIGHT_AWARE_API_KEY = stringPreferencesKey("flightAwareApiKey")
+        val MAP_PROVIDER_ID = stringPreferencesKey("mapProviderId")
         const val DEFAULT_REFRESH_INTERVAL = 5
     }
 }
