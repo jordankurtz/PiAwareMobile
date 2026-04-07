@@ -30,7 +30,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
-import com.jordankurtz.piawaremobile.map.offline.DownloadProgress
 import com.jordankurtz.piawaremobile.map.offline.DownloadStatus
 import com.jordankurtz.piawaremobile.map.offline.MapRegionPickerScreen
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
@@ -63,8 +62,6 @@ fun OfflineMapsScreen(
     regions: List<OfflineRegion> = emptyList(),
     onDeleteRegion: (OfflineRegion) -> Unit = {},
     onRetry: (OfflineRegion) -> Unit = {},
-    isDownloading: Boolean = false,
-    downloadProgress: DownloadProgress? = null,
     onStartDownload: (name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int) -> Unit = { _, _, _, _ -> },
     onCancelDownload: () -> Unit = {},
 ) {
@@ -135,49 +132,32 @@ fun OfflineMapsScreen(
                         actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                 actions = {
-                    if (isDownloading) {
-                        IconButton(onClick = onCancelDownload) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_clear),
-                                contentDescription = stringResource(Res.string.offline_maps_cancel_download),
-                            )
-                        }
-                    } else {
-                        IconButton(
-                            onClick = { showDownloadDialog = true },
-                        ) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_add),
-                                contentDescription = stringResource(Res.string.offline_maps_add_region),
-                            )
-                        }
+                    IconButton(
+                        onClick = { showDownloadDialog = true },
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_add),
+                            contentDescription = stringResource(Res.string.offline_maps_add_region),
+                        )
                     }
                 },
             )
         },
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            if (isDownloading) {
-                val fraction = downloadProgress?.fraction ?: 0f
-                LinearProgressIndicator(
-                    progress = { fraction },
-                    modifier = Modifier.fillMaxWidth(),
+        Box(
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (regions.isEmpty()) {
+                OfflineMapsEmptyState()
+            } else {
+                OfflineRegionList(
+                    regions = regions,
+                    onDeleteRegion = onDeleteRegion,
+                    onRetryRegion = onRetry,
+                    onCancelRegion = onCancelDownload,
+                    modifier = Modifier.fillMaxSize(),
                 )
-            }
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (regions.isEmpty()) {
-                    OfflineMapsEmptyState()
-                } else {
-                    OfflineRegionList(
-                        regions = regions,
-                        onDeleteRegion = onDeleteRegion,
-                        onRetryRegion = onRetry,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
             }
         }
     }
@@ -207,6 +187,7 @@ private fun OfflineRegionList(
     regions: List<OfflineRegion>,
     onDeleteRegion: (OfflineRegion) -> Unit,
     onRetryRegion: (OfflineRegion) -> Unit,
+    onCancelRegion: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier) {
@@ -215,6 +196,7 @@ private fun OfflineRegionList(
                 region = region,
                 onDelete = { onDeleteRegion(region) },
                 onRetry = { onRetryRegion(region) },
+                onCancel = onCancelRegion,
             )
             HorizontalDivider()
         }
@@ -226,6 +208,7 @@ private fun OfflineRegionItem(
     region: OfflineRegion,
     onDelete: () -> Unit,
     onRetry: () -> Unit,
+    onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -302,21 +285,38 @@ private fun OfflineRegionItem(
                 }
             }
         }
-        if (region.status == DownloadStatus.PARTIAL || region.status == DownloadStatus.FAILED) {
-            IconButton(onClick = onRetry) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_refresh),
-                    contentDescription = stringResource(Res.string.offline_maps_region_retry),
-                )
+        when (region.status) {
+            DownloadStatus.DOWNLOADING -> {
+                IconButton(onClick = onCancel) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_clear),
+                        contentDescription = stringResource(Res.string.offline_maps_cancel_download),
+                    )
+                }
             }
-        }
-        if (region.status != DownloadStatus.DOWNLOADING) {
-            IconButton(onClick = onDelete) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_delete),
-                    contentDescription = stringResource(Res.string.offline_maps_region_delete),
-                    tint = MaterialTheme.colorScheme.error,
-                )
+            DownloadStatus.PARTIAL, DownloadStatus.FAILED -> {
+                IconButton(onClick = onRetry) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_refresh),
+                        contentDescription = stringResource(Res.string.offline_maps_region_retry),
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_delete),
+                        contentDescription = stringResource(Res.string.offline_maps_region_delete),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+            DownloadStatus.COMPLETE -> {
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_delete),
+                        contentDescription = stringResource(Res.string.offline_maps_region_delete),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         }
     }

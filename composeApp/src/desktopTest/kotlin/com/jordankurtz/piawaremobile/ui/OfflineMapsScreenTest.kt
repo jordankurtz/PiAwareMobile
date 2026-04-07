@@ -385,7 +385,7 @@ class OfflineMapsScreenTest {
         }
 
     @Test
-    fun downloadingRegionDoesNotShowRetryButton() =
+    fun downloadingRegionShowsCancelButtonNotRetryOrDelete() =
         runComposeUiTest {
             val region =
                 OfflineRegion(
@@ -409,7 +409,39 @@ class OfflineMapsScreenTest {
                     regions = listOf(region),
                 )
             }
+            onNodeWithContentDescription("Cancel download").assertIsDisplayed()
             onNodeWithContentDescription("Retry download").assertDoesNotExist()
             onNodeWithContentDescription("Delete region").assertDoesNotExist()
+        }
+
+    @Test
+    fun cancelButtonFiresOnCancelDownloadCallback() =
+        runComposeUiTest {
+            var cancelCalled = false
+            val region =
+                OfflineRegion(
+                    id = 1L,
+                    name = "Downloading Region",
+                    minZoom = 8,
+                    maxZoom = 14,
+                    minLat = 37.0,
+                    maxLat = 38.0,
+                    minLon = -122.0,
+                    maxLon = -121.0,
+                    providerId = "osm",
+                    createdAt = 1000L,
+                    tileCount = 100L,
+                    downloadedTileCount = 40L,
+                    status = DownloadStatus.DOWNLOADING,
+                )
+            setContent {
+                OfflineMapsScreen(
+                    onBack = {},
+                    regions = listOf(region),
+                    onCancelDownload = { cancelCalled = true },
+                )
+            }
+            onNodeWithContentDescription("Cancel download").performClick()
+            assertTrue(cancelCalled)
         }
 }

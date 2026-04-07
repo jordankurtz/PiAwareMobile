@@ -46,8 +46,6 @@ fun SettingsScreen() {
                 SettingsScreens.OfflineMaps -> {
                     val vm: OfflineMapsViewModel = koinViewModel()
                     val regions by vm.regions.collectAsState()
-                    val isDownloading by vm.isDownloading.collectAsState()
-                    val downloadProgress by vm.downloadProgress.collectAsState()
                     val pendingDelete by vm.pendingDeleteRegion.collectAsState()
                     val pendingDeleteFreedBytes by vm.pendingDeleteFreedBytes.collectAsState()
                     val onRequestDelete = remember(vm) { { region: OfflineRegion -> vm.requestDeleteRegion(region) } }
@@ -91,8 +89,6 @@ fun SettingsScreen() {
                         regions = regions,
                         onDeleteRegion = onRequestDelete,
                         onRetry = onRetryDownload,
-                        isDownloading = isDownloading,
-                        downloadProgress = downloadProgress,
                         onStartDownload = onStartDownloadFn,
                         onCancelDownload = onCancelDownload,
                     )
