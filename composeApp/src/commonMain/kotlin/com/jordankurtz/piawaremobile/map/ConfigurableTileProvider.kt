@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.map
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.io.Buffer
 import kotlinx.io.RawSource
 import kotlinx.io.readByteArray
@@ -13,19 +14,19 @@ import ovh.plrapps.mapcompose.core.TileStreamProvider
 class ConfigurableTileProvider(
     private val httpClient: HttpClient,
     private val tileCache: TileCache,
-    private val config: TileProviderConfig,
+    private val configFlow: StateFlow<TileProviderConfig>,
 ) : TileStreamProvider {
     override suspend fun getTileStream(
         row: Int,
         col: Int,
         zoomLvl: Int,
     ): RawSource? {
-        tileCache.get(zoomLvl, col, row, config.id)?.let { cached ->
+        tileCache.get(zoomLvl, col, row, configFlow.value.id)?.let { cached ->
             return Buffer().apply { write(cached) }
         }
 
-        val subdomain = if (config.subdomains.isEmpty()) "" else config.subdomains.random()
-        val url = config.buildUrl(zoom = zoomLvl, col = col, row = row, subdomain = subdomain)
+        val subdomain = if (configFlow.value.subdomains.isEmpty()) "" else configFlow.value.subdomains.random()
+        val url = configFlow.value.buildUrl(zoom = zoomLvl, col = col, row = row, subdomain = subdomain)
 
         return try {
             val source = getStream(httpClient, url)
@@ -36,7 +37,7 @@ class ConfigurableTileProvider(
                 }
             }
             val bytes = buffer.readByteArray()
-            tileCache.put(zoomLvl, col, row, config.id, bytes)
+            tileCache.put(zoomLvl, col, row, configFlow.value.id, bytes)
             Buffer().apply { write(bytes) }
         } catch (e: Exception) {
             Logger.e("Failed to load tile", e)

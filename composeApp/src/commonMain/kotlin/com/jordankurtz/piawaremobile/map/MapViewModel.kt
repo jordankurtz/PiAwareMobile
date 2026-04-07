@@ -33,6 +33,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -49,6 +50,7 @@ import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.onTouchDown
 import ovh.plrapps.mapcompose.api.removeMarker
 import ovh.plrapps.mapcompose.api.removePath
+import ovh.plrapps.mapcompose.api.replaceLayer
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.api.scroll
 import ovh.plrapps.mapcompose.api.scrollTo
@@ -71,14 +73,17 @@ private const val USER_LOCATION_MARKER_ID = "user_location"
 @Factory
 class MapViewModel(
     private val mapProvider: TileStreamProvider,
-    val activeProvider: TileProviderConfig,
+    private val providerConfigFlow: StateFlow<TileProviderConfig>,
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
     private val tileCacheStatsTracker: TileCacheStatsTracker,
 ) : ViewModel() {
+    val activeProvider: StateFlow<TileProviderConfig> = providerConfigFlow
+
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
+    private var tileLayerId: String = ""
     private val previousAircraftMarkerIds = mutableSetOf<String>()
     private val previousPathIds = mutableSetOf<String>()
     private var lastTrails: Map<String, AircraftTrail> = emptyMap()
@@ -106,7 +111,7 @@ class MapViewModel(
         MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
             minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
         }.apply {
-            addLayer(mapProvider)
+            tileLayerId = addLayer(mapProvider)
 
             onMarkerClick { id, _, _ ->
                 if (previousAircraftMarkerIds.contains(id)) {
@@ -146,6 +151,14 @@ class MapViewModel(
                     else -> {
                         // No-op
                     }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            providerConfigFlow.drop(1).collect { // skip initial — already loaded
+                state.replaceLayer(tileLayerId, mapProvider)?.let { newId ->
+                    tileLayerId = newId
                 }
             }
         }

@@ -50,6 +50,7 @@ fun MapWithListLayout(
     val tileStats by mapViewModel.tileStats.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val mapSelectedHex by mapViewModel.selectedAircraft.collectAsState()
+    val activeProvider by mapViewModel.activeProvider.collectAsState()
 
     // Sync aircraft updates to map
     LaunchedEffect(aircraft) {
@@ -103,7 +104,7 @@ fun MapWithListLayout(
             OpenStreetMap(state = mapViewModel.state)
             Overlay(
                 numberOfPlanes = numberOfPlanes,
-                provider = mapViewModel.activeProvider,
+                provider = activeProvider,
                 modifier =
                     Modifier
                         .align(Alignment.BottomEnd)
