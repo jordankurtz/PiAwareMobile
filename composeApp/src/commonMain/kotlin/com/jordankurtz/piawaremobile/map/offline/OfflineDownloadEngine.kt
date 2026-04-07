@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.map.offline
 
 import com.jordankurtz.logger.Logger
+import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -19,7 +20,7 @@ class OfflineDownloadEngine(
     private val tileCache: TileCache,
     private val offlineTileStore: OfflineTileStore,
     private val httpClient: HttpClient,
-    private val ioDispatcher: CoroutineDispatcher,
+    @IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : DownloadEngine {
     /**
      * Downloads all tiles for [region] using [config] and pins them so they survive eviction.
