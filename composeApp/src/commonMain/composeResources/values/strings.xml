@@ -4,8 +4,11 @@
     <string name="screen_list">List</string>
     <string name="screen_settings">Settings</string>
     <string name="settings_title">Settings</string>
-    <string name="preferences_title">Preferences</string>
     <string name="map_section_title">Map</string>
+    <string name="offline_section_title">Offline</string>
+    <string name="servers_section_title">Servers</string>
+    <string name="flightaware_section_title">FlightAware</string>
+    <string name="app_section_title">App</string>
     <string name="map_provider_title">Map Tiles</string>
     <string name="map_provider_description">Tile source used for the map</string>
     <string name="servers_title">Servers</string>

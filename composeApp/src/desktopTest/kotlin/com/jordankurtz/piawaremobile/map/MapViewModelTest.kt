@@ -88,11 +88,13 @@ class MapViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): MapViewModel {
+    private fun createViewModel(
+        providerConfigFlow: MutableStateFlow<TileProviderConfig> = MutableStateFlow(TileProviders.OPENSTREETMAP),
+    ): MapViewModel {
         val vm =
             MapViewModel(
                 mapProvider = mapProvider,
-                providerConfigFlow = MutableStateFlow(TileProviders.OPENSTREETMAP),
+                providerConfigFlow = providerConfigFlow,
                 getSavedMapStateUseCase = getSavedMapStateUseCase,
                 saveMapStateUseCase = saveMapStateUseCase,
                 loadSettingsUseCase = loadSettingsUseCase,
@@ -391,6 +393,21 @@ class MapViewModelTest {
 
             vm.onMapTouchDown()
             assertFalse(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `switching providerConfigFlow updates activeProvider`() =
+        runTest {
+            val providerFlow = MutableStateFlow<TileProviderConfig>(TileProviders.OPENSTREETMAP)
+            val vm = createViewModel(providerConfigFlow = providerFlow)
+            advanceUntilIdle()
+
+            assertEquals(TileProviders.OPENSTREETMAP, vm.activeProvider.value)
+
+            providerFlow.value = TileProviders.CARTO_DARK_ALL
+            advanceUntilIdle()
+
+            assertEquals(TileProviders.CARTO_DARK_ALL, vm.activeProvider.value)
         }
 
     private fun makeTrail(

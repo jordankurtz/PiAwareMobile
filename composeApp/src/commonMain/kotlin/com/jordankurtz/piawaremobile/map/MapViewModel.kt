@@ -238,12 +238,7 @@ class MapViewModel(
                 Image(
                     painter = painterResource(Res.drawable.ic_receiver),
                     contentDescription = null,
-                    colorFilter =
-                        ColorFilter.tint(
-                            settings?.mapProviderId?.let {
-                                TileProviders.findById(it).overlayColor
-                            } ?: Color.Unspecified,
-                        ),
+                    colorFilter = ColorFilter.tint(providerConfigFlow.value.overlayColor),
                     modifier =
                         Modifier
                             .size(20.dp),
