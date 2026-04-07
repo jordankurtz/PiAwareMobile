@@ -34,11 +34,11 @@ class OpenStreetMapProvider(
         val mark = TimeSource.Monotonic.markNow()
 
         // Check cache first
-        tileCache.get(zoomLvl, col, row)?.let { cached ->
+        tileCache.get(zoomLvl, col, row, PROVIDER_ID)?.let { cached ->
             val elapsed = mark.elapsedNow().inWholeMilliseconds
             Logger.d("Tile cache hit z=$zoomLvl x=$col y=$row (${elapsed}ms)")
             // isPinned is a DB query — only pay the cost in debug builds where the overlay is shown
-            if (isDebugBuild && offlineTileStore.isPinned(zoomLevel = zoomLvl, col = col, row = row)) {
+            if (isDebugBuild && offlineTileStore.isPinned(zoomLevel = zoomLvl, col = col, row = row, providerId = PROVIDER_ID)) {
                 statsTracker.recordOfflineHit()
             } else {
                 statsTracker.recordDiskHit()
@@ -62,7 +62,7 @@ class OpenStreetMapProvider(
             Logger.d("Tile loaded from network z=$zoomLvl x=$col y=$row (${networkElapsed}ms)")
 
             // Store in cache (failures are logged inside TileCache)
-            tileCache.put(zoomLvl, col, row, bytes)
+            tileCache.put(zoomLvl, col, row, PROVIDER_ID, bytes)
             statsTracker.recordNetworkFetch()
 
             Buffer().apply { write(bytes) }
@@ -99,6 +99,7 @@ class OpenStreetMapProvider(
     }
 
     companion object {
+        const val PROVIDER_ID = "openstreetmap"
         private const val DEFAULT_BUFFER_SIZE = 8192
     }
 }

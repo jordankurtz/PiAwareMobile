@@ -1,94 +1,111 @@
 CREATE TABLE tile (
-    zoom_level INTEGER NOT NULL,
-    col INTEGER NOT NULL,
-    row INTEGER NOT NULL,
-    size_bytes INTEGER NOT NULL,
-    fetched_at INTEGER NOT NULL,
-    PRIMARY KEY (zoom_level, col, row)
+    zoom_level  INTEGER NOT NULL,
+    col         INTEGER NOT NULL,
+    row         INTEGER NOT NULL,
+    provider_id TEXT NOT NULL,
+    size_bytes  INTEGER NOT NULL,
+    fetched_at  INTEGER NOT NULL,
+    PRIMARY KEY (zoom_level, col, row, provider_id)
 );
 
 CREATE TABLE cache_entry (
-    zoom_level INTEGER NOT NULL,
-    col INTEGER NOT NULL,
-    row INTEGER NOT NULL,
+    zoom_level    INTEGER NOT NULL,
+    col           INTEGER NOT NULL,
+    row           INTEGER NOT NULL,
+    provider_id   TEXT NOT NULL,
     last_accessed INTEGER NOT NULL,
-    PRIMARY KEY (zoom_level, col, row),
-    FOREIGN KEY (zoom_level, col, row) REFERENCES tile(zoom_level, col, row) ON DELETE CASCADE
+    PRIMARY KEY (zoom_level, col, row, provider_id),
+    FOREIGN KEY (zoom_level, col, row, provider_id)
+        REFERENCES tile(zoom_level, col, row, provider_id) ON DELETE CASCADE
 );
 
 CREATE INDEX cache_entry_lru ON cache_entry(last_accessed ASC);
 
 CREATE TABLE offline_region (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    min_zoom INTEGER NOT NULL,
-    max_zoom INTEGER NOT NULL,
-    min_lat REAL NOT NULL,
-    max_lat REAL NOT NULL,
-    min_lon REAL NOT NULL,
-    max_lon REAL NOT NULL,
-    provider_id TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    tile_count INTEGER NOT NULL DEFAULT 0,
-    size_bytes INTEGER NOT NULL DEFAULT 0
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    name                  TEXT NOT NULL,
+    min_zoom              INTEGER NOT NULL,
+    max_zoom              INTEGER NOT NULL,
+    min_lat               REAL NOT NULL,
+    max_lat               REAL NOT NULL,
+    min_lon               REAL NOT NULL,
+    max_lon               REAL NOT NULL,
+    provider_id           TEXT NOT NULL,
+    created_at            INTEGER NOT NULL,
+    tile_count            INTEGER NOT NULL DEFAULT 0,
+    size_bytes            INTEGER NOT NULL DEFAULT 0,
+    status                TEXT NOT NULL DEFAULT 'COMPLETE',
+    downloaded_tile_count INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE pinned_tile (
-    zoom_level INTEGER NOT NULL,
-    col INTEGER NOT NULL,
-    row INTEGER NOT NULL,
-    region_id INTEGER NOT NULL REFERENCES offline_region(id) ON DELETE CASCADE,
-    PRIMARY KEY (zoom_level, col, row, region_id),
-    FOREIGN KEY (zoom_level, col, row) REFERENCES tile(zoom_level, col, row) ON DELETE CASCADE
+    zoom_level  INTEGER NOT NULL,
+    col         INTEGER NOT NULL,
+    row         INTEGER NOT NULL,
+    provider_id TEXT NOT NULL,
+    region_id   INTEGER NOT NULL REFERENCES offline_region(id) ON DELETE CASCADE,
+    PRIMARY KEY (zoom_level, col, row, provider_id, region_id),
+    FOREIGN KEY (zoom_level, col, row, provider_id)
+        REFERENCES tile(zoom_level, col, row, provider_id) ON DELETE CASCADE
 );
 
 -- Used by get(): check if tile is cached and get its age
 selectCacheEntry:
 SELECT t.fetched_at, t.size_bytes
 FROM tile t
-INNER JOIN cache_entry c ON t.zoom_level = c.zoom_level AND t.col = c.col AND t.row = c.row
-WHERE t.zoom_level = ? AND t.col = ? AND t.row = ?;
+INNER JOIN cache_entry c
+    ON t.zoom_level = c.zoom_level
+    AND t.col = c.col
+    AND t.row = c.row
+    AND t.provider_id = c.provider_id
+WHERE t.zoom_level = ? AND t.col = ? AND t.row = ? AND t.provider_id = ?;
 
 -- Used by put(): insert or update tile metadata
 upsertTile:
-INSERT OR REPLACE INTO tile (zoom_level, col, row, size_bytes, fetched_at)
-VALUES (?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO tile (zoom_level, col, row, provider_id, size_bytes, fetched_at)
+VALUES (?, ?, ?, ?, ?, ?);
 
 -- Used by put(): insert or update cache membership
 upsertCacheEntry:
-INSERT OR REPLACE INTO cache_entry (zoom_level, col, row, last_accessed)
-VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO cache_entry (zoom_level, col, row, provider_id, last_accessed)
+VALUES (?, ?, ?, ?, ?);
 
 -- Used by get(): touch LRU timestamp on cache hit
 updateLastAccessed:
-UPDATE cache_entry SET last_accessed = ? WHERE zoom_level = ? AND col = ? AND row = ?;
+UPDATE cache_entry SET last_accessed = ?
+WHERE zoom_level = ? AND col = ? AND row = ? AND provider_id = ?;
 
 -- Used by eviction: total bytes currently in cache
 totalCacheSize:
 SELECT COALESCE(SUM(t.size_bytes), 0) AS total
 FROM tile t
-INNER JOIN cache_entry c ON t.zoom_level = c.zoom_level AND t.col = c.col AND t.row = c.row;
+INNER JOIN cache_entry c
+    ON t.zoom_level = c.zoom_level
+    AND t.col = c.col
+    AND t.row = c.row
+    AND t.provider_id = c.provider_id;
 
 -- Used by eviction: tiles ordered by LRU (oldest first), skipping pinned tiles
 selectLruTiles:
-SELECT tile.zoom_level, tile.col, tile.row, tile.size_bytes
+SELECT tile.zoom_level, tile.col, tile.row, tile.provider_id, tile.size_bytes
 FROM cache_entry
-JOIN tile USING (zoom_level, col, row)
+JOIN tile USING (zoom_level, col, row, provider_id)
 WHERE NOT EXISTS (
     SELECT 1 FROM pinned_tile pt
     WHERE pt.zoom_level = tile.zoom_level
       AND pt.col = tile.col
       AND pt.row = tile.row
+      AND pt.provider_id = tile.provider_id
 )
 ORDER BY cache_entry.last_accessed ASC
 LIMIT :limit;
 
 -- Used by eviction and expiry: remove tile from cache and disk tracking
 deleteCacheEntry:
-DELETE FROM cache_entry WHERE zoom_level = ? AND col = ? AND row = ?;
+DELETE FROM cache_entry WHERE zoom_level = ? AND col = ? AND row = ? AND provider_id = ?;
 
 deleteTile:
-DELETE FROM tile WHERE zoom_level = ? AND col = ? AND row = ?;
+DELETE FROM tile WHERE zoom_level = ? AND col = ? AND row = ? AND provider_id = ?;
 
 -- Offline region queries
 insertOfflineRegion:
@@ -110,17 +127,56 @@ DELETE FROM offline_region WHERE id = ?;
 updateRegionStats:
 UPDATE offline_region SET tile_count = ?, size_bytes = ? WHERE id = ?;
 
+updateRegionStatus:
+UPDATE offline_region SET status = ?, downloaded_tile_count = ? WHERE id = ?;
+
 -- Pinned tile queries
 insertPinnedTile:
-INSERT OR IGNORE INTO pinned_tile (zoom_level, col, row, region_id)
-VALUES (?, ?, ?, ?);
+INSERT OR IGNORE INTO pinned_tile (zoom_level, col, row, provider_id, region_id)
+VALUES (?, ?, ?, ?, ?);
 
 isPinned:
 SELECT COUNT(*) FROM pinned_tile
-WHERE zoom_level = ? AND col = ? AND row = ?;
+WHERE zoom_level = ? AND col = ? AND row = ? AND provider_id = ?;
 
 selectPinnedTilesByRegion:
 SELECT zoom_level, col, row FROM pinned_tile WHERE region_id = ?;
 
 deletePinnedTilesByRegion:
 DELETE FROM pinned_tile WHERE region_id = ?;
+
+-- Tiles exclusively pinned to a specific region (not pinned by any other region)
+selectExclusivelyPinnedTilesByRegion:
+SELECT pt.zoom_level, pt.col, pt.row
+FROM pinned_tile pt
+WHERE pt.region_id = ?
+  AND NOT EXISTS (
+    SELECT 1 FROM pinned_tile pt2
+    WHERE pt2.zoom_level = pt.zoom_level
+      AND pt2.col = pt.col
+      AND pt2.row = pt.row
+      AND pt2.region_id != pt.region_id
+  );
+
+-- Total bytes of tiles exclusively pinned to a specific region
+sizeOfExclusivelyPinnedTilesByRegion:
+SELECT COALESCE(SUM(t.size_bytes), 0)
+FROM tile t
+WHERE EXISTS (
+  SELECT 1 FROM pinned_tile pt
+  WHERE pt.zoom_level = t.zoom_level
+    AND pt.col = t.col
+    AND pt.row = t.row
+    AND pt.provider_id = t.provider_id
+    AND pt.region_id = ?
+    AND NOT EXISTS (
+      SELECT 1 FROM pinned_tile pt2
+      WHERE pt2.zoom_level = pt.zoom_level
+        AND pt2.col = pt.col
+        AND pt2.row = pt.row
+        AND pt2.region_id != pt.region_id
+    )
+);
+
+resetStuckDownloads:
+UPDATE offline_region SET status = 'PARTIAL' WHERE status = 'DOWNLOADING';

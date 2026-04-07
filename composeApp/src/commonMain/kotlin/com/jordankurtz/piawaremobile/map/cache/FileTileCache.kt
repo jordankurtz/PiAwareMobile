@@ -10,22 +10,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
-/**
- * Disk-based tile cache that stores tile bytes on the filesystem and tracks
- * metadata (size, age, LRU order) in a SQLDelight database.
- *
- * Files are organized as `{cacheDir}/{zoom}/{col}/{row}.png`.
- * The database stores tile metadata in `tile` and cache membership in `cache_entry`,
- * enabling O(1) size lookups and O(log n) LRU eviction queries.
- *
- * @param cacheFileSystem Abstraction over raw file operations (read/write/delete only)
- * @param queries SQLDelight-generated queries for tile metadata
- * @param ioDispatcher Dispatcher for file I/O operations
- * @param maxCacheBytes Maximum total cache size in bytes (default 100 MB)
- * @param maxAgeMillis Maximum age of a cached tile in milliseconds (default 7 days)
- * @param cacheScope Scope for background eviction jobs; uses a [SupervisorJob] so that
- *   cancellation of individual tile workers does not cancel eviction
- */
 class FileTileCache(
     private val cacheFileSystem: CacheFileSystem,
     private val queries: TileCacheQueries,
@@ -42,14 +26,16 @@ class FileTileCache(
         zoomLvl: Int,
         col: Int,
         row: Int,
+        providerId: String,
     ): ByteArray? =
         withContext(ioDispatcher) {
-            val tileKey = tileKey(zoomLvl, col, row)
+            val tileKey = tileKey(zoomLvl, col, row, providerId)
             val entry =
                 queries.selectCacheEntry(
                     zoomLvl.toLong(),
                     col.toLong(),
                     row.toLong(),
+                    providerId,
                 ).executeAsOneOrNull()
 
             if (entry == null) {
@@ -61,8 +47,8 @@ class FileTileCache(
             if (age > maxAgeMillis) {
                 Logger.d("Cache miss: $tileKey (expired)")
                 cacheFileSystem.delete(tileKey)
-                queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
-                queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
+                queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong(), providerId)
+                queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong(), providerId)
                 return@withContext null
             }
 
@@ -70,13 +56,13 @@ class FileTileCache(
                 try {
                     cacheFileSystem.read(tileKey)
                 } catch (e: Exception) {
-                    Logger.e("Failed to read cached tile $zoomLvl/$col/$row", e)
+                    Logger.e("Failed to read cached tile $tileKey", e)
                     null
                 }
             if (bytes == null) {
                 Logger.d("Cache miss: $tileKey (missing from disk)")
-                queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
-                queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
+                queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong(), providerId)
+                queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong(), providerId)
                 return@withContext null
             }
 
@@ -85,6 +71,7 @@ class FileTileCache(
                 zoomLvl.toLong(),
                 col.toLong(),
                 row.toLong(),
+                providerId,
             )
             Logger.d("Cache hit: $tileKey")
             bytes
@@ -94,10 +81,11 @@ class FileTileCache(
         zoomLvl: Int,
         col: Int,
         row: Int,
+        providerId: String,
         data: ByteArray,
     ) {
         withContext(ioDispatcher) {
-            val tileKey = tileKey(zoomLvl, col, row)
+            val tileKey = tileKey(zoomLvl, col, row, providerId)
             try {
                 cacheFileSystem.write(tileKey, data)
                 val now = Clock.System.now().toEpochMilliseconds()
@@ -105,6 +93,7 @@ class FileTileCache(
                     zoomLvl.toLong(),
                     col.toLong(),
                     row.toLong(),
+                    providerId,
                     data.size.toLong(),
                     now,
                 )
@@ -112,11 +101,12 @@ class FileTileCache(
                     zoomLvl.toLong(),
                     col.toLong(),
                     row.toLong(),
+                    providerId,
                     now,
                 )
                 Logger.d("Cached tile: $tileKey (${data.size} bytes)")
             } catch (e: Exception) {
-                Logger.e("Failed to write cached tile $zoomLvl/$col/$row", e)
+                Logger.e("Failed to write cached tile $tileKey", e)
                 return@withContext
             }
 
@@ -135,10 +125,6 @@ class FileTileCache(
         }
     }
 
-    /**
-     * Evicts least-recently-accessed tiles until total cache size is at or below [maxCacheBytes].
-     * Runs in [scope] so that cancellation of tile workers does not abort eviction.
-     */
     private suspend fun evictIfNeeded() {
         evictionMutex.withLock {
             evictionScheduled = false
@@ -156,14 +142,15 @@ class FileTileCache(
                         tile.zoom_level.toInt(),
                         tile.col.toInt(),
                         tile.row.toInt(),
+                        tile.provider_id,
                     )
                 Logger.d(
                     "Evicting tile: $tileKey " +
                         "(cache at ${currentSize / 1024}KB / ${maxCacheBytes / 1024}KB)",
                 )
                 cacheFileSystem.delete(tileKey)
-                queries.deleteCacheEntry(tile.zoom_level, tile.col, tile.row)
-                queries.deleteTile(tile.zoom_level, tile.col, tile.row)
+                queries.deleteCacheEntry(tile.zoom_level, tile.col, tile.row, tile.provider_id)
+                queries.deleteTile(tile.zoom_level, tile.col, tile.row, tile.provider_id)
                 currentSize -= tile.size_bytes
             }
         }
@@ -173,11 +160,12 @@ class FileTileCache(
         zoomLvl: Int,
         col: Int,
         row: Int,
-    ): String = "$zoomLvl/$col/$row.png"
+        providerId: String,
+    ): String = "$providerId/$zoomLvl/$col/$row.png"
 
     companion object {
-        const val DEFAULT_MAX_CACHE_BYTES = 100L * 1024 * 1024 // 100 MB
-        const val DEFAULT_MAX_AGE_MILLIS = 7L * 24 * 60 * 60 * 1000 // 7 days
+        const val DEFAULT_MAX_CACHE_BYTES = 100L * 1024 * 1024
+        const val DEFAULT_MAX_AGE_MILLIS = 7L * 24 * 60 * 60 * 1000
         private const val EVICTION_MIN_TILE_BYTES = 1024L
     }
 }
