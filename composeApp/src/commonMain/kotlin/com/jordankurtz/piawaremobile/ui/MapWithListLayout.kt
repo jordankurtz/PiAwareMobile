@@ -102,7 +102,8 @@ fun MapWithListLayout(
         ) {
             OpenStreetMap(state = mapViewModel.state)
             Overlay(
-                numberOfPlanes,
+                numberOfPlanes = numberOfPlanes,
+                provider = mapViewModel.activeProvider,
                 modifier =
                     Modifier
                         .align(Alignment.BottomEnd)

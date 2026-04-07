@@ -9,6 +9,8 @@ data class TileProviderConfig(
     val avgTileSizeBytes: Long = 15_000L,
     val userAgent: String = "PiAwareMobile/1.0 (https://github.com/jordankurtz/PiAwareMobile)",
     val attribution: String = "",
+    val copyrightUrl: String,
+    val isDarkMap: Boolean = false,
 ) {
     fun buildUrl(
         zoom: Int,
@@ -30,6 +32,7 @@ object TileProviders {
             displayName = "OpenStreetMap",
             urlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             attribution = "© OpenStreetMap contributors",
+            copyrightUrl = "https://www.openstreetmap.org/copyright",
         )
 
     val CARTO_DARK_ALL =
@@ -40,6 +43,8 @@ object TileProviders {
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 10_000L,
             attribution = "© CARTO, © OpenStreetMap contributors",
+            copyrightUrl = "https://carto.com/legal/",
+            isDarkMap = true,
         )
 
     val CARTO_DARK_NOLABELS =
@@ -50,6 +55,8 @@ object TileProviders {
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 8_000L,
             attribution = "© CARTO, © OpenStreetMap contributors",
+            copyrightUrl = "https://carto.com/legal/",
+            isDarkMap = true,
         )
 
     val CARTO_LIGHT_ALL =
@@ -60,6 +67,7 @@ object TileProviders {
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 12_000L,
             attribution = "© CARTO, © OpenStreetMap contributors",
+            copyrightUrl = "https://carto.com/legal/",
         )
 
     val CARTO_LIGHT_NOLABELS =
@@ -70,6 +78,7 @@ object TileProviders {
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 10_000L,
             attribution = "© CARTO, © OpenStreetMap contributors",
+            copyrightUrl = "https://carto.com/legal/",
         )
 
     val ESRI_SATELLITE =
@@ -80,6 +89,8 @@ object TileProviders {
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
             avgTileSizeBytes = 30_000L,
             attribution = "Tiles © Esri",
+            copyrightUrl = "https://www.esri.com/",
+            isDarkMap = true,
         )
 
     val ESRI_TOPO =
@@ -90,6 +101,7 @@ object TileProviders {
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
             avgTileSizeBytes = 25_000L,
             attribution = "Tiles © Esri",
+            copyrightUrl = "https://www.esri.com/",
         )
 
     val ESRI_STREET =
@@ -100,6 +112,7 @@ object TileProviders {
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
             avgTileSizeBytes = 20_000L,
             attribution = "Tiles © Esri",
+            copyrightUrl = "https://www.esri.com/",
         )
 
     val ALL: List<TileProviderConfig> =
