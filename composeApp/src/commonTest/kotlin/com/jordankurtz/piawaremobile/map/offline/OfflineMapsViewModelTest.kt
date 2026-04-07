@@ -9,7 +9,6 @@ import dev.mokkery.matcher.matching
 import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -32,7 +31,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class OfflineMapsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
-    private val downloadScopeHolder = DownloadScopeHolder(scope = CoroutineScope(testDispatcher))
+    private val downloadScopeHolder = DownloadScopeHolder(testDispatcher)
 
     private lateinit var store: OfflineTileStore
     private lateinit var engine: DownloadEngine
@@ -61,6 +60,7 @@ class OfflineMapsViewModelTest {
         tileCache = mock()
         everySuspend { store.resetStuckDownloads() } returns Unit
         everySuspend { store.updateDownloadStatus(any(), any(), any()) } returns Unit
+        everySuspend { store.updateRegionStats(any(), any(), any()) } returns Unit
     }
 
     @AfterTest
@@ -215,6 +215,9 @@ class OfflineMapsViewModelTest {
             vm.cancelDownload()
             advanceUntilIdle()
 
+            verifySuspend(mode = VerifyMode.atLeast(1)) {
+                store.updateRegionStats(1L, 10L, 0L)
+            }
             verifySuspend(mode = VerifyMode.atLeast(1)) {
                 store.updateDownloadStatus(1L, DownloadStatus.PARTIAL, any())
             }

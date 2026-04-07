@@ -1,18 +1,15 @@
 package com.jordankurtz.piawaremobile.map.offline
 
 import com.jordankurtz.logger.Logger
-import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.isSuccess
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -20,13 +17,14 @@ class OfflineDownloadEngine(
     private val tileCache: TileCache,
     private val offlineTileStore: OfflineTileStore,
     private val httpClient: HttpClient,
-    @IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : DownloadEngine {
     /**
      * Downloads all tiles for [region] using [config] and pins them so they survive eviction.
      * Already-pinned tiles are skipped (safe to call on a partially-downloaded region).
      * Emits a [DownloadProgress] after each tile (downloaded or skipped).
      * Completes after all tiles are processed and region stats are updated.
+     *
+     * Must be collected on an IO dispatcher — callers are responsible for the coroutine context.
      */
     override fun download(
         region: OfflineRegion,
@@ -35,9 +33,7 @@ class OfflineDownloadEngine(
         flow {
             var downloaded = 0L
             try {
-                withContext(ioDispatcher) {
-                    offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.DOWNLOADING, 0L)
-                }
+                offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.DOWNLOADING, 0L)
 
                 val tiles =
                     tilesForRegion(
@@ -57,13 +53,11 @@ class OfflineDownloadEngine(
 
                 for (tile in tiles) {
                     val alreadyPinned =
-                        withContext(ioDispatcher) {
-                            offlineTileStore.isPinned(
-                                zoomLevel = tile.zoom,
-                                col = tile.col,
-                                row = tile.row,
-                            )
-                        }
+                        offlineTileStore.isPinned(
+                            zoomLevel = tile.zoom,
+                            col = tile.col,
+                            row = tile.row,
+                        )
 
                     if (!alreadyPinned) {
                         val bytes =
@@ -75,20 +69,18 @@ class OfflineDownloadEngine(
                                 userAgent = config.userAgent,
                             )
                         if (bytes != null) {
-                            withContext(ioDispatcher) {
-                                tileCache.put(
-                                    zoomLvl = tile.zoom,
-                                    col = tile.col,
-                                    row = tile.row,
-                                    data = bytes,
-                                )
-                                offlineTileStore.pinTile(
-                                    zoomLevel = tile.zoom,
-                                    col = tile.col,
-                                    row = tile.row,
-                                    regionId = region.id,
-                                )
-                            }
+                            tileCache.put(
+                                zoomLvl = tile.zoom,
+                                col = tile.col,
+                                row = tile.row,
+                                data = bytes,
+                            )
+                            offlineTileStore.pinTile(
+                                zoomLevel = tile.zoom,
+                                col = tile.col,
+                                row = tile.row,
+                                regionId = region.id,
+                            )
                             totalBytes += bytes.size
                             stored++
                             if (config.requestDelayMs > 0L) {
@@ -101,21 +93,15 @@ class OfflineDownloadEngine(
                     emit(DownloadProgress(regionId = region.id, downloaded = downloaded, total = total))
                 }
 
-                withContext(ioDispatcher) {
-                    offlineTileStore.updateRegionStats(
-                        id = region.id,
-                        tileCount = stored,
-                        sizeBytes = totalBytes,
-                    )
-                }
-                withContext(ioDispatcher) {
-                    offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.COMPLETE, downloaded)
-                }
+                offlineTileStore.updateRegionStats(
+                    id = region.id,
+                    tileCount = stored,
+                    sizeBytes = totalBytes,
+                )
+                offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.COMPLETE, downloaded)
             } catch (e: Exception) {
                 Logger.e("Download failed for region ${region.id}", e)
-                withContext(ioDispatcher) {
-                    offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.FAILED, downloaded)
-                }
+                offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.FAILED, downloaded)
                 throw e
             }
         }

@@ -61,7 +61,6 @@ class OfflineDownloadEngineTest {
             tileCache = tileCache,
             offlineTileStore = offlineStore,
             httpClient = httpClient,
-            ioDispatcher = testDispatcher,
         )
 
     private fun successHttpClient(): HttpClient =

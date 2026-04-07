@@ -101,7 +101,7 @@ class OfflineMapsViewModel(
             )
         downloadJob =
             downloadScopeHolder.scope.launch {
-                val regionId = withContext(ioDispatcher) { store.saveRegion(region) }
+                val regionId = store.saveRegion(region)
                 // Show the region immediately in the list before tiles start downloading
                 _regions.value = _regions.value + region.copy(id = regionId, status = DownloadStatus.DOWNLOADING)
                 doDownload(regionId)
@@ -118,28 +118,24 @@ class OfflineMapsViewModel(
 
     private suspend fun doDownload(regionId: Long) {
         var lastDownloadedCount = 0L
+        var lastTileCount = 0L
         try {
-            withContext(ioDispatcher) {
-                store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, 0L)
-            }
+            store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, 0L)
             _regions.value =
                 _regions.value.map { r ->
                     if (r.id == regionId) r.copy(status = DownloadStatus.DOWNLOADING) else r
                 }
             val region =
                 _regions.value.find { it.id == regionId } ?: run {
-                    withContext(ioDispatcher) {
-                        store.updateDownloadStatus(regionId, DownloadStatus.FAILED, 0L)
-                    }
+                    store.updateDownloadStatus(regionId, DownloadStatus.FAILED, 0L)
                     return
                 }
             // Preserve previously downloaded count so cancel-after-retry doesn't regress progress
             lastDownloadedCount = region.downloadedTileCount
             engine.download(region, TileProviders.OPENSTREETMAP).collect { progress ->
                 lastDownloadedCount = progress.downloaded
-                withContext(ioDispatcher) {
-                    store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, progress.downloaded)
-                }
+                lastTileCount = progress.total
+                store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, progress.downloaded)
                 _downloadProgress.value = progress
                 _regions.value =
                     _regions.value.map { r ->
@@ -157,9 +153,10 @@ class OfflineMapsViewModel(
                 yield()
             }
             // Refresh from DB on completion to pick up final stats and COMPLETE status
-            withContext(ioDispatcher) { _regions.value = store.getRegions() }
+            _regions.value = store.getRegions()
         } catch (e: CancellationException) {
-            withContext(NonCancellable + ioDispatcher) {
+            withContext(NonCancellable) {
+                store.updateRegionStats(regionId, lastTileCount, 0L)
                 store.updateDownloadStatus(regionId, DownloadStatus.PARTIAL, lastDownloadedCount)
                 _regions.value = store.getRegions()
             }
@@ -167,7 +164,7 @@ class OfflineMapsViewModel(
         } catch (e: Exception) {
             Logger.e("Download failed for region", e)
             // Refresh from DB so the FAILED status written by the engine is reflected
-            withContext(NonCancellable + ioDispatcher) { _regions.value = store.getRegions() }
+            withContext(NonCancellable) { _regions.value = store.getRegions() }
         } finally {
             _isDownloading.value = false
             _downloadProgress.value = null
