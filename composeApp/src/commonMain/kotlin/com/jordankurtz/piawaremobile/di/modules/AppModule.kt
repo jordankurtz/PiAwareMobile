@@ -11,6 +11,7 @@ import org.koin.core.annotation.Module
         DataStoreModule::class,
         DatabaseModule::class,
         TileCacheModule::class,
+        MapModule::class,
     ],
 )
 @ComponentScan("com.jordankurtz.piawaremobile")
