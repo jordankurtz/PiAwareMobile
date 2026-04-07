@@ -1,0 +1,47 @@
+-- Migration 2 → 3: add provider_id to tile tracking tables.
+-- SQLite does not support adding columns to a composite PRIMARY KEY,
+-- so each affected table is recreated with the new schema.
+
+-- Recreate tile
+CREATE TABLE tile_new (
+    zoom_level  INTEGER NOT NULL,
+    col         INTEGER NOT NULL,
+    row         INTEGER NOT NULL,
+    provider_id TEXT NOT NULL DEFAULT 'openstreetmap',
+    size_bytes  INTEGER NOT NULL,
+    fetched_at  INTEGER NOT NULL,
+    PRIMARY KEY (zoom_level, col, row, provider_id)
+);
+INSERT INTO tile_new SELECT zoom_level, col, row, 'openstreetmap', size_bytes, fetched_at FROM tile;
+DROP TABLE tile;
+ALTER TABLE tile_new RENAME TO tile;
+
+-- Recreate cache_entry
+CREATE TABLE cache_entry_new (
+    zoom_level    INTEGER NOT NULL,
+    col           INTEGER NOT NULL,
+    row           INTEGER NOT NULL,
+    provider_id   TEXT NOT NULL DEFAULT 'openstreetmap',
+    last_accessed INTEGER NOT NULL,
+    PRIMARY KEY (zoom_level, col, row, provider_id),
+    FOREIGN KEY (zoom_level, col, row, provider_id)
+        REFERENCES tile(zoom_level, col, row, provider_id) ON DELETE CASCADE
+);
+INSERT INTO cache_entry_new SELECT zoom_level, col, row, 'openstreetmap', last_accessed FROM cache_entry;
+DROP TABLE cache_entry;
+ALTER TABLE cache_entry_new RENAME TO cache_entry;
+
+-- Recreate pinned_tile with provider_id in PK and FK
+CREATE TABLE pinned_tile_new (
+    zoom_level  INTEGER NOT NULL,
+    col         INTEGER NOT NULL,
+    row         INTEGER NOT NULL,
+    provider_id TEXT NOT NULL DEFAULT 'openstreetmap',
+    region_id   INTEGER NOT NULL REFERENCES offline_region(id) ON DELETE CASCADE,
+    PRIMARY KEY (zoom_level, col, row, provider_id, region_id),
+    FOREIGN KEY (zoom_level, col, row, provider_id)
+        REFERENCES tile(zoom_level, col, row, provider_id) ON DELETE CASCADE
+);
+INSERT INTO pinned_tile_new SELECT zoom_level, col, row, 'openstreetmap', region_id FROM pinned_tile;
+DROP TABLE pinned_tile;
+ALTER TABLE pinned_tile_new RENAME TO pinned_tile;
