@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
+import kotlin.time.Clock
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFalse
@@ -47,7 +48,7 @@ class FileTileCacheCommonTest {
         runTest(testDispatcher) {
             val cache = createCache()
 
-            val result = cache.get(zoomLvl = 1, col = 2, row = 3)
+            val result = cache.get(zoomLvl = 1, col = 2, row = 3, providerId = "osm")
 
             assertNull(result)
         }
@@ -58,8 +59,8 @@ class FileTileCacheCommonTest {
             val cache = createCache()
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
-            cache.put(zoomLvl = 5, col = 10, row = 20, data = data)
-            val result = cache.get(zoomLvl = 5, col = 10, row = 20)
+            cache.put(zoomLvl = 5, col = 10, row = 20, providerId = "osm", data = data)
+            val result = cache.get(zoomLvl = 5, col = 10, row = 20, providerId = "osm")
 
             assertNotNull(result)
             assertContentEquals(data, result)
@@ -72,11 +73,11 @@ class FileTileCacheCommonTest {
             val data1 = byteArrayOf(1, 2, 3)
             val data2 = byteArrayOf(4, 5, 6)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data1)
-            cache.put(zoomLvl = 2, col = 0, row = 0, data = data2)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data1)
+            cache.put(zoomLvl = 2, col = 0, row = 0, providerId = "osm", data = data2)
 
-            assertContentEquals(data1, cache.get(zoomLvl = 1, col = 0, row = 0))
-            assertContentEquals(data2, cache.get(zoomLvl = 2, col = 0, row = 0))
+            assertContentEquals(data1, cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm"))
+            assertContentEquals(data2, cache.get(zoomLvl = 2, col = 0, row = 0, providerId = "osm"))
         }
 
     @Test
@@ -86,10 +87,10 @@ class FileTileCacheCommonTest {
             val originalData = byteArrayOf(1, 2, 3)
             val updatedData = byteArrayOf(7, 8, 9, 10)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = originalData)
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = updatedData)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = originalData)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = updatedData)
 
-            assertContentEquals(updatedData, cache.get(zoomLvl = 1, col = 0, row = 0))
+            assertContentEquals(updatedData, cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm"))
         }
 
     @Test
@@ -98,21 +99,22 @@ class FileTileCacheCommonTest {
             val cache = createCache(maxAgeMillis = 1L)
             val data = byteArrayOf(1, 2, 3)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data)
 
             // Backdate the fetched_at to simulate expiration
             queries.upsertTile(
                 1L,
                 0L,
                 0L,
+                "osm",
                 data.size.toLong(),
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 1000,
+                Clock.System.now().toEpochMilliseconds() - 1000,
             )
 
-            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm")
 
             assertNull(result)
-            assertFalse(fakeFs.exists("1/0/0.png"), "Expired tile file should be deleted")
+            assertFalse(fakeFs.exists("osm/1/0/0.png"), "Expired tile file should be deleted")
         }
 
     @Test
@@ -121,26 +123,27 @@ class FileTileCacheCommonTest {
             val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data)
             // Backdate the first tile's access time so it gets evicted first
             queries.updateLastAccessed(
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 5000,
+                Clock.System.now().toEpochMilliseconds() - 5000,
                 1L,
                 0L,
                 0L,
+                "osm",
             )
 
-            cache.put(zoomLvl = 1, col = 0, row = 1, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 1, providerId = "osm", data = data)
 
             // Third tile pushes cache to 15 bytes, exceeding 10-byte limit
-            cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 2, providerId = "osm", data = data)
             advanceUntilIdle()
 
             // The oldest-accessed tile (row=0) should be evicted
-            assertFalse(fakeFs.exists("1/0/0.png"), "Oldest-accessed tile should be evicted")
+            assertFalse(fakeFs.exists("osm/1/0/0.png"), "Oldest-accessed tile should be evicted")
 
             // Newer tiles should remain
-            assertNotNull(cache.get(zoomLvl = 1, col = 0, row = 2))
+            assertNotNull(cache.get(zoomLvl = 1, col = 0, row = 2, providerId = "osm"))
         }
 
     @Test
@@ -150,38 +153,40 @@ class FileTileCacheCommonTest {
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
             // Put tile A (5 bytes)
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data)
             queries.updateLastAccessed(
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 10_000,
+                Clock.System.now().toEpochMilliseconds() - 10_000,
                 1L,
                 0L,
                 0L,
+                "osm",
             )
 
             // Put tile B (5 bytes) -- at 10 bytes, at limit
-            cache.put(zoomLvl = 1, col = 0, row = 1, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 1, providerId = "osm", data = data)
             queries.updateLastAccessed(
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 5_000,
+                Clock.System.now().toEpochMilliseconds() - 5_000,
                 1L,
                 0L,
                 1L,
+                "osm",
             )
 
             // Access tile A to make it recently used
-            cache.get(zoomLvl = 1, col = 0, row = 0)
+            cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm")
 
             // Put tile C -- exceeds limit, should evict tile B (least recently accessed)
-            cache.put(zoomLvl = 1, col = 0, row = 2, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 2, providerId = "osm", data = data)
             advanceUntilIdle()
 
             // Tile A should survive because it was recently accessed
             assertNotNull(
-                cache.get(zoomLvl = 1, col = 0, row = 0),
+                cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm"),
                 "Recently accessed tile should survive eviction",
             )
             // Tile B should be evicted
             assertFalse(
-                fakeFs.exists("1/0/1.png"),
+                fakeFs.exists("osm/1/0/1.png"),
                 "Least recently accessed tile should be evicted",
             )
         }
@@ -192,12 +197,12 @@ class FileTileCacheCommonTest {
             val cache = createCache()
             val data = byteArrayOf(1, 2, 3)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data)
 
             // Enable read errors -- file is missing from disk but DB entry exists
             fakeFs.throwOnRead = true
 
-            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm")
 
             assertNull(result, "get() should return null on file I/O error")
         }
@@ -210,7 +215,7 @@ class FileTileCacheCommonTest {
             fakeFs.throwOnWrite = true
 
             // Should not throw
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = byteArrayOf(1, 2, 3))
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = byteArrayOf(1, 2, 3))
         }
 
     @Test
@@ -218,8 +223,8 @@ class FileTileCacheCommonTest {
         runTest(testDispatcher) {
             val cache = createCache()
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = byteArrayOf())
-            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = byteArrayOf())
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm")
 
             assertNotNull(result)
             assertContentEquals(byteArrayOf(), result)
@@ -231,13 +236,13 @@ class FileTileCacheCommonTest {
             val cache = createCache(maxCacheBytes = 1000L, cacheScope = this)
             val data = byteArrayOf(1, 2, 3, 4, 5)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
-            cache.put(zoomLvl = 1, col = 0, row = 1, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 1, providerId = "osm", data = data)
             advanceUntilIdle()
 
             // Both tiles should still exist (total 10 bytes, well under 1000 limit)
-            assertTrue(fakeFs.exists("1/0/0.png"), "Tile should not be evicted when under limit")
-            assertTrue(fakeFs.exists("1/0/1.png"), "Tile should not be evicted when under limit")
+            assertTrue(fakeFs.exists("osm/1/0/0.png"), "Tile should not be evicted when under limit")
+            assertTrue(fakeFs.exists("osm/1/0/1.png"), "Tile should not be evicted when under limit")
         }
 
     @Test
@@ -246,25 +251,27 @@ class FileTileCacheCommonTest {
             val cache = createCache(maxAgeMillis = 1L)
             val data = byteArrayOf(1, 2, 3)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data)
 
             // Backdate fetched_at to simulate expiration
             queries.upsertTile(
                 1L,
                 0L,
                 0L,
+                "osm",
                 data.size.toLong(),
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 1000,
+                Clock.System.now().toEpochMilliseconds() - 1000,
             )
             // Set access time to recent (shouldn't matter -- expiration wins)
             queries.updateLastAccessed(
-                kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                Clock.System.now().toEpochMilliseconds(),
                 1L,
                 0L,
                 0L,
+                "osm",
             )
 
-            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm")
 
             assertNull(result, "Expired tile should not be served regardless of access time")
         }
@@ -275,31 +282,34 @@ class FileTileCacheCommonTest {
             val cache = createCache(maxCacheBytes = 10L, cacheScope = this)
 
             // Put 4 tiles of 5 bytes each: total 20 bytes, exceeding 10-byte limit
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = byteArrayOf(1, 2, 3, 4, 5))
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = byteArrayOf(1, 2, 3, 4, 5))
             queries.updateLastAccessed(
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 20_000,
+                Clock.System.now().toEpochMilliseconds() - 20_000,
                 1L,
                 0L,
                 0L,
+                "osm",
             )
 
-            cache.put(zoomLvl = 1, col = 0, row = 1, data = byteArrayOf(1, 2, 3, 4, 5))
+            cache.put(zoomLvl = 1, col = 0, row = 1, providerId = "osm", data = byteArrayOf(1, 2, 3, 4, 5))
             queries.updateLastAccessed(
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 15_000,
+                Clock.System.now().toEpochMilliseconds() - 15_000,
                 1L,
                 0L,
                 1L,
+                "osm",
             )
 
-            cache.put(zoomLvl = 1, col = 0, row = 2, data = byteArrayOf(1, 2, 3, 4, 5))
+            cache.put(zoomLvl = 1, col = 0, row = 2, providerId = "osm", data = byteArrayOf(1, 2, 3, 4, 5))
             queries.updateLastAccessed(
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 10_000,
+                Clock.System.now().toEpochMilliseconds() - 10_000,
                 1L,
                 0L,
                 2L,
+                "osm",
             )
 
-            cache.put(zoomLvl = 1, col = 0, row = 3, data = byteArrayOf(1, 2, 3, 4, 5))
+            cache.put(zoomLvl = 1, col = 0, row = 3, providerId = "osm", data = byteArrayOf(1, 2, 3, 4, 5))
             advanceUntilIdle()
 
             // After eviction, total size in DB should be at or below 10 bytes
@@ -318,21 +328,23 @@ class FileTileCacheCommonTest {
 
             // Put a tile and pin it
             val data = byteArrayOf(1, 2, 3, 4, 5)
-            cache.put(zoomLvl = 5, col = 1, row = 1, data = data)
+            cache.put(zoomLvl = 5, col = 1, row = 1, providerId = "osm", data = data)
             queries.insertPinnedTile(
                 zoom_level = 5L,
                 col = 1L,
                 row = 1L,
-                region_id = 1L, // FK enforcement is off in JVM SQLite tests
+                provider_id = "osm",
+                // FK enforcement is off in JVM SQLite tests
+                region_id = 1L,
             )
 
             // Put more tiles to exceed the 10-byte limit and trigger eviction
-            cache.put(zoomLvl = 5, col = 2, row = 1, data = data)
-            cache.put(zoomLvl = 5, col = 3, row = 1, data = data)
+            cache.put(zoomLvl = 5, col = 2, row = 1, providerId = "osm", data = data)
+            cache.put(zoomLvl = 5, col = 3, row = 1, providerId = "osm", data = data)
             advanceUntilIdle()
 
             // The pinned tile should NOT be evicted
-            val result = cache.get(zoomLvl = 5, col = 1, row = 1)
+            val result = cache.get(zoomLvl = 5, col = 1, row = 1, providerId = "osm")
             assertNotNull(result, "Pinned tile should not be evicted")
         }
 
@@ -342,17 +354,17 @@ class FileTileCacheCommonTest {
             val cache = createCache()
             val data = byteArrayOf(1, 2, 3)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data)
 
             // Remove file from disk but leave DB entries
-            fakeFs.delete("1/0/0.png")
+            fakeFs.delete("osm/1/0/0.png")
 
-            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm")
 
             assertNull(result, "Should return null when file is missing from disk")
             // DB should be cleaned up
             assertNull(
-                queries.selectCacheEntry(1L, 0L, 0L).executeAsOneOrNull(),
+                queries.selectCacheEntry(1L, 0L, 0L, "osm").executeAsOneOrNull(),
                 "DB entry should be cleaned up when file is missing",
             )
         }
