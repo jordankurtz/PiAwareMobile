@@ -8,6 +8,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -15,6 +16,7 @@ import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStats
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
+import com.jordankurtz.piawaremobile.extensions.overlayColor
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.AircraftPosition
@@ -31,6 +33,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -68,6 +71,7 @@ private const val USER_LOCATION_MARKER_ID = "user_location"
 @Factory
 class MapViewModel(
     private val mapProvider: TileStreamProvider,
+    val activeProvider: TileProviderConfig,
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
@@ -134,6 +138,7 @@ class MapViewModel(
                         settings = it.data
                         onSettingsLoaded(it.data)
                     }
+
                     is Async.Error -> {
                         Logger.e("Failed to load settings", it.throwable)
                     }
@@ -220,6 +225,12 @@ class MapViewModel(
                 Image(
                     painter = painterResource(Res.drawable.ic_receiver),
                     contentDescription = null,
+                    colorFilter =
+                        ColorFilter.tint(
+                            settings?.mapProviderId?.let {
+                                TileProviders.findById(it).overlayColor
+                            } ?: Color.Unspecified,
+                        ),
                     modifier =
                         Modifier
                             .size(20.dp),
@@ -249,6 +260,7 @@ class MapViewModel(
                     )
                 }
             }
+
             is FitTarget.BoundingRegion -> {
                 val boundingBox =
                     BoundingBox(

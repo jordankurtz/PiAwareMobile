@@ -92,6 +92,7 @@ class MapViewModelTest {
         val vm =
             MapViewModel(
                 mapProvider = mapProvider,
+                activeProvider = TileProviders.OPENSTREETMAP,
                 getSavedMapStateUseCase = getSavedMapStateUseCase,
                 saveMapStateUseCase = saveMapStateUseCase,
                 loadSettingsUseCase = loadSettingsUseCase,

@@ -126,7 +126,8 @@ fun MapScreen(
             OfflineIndicator()
         }
         Overlay(
-            numberOfPlanes,
+            numberOfPlanes = numberOfPlanes,
+            provider = mapViewModel.activeProvider,
             modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
         )
         if (isDebugBuild) {
