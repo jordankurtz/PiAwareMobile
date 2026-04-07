@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.settings.repo
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.testutil.FakeDataStore
 import kotlinx.coroutines.flow.first
@@ -56,5 +57,23 @@ class SettingsRepositoryImplTest {
             val savedSettings = repository.getSettings().first()
 
             assertEquals(newSettings, savedSettings)
+        }
+
+    @Test
+    fun `saveSettings persists mapProviderId`() =
+        runTest {
+            val settings = Settings(mapProviderId = "esri_satellite")
+
+            repository.saveSettings(settings)
+
+            assertEquals("esri_satellite", repository.getSettings().first().mapProviderId)
+        }
+
+    @Test
+    fun `getSettings returns openstreetmap as default mapProviderId`() =
+        runTest {
+            val settings = repository.getSettings().first()
+
+            assertEquals(TileProviders.OPENSTREETMAP.id, settings.mapProviderId)
         }
 }

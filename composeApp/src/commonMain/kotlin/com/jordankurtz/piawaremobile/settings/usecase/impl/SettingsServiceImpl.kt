@@ -113,4 +113,7 @@ class SettingsServiceImpl(
         updateSetting { it.copy(enableFlightAwareApi = enabled) }
 
     override suspend fun setFlightAwareApiKey(apiKey: String) = updateSetting { it.copy(flightAwareApiKey = apiKey) }
+
+    override suspend fun setMapProviderId(providerId: String) =
+        updateSetting { it.copy(mapProviderId = providerId) }
 }

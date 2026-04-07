@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.extensions.stateIn
+import com.jordankurtz.piawaremobile.map.TileProviderConfig
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import kotlinx.coroutines.flow.StateFlow
@@ -84,5 +85,10 @@ class SettingsViewModel(
     fun updateFlightAwareApiKey(apiKey: String) =
         viewModelScope.launch {
             settingsService.setFlightAwareApiKey(apiKey)
+        }
+
+    fun updateMapProvider(config: TileProviderConfig) =
+        viewModelScope.launch {
+            settingsService.setMapProviderId(config.id)
         }
 }
