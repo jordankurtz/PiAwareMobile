@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
+import com.jordankurtz.piawaremobile.map.offline.DownloadProgress
 import com.jordankurtz.piawaremobile.map.offline.MapRegionPickerScreen
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import org.jetbrains.compose.resources.painterResource
@@ -50,6 +52,9 @@ fun OfflineMapsScreen(
     onBack: () -> Unit,
     regions: List<OfflineRegion> = emptyList(),
     onDeleteRegion: (OfflineRegion) -> Unit = {},
+    isDownloading: Boolean = false,
+    downloadProgress: DownloadProgress? = null,
+    onStartDownload: (name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int) -> Unit = { _, _, _, _ -> },
 ) {
     var showDownloadDialog by remember { mutableStateOf(false) }
     var showMapPicker by remember { mutableStateOf(false) }
@@ -76,9 +81,13 @@ fun OfflineMapsScreen(
                 showDownloadDialog = false
                 pendingBounds = null
             },
-            onConfirm = { _, _, _ ->
-                showDownloadDialog = false
-                pendingBounds = null
+            onConfirm = { name, minZoom, maxZoom ->
+                val bounds = pendingBounds
+                if (bounds != null) {
+                    onStartDownload(name, bounds, minZoom, maxZoom)
+                    showDownloadDialog = false
+                    pendingBounds = null
+                }
             },
             selectedBounds = pendingBounds,
             onSelectOnMap = {
@@ -120,21 +129,27 @@ fun OfflineMapsScreen(
             )
         },
     ) { paddingValues ->
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (regions.isEmpty()) {
-                OfflineMapsEmptyState()
-            } else {
-                OfflineRegionList(
-                    regions = regions,
-                    onDeleteRegion = onDeleteRegion,
-                    modifier = Modifier.fillMaxSize(),
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            if (isDownloading) {
+                val fraction = downloadProgress?.fraction ?: 0f
+                LinearProgressIndicator(
+                    progress = { fraction },
+                    modifier = Modifier.fillMaxWidth(),
                 )
+            }
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (regions.isEmpty()) {
+                    OfflineMapsEmptyState()
+                } else {
+                    OfflineRegionList(
+                        regions = regions,
+                        onDeleteRegion = onDeleteRegion,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
     }

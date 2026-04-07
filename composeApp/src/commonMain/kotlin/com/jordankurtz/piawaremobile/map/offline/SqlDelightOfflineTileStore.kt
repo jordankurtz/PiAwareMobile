@@ -45,6 +45,19 @@ class SqlDelightOfflineTileStore(
             }
         }
 
+    override suspend fun updateRegionStats(
+        id: Long,
+        tileCount: Long,
+        sizeBytes: Long,
+    ): Unit =
+        withContext(ioDispatcher) {
+            queries.updateRegionStats(
+                tile_count = tileCount,
+                size_bytes = sizeBytes,
+                id = id,
+            )
+        }
+
     override suspend fun pinTile(
         zoomLevel: Int,
         col: Int,

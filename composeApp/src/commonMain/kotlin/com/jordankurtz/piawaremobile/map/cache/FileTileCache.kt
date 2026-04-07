@@ -59,11 +59,22 @@ class FileTileCache(
 
             val age = Clock.System.now().toEpochMilliseconds() - entry.fetched_at
             if (age > maxAgeMillis) {
-                Logger.d("Cache miss: $tileKey (expired)")
-                cacheFileSystem.delete(tileKey)
-                queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
-                queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
-                return@withContext null
+                val pinned =
+                    queries.isPinned(
+                        zoom_level = zoomLvl.toLong(),
+                        col = col.toLong(),
+                        row = row.toLong(),
+                    ).executeAsOne() > 0L
+                if (pinned) {
+                    Logger.d("Cache hit (pinned, skipping expiry check): $tileKey")
+                    // fall through to serve the tile below
+                } else {
+                    Logger.d("Cache miss: $tileKey (expired)")
+                    cacheFileSystem.delete(tileKey)
+                    queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong())
+                    queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong())
+                    return@withContext null
+                }
             }
 
             val bytes =

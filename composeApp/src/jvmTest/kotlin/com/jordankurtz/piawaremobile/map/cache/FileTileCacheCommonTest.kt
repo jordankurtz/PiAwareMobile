@@ -359,6 +359,39 @@ class FileTileCacheCommonTest {
         }
 
     @Test
+    fun `expired pinned tile is still served and not deleted`() =
+        runTest(testDispatcher) {
+            val cache = createCache(maxAgeMillis = 1L)
+            val data = byteArrayOf(1, 2, 3)
+
+            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+
+            // Pin the tile
+            // FK enforcement is off in JVM SQLite tests
+            queries.insertPinnedTile(
+                zoom_level = 1L,
+                col = 0L,
+                row = 0L,
+                region_id = 1L,
+            )
+
+            // Backdate fetched_at to simulate expiration
+            queries.upsertTile(
+                1L,
+                0L,
+                0L,
+                data.size.toLong(),
+                kotlin.time.Clock.System.now().toEpochMilliseconds() - 1000,
+            )
+
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+
+            assertNotNull(result, "Pinned tile should be served even after TTL expires")
+            assertContentEquals(data, result)
+            assertTrue(fakeFs.exists("1/0/0.png"), "Pinned tile file should not be deleted on expiry")
+        }
+
+    @Test
     fun `CacheFileSystem interface has three required methods`() {
         // Compile-time verification that the interface has the expected methods.
         val fs: CacheFileSystem = fakeFs

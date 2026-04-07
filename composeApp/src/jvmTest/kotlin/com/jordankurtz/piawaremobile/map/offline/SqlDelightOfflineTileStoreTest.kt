@@ -145,4 +145,27 @@ class SqlDelightOfflineTileStoreTest {
             assertTrue(Triple(5, 10, 20) in coords)
             assertTrue(Triple(5, 11, 20) in coords)
         }
+
+    @Test
+    fun `updateRegionStats persists tile count and size`() =
+        runTest(testDispatcher) {
+            val id =
+                store.saveRegion(
+                    OfflineRegion(
+                        name = "Stats",
+                        minZoom = 8,
+                        maxZoom = 12,
+                        minLat = 0.0,
+                        maxLat = 1.0,
+                        minLon = 0.0,
+                        maxLon = 1.0,
+                        providerId = "osm",
+                        createdAt = 1000L,
+                    ),
+                )
+            store.updateRegionStats(id = id, tileCount = 42L, sizeBytes = 630_000L)
+            val region = store.getRegion(id)
+            assertEquals(42L, region?.tileCount)
+            assertEquals(630_000L, region?.sizeBytes)
+        }
 }
