@@ -6,7 +6,6 @@ import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -21,15 +20,15 @@ class MapModule {
     @Single
     fun provideActiveTileProviderConfigFlow(
         settingsRepository: SettingsRepository,
+        applicationScope: CoroutineScope,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): StateFlow<TileProviderConfig> {
-        val scope = CoroutineScope(ioDispatcher + SupervisorJob())
         val initial =
             runBlocking(ioDispatcher) {
                 TileProviders.findById(settingsRepository.getSettings().first().mapProviderId)
             }
         return settingsRepository.getSettings()
             .map { TileProviders.findById(it.mapProviderId) }
-            .stateIn(scope = scope, started = SharingStarted.Eagerly, initialValue = initial)
+            .stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = initial)
     }
 }
