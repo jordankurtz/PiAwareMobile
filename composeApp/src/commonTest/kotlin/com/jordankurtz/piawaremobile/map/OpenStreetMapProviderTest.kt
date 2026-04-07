@@ -76,27 +76,27 @@ class OpenStreetMapProviderTest {
     fun returnsCachedTileWhenCacheHits() =
         runTest {
             createProvider(mockHttpClient())
-            everySuspend { tileCache.get(any(), any(), any()) } returns tileBytes
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns tileBytes
 
             val result = provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
 
             assertNotNull(result)
             assertContentEquals(tileBytes, readAllBytes(result))
             // Should not attempt to put since it was a cache hit
-            verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any()) }
+            verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any(), any()) }
         }
 
     @Test
     fun fetchesFromNetworkOnCacheMissAndStoresInCache() =
         runTest {
             createProvider(mockHttpClient())
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
-            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
 
             val result = provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
 
             assertNotNull(result)
-            verifySuspend { tileCache.put(5, 1, 0, any()) }
+            verifySuspend { tileCache.put(5, 1, 0, OpenStreetMapProvider.PROVIDER_ID, any()) }
         }
 
     @Test
@@ -111,23 +111,23 @@ class OpenStreetMapProviderTest {
                     }
                 }
             createProvider(failingClient)
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
 
             val result = provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
 
             assertNull(result)
-            verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any()) }
+            verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any(), any()) }
         }
 
     @Test
     fun passesCorrectCoordinatesToCache() =
         runTest {
             createProvider(mockHttpClient())
-            everySuspend { tileCache.get(any(), any(), any()) } returns tileBytes
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns tileBytes
 
             provider.getTileStream(row = 42, col = 7, zoomLvl = 12)
 
-            verifySuspend { tileCache.get(12, 7, 42) }
+            verifySuspend { tileCache.get(12, 7, 42, OpenStreetMapProvider.PROVIDER_ID) }
         }
 
     @Test
