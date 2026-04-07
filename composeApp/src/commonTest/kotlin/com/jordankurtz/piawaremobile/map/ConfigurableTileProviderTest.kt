@@ -14,6 +14,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.Buffer
 import kotlinx.io.readByteArray
@@ -49,7 +50,7 @@ class ConfigurableTileProviderTest {
         httpClient: HttpClient = mockHttpClient(),
     ): ConfigurableTileProvider {
         tileCache = mock()
-        return ConfigurableTileProvider(httpClient, tileCache, config)
+        return ConfigurableTileProvider(httpClient, tileCache, MutableStateFlow(config))
     }
 
     private fun readAllBytes(source: kotlinx.io.RawSource): ByteArray {
