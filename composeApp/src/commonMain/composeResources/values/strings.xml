@@ -158,4 +158,16 @@
     <string name="offline_maps_picker_switch_to_map_mode">Switch to map mode</string>
     <string name="offline_maps_picker_switch_to_box_mode">Switch to box mode</string>
     <string name="offline_indicator_label">Offline</string>
+    <string name="offline_maps_dialog_estimate_no_bounds">Select a region on the map to see an estimate</string>
+    <string name="offline_maps_dialog_estimate_computed">~%1$d MB (%2$d tiles)</string>
+    <string name="offline_maps_dialog_too_many_tiles">Too many tiles (%1$d). Reduce area or zoom range.</string>
+    <string name="offline_maps_region_downloading">Downloading</string>
+    <string name="offline_maps_region_download_failed">Download failed</string>
+    <string name="offline_maps_region_partial_progress">%1$d / %2$d tiles downloaded</string>
+    <string name="offline_maps_region_retry">Retry download</string>
+    <string name="offline_maps_cancel_download">Cancel download</string>
+    <string name="offline_maps_delete_confirm_title">Delete Region?</string>
+    <string name="offline_maps_delete_confirm_message">Delete "%1$s"? This will free approximately %2$d MB of storage.</string>
+    <string name="offline_maps_delete_confirm_delete">Delete</string>
+    <string name="offline_maps_delete_confirm_cancel">Cancel</string>
 </resources>

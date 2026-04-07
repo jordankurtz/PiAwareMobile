@@ -21,10 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.Overlay
 import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
+import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.list.TabletAircraftListPanel
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMap
+import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -45,6 +47,7 @@ fun MapWithListLayout(
     val userLocation by locationViewModel.currentLocation.collectAsState()
     val receiverLocations by aircraftViewModel.receiverLocations.collectAsState()
     val numberOfPlanes by aircraftViewModel.numberOfPlanes.collectAsState()
+    val tileStats by mapViewModel.tileStats.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val mapSelectedHex by mapViewModel.selectedAircraft.collectAsState()
 
@@ -105,6 +108,12 @@ fun MapWithListLayout(
                         .align(Alignment.BottomEnd)
                         .padding(horizontal = 8.dp),
             )
+            if (isDebugBuild) {
+                TileCacheDebugOverlay(
+                    stats = tileStats,
+                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+                )
+            }
             // Settings button
             IconButton(
                 onClick = onSettingsClick,

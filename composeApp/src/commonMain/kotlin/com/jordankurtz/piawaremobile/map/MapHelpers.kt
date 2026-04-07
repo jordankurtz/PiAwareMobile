@@ -2,7 +2,10 @@ package com.jordankurtz.piawaremobile.map
 
 import androidx.compose.ui.graphics.Color
 import com.jordankurtz.piawaremobile.model.Location
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.asin
+import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sin
@@ -117,4 +120,49 @@ private fun normalize(
     max: Double,
 ): Double {
     return (t - min) / (max - min)
+}
+
+/**
+ * Inverse of [doProjection]: converts normalized [0,1] map coordinates back to geographic degrees.
+ *
+ * @param normX Normalized x coordinate in [0,1] (increases eastward)
+ * @param normY Normalized y coordinate in [0,1] (increases southward, 0 = north pole)
+ * @return Pair of (latitude, longitude) in degrees
+ */
+fun invertProjection(
+    normX: Double,
+    normY: Double,
+): Pair<Double, Double> {
+    val halfRange = -X0 // 20037508.342789248
+    val xMerc = normX * (2.0 * halfRange) - halfRange
+    val lon = xMerc / 6378137.0 * (180.0 / PI)
+
+    val yMerc = halfRange * (1.0 - 2.0 * normY)
+    val u = yMerc / 3189068.5
+    val sinLat = (exp(u) - 1.0) / (exp(u) + 1.0)
+    val lat = asin(sinLat) * (180.0 / PI)
+
+    return Pair(lat, lon)
+}
+
+/**
+ * Converts a screen pixel position to geographic (lat, lon) degrees using the current viewport.
+ *
+ * @param scrollX Normalized [0,1] x-coordinate of the viewport center (MapState.scroll.x)
+ * @param scrollY Normalized [0,1] y-coordinate of the viewport center (MapState.scroll.y)
+ * @param scale Current map scale factor (MapState.scale)
+ * @return Pair of (latitude, longitude) in degrees
+ */
+fun screenToLatLon(
+    screenX: Float,
+    screenY: Float,
+    screenWidth: Float,
+    screenHeight: Float,
+    scrollX: Double,
+    scrollY: Double,
+    scale: Float,
+): Pair<Double, Double> {
+    val normX = scrollX + (screenX - screenWidth / 2f) / (mapSize * scale)
+    val normY = scrollY + (screenY - screenHeight / 2f) / (mapSize * scale)
+    return invertProjection(normX, normY)
 }

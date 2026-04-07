@@ -86,11 +86,41 @@ class SqlDelightOfflineTileStore(
             ).executeAsOne() > 0L
         }
 
-    override suspend fun getPinnedTilesForRegion(regionId: Long): List<Triple<Int, Int, Int>> =
+    override suspend fun getPinnedTilesForRegion(regionId: Long): List<TileCoord> =
         withContext(ioDispatcher) {
             queries.selectPinnedTilesByRegion(regionId).executeAsList().map {
-                Triple(it.zoom_level.toInt(), it.col.toInt(), it.row.toInt())
+                TileCoord(zoom = it.zoom_level.toInt(), col = it.col.toInt(), row = it.row.toInt())
             }
+        }
+
+    override suspend fun updateDownloadStatus(
+        id: Long,
+        status: DownloadStatus,
+        downloadedTileCount: Long,
+    ): Unit =
+        withContext(ioDispatcher) {
+            queries.updateRegionStatus(
+                status = status.name,
+                downloaded_tile_count = downloadedTileCount,
+                id = id,
+            )
+        }
+
+    override suspend fun getExclusiveTilesForRegion(id: Long): List<TileCoord> =
+        withContext(ioDispatcher) {
+            queries.selectExclusivelyPinnedTilesByRegion(id).executeAsList().map {
+                TileCoord(zoom = it.zoom_level.toInt(), col = it.col.toInt(), row = it.row.toInt())
+            }
+        }
+
+    override suspend fun getFreedBytesForRegion(id: Long): Long =
+        withContext(ioDispatcher) {
+            queries.sizeOfExclusivelyPinnedTilesByRegion(id).executeAsOne()
+        }
+
+    override suspend fun resetStuckDownloads(): Unit =
+        withContext(ioDispatcher) {
+            queries.resetStuckDownloads()
         }
 }
 
@@ -108,4 +138,6 @@ private fun Offline_region.toOfflineRegion() =
         createdAt = created_at,
         tileCount = tile_count,
         sizeBytes = size_bytes,
+        status = DownloadStatus.entries.find { it.name == status } ?: DownloadStatus.FAILED,
+        downloadedTileCount = downloaded_tile_count,
     )

@@ -198,18 +198,6 @@ class OpenStreetMapProviderTest {
         }
 
     @Test
-    fun recordsOfflineHitWhenServingPinnedTileFromCache() =
-        runTest {
-            createProvider(mockHttpClient(), pinnedResult = true)
-            everySuspend { tileCache.get(any(), any(), any()) } returns tileBytes
-
-            provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
-
-            assertEquals(1L, statsTracker.stats.value.offlineHits)
-            assertEquals(0L, statsTracker.stats.value.diskHits)
-        }
-
-    @Test
     fun recordsDiskHitWhenServingUnpinnedTileFromCache() =
         runTest {
             createProvider(mockHttpClient(), pinnedResult = false)

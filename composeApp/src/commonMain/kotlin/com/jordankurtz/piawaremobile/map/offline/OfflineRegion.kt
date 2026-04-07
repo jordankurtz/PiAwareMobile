@@ -13,4 +13,6 @@ data class OfflineRegion(
     val createdAt: Long,
     val tileCount: Long = 0L,
     val sizeBytes: Long = 0L,
+    val status: DownloadStatus = DownloadStatus.COMPLETE,
+    val downloadedTileCount: Long = 0L,
 )

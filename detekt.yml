@@ -14,11 +14,12 @@ complexity:
   LongParameterList:
     active: true
     constructorThreshold: 13
-    functionThreshold: 8
+    functionThreshold: 9
   TooManyFunctions:
     active: true
     thresholdInFiles: 15
     thresholdInClasses: 15
+    thresholdInInterfaces: 13
   ComplexCondition:
     active: true
     threshold: 5

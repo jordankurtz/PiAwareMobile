@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.map
 
 import com.jordankurtz.logger.Logger
+import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import com.jordankurtz.piawaremobile.map.offline.OfflineTileStore
@@ -36,7 +37,8 @@ class OpenStreetMapProvider(
         tileCache.get(zoomLvl, col, row)?.let { cached ->
             val elapsed = mark.elapsedNow().inWholeMilliseconds
             Logger.d("Tile cache hit z=$zoomLvl x=$col y=$row (${elapsed}ms)")
-            if (offlineTileStore.isPinned(zoomLevel = zoomLvl, col = col, row = row)) {
+            // isPinned is a DB query — only pay the cost in debug builds where the overlay is shown
+            if (isDebugBuild && offlineTileStore.isPinned(zoomLevel = zoomLvl, col = col, row = row)) {
                 statsTracker.recordOfflineHit()
             } else {
                 statsTracker.recordDiskHit()
