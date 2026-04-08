@@ -19,3 +19,4 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 **/xcshareddata/swiftpm/
 composeApp/settings.preferences_pb
+.worktrees/
