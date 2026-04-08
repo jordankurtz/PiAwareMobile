@@ -92,6 +92,28 @@ object TileProviders {
             copyrightUrl = "https://carto.com/legal/",
         )
 
+    val OPENTOPOMAP =
+        TileProviderConfig(
+            id = "opentopomap",
+            displayName = "OpenTopoMap",
+            urlTemplate = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+            subdomains = listOf("a", "b", "c"),
+            avgTileSizeBytes = 20_000L,
+            attribution = "© OpenTopoMap, © OpenStreetMap contributors",
+            copyrightUrl = "https://opentopomap.org/about",
+        )
+
+    val CYCLOSM =
+        TileProviderConfig(
+            id = "cyclosm",
+            displayName = "CyclOSM",
+            urlTemplate = "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
+            subdomains = listOf("a", "b", "c"),
+            avgTileSizeBytes = 15_000L,
+            attribution = "© CyclOSM, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.cyclosm.org/#map=12/48.8566/2.3522/cyclosm",
+        )
+
     val ESRI_SATELLITE =
         TileProviderConfig(
             id = "esri_satellite",
@@ -134,6 +156,8 @@ object TileProviders {
             CARTO_DARK_NOLABELS,
             CARTO_LIGHT_ALL,
             CARTO_LIGHT_NOLABELS,
+            OPENTOPOMAP,
+            CYCLOSM,
             ESRI_SATELLITE,
             ESRI_TOPO,
             ESRI_STREET,
