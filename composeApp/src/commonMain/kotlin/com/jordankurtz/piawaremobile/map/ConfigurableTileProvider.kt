@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map
 
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.cache.TileCache
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.io.Buffer
@@ -15,6 +16,7 @@ class ConfigurableTileProvider(
     private val httpClient: HttpClient,
     private val tileCache: TileCache,
     private val configFlow: StateFlow<TileProviderConfig>,
+    private val statsTracker: TileCacheStatsTracker,
 ) : TileStreamProvider {
     override suspend fun getTileStream(
         row: Int,
@@ -22,6 +24,7 @@ class ConfigurableTileProvider(
         zoomLvl: Int,
     ): RawSource? {
         tileCache.get(zoomLvl, col, row, configFlow.value.id)?.let { cached ->
+            statsTracker.recordDiskHit()
             return Buffer().apply { write(cached) }
         }
 
@@ -38,9 +41,11 @@ class ConfigurableTileProvider(
             }
             val bytes = buffer.readByteArray()
             tileCache.put(zoomLvl, col, row, configFlow.value.id, bytes)
+            statsTracker.recordNetworkFetch()
             Buffer().apply { write(bytes) }
         } catch (e: Exception) {
             Logger.e("Failed to load tile", e)
+            statsTracker.recordError()
             null
         }
     }

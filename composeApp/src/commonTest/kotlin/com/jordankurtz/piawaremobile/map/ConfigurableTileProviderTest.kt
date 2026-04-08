@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.map
 
 import com.jordankurtz.piawaremobile.map.cache.TileCache
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -27,6 +28,7 @@ import kotlin.test.assertTrue
 class ConfigurableTileProviderTest {
     private val tileBytes = byteArrayOf(89, 80, 78, 71, 13, 10, 26, 10)
     private lateinit var tileCache: TileCache
+    private val statsTracker = TileCacheStatsTracker()
 
     private fun mockHttpClient(
         responseBytes: ByteArray = tileBytes,
@@ -50,7 +52,7 @@ class ConfigurableTileProviderTest {
         httpClient: HttpClient = mockHttpClient(),
     ): ConfigurableTileProvider {
         tileCache = mock()
-        return ConfigurableTileProvider(httpClient, tileCache, MutableStateFlow(config))
+        return ConfigurableTileProvider(httpClient, tileCache, MutableStateFlow(config), statsTracker)
     }
 
     private fun readAllBytes(source: kotlinx.io.RawSource): ByteArray {
