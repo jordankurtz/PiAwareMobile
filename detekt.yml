@@ -56,3 +56,5 @@ style:
     active: true
   UnusedPrivateProperty:
     active: true
+  RedundantVisibilityModifierRule:
+    active: true
