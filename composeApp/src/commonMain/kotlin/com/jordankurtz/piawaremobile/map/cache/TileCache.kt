@@ -24,5 +24,6 @@ interface TileCache {
         zoomLvl: Int,
         col: Int,
         row: Int,
+        providerId: String,
     )
 }

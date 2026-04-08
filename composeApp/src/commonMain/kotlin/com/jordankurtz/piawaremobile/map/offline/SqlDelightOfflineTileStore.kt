@@ -45,6 +45,45 @@ class SqlDelightOfflineTileStore(
             }
         }
 
+    override suspend fun updateRegionStats(
+        id: Long,
+        tileCount: Long,
+        sizeBytes: Long,
+    ): Unit =
+        withContext(ioDispatcher) {
+            queries.updateRegionStats(tile_count = tileCount, size_bytes = sizeBytes, id = id)
+        }
+
+    override suspend fun updateDownloadStatus(
+        id: Long,
+        status: DownloadStatus,
+        downloadedTileCount: Long,
+    ): Unit =
+        withContext(ioDispatcher) {
+            queries.updateRegionStatus(
+                status = status.name,
+                downloaded_tile_count = downloadedTileCount,
+                id = id,
+            )
+        }
+
+    override suspend fun resetStuckDownloads(): Unit =
+        withContext(ioDispatcher) {
+            queries.resetStuckDownloads()
+        }
+
+    override suspend fun getFreedBytesForRegion(id: Long): Long =
+        withContext(ioDispatcher) {
+            queries.sizeOfExclusivelyPinnedTilesByRegion(id).executeAsOne()
+        }
+
+    override suspend fun getExclusiveTilesForRegion(id: Long): List<Triple<Int, Int, Int>> =
+        withContext(ioDispatcher) {
+            queries.selectExclusivelyPinnedTilesByRegion(id).executeAsList().map {
+                Triple(it.zoom_level.toInt(), it.col.toInt(), it.row.toInt())
+            }
+        }
+
     override suspend fun pinTile(
         zoomLevel: Int,
         col: Int,
@@ -99,4 +138,6 @@ private fun Offline_region.toOfflineRegion() =
         createdAt = created_at,
         tileCount = tile_count,
         sizeBytes = size_bytes,
+        status = DownloadStatus.valueOf(status),
+        downloadedTileCount = downloaded_tile_count,
     )

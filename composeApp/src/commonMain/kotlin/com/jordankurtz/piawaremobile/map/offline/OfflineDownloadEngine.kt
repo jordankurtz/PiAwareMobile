@@ -57,6 +57,7 @@ class OfflineDownloadEngine(
                             zoomLevel = tile.zoom,
                             col = tile.col,
                             row = tile.row,
+                            providerId = config.id,
                         )
 
                     if (!alreadyPinned) {
@@ -73,6 +74,7 @@ class OfflineDownloadEngine(
                                 zoomLvl = tile.zoom,
                                 col = tile.col,
                                 row = tile.row,
+                                providerId = config.id,
                                 data = bytes,
                             )
                             offlineTileStore.pinTile(
@@ -80,6 +82,7 @@ class OfflineDownloadEngine(
                                 col = tile.col,
                                 row = tile.row,
                                 regionId = region.id,
+                                providerId = config.id,
                             )
                             totalBytes += bytes.size
                             stored++

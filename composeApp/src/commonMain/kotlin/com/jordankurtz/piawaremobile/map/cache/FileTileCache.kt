@@ -125,6 +125,20 @@ class FileTileCache(
         }
     }
 
+    override suspend fun delete(
+        zoomLvl: Int,
+        col: Int,
+        row: Int,
+        providerId: String,
+    ) {
+        withContext(ioDispatcher) {
+            val tileKey = tileKey(zoomLvl, col, row, providerId)
+            cacheFileSystem.delete(tileKey)
+            queries.deleteCacheEntry(zoomLvl.toLong(), col.toLong(), row.toLong(), providerId)
+            queries.deleteTile(zoomLvl.toLong(), col.toLong(), row.toLong(), providerId)
+        }
+    }
+
     private suspend fun evictIfNeeded() {
         evictionMutex.withLock {
             evictionScheduled = false
