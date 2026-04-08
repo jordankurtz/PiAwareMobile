@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map
 
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
+import com.jordankurtz.piawaremobile.map.offline.OfflineTileStore
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -21,6 +22,7 @@ import kotlinx.io.Buffer
 import kotlinx.io.readByteArray
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -28,6 +30,7 @@ import kotlin.test.assertTrue
 class ConfigurableTileProviderTest {
     private val tileBytes = byteArrayOf(89, 80, 78, 71, 13, 10, 26, 10)
     private lateinit var tileCache: TileCache
+    private lateinit var offlineTileStore: OfflineTileStore
     private val statsTracker = TileCacheStatsTracker()
 
     private fun mockHttpClient(
@@ -52,7 +55,8 @@ class ConfigurableTileProviderTest {
         httpClient: HttpClient = mockHttpClient(),
     ): ConfigurableTileProvider {
         tileCache = mock()
-        return ConfigurableTileProvider(httpClient, tileCache, MutableStateFlow(config), statsTracker)
+        offlineTileStore = mock()
+        return ConfigurableTileProvider(httpClient, tileCache, MutableStateFlow(config), statsTracker, offlineTileStore)
     }
 
     private fun readAllBytes(source: kotlinx.io.RawSource): ByteArray {
@@ -68,12 +72,29 @@ class ConfigurableTileProviderTest {
         runTest {
             val provider = createProvider()
             everySuspend { tileCache.get(any(), any(), any(), any()) } returns tileBytes
+            everySuspend { offlineTileStore.isPinned(any(), any(), any(), any()) } returns false
 
             val result = provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
 
             assertNotNull(result)
             assertContentEquals(tileBytes, readAllBytes(result))
             verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any(), any()) }
+            assertEquals(1, statsTracker.stats.value.diskHits)
+            assertEquals(0, statsTracker.stats.value.offlineHits)
+        }
+
+    @Test
+    fun recordsOfflineHitForPinnedTile() =
+        runTest {
+            val provider = createProvider()
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns tileBytes
+            everySuspend { offlineTileStore.isPinned(any(), any(), any(), any()) } returns true
+
+            val result = provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertNotNull(result)
+            assertEquals(0, statsTracker.stats.value.diskHits)
+            assertEquals(1, statsTracker.stats.value.offlineHits)
         }
 
     @Test
@@ -167,6 +188,7 @@ class ConfigurableTileProviderTest {
         runTest {
             val provider = createProvider(config = TileProviders.ESRI_SATELLITE)
             everySuspend { tileCache.get(any(), any(), any(), any()) } returns tileBytes
+            everySuspend { offlineTileStore.isPinned(any(), any(), any(), any()) } returns false
 
             provider.getTileStream(row = 42, col = 7, zoomLvl = 12)
 

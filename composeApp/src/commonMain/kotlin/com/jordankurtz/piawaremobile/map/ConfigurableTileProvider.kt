@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.map
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
+import com.jordankurtz.piawaremobile.map.offline.OfflineTileStore
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.io.Buffer
@@ -17,6 +18,7 @@ class ConfigurableTileProvider(
     private val tileCache: TileCache,
     private val configFlow: StateFlow<TileProviderConfig>,
     private val statsTracker: TileCacheStatsTracker,
+    private val offlineTileStore: OfflineTileStore,
 ) : TileStreamProvider {
     override suspend fun getTileStream(
         row: Int,
@@ -24,7 +26,17 @@ class ConfigurableTileProvider(
         zoomLvl: Int,
     ): RawSource? {
         tileCache.get(zoomLvl, col, row, configFlow.value.id)?.let { cached ->
-            statsTracker.recordDiskHit()
+            if (offlineTileStore.isPinned(
+                    zoomLevel = zoomLvl,
+                    col = col,
+                    row = row,
+                    providerId = configFlow.value.id,
+                )
+            ) {
+                statsTracker.recordOfflineHit()
+            } else {
+                statsTracker.recordDiskHit()
+            }
             return Buffer().apply { write(cached) }
         }
 
