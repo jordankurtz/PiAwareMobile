@@ -81,6 +81,17 @@ object TileProviders {
             copyrightUrl = "https://carto.com/legal/",
         )
 
+    val CARTO_VOYAGER =
+        TileProviderConfig(
+            id = "carto_voyager",
+            displayName = "CARTO Voyager",
+            urlTemplate = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+            subdomains = listOf("a", "b", "c", "d"),
+            avgTileSizeBytes = 14_000L,
+            attribution = "© CARTO, © OpenStreetMap contributors",
+            copyrightUrl = "https://carto.com/legal/",
+        )
+
     val ESRI_SATELLITE =
         TileProviderConfig(
             id = "esri_satellite",
@@ -118,6 +129,7 @@ object TileProviders {
     val ALL: List<TileProviderConfig> =
         listOf(
             OPENSTREETMAP,
+            CARTO_VOYAGER,
             CARTO_DARK_ALL,
             CARTO_DARK_NOLABELS,
             CARTO_LIGHT_ALL,
