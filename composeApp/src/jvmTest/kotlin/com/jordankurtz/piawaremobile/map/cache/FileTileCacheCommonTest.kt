@@ -375,7 +375,7 @@ class FileTileCacheCommonTest {
             val cache = createCache(maxAgeMillis = 1L)
             val data = byteArrayOf(1, 2, 3)
 
-            cache.put(zoomLvl = 1, col = 0, row = 0, data = data)
+            cache.put(zoomLvl = 1, col = 0, row = 0, providerId = "osm", data = data)
 
             // Pin the tile
             // FK enforcement is off in JVM SQLite tests
@@ -383,6 +383,7 @@ class FileTileCacheCommonTest {
                 zoom_level = 1L,
                 col = 0L,
                 row = 0L,
+                provider_id = "osm",
                 region_id = 1L,
             )
 
@@ -391,15 +392,16 @@ class FileTileCacheCommonTest {
                 1L,
                 0L,
                 0L,
+                "osm",
                 data.size.toLong(),
                 kotlin.time.Clock.System.now().toEpochMilliseconds() - 1000,
             )
 
-            val result = cache.get(zoomLvl = 1, col = 0, row = 0)
+            val result = cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm")
 
             assertNotNull(result, "Pinned tile should be served even after TTL expires")
             assertContentEquals(data, result)
-            assertTrue(fakeFs.exists("1/0/0.png"), "Pinned tile file should not be deleted on expiry")
+            assertTrue(fakeFs.exists("osm/1/0/0.png"), "Pinned tile file should not be deleted on expiry")
         }
 
     @Test

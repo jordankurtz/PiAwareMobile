@@ -79,10 +79,10 @@ class OfflineDownloadEngineTest {
     @Test
     fun `download emits one progress event per tile`() =
         runTest(testDispatcher) {
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
-            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
-            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
-            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.isPinned(any(), any(), any(), any()) } returns false
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
@@ -101,11 +101,11 @@ class OfflineDownloadEngineTest {
     fun `download skips already-pinned tiles and does not fetch from network`() =
         runTest(testDispatcher) {
             // First tile (col=74, row=96 at zoom 8) is already pinned
-            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
-            everySuspend { offlineStore.isPinned(zoomLevel = 8, col = 74, row = 96) } returns true
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
-            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
-            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.isPinned(any(), any(), any(), any()) } returns false
+            everySuspend { offlineStore.isPinned(zoomLevel = 8, col = 74, row = 96, providerId = any()) } returns true
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
@@ -115,7 +115,7 @@ class OfflineDownloadEngineTest {
 
             // 4 total tiles, 1 skipped → 3 network fetches (puts to cache)
             verifySuspend(VerifyMode.exactly(3)) {
-                tileCache.put(any(), any(), any(), any())
+                tileCache.put(any(), any(), any(), any(), any())
             }
             // Skipped tiles still count toward total
             assertEquals(4L, events.last().total)
@@ -124,10 +124,10 @@ class OfflineDownloadEngineTest {
     @Test
     fun `download pins each tile after putting in cache`() =
         runTest(testDispatcher) {
-            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
-            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
-            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.isPinned(any(), any(), any(), any()) } returns false
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
@@ -135,17 +135,17 @@ class OfflineDownloadEngineTest {
             engine.download(testRegion, config).collect {}
 
             verifySuspend(VerifyMode.exactly(4)) {
-                offlineStore.pinTile(any(), any(), any(), any())
+                offlineStore.pinTile(any(), any(), any(), any(), any())
             }
         }
 
     @Test
     fun `download calls updateRegionStats once on completion`() =
         runTest(testDispatcher) {
-            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
-            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
-            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.isPinned(any(), any(), any(), any()) } returns false
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
@@ -166,10 +166,10 @@ class OfflineDownloadEngineTest {
                         addHandler { throw RuntimeException("Network error") }
                     }
                 }
-            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
-            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
-            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.isPinned(any(), any(), any(), any()) } returns false
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
@@ -182,17 +182,17 @@ class OfflineDownloadEngineTest {
             assertTrue(completed)
             // No tiles should be cached on network error
             verifySuspend(VerifyMode.exactly(0)) {
-                tileCache.put(any(), any(), any(), any())
+                tileCache.put(any(), any(), any(), any(), any())
             }
         }
 
     @Test
     fun `download sets DOWNLOADING at start then COMPLETE on success`() =
         runTest(testDispatcher) {
-            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
-            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
-            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.isPinned(any(), any(), any(), any()) } returns false
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 
@@ -210,11 +210,11 @@ class OfflineDownloadEngineTest {
     @Test
     fun `download sets FAILED and rethrows on store error`() =
         runTest(testDispatcher) {
-            everySuspend { offlineStore.isPinned(any(), any(), any()) } returns false
-            everySuspend { tileCache.get(any(), any(), any()) } returns null
-            everySuspend { tileCache.put(any(), any(), any(), any()) } returns Unit
+            everySuspend { offlineStore.isPinned(any(), any(), any(), any()) } returns false
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+            everySuspend { tileCache.put(any(), any(), any(), any(), any()) } returns Unit
             // pinTile throws on first call
-            everySuspend { offlineStore.pinTile(any(), any(), any(), any()) } throws RuntimeException("DB error")
+            everySuspend { offlineStore.pinTile(any(), any(), any(), any(), any()) } throws RuntimeException("DB error")
             everySuspend { offlineStore.updateRegionStats(any(), any(), any()) } returns Unit
             everySuspend { offlineStore.updateDownloadStatus(any(), any(), any()) } returns Unit
 

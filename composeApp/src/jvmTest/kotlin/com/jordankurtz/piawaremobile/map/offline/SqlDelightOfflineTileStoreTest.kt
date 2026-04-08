@@ -199,10 +199,10 @@ class SqlDelightOfflineTileStoreTest {
             val region2Id = store.saveRegion(baseRegion("R2"))
 
             // Tile (8, 10, 20) pinned by both regions
-            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = region1Id)
-            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = region2Id)
+            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = region1Id, providerId = "osm")
+            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = region2Id, providerId = "osm")
             // Tile (8, 11, 20) exclusively pinned by region1
-            store.pinTile(zoomLevel = 8, col = 11, row = 20, regionId = region1Id)
+            store.pinTile(zoomLevel = 8, col = 11, row = 20, regionId = region1Id, providerId = "osm")
 
             val exclusive = store.getExclusiveTilesForRegion(region1Id)
             assertEquals(1, exclusive.size)
@@ -213,7 +213,7 @@ class SqlDelightOfflineTileStoreTest {
     fun `getFreedBytesForRegion returns 0 when no tiles in cache`() =
         runTest(testDispatcher) {
             val id = store.saveRegion(baseRegion("R"))
-            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = id)
+            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = id, providerId = "osm")
             val freed = store.getFreedBytesForRegion(id)
             assertEquals(0L, freed)
         }
