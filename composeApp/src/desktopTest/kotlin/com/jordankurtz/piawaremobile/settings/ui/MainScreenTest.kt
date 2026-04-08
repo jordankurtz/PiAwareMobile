@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
 import com.jordankurtz.piawaremobile.map.TileProviders
+import org.jetbrains.compose.resources.stringResource
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
@@ -19,7 +20,7 @@ class MainScreenTest {
                     selectedValue = TileProviders.OPENSTREETMAP,
                     values = TileProviders.ALL.toTypedArray(),
                     onValueSelected = {},
-                    stringFor = { it.displayName },
+                    stringFor = { stringResource(it.displayNameRes) },
                 )
             }
 
@@ -37,7 +38,7 @@ class MainScreenTest {
                     selectedValue = TileProviders.ESRI_SATELLITE,
                     values = TileProviders.ALL.toTypedArray(),
                     onValueSelected = {},
-                    stringFor = { it.displayName },
+                    stringFor = { stringResource(it.displayNameRes) },
                 )
             }
 

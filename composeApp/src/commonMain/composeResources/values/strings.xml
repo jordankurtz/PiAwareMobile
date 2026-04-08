@@ -11,6 +11,17 @@
     <string name="app_section_title">App</string>
     <string name="map_provider_title">Map Tiles</string>
     <string name="map_provider_description">Tile source used for the map</string>
+    <string name="tile_provider_openstreetmap">OpenStreetMap</string>
+    <string name="tile_provider_carto_dark">CARTO Dark</string>
+    <string name="tile_provider_carto_dark_nolabels">CARTO Dark (No Labels)</string>
+    <string name="tile_provider_carto_light">CARTO Light</string>
+    <string name="tile_provider_carto_light_nolabels">CARTO Light (No Labels)</string>
+    <string name="tile_provider_carto_voyager">CARTO Voyager</string>
+    <string name="tile_provider_opentopomap">OpenTopoMap</string>
+    <string name="tile_provider_cyclosm">CyclOSM</string>
+    <string name="tile_provider_esri_satellite">ESRI Satellite</string>
+    <string name="tile_provider_esri_topo">ESRI Topographic</string>
+    <string name="tile_provider_esri_street">ESRI Street</string>
     <string name="servers_title">Servers</string>
     <string name="refresh_interval_title">Refresh Interval</string>
     <string name="center_map_on_user_title">Center map on user</string>

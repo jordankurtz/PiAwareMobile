@@ -1,8 +1,22 @@
 package com.jordankurtz.piawaremobile.map
 
+import org.jetbrains.compose.resources.StringResource
+import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.tile_provider_carto_dark
+import piawaremobile.composeapp.generated.resources.tile_provider_carto_dark_nolabels
+import piawaremobile.composeapp.generated.resources.tile_provider_carto_light
+import piawaremobile.composeapp.generated.resources.tile_provider_carto_light_nolabels
+import piawaremobile.composeapp.generated.resources.tile_provider_carto_voyager
+import piawaremobile.composeapp.generated.resources.tile_provider_cyclosm
+import piawaremobile.composeapp.generated.resources.tile_provider_esri_satellite
+import piawaremobile.composeapp.generated.resources.tile_provider_esri_street
+import piawaremobile.composeapp.generated.resources.tile_provider_esri_topo
+import piawaremobile.composeapp.generated.resources.tile_provider_openstreetmap
+import piawaremobile.composeapp.generated.resources.tile_provider_opentopomap
+
 data class TileProviderConfig(
     val id: String,
-    val displayName: String,
+    val displayNameRes: StringResource,
     val urlTemplate: String,
     val subdomains: List<String> = emptyList(),
     val requestDelayMs: Long = 0L,
@@ -29,7 +43,7 @@ object TileProviders {
     val OPENSTREETMAP =
         TileProviderConfig(
             id = "openstreetmap",
-            displayName = "OpenStreetMap",
+            displayNameRes = Res.string.tile_provider_openstreetmap,
             urlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             attribution = "© OpenStreetMap contributors",
             copyrightUrl = "https://www.openstreetmap.org/copyright",
@@ -38,7 +52,7 @@ object TileProviders {
     val CARTO_DARK_ALL =
         TileProviderConfig(
             id = "carto_dark_all",
-            displayName = "CARTO Dark",
+            displayNameRes = Res.string.tile_provider_carto_dark,
             urlTemplate = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 10_000L,
@@ -50,7 +64,7 @@ object TileProviders {
     val CARTO_DARK_NOLABELS =
         TileProviderConfig(
             id = "carto_dark_nolabels",
-            displayName = "CARTO Dark (No Labels)",
+            displayNameRes = Res.string.tile_provider_carto_dark_nolabels,
             urlTemplate = "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png",
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 8_000L,
@@ -62,7 +76,7 @@ object TileProviders {
     val CARTO_LIGHT_ALL =
         TileProviderConfig(
             id = "carto_light_all",
-            displayName = "CARTO Light",
+            displayNameRes = Res.string.tile_provider_carto_light,
             urlTemplate = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 12_000L,
@@ -73,7 +87,7 @@ object TileProviders {
     val CARTO_LIGHT_NOLABELS =
         TileProviderConfig(
             id = "carto_light_nolabels",
-            displayName = "CARTO Light (No Labels)",
+            displayNameRes = Res.string.tile_provider_carto_light_nolabels,
             urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 10_000L,
@@ -84,7 +98,7 @@ object TileProviders {
     val CARTO_VOYAGER =
         TileProviderConfig(
             id = "carto_voyager",
-            displayName = "CARTO Voyager",
+            displayNameRes = Res.string.tile_provider_carto_voyager,
             urlTemplate = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
             subdomains = listOf("a", "b", "c", "d"),
             avgTileSizeBytes = 14_000L,
@@ -95,7 +109,7 @@ object TileProviders {
     val OPENTOPOMAP =
         TileProviderConfig(
             id = "opentopomap",
-            displayName = "OpenTopoMap",
+            displayNameRes = Res.string.tile_provider_opentopomap,
             urlTemplate = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
             subdomains = listOf("a", "b", "c"),
             avgTileSizeBytes = 20_000L,
@@ -106,7 +120,7 @@ object TileProviders {
     val CYCLOSM =
         TileProviderConfig(
             id = "cyclosm",
-            displayName = "CyclOSM",
+            displayNameRes = Res.string.tile_provider_cyclosm,
             urlTemplate = "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
             subdomains = listOf("a", "b", "c"),
             avgTileSizeBytes = 15_000L,
@@ -117,7 +131,7 @@ object TileProviders {
     val ESRI_SATELLITE =
         TileProviderConfig(
             id = "esri_satellite",
-            displayName = "ESRI Satellite",
+            displayNameRes = Res.string.tile_provider_esri_satellite,
             urlTemplate =
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
             avgTileSizeBytes = 30_000L,
@@ -129,7 +143,7 @@ object TileProviders {
     val ESRI_TOPO =
         TileProviderConfig(
             id = "esri_topo",
-            displayName = "ESRI Topographic",
+            displayNameRes = Res.string.tile_provider_esri_topo,
             urlTemplate =
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
             avgTileSizeBytes = 25_000L,
@@ -140,7 +154,7 @@ object TileProviders {
     val ESRI_STREET =
         TileProviderConfig(
             id = "esri_street",
-            displayName = "ESRI Street",
+            displayNameRes = Res.string.tile_provider_esri_street,
             urlTemplate =
                 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
             avgTileSizeBytes = 20_000L,
