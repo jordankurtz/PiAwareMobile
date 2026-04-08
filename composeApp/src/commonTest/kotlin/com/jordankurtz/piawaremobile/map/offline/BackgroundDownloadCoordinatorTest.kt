@@ -148,6 +148,23 @@ class BackgroundDownloadCoordinatorTest {
         }
 
     @Test
+    fun `onFailedPlatform called and isDownloading resets when engine throws`() =
+        runTest {
+            every { engine.download(any(), any()) } returns
+                flow {
+                    emit(DownloadProgress(1L, 1L, 2L))
+                    throw RuntimeException("network error")
+                }
+
+            coordinator.start(region, TileProviders.OPENSTREETMAP)
+            advanceUntilIdle()
+
+            assertTrue(coordinator.platformEvents.contains("failed:Home"))
+            assertFalse(coordinator.isDownloading.value)
+            assertNull(coordinator.progress.value)
+        }
+
+    @Test
     fun `second start call is ignored while download is running`() =
         runTest {
             every { engine.download(any(), any()) } returns flow { awaitCancellation() }

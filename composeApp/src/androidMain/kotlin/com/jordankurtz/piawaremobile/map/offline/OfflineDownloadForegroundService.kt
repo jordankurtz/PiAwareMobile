@@ -117,7 +117,7 @@ class OfflineDownloadForegroundService : Service() {
             "Cancel",
             PendingIntent.getBroadcast(
                 this,
-                0,
+                REQUEST_CODE_CANCEL,
                 Intent(this, CancelDownloadReceiver::class.java),
                 PendingIntent.FLAG_IMMUTABLE,
             ),
@@ -137,13 +137,14 @@ class OfflineDownloadForegroundService : Service() {
             .setSmallIcon(R.drawable.ic_plane)
             .setContentTitle("$name download failed")
             .setContentText("Tap to retry")
+            .setAutoCancel(true)
             .setContentIntent(openAppIntent())
             .build()
 
     private fun openAppIntent() =
         PendingIntent.getActivity(
             this,
-            0,
+            REQUEST_CODE_OPEN,
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
@@ -157,5 +158,7 @@ class OfflineDownloadForegroundService : Service() {
         const val CHANNEL_ID = "offline_map_downloads"
         const val NOTIFICATION_ID = 1001
         const val COMPLETE_NOTIFICATION_ID = 1002
+        private const val REQUEST_CODE_CANCEL = 1
+        private const val REQUEST_CODE_OPEN = 2
     }
 }
