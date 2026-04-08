@@ -1,6 +1,8 @@
 package com.jordankurtz.piawaremobile
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -38,7 +40,7 @@ class SettingsScreenAndroidTest {
             MainScreen(onServersClicked = {}, viewModel = createViewModel())
         }
         composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Servers").assertIsDisplayed()
+        composeTestRule.onNode(hasText("Servers") and hasClickAction()).assertIsDisplayed()
         composeTestRule.onNodeWithText("Preferences").assertIsDisplayed()
     }
 
@@ -58,7 +60,7 @@ class SettingsScreenAndroidTest {
         composeTestRule.setContent {
             MainScreen(onServersClicked = { clicked = true }, viewModel = createViewModel())
         }
-        composeTestRule.onNodeWithText("Servers").performClick()
+        composeTestRule.onNode(hasText("Servers") and hasClickAction()).performClick()
         assertTrue(clicked)
     }
 }
