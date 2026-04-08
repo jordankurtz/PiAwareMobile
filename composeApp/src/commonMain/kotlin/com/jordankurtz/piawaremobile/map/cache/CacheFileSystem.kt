@@ -3,7 +3,7 @@ package com.jordankurtz.piawaremobile.map.cache
 /**
  * Abstraction over file-system operations needed by [FileTileCache].
  *
- * Keys use relative paths with the convention `{zoom}/{col}/{row}.png`.
+ * Keys use relative paths with the convention `{provider_id}/{zoom}/{col}/{row}.png`.
  * Implementations handle directory creation internally on [write].
  *
  * Metadata tracking (size, timestamps, LRU order) is handled by the database,
