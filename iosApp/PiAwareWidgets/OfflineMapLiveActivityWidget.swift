@@ -61,7 +61,7 @@ struct OfflineMapWidget: Widget {
                 ? Double(context.state.downloaded) / Double(context.state.total)
                 : 0.0
 
-            DynamicIsland {
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     Gauge(value: progress) {
                         Image(systemName: "map")
