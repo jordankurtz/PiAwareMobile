@@ -55,5 +55,11 @@
     <string>We need your location to center the map on your position.</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.jordankurtz.piawaremobile.offlinedownload</string>
+    </array>
+    <key>NSSupportsLiveActivities</key>
+    <true/>
 </dict>
 </plist>

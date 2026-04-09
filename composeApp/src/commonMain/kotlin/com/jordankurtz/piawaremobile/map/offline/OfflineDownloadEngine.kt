@@ -103,6 +103,11 @@ class OfflineDownloadEngine(
                 )
                 offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.COMPLETE, downloaded)
             } catch (e: Exception) {
+                // Must remain `Exception`, not `Throwable`. CancellationException is a Throwable
+                // but not an Exception, so it propagates through here uncaught and is handled by
+                // BaseDownloadCoordinator.executeDownload which writes PARTIAL status. Widening
+                // this to `Throwable` would cause the engine to write FAILED and the coordinator
+                // to overwrite it with PARTIAL — a correctness bug.
                 Logger.e("Download failed for region ${region.id}", e)
                 offlineTileStore.updateDownloadStatus(region.id, DownloadStatus.FAILED, downloaded)
                 throw e

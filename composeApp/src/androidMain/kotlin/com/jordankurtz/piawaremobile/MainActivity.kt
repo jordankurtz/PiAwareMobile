@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.jordankurtz.piawaremobile.location.LocationService
 import com.jordankurtz.piawaremobile.location.LocationServiceImpl
+import com.jordankurtz.piawaremobile.map.offline.AndroidNotificationPermissionService
 import org.koin.android.ext.android.inject
 import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
@@ -19,20 +20,27 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
     override val scope: Scope by activityScope()
 
     private val locationService: LocationService by inject()
+    private val notificationPermissionService: AndroidNotificationPermissionService by inject()
 
     private val requestPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission(),
         ) { isGranted: Boolean ->
-            // When the user responds, notify the LocationService
             (locationService as? LocationServiceImpl)?.onResult(isGranted)
         }
+
+    private val requestNotificationPermissionLauncher: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* fire-and-forget */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         (locationService as? LocationServiceImpl)?.permissionLauncher = {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        notificationPermissionService.permissionLauncher = {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
         setContent {
