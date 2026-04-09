@@ -20,7 +20,11 @@ class DownloadActivityManager: IosDownloadObserver {
         try? BGTaskScheduler.shared.submit(request)
 
         let attributes = OfflineMapActivityAttributes(regionName: regionName)
-        let contentState = OfflineMapActivityAttributes.ContentState(downloaded: 0, total: 0)
+        let contentState = OfflineMapActivityAttributes.ContentState(
+            downloaded: 0,
+            total: 0,
+            status: .downloading
+        )
         activity = try? Activity.request(attributes: attributes, contentState: contentState, pushType: nil)
     }
 
@@ -28,7 +32,8 @@ class DownloadActivityManager: IosDownloadObserver {
         lastTotal = Int(total)
         let state = OfflineMapActivityAttributes.ContentState(
             downloaded: Int(downloaded),
-            total: Int(total)
+            total: Int(total),
+            status: .downloading
         )
         Task { await self.activity?.update(using: state) }
     }
@@ -36,7 +41,8 @@ class DownloadActivityManager: IosDownloadObserver {
     func onComplete(regionName: String) {
         let finalState = OfflineMapActivityAttributes.ContentState(
             downloaded: lastTotal,
-            total: lastTotal
+            total: lastTotal,
+            status: .complete
         )
         let task = currentTask
         currentTask = nil
@@ -48,20 +54,27 @@ class DownloadActivityManager: IosDownloadObserver {
     }
 
     func onFailed(regionName: String) {
-        endActivity(success: false)
+        let failedState = OfflineMapActivityAttributes.ContentState(
+            downloaded: 0,
+            total: 0,
+            status: .failed
+        )
+        let task = currentTask
+        currentTask = nil
+        Task {
+            await self.activity?.end(using: failedState, dismissalPolicy: .after(.now + 5))
+            self.activity = nil
+            task?.setTaskCompleted(success: false)
+        }
     }
 
     func onCancelled() {
-        endActivity(success: false)
-    }
-
-    private func endActivity(success: Bool) {
         let task = currentTask
         currentTask = nil
         Task {
             await self.activity?.end(using: nil, dismissalPolicy: .immediate)
             self.activity = nil
-            task?.setTaskCompleted(success: success)
+            task?.setTaskCompleted(success: false)
         }
     }
 }
