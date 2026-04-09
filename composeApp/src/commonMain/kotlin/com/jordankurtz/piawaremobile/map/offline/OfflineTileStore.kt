@@ -20,12 +20,14 @@ interface OfflineTileStore {
         col: Int,
         row: Int,
         regionId: Long,
+        providerId: String,
     )
 
     suspend fun isPinned(
         zoomLevel: Int,
         col: Int,
         row: Int,
+        providerId: String,
     ): Boolean
 
     suspend fun getPinnedTilesForRegion(regionId: Long): List<TileCoord>

@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
@@ -42,19 +43,25 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.app_section_title
 import piawaremobile.composeapp.generated.resources.center_map_on_user_description
 import piawaremobile.composeapp.generated.resources.center_map_on_user_title
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_description
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
 import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
+import piawaremobile.composeapp.generated.resources.flightaware_section_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
+import piawaremobile.composeapp.generated.resources.map_provider_description
+import piawaremobile.composeapp.generated.resources.map_provider_title
+import piawaremobile.composeapp.generated.resources.map_section_title
 import piawaremobile.composeapp.generated.resources.offline_maps_settings_title
+import piawaremobile.composeapp.generated.resources.offline_section_title
 import piawaremobile.composeapp.generated.resources.open_urls_externally_description
 import piawaremobile.composeapp.generated.resources.open_urls_externally_title
-import piawaremobile.composeapp.generated.resources.preferences_title
 import piawaremobile.composeapp.generated.resources.refresh_interval_title
 import piawaremobile.composeapp.generated.resources.restore_map_position_description
 import piawaremobile.composeapp.generated.resources.restore_map_position_title
+import piawaremobile.composeapp.generated.resources.servers_section_title
 import piawaremobile.composeapp.generated.resources.servers_title
 import piawaremobile.composeapp.generated.resources.settings_title
 import piawaremobile.composeapp.generated.resources.show_minimap_trails_description
@@ -92,45 +99,21 @@ fun MainScreen(
             modifier = Modifier.padding(paddingValues),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
+            // Section: Map
             item {
-                SettingsSection(title = stringResource(Res.string.preferences_title))
+                SettingsSection(title = stringResource(Res.string.map_section_title))
             }
 
             item {
-                SettingsItem(
-                    title = stringResource(Res.string.servers_title),
-                    onClick = onServersClicked,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                        )
-                    },
-                )
-            }
-
-            item {
-                SettingsItem(
-                    title = stringResource(Res.string.offline_maps_settings_title),
-                    onClick = onOfflineMapsClicked,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                        )
-                    },
-                )
-            }
-
-            item {
-                SettingsNumberInput(
-                    title = stringResource(Res.string.refresh_interval_title),
-                    value =
-                        settings.getValue()?.refreshInterval
-                            ?: SettingsRepository.DEFAULT_REFRESH_INTERVAL,
-                    onValueChange = viewModel::updateRefreshInterval,
+                SettingsDropdown(
+                    title = stringResource(Res.string.map_provider_title),
+                    description = stringResource(Res.string.map_provider_description),
+                    selectedValue =
+                        settings.getValue()?.mapProviderId?.let { TileProviders.findById(it) }
+                            ?: TileProviders.OPENSTREETMAP,
+                    values = TileProviders.ALL.toTypedArray(),
+                    onValueSelected = viewModel::updateMapProvider,
+                    stringFor = { stringResource(it.displayNameRes) },
                 )
             }
 
@@ -149,24 +132,6 @@ fun MainScreen(
                     description = stringResource(Res.string.restore_map_position_description),
                     checked = settings.getValue()?.restoreMapStateOnStart ?: true,
                     onCheckedChange = viewModel::updateRestoreMapStateOnStart,
-                )
-            }
-
-            item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.show_receiver_locations_title),
-                    description = stringResource(Res.string.show_receiver_locations_description),
-                    checked = settings.getValue()?.showReceiverLocations ?: true,
-                    onCheckedChange = viewModel::updateShowReceiverLocations,
-                )
-            }
-
-            item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.show_user_location_title),
-                    description = stringResource(Res.string.show_user_location_description),
-                    checked = settings.getValue()?.showUserLocationOnMap ?: true,
-                    onCheckedChange = viewModel::updateShowUserLocationOnMap,
                 )
             }
 
@@ -191,11 +156,73 @@ fun MainScreen(
 
             item {
                 SettingsSwitch(
-                    title = stringResource(Res.string.open_urls_externally_title),
-                    description = stringResource(Res.string.open_urls_externally_description),
-                    checked = settings.getValue()?.openUrlsExternally ?: false,
-                    onCheckedChange = viewModel::updateOpenUrlsExternally,
+                    title = stringResource(Res.string.show_receiver_locations_title),
+                    description = stringResource(Res.string.show_receiver_locations_description),
+                    checked = settings.getValue()?.showReceiverLocations ?: true,
+                    onCheckedChange = viewModel::updateShowReceiverLocations,
                 )
+            }
+
+            item {
+                SettingsSwitch(
+                    title = stringResource(Res.string.show_user_location_title),
+                    description = stringResource(Res.string.show_user_location_description),
+                    checked = settings.getValue()?.showUserLocationOnMap ?: true,
+                    onCheckedChange = viewModel::updateShowUserLocationOnMap,
+                )
+            }
+
+            // Section: Offline
+            item {
+                SettingsSection(title = stringResource(Res.string.offline_section_title))
+            }
+
+            item {
+                SettingsItem(
+                    title = stringResource(Res.string.offline_maps_settings_title),
+                    onClick = onOfflineMapsClicked,
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_chevron_right),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                        )
+                    },
+                )
+            }
+
+            // Section: Servers
+            item {
+                SettingsSection(title = stringResource(Res.string.servers_section_title))
+            }
+
+            item {
+                SettingsItem(
+                    title = stringResource(Res.string.servers_title),
+                    onClick = onServersClicked,
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_chevron_right),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                        )
+                    },
+                )
+            }
+
+            item {
+                SettingsNumberInput(
+                    title = stringResource(Res.string.refresh_interval_title),
+                    value =
+                        settings.getValue()?.refreshInterval
+                            ?: SettingsRepository.DEFAULT_REFRESH_INTERVAL,
+                    onValueChange = viewModel::updateRefreshInterval,
+                )
+            }
+
+            // Section: FlightAware
+            item {
+                SettingsSection(title = stringResource(Res.string.flightaware_section_title))
             }
 
             item {
@@ -212,6 +239,20 @@ fun MainScreen(
                     title = stringResource(Res.string.flightaware_api_key_title),
                     value = settings.getValue()?.flightAwareApiKey ?: "",
                     onValueChange = viewModel::updateFlightAwareApiKey,
+                )
+            }
+
+            // Section: App
+            item {
+                SettingsSection(title = stringResource(Res.string.app_section_title))
+            }
+
+            item {
+                SettingsSwitch(
+                    title = stringResource(Res.string.open_urls_externally_title),
+                    description = stringResource(Res.string.open_urls_externally_description),
+                    checked = settings.getValue()?.openUrlsExternally ?: false,
+                    onCheckedChange = viewModel::updateOpenUrlsExternally,
                 )
             }
         }

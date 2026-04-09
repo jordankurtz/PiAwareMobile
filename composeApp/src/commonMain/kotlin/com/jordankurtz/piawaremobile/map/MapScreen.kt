@@ -47,6 +47,7 @@ fun MapScreen(
     val receiverLocations by aircraftViewModel.receiverLocations.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val numberOfPlanes by aircraftViewModel.numberOfPlanes.collectAsState()
+    val activeProvider by mapViewModel.activeProvider.collectAsState()
     val selectedAircraftHex by mapViewModel.selectedAircraft.collectAsState()
     val followingAircraftHex by mapViewModel.followingAircraft.collectAsState()
     val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
@@ -126,7 +127,8 @@ fun MapScreen(
             OfflineIndicator()
         }
         Overlay(
-            numberOfPlanes,
+            numberOfPlanes = numberOfPlanes,
+            provider = activeProvider,
             modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
         )
         if (isDebugBuild) {

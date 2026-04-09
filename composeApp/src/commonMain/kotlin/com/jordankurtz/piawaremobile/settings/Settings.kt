@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.settings
 
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 
 data class Settings(
@@ -14,4 +15,5 @@ data class Settings(
     val openUrlsExternally: Boolean = false,
     val enableFlightAwareApi: Boolean = false,
     val flightAwareApiKey: String = "",
+    val mapProviderId: String = TileProviders.OPENSTREETMAP.id,
 )

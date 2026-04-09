@@ -63,12 +63,14 @@ class SqlDelightOfflineTileStore(
         col: Int,
         row: Int,
         regionId: Long,
+        providerId: String,
     ): Unit =
         withContext(ioDispatcher) {
             queries.insertPinnedTile(
                 zoom_level = zoomLevel.toLong(),
                 col = col.toLong(),
                 row = row.toLong(),
+                provider_id = providerId,
                 region_id = regionId,
             )
         }
@@ -77,12 +79,14 @@ class SqlDelightOfflineTileStore(
         zoomLevel: Int,
         col: Int,
         row: Int,
+        providerId: String,
     ): Boolean =
         withContext(ioDispatcher) {
             queries.isPinned(
                 zoom_level = zoomLevel.toLong(),
                 col = col.toLong(),
                 row = row.toLong(),
+                provider_id = providerId,
             ).executeAsOne() > 0L
         }
 

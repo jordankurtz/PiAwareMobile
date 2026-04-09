@@ -8,11 +8,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
+import com.jordankurtz.piawaremobile.extensions.overlayColor
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStats
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
@@ -31,6 +33,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -46,6 +50,7 @@ import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.onTouchDown
 import ovh.plrapps.mapcompose.api.removeMarker
 import ovh.plrapps.mapcompose.api.removePath
+import ovh.plrapps.mapcompose.api.replaceLayer
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.api.scroll
 import ovh.plrapps.mapcompose.api.scrollTo
@@ -68,13 +73,17 @@ private const val USER_LOCATION_MARKER_ID = "user_location"
 @Factory
 class MapViewModel(
     private val mapProvider: TileStreamProvider,
+    private val providerConfigFlow: StateFlow<TileProviderConfig>,
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
     private val tileCacheStatsTracker: TileCacheStatsTracker,
 ) : ViewModel() {
+    val activeProvider: StateFlow<TileProviderConfig> = providerConfigFlow
+
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
+    private var tileLayerId: String = ""
     private val previousAircraftMarkerIds = mutableSetOf<String>()
     private val previousPathIds = mutableSetOf<String>()
     private var lastTrails: Map<String, AircraftTrail> = emptyMap()
@@ -102,7 +111,7 @@ class MapViewModel(
         MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
             minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
         }.apply {
-            addLayer(mapProvider)
+            tileLayerId = addLayer(mapProvider)
 
             onMarkerClick { id, _, _ ->
                 if (previousAircraftMarkerIds.contains(id)) {
@@ -134,6 +143,7 @@ class MapViewModel(
                         settings = it.data
                         onSettingsLoaded(it.data)
                     }
+
                     is Async.Error -> {
                         Logger.e("Failed to load settings", it.throwable)
                     }
@@ -141,6 +151,14 @@ class MapViewModel(
                     else -> {
                         // No-op
                     }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            providerConfigFlow.drop(1).collect { // skip initial — already loaded
+                state.replaceLayer(tileLayerId, mapProvider)?.let { newId ->
+                    tileLayerId = newId
                 }
             }
         }
@@ -220,6 +238,7 @@ class MapViewModel(
                 Image(
                     painter = painterResource(Res.drawable.ic_receiver),
                     contentDescription = null,
+                    colorFilter = ColorFilter.tint(providerConfigFlow.value.overlayColor),
                     modifier =
                         Modifier
                             .size(20.dp),
@@ -249,6 +268,7 @@ class MapViewModel(
                     )
                 }
             }
+
             is FitTarget.BoundingRegion -> {
                 val boundingBox =
                     BoundingBox(

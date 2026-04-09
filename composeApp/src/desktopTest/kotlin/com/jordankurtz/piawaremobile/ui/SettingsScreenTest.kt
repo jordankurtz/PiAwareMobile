@@ -4,6 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -46,7 +47,8 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
-            onNodeWithText("Servers").assertIsDisplayed()
+            // "Servers" appears as a section header and as a clickable item
+            onAllNodesWithText("Servers")[0].assertIsDisplayed()
         }
 
     @Test
@@ -56,7 +58,11 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = { clicked = true }, viewModel = createViewModel())
             }
-            onNodeWithText("Servers").performClick()
+            // "Servers" appears twice: once as a section header (not clickable) and once as an item
+            // (clickable). Scroll to ensure both are in the tree, then click the item (index 1).
+            val scrollable = onNode(hasScrollAction())
+            scrollable.performScrollToNode(hasText("Servers"))
+            onAllNodesWithText("Servers")[1].performClick()
             assertTrue(clicked)
         }
 
@@ -66,20 +72,36 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
+            val scrollable = onNode(hasScrollAction())
+            scrollable.performScrollToNode(hasText("Show receiver locations"))
             onNodeWithText("Show receiver locations").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Show User Location on Map"))
             onNodeWithText("Show User Location on Map").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Show Minimap Trails"))
             onNodeWithText("Show Minimap Trails").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Center map on user"))
             onNodeWithText("Center map on user").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Restore map position"))
             onNodeWithText("Restore map position").assertIsDisplayed()
         }
 
     @Test
-    fun displaysPreferencesSection() =
+    fun displaysSectionHeaders() =
         runComposeUiTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
-            onNodeWithText("Preferences").assertIsDisplayed()
+            val scrollable = onNode(hasScrollAction())
+            onNodeWithText("Map").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("Offline"))
+            onNodeWithText("Offline").assertIsDisplayed()
+            // "Servers" appears as both a section header and a list item; [0] is the header
+            scrollable.performScrollToNode(hasText("Servers"))
+            onAllNodesWithText("Servers")[0].assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("FlightAware"))
+            onNodeWithText("FlightAware").assertIsDisplayed()
+            scrollable.performScrollToNode(hasText("App"))
+            onNodeWithText("App").assertIsDisplayed()
         }
 
     @Test
@@ -88,6 +110,8 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
+            val scrollable = onNode(hasScrollAction())
+            scrollable.performScrollToNode(hasText("Refresh Interval"))
             onNodeWithText("Refresh Interval").assertIsDisplayed()
         }
 

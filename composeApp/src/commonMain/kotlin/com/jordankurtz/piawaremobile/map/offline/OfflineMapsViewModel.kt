@@ -73,7 +73,7 @@ class OfflineMapsViewModel(
         viewModelScope.launch(ioDispatcher) {
             val exclusiveTiles = store.getExclusiveTilesForRegion(region.id)
             for ((zoom, col, row) in exclusiveTiles) {
-                tileCache.delete(zoom, col, row)
+                tileCache.delete(zoom, col, row, region.providerId)
             }
             store.deleteRegion(region.id)
             _regions.value = store.getRegions()

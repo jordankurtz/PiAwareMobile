@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.settings.repo
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository.Companion.DEFAULT_REFRESH_INTERVAL
@@ -37,6 +38,7 @@ class SettingsRepositoryImpl(
                 openUrlsExternally = preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] ?: false,
                 enableFlightAwareApi = preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] ?: false,
                 flightAwareApiKey = preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] ?: "",
+                mapProviderId = preferences[SettingsRepository.MAP_PROVIDER_ID] ?: TileProviders.OPENSTREETMAP.id,
             )
         }
     }
@@ -54,6 +56,7 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] = settings.openUrlsExternally
             preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] = settings.enableFlightAwareApi
             preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] = settings.flightAwareApiKey
+            preferences[SettingsRepository.MAP_PROVIDER_ID] = settings.mapProviderId
         }
     }
 
