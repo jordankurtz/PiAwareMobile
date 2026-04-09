@@ -2,11 +2,12 @@ package com.jordankurtz.piawaremobile
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
@@ -42,7 +43,8 @@ class SettingsScreenAndroidTest {
         }
         composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
         composeTestRule.onNodeWithText("Map").assertIsDisplayed()
-        composeTestRule.onNode(hasText("Servers") and hasClickAction()).performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Servers") and hasClickAction())
+        composeTestRule.onNode(hasText("Servers") and hasClickAction()).assertIsDisplayed()
     }
 
     @Test
@@ -61,7 +63,8 @@ class SettingsScreenAndroidTest {
         composeTestRule.setContent {
             MainScreen(onServersClicked = { clicked = true }, viewModel = createViewModel())
         }
-        composeTestRule.onNode(hasText("Servers") and hasClickAction()).performScrollTo().performClick()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Servers") and hasClickAction())
+        composeTestRule.onNode(hasText("Servers") and hasClickAction()).performClick()
         assertTrue(clicked)
     }
 }
