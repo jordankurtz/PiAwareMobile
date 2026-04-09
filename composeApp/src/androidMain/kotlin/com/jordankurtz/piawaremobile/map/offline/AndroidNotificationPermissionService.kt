@@ -5,9 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
-import org.koin.core.annotation.Single
 
-@Single(binds = [NotificationPermissionService::class])
 class AndroidNotificationPermissionService(
     private val contextWrapper: ContextWrapper,
 ) : NotificationPermissionService {

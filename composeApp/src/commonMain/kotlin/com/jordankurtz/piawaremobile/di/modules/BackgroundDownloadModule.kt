@@ -11,6 +11,9 @@ import org.koin.core.annotation.Single
 
 @Module
 expect class BackgroundDownloadModule() {
+    @Single(binds = [NotificationPermissionService::class])
+    fun provideNotificationPermissionService(contextWrapper: ContextWrapper): NotificationPermissionService
+
     @Single
     fun provideBackgroundDownloadCoordinator(
         contextWrapper: ContextWrapper,

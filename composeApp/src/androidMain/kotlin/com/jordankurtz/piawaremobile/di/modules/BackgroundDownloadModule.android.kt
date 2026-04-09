@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.di.modules
 
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.offline.AndroidBackgroundDownloadCoordinator
+import com.jordankurtz.piawaremobile.map.offline.AndroidNotificationPermissionService
 import com.jordankurtz.piawaremobile.map.offline.BackgroundDownloadCoordinator
 import com.jordankurtz.piawaremobile.map.offline.DownloadEngine
 import com.jordankurtz.piawaremobile.map.offline.NotificationPermissionService
@@ -12,6 +13,10 @@ import org.koin.core.annotation.Single
 
 @Module
 actual class BackgroundDownloadModule {
+    @Single(binds = [NotificationPermissionService::class])
+    actual fun provideNotificationPermissionService(contextWrapper: ContextWrapper): NotificationPermissionService =
+        AndroidNotificationPermissionService(contextWrapper)
+
     @Single
     actual fun provideBackgroundDownloadCoordinator(
         contextWrapper: ContextWrapper,
