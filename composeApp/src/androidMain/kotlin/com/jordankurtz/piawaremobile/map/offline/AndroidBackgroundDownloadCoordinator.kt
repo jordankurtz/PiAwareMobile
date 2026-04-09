@@ -4,13 +4,16 @@ import android.content.Intent
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
 import kotlinx.coroutines.CoroutineDispatcher
+
 class AndroidBackgroundDownloadCoordinator(
     private val contextWrapper: ContextWrapper,
+    private val notificationPermissionService: NotificationPermissionService,
     engine: DownloadEngine,
     store: OfflineTileStore,
     @IODispatcher ioDispatcher: CoroutineDispatcher,
 ) : BaseDownloadCoordinator(engine, store, ioDispatcher) {
     override fun onStartPlatform(regionName: String) {
+        notificationPermissionService.requestIfNeeded()
         contextWrapper.context.startForegroundService(
             serviceIntent(OfflineDownloadForegroundService.ACTION_START) {
                 putExtra(OfflineDownloadForegroundService.EXTRA_REGION_NAME, regionName)
