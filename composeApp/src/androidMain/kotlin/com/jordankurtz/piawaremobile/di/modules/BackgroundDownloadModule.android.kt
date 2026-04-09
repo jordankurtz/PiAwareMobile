@@ -4,6 +4,7 @@ import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.offline.AndroidBackgroundDownloadCoordinator
 import com.jordankurtz.piawaremobile.map.offline.BackgroundDownloadCoordinator
 import com.jordankurtz.piawaremobile.map.offline.DownloadEngine
+import com.jordankurtz.piawaremobile.map.offline.NotificationPermissionService
 import com.jordankurtz.piawaremobile.map.offline.OfflineTileStore
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.core.annotation.Module
@@ -14,8 +15,10 @@ actual class BackgroundDownloadModule {
     @Single
     actual fun provideBackgroundDownloadCoordinator(
         contextWrapper: ContextWrapper,
+        notificationPermissionService: NotificationPermissionService,
         engine: DownloadEngine,
         store: OfflineTileStore,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
-    ): BackgroundDownloadCoordinator = AndroidBackgroundDownloadCoordinator(contextWrapper, engine, store, ioDispatcher)
+    ): BackgroundDownloadCoordinator =
+        AndroidBackgroundDownloadCoordinator(contextWrapper, notificationPermissionService, engine, store, ioDispatcher)
 }
