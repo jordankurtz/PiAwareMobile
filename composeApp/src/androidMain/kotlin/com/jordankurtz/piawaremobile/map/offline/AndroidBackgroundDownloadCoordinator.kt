@@ -4,9 +4,6 @@ import android.content.Intent
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.di.modules.ContextWrapper
 import kotlinx.coroutines.CoroutineDispatcher
-import org.koin.core.annotation.Single
-
-@Single(binds = [BackgroundDownloadCoordinator::class])
 class AndroidBackgroundDownloadCoordinator(
     private val contextWrapper: ContextWrapper,
     engine: DownloadEngine,

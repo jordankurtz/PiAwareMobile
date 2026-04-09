@@ -13,7 +13,9 @@ class DownloadActivityManager: IosDownloadObserver {
 
     func onDownloadStarting(regionName: String) {
         let request = BGContinuedProcessingTaskRequest(
-            identifier: "com.jordankurtz.piawaremobile.offlinedownload"
+            identifier: "com.jordankurtz.piawaremobile.offlinedownload",
+            title: "Downloading Offline Map",
+            subtitle: regionName
         )
         try? BGTaskScheduler.shared.submit(request)
 

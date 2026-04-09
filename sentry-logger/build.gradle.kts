@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.sentry)
+    kotlin("native.cocoapods")
 }
 
 kotlin {
@@ -30,6 +31,19 @@ kotlin {
         it.binaries.framework {
             baseName = "sentry-logger"
             isStatic = true
+        }
+    }
+
+    cocoapods {
+        summary = "Sentry logging wrapper"
+        homepage = "https://github.com/jordankurtz/piawaremobile"
+        version = "1.0"
+        ios.deploymentTarget = "26.0"
+        podfile = project.file("../iosApp/Podfile")
+        pod("Sentry") {
+            version = "8.58.0"
+            linkOnly = true
+            extraOpts += listOf("-compiler-option", "-fmodules")
         }
     }
 

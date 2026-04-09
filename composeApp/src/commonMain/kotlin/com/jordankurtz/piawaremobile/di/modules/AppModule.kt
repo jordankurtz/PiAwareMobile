@@ -12,6 +12,7 @@ import org.koin.core.annotation.Module
         DatabaseModule::class,
         TileCacheModule::class,
         MapModule::class,
+        BackgroundDownloadModule::class,
     ],
 )
 @ComponentScan("com.jordankurtz.piawaremobile")

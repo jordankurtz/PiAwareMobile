@@ -1,4 +1,5 @@
 import BackgroundTasks
+import ComposeApp
 import SwiftUI
 
 @main
