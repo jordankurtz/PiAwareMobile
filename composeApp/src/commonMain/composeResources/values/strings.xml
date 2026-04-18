@@ -31,7 +31,6 @@
     <string name="show_receiver_locations_title">Show receiver locations</string>
     <string name="show_receiver_locations_description">Display a marker for each configured server's location on the map</string>
     <string name="planes_count">%1$d planes</string>
-    <!--    <string name="planes_count">planes</string>-->
     <string name="user_location_content_description">User Location</string>
     <string name="fit_to_aircraft">Fit map to aircraft</string>
     <string name="follow_aircraft">Follow</string>
