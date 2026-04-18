@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map.offline
 
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.jordankurtz.piawaremobile.map.cache.TileCacheDatabase
+import com.jordankurtz.piawaremobile.map.cache.TileCacheQueries
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -13,13 +14,15 @@ import kotlin.test.assertTrue
 
 class SqlDelightOfflineTileStoreTest {
     private lateinit var store: SqlDelightOfflineTileStore
+    private lateinit var queries: TileCacheQueries
     private val testDispatcher = StandardTestDispatcher()
 
     @BeforeTest
     fun setUp() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        driver.execute(null, "PRAGMA foreign_keys = ON", 0)
         TileCacheDatabase.Schema.create(driver)
-        val queries = TileCacheDatabase(driver).tileCacheQueries
+        queries = TileCacheDatabase(driver).tileCacheQueries
         store = SqlDelightOfflineTileStore(queries, testDispatcher)
     }
 
@@ -88,6 +91,7 @@ class SqlDelightOfflineTileStoreTest {
                         createdAt = 1000L,
                     ),
                 )
+            insertTile(zoom = 10, col = 5, row = 3, providerId = "osm")
             store.pinTile(zoomLevel = 10, col = 5, row = 3, regionId = id, providerId = "osm")
             assertTrue(store.isPinned(zoomLevel = 10, col = 5, row = 3, providerId = "osm"))
 
@@ -115,6 +119,7 @@ class SqlDelightOfflineTileStoreTest {
                     ),
                 )
             assertFalse(store.isPinned(zoomLevel = 5, col = 10, row = 20, providerId = "osm"))
+            insertTile(zoom = 5, col = 10, row = 20, providerId = "osm")
             store.pinTile(zoomLevel = 5, col = 10, row = 20, regionId = id, providerId = "osm")
             assertTrue(store.isPinned(zoomLevel = 5, col = 10, row = 20, providerId = "osm"))
         }
@@ -136,6 +141,8 @@ class SqlDelightOfflineTileStoreTest {
                         createdAt = 1000L,
                     ),
                 )
+            insertTile(zoom = 5, col = 10, row = 20, providerId = "osm")
+            insertTile(zoom = 5, col = 11, row = 20, providerId = "osm")
             store.pinTile(zoomLevel = 5, col = 10, row = 20, regionId = id, providerId = "osm")
             store.pinTile(zoomLevel = 5, col = 11, row = 20, regionId = id, providerId = "osm")
 
@@ -199,9 +206,11 @@ class SqlDelightOfflineTileStoreTest {
             val region2Id = store.saveRegion(baseRegion("R2"))
 
             // Tile (8, 10, 20) pinned by both regions
+            insertTile(zoom = 8, col = 10, row = 20, providerId = "osm")
             store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = region1Id, providerId = "osm")
             store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = region2Id, providerId = "osm")
             // Tile (8, 11, 20) exclusively pinned by region1
+            insertTile(zoom = 8, col = 11, row = 20, providerId = "osm")
             store.pinTile(zoomLevel = 8, col = 11, row = 20, regionId = region1Id, providerId = "osm")
 
             val exclusive = store.getExclusiveTilesForRegion(region1Id)
@@ -210,12 +219,22 @@ class SqlDelightOfflineTileStoreTest {
         }
 
     @Test
-    fun `getFreedBytesForRegion returns 0 when no tiles in cache`() =
+    fun `getFreedBytesForRegion returns 0 when no tiles pinned`() =
         runTest(testDispatcher) {
             val id = store.saveRegion(baseRegion("R"))
-            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = id, providerId = "osm")
+            // No tiles pinned — nothing to free
             val freed = store.getFreedBytesForRegion(id)
             assertEquals(0L, freed)
+        }
+
+    @Test
+    fun `getFreedBytesForRegion returns size of exclusively pinned tiles`() =
+        runTest(testDispatcher) {
+            val id = store.saveRegion(baseRegion("R"))
+            insertTile(zoom = 8, col = 10, row = 20, providerId = "osm", sizeBytes = 512L)
+            store.pinTile(zoomLevel = 8, col = 10, row = 20, regionId = id, providerId = "osm")
+            val freed = store.getFreedBytesForRegion(id)
+            assertEquals(512L, freed)
         }
 
     @Test
@@ -247,6 +266,38 @@ class SqlDelightOfflineTileStoreTest {
             assertEquals(DownloadStatus.FAILED, store.getRegion(failedId)?.status)
             assertEquals(DownloadStatus.PARTIAL, store.getRegion(partialId)?.status)
         }
+
+    @Test
+    fun `deleteRegion cascades to pinned tiles via FK without explicit cleanup`() =
+        runTest(testDispatcher) {
+            val id = store.saveRegion(baseRegion("Cascade"))
+            insertTile(zoom = 8, col = 3, row = 4, providerId = "osm")
+            store.pinTile(zoomLevel = 8, col = 3, row = 4, regionId = id, providerId = "osm")
+            assertTrue(store.isPinned(zoomLevel = 8, col = 3, row = 4, providerId = "osm"))
+
+            // Delete directly via SQL, bypassing the explicit deletePinnedTilesByRegion workaround
+            queries.deleteRegion(id)
+
+            // FK cascade should remove pinned_tile rows automatically
+            assertFalse(store.isPinned(zoomLevel = 8, col = 3, row = 4, providerId = "osm"))
+        }
+
+    private fun insertTile(
+        zoom: Int,
+        col: Int,
+        row: Int,
+        providerId: String,
+        sizeBytes: Long = 1024L,
+    ) {
+        queries.upsertTile(
+            zoom_level = zoom.toLong(),
+            col = col.toLong(),
+            row = row.toLong(),
+            provider_id = providerId,
+            size_bytes = sizeBytes,
+            fetched_at = 0L,
+        )
+    }
 
     private fun baseRegion(name: String) =
         OfflineRegion(

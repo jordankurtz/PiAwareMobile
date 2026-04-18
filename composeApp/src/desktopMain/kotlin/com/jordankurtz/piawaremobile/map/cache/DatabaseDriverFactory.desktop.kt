@@ -10,6 +10,7 @@ actual class DatabaseDriverFactory(private val dbDir: File, private val dbName: 
         dbDir.mkdirs()
         val dbFile = File(dbDir, dbName)
         val driver = JdbcSqliteDriver("jdbc:sqlite:${dbFile.absolutePath}")
+        driver.execute(null, "PRAGMA foreign_keys = ON", 0)
         val currentVersion =
             driver.executeQuery(
                 identifier = null,
