@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.FlightAirportRef
 import com.jordankurtz.piawaremobile.model.Receiver
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.ServerType
 import com.jordankurtz.piawaremobile.settings.Settings
@@ -23,6 +24,7 @@ fun mockSettings(
     openUrlsExternally: Boolean = false,
     enableFlightAwareApi: Boolean = false,
     flightAwareApiKey: String = "",
+    mapProviderId: String = TileProviders.OPENSTREETMAP.id,
 ): Settings =
     Settings(
         servers = servers,
@@ -36,6 +38,7 @@ fun mockSettings(
         openUrlsExternally = openUrlsExternally,
         enableFlightAwareApi = enableFlightAwareApi,
         flightAwareApiKey = flightAwareApiKey,
+        mapProviderId = mapProviderId,
     )
 
 fun mockServer(
