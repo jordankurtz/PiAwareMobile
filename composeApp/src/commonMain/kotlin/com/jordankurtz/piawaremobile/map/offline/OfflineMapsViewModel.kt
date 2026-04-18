@@ -85,6 +85,7 @@ class OfflineMapsViewModel(
         bounds: BoundingBox,
         minZoom: Int,
         maxZoom: Int,
+        provider: TileProviderConfig = TileProviders.OPENSTREETMAP,
     ) {
         if (!_isDownloading.compareAndSet(expect = false, update = true)) return
         val region =
@@ -96,7 +97,7 @@ class OfflineMapsViewModel(
                 maxLat = bounds.maxLat,
                 minLon = bounds.minLon,
                 maxLon = bounds.maxLon,
-                providerId = TileProviders.OPENSTREETMAP.id,
+                providerId = provider.id,
                 createdAt = Clock.System.now().toEpochMilliseconds(),
             )
         downloadJob =
@@ -132,7 +133,7 @@ class OfflineMapsViewModel(
                 }
             // Preserve previously downloaded count so cancel-after-retry doesn't regress progress
             lastDownloadedCount = region.downloadedTileCount
-            engine.download(region, TileProviders.OPENSTREETMAP).collect { progress ->
+            engine.download(region, TileProviders.findById(region.providerId)).collect { progress ->
                 lastDownloadedCount = progress.downloaded
                 lastTileCount = progress.total
                 store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, progress.downloaded)
