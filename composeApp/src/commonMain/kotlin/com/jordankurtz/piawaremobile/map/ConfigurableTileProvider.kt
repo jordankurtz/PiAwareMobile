@@ -8,7 +8,6 @@ import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.io.Buffer
 import kotlinx.io.RawSource
-import kotlinx.io.readByteArray
 import org.koin.core.annotation.Single
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 
@@ -44,14 +43,7 @@ class ConfigurableTileProvider(
         val url = configFlow.value.buildUrl(zoom = zoomLvl, col = col, row = row, subdomain = subdomain)
 
         return try {
-            val source = getStream(httpClient, url)
-            val buffer = Buffer()
-            source.use { raw ->
-                while (raw.readAtMostTo(buffer, Long.MAX_VALUE) != -1L) {
-                    // read until exhausted
-                }
-            }
-            val bytes = buffer.readByteArray()
+            val bytes = getStream(httpClient, url)
             tileCache.put(zoomLvl, col, row, configFlow.value.id, bytes)
             statsTracker.recordNetworkFetch()
             Buffer().apply { write(bytes) }
