@@ -216,7 +216,7 @@ class AircraftViewModel(
         }
         val aircraft = _aircraft.value.firstOrNull { it.aircraft.hex == selectedAircraft }?.aircraft
         if (aircraft?.flight.isNullOrBlank()) {
-            _flightDetails.value = Async.Error("Flight information not available for this aircraft.")
+            _flightDetails.value = Async.NotStarted
             return
         }
         if (settings?.enableFlightAwareApi == true && settings?.flightAwareApiKey?.isNotEmpty() == true) {
