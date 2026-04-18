@@ -10,6 +10,7 @@ import com.jordankurtz.piawaremobile.settings.Server
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonObject
 import org.koin.core.annotation.Single
 
@@ -25,6 +26,7 @@ class ReadsbDataSource(
                 httpClient.get("http://${server.address}/data/aircraft.json").body()
             response.aircraft
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Logger.e("Error fetching aircraft from readsb server ${server.address}", e)
             emptyList()
         }
@@ -34,6 +36,7 @@ class ReadsbDataSource(
         return try {
             httpClient.get("http://${server.address}/data/receiver.json").body()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Logger.e("Error fetching receiver info from readsb server ${server.address}", e)
             null
         }
@@ -48,6 +51,7 @@ class ReadsbDataSource(
         return try {
             httpClient.get("http://${server.address}/db/aircraft_types/icao_aircraft_types.json").body()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Logger.e("Error fetching aircraft types from readsb server ${server.address}", e)
             emptyMap()
         }
@@ -60,6 +64,7 @@ class ReadsbDataSource(
         return try {
             httpClient.get("http://${server.address}/db/$bkey.json").body()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Logger.e("Error fetching aircraft info from readsb server ${server.address}", e)
             null
         }

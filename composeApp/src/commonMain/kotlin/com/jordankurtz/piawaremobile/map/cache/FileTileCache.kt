@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.map.cache
 
 import com.jordankurtz.logger.Logger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -68,6 +69,7 @@ class FileTileCache(
                 try {
                     cacheFileSystem.read(tileKey)
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Logger.e("Failed to read cached tile $tileKey", e)
                     null
                 }
@@ -118,6 +120,7 @@ class FileTileCache(
                 )
                 Logger.d("Cached tile: $tileKey (${data.size} bytes)")
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Logger.e("Failed to write cached tile $tileKey", e)
                 return@withContext
             }
