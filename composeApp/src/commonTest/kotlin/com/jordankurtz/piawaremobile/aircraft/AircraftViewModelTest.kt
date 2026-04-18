@@ -389,7 +389,7 @@ class AircraftViewModelTest {
         }
 
     @Test
-    fun `openFlightPage sets error message before opening URL`() =
+    fun `openFlightPage does not change flightDetails state`() =
         runTest {
             val aircraftList =
                 listOf(
@@ -404,11 +404,10 @@ class AircraftViewModelTest {
             pollTicker.emit(Unit)
             testDispatcher.scheduler.advanceUntilIdle()
 
+            val stateBefore = viewModel.flightDetails.value
             viewModel.openFlightPage("ABC123")
             testDispatcher.scheduler.advanceUntilIdle()
 
-            val details = viewModel.flightDetails.value
-            assertIs<Async.Error>(details)
-            assertTrue(details.message.contains("not configured"))
+            assertEquals(stateBefore, viewModel.flightDetails.value)
         }
 }

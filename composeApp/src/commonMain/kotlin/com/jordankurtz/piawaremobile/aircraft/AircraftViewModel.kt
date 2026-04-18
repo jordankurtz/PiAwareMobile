@@ -234,7 +234,6 @@ class AircraftViewModel(
     }
 
     private fun openFlightPageInternal(flight: String) {
-        _flightDetails.value = Async.Error("FlightAware API is not configured. Opening on flightaware.com instead.")
         viewModelScope.launch(mainDispatcher) {
             val dateString = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val url = "https://www.flightaware.com/live/flight/$flight/history/${
