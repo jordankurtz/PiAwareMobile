@@ -6,16 +6,15 @@ import io.ktor.client.request.prepareGet
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readRemaining
 import kotlinx.io.Buffer
-import kotlinx.io.RawSource
 import kotlinx.io.readByteArray
 
 /**
- * Utility method to get a [RawSource] from a Ktor HTTP client, using a GET method.
+ * Fetches the response body from [path] as a [ByteArray] using an HTTP GET request.
  */
 suspend fun getStream(
     client: HttpClient,
     path: String,
-): RawSource {
+): ByteArray {
     val buffer = Buffer()
     client.prepareGet(path).execute { httpResponse ->
         val channel: ByteReadChannel = httpResponse.body()
@@ -27,7 +26,7 @@ suspend fun getStream(
             }
         }
     }
-    return buffer
+    return buffer.readByteArray()
 }
 
 private const val DEFAULT_BUFFER_SIZE = 8192
