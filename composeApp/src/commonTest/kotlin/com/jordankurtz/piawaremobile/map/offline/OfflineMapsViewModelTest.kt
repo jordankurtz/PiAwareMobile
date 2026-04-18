@@ -182,6 +182,35 @@ class OfflineMapsViewModelTest {
         }
 
     @Test
+    fun `startDownload uses provider id for region and download`() =
+        runTest {
+            val customProvider =
+                TileProviderConfig(
+                    id = "custom",
+                    urlTemplate = "https://example.com/{z}/{x}/{y}.png",
+                    requestDelayMs = 0L,
+                    avgTileSizeBytes = 10_000L,
+                    userAgent = "Test",
+                )
+            everySuspend { store.getRegions() } returns emptyList()
+            everySuspend { store.saveRegion(any()) } returns 3L
+            every { engine.download(any(), any()) } returns flowOf()
+
+            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            advanceUntilIdle()
+
+            val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
+            vm.startDownload("Custom area", bounds, minZoom = 8, maxZoom = 12, provider = customProvider)
+            advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                store.saveRegion(
+                    matching<OfflineRegion> { region -> region.providerId == "custom" },
+                )
+            }
+        }
+
+    @Test
     fun `resetStuckDownloads is called on construction`() =
         runTest {
             everySuspend { store.getRegions() } returns emptyList()
