@@ -81,7 +81,7 @@ fun FlightDetailsBottomSheet(
     locationViewModel: LocationViewModel = koinViewModel(),
 ) {
     val userLocation by locationViewModel.currentLocation.collectAsState()
-    if (flightDetails !is Async.NotStarted) {
+    if (aircraft != null) {
         ModalBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
@@ -119,11 +119,32 @@ fun FlightDetailsSheetContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         when (flightDetails) {
-            is Async.Error ->
+            is Async.Error -> {
                 Text(
                     text = stringResource(Res.string.flight_details_error, flightDetails.message),
                 )
-            Async.Loading -> CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(8.dp))
+                FlightDetailsActionButtons(
+                    aircraft = aircraft,
+                    isFollowing = isFollowing,
+                    onFollowToggle = onFollowToggle,
+                    onOpenFlightPage = onOpenFlightPage,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                DetailsTab(aircraft, userLocation)
+            }
+            Async.Loading -> {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(8.dp))
+                FlightDetailsActionButtons(
+                    aircraft = aircraft,
+                    isFollowing = isFollowing,
+                    onFollowToggle = onFollowToggle,
+                    onOpenFlightPage = onOpenFlightPage,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                DetailsTab(aircraft, userLocation)
+            }
             is Async.Success -> {
                 val flight = flightDetails.data
 
@@ -160,7 +181,15 @@ fun FlightDetailsSheetContent(
             }
 
             Async.NotStarted -> {
-                // Do nothing
+                // Aircraft has no flight number — show aircraft details without flight section
+                FlightDetailsActionButtons(
+                    aircraft = aircraft,
+                    isFollowing = isFollowing,
+                    onFollowToggle = onFollowToggle,
+                    onOpenFlightPage = onOpenFlightPage,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                DetailsTab(aircraft, userLocation)
             }
         }
     }

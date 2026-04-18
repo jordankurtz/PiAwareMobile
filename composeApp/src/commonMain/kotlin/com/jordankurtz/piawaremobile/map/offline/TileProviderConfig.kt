@@ -17,4 +17,8 @@ object TileProviders {
             avgTileSizeBytes = 15_000L,
             userAgent = "PiAwareMobile/1.0 (https://github.com/jordankurtz/PiAwareMobile)",
         )
+
+    private val all = listOf(OPENSTREETMAP)
+
+    fun findById(id: String): TileProviderConfig = all.find { it.id == id } ?: OPENSTREETMAP
 }

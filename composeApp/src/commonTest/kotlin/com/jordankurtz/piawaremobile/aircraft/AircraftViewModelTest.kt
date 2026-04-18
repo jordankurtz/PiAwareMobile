@@ -233,7 +233,7 @@ class AircraftViewModelTest {
         }
 
     @Test
-    fun `selectAircraft sets error when aircraft has no flight number`() =
+    fun `selectAircraft leaves flightDetails as NotStarted when aircraft has no flight number`() =
         runTest {
             val aircraftList =
                 listOf(
@@ -252,7 +252,7 @@ class AircraftViewModelTest {
             viewModel.selectAircraft("ABC123")
             testDispatcher.scheduler.advanceUntilIdle()
 
-            assertIs<Async.Error>(viewModel.flightDetails.value)
+            assertEquals(Async.NotStarted, viewModel.flightDetails.value)
         }
 
     @Test
