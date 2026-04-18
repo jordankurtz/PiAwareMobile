@@ -22,6 +22,7 @@ class SqlDelightOfflineTileStore(
                     max_lon = region.maxLon,
                     provider_id = region.providerId,
                     created_at = region.createdAt,
+                    status = region.status.name,
                 )
                 queries.lastInsertedRegionId().executeAsOne()
             }

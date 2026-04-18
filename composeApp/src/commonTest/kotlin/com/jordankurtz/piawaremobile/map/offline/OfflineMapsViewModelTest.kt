@@ -50,6 +50,7 @@ class OfflineMapsViewModelTest {
             maxLon = -74.0,
             providerId = "openstreetmap",
             createdAt = 1000L,
+            status = DownloadStatus.COMPLETE,
         )
 
     @BeforeTest

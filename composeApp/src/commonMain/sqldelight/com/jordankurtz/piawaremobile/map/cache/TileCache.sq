@@ -109,8 +109,8 @@ DELETE FROM tile WHERE zoom_level = ? AND col = ? AND row = ? AND provider_id = 
 
 -- Offline region queries
 insertOfflineRegion:
-INSERT INTO offline_region (name, min_zoom, max_zoom, min_lat, max_lat, min_lon, max_lon, provider_id, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO offline_region (name, min_zoom, max_zoom, min_lat, max_lat, min_lon, max_lon, provider_id, created_at, status)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 lastInsertedRegionId:
 SELECT last_insert_rowid();

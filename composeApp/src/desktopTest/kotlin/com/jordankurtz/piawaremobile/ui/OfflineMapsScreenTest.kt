@@ -58,6 +58,7 @@ class OfflineMapsScreenTest {
                         createdAt = 1700000000000L,
                         tileCount = 2400L,
                         sizeBytes = 42L * 1024 * 1024,
+                        status = DownloadStatus.COMPLETE,
                     ),
                     OfflineRegion(
                         id = 2L,
@@ -72,6 +73,7 @@ class OfflineMapsScreenTest {
                         createdAt = 1700000000000L,
                         tileCount = 5000L,
                         sizeBytes = 128L * 1024 * 1024,
+                        status = DownloadStatus.COMPLETE,
                     ),
                 )
             setContent {
@@ -102,6 +104,7 @@ class OfflineMapsScreenTest {
                         createdAt = 1700000000000L,
                         tileCount = 2400L,
                         sizeBytes = 42L * 1024 * 1024,
+                        status = DownloadStatus.COMPLETE,
                     ),
                     OfflineRegion(
                         id = 2L,
@@ -116,6 +119,7 @@ class OfflineMapsScreenTest {
                         createdAt = 1700000000000L,
                         tileCount = 5000L,
                         sizeBytes = 128L * 1024 * 1024,
+                        status = DownloadStatus.COMPLETE,
                     ),
                 )
             setContent {
@@ -146,6 +150,7 @@ class OfflineMapsScreenTest {
                         createdAt = 1700000000000L,
                         tileCount = 2400L,
                         sizeBytes = 42L * 1024 * 1024,
+                        status = DownloadStatus.COMPLETE,
                     ),
                 )
             setContent {
@@ -187,6 +192,7 @@ class OfflineMapsScreenTest {
                         createdAt = 1700000000000L,
                         tileCount = 2400L,
                         sizeBytes = 42L * 1024 * 1024,
+                        status = DownloadStatus.COMPLETE,
                     ),
                 )
             setContent {
@@ -216,6 +222,7 @@ class OfflineMapsScreenTest {
                     createdAt = 1700000000000L,
                     tileCount = 2400L,
                     sizeBytes = 42L * 1024 * 1024,
+                    status = DownloadStatus.COMPLETE,
                 )
             setContent {
                 OfflineMapsScreen(
