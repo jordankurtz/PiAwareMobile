@@ -7,6 +7,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -127,6 +128,8 @@ class OfflineDownloadEngine(
                     header("User-Agent", userAgent)
                 }
             if (response.status.isSuccess()) response.body() else null
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.e("Failed to download tile $zoom/$col/$row", e)
             null

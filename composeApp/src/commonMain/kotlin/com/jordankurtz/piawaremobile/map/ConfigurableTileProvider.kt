@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import com.jordankurtz.piawaremobile.map.offline.OfflineTileStore
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.io.Buffer
 import kotlinx.io.RawSource
@@ -47,6 +48,8 @@ class ConfigurableTileProvider(
             tileCache.put(zoomLvl, col, row, configFlow.value.id, bytes)
             statsTracker.recordNetworkFetch()
             Buffer().apply { write(bytes) }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.e("Failed to load tile", e)
             statsTracker.recordError()

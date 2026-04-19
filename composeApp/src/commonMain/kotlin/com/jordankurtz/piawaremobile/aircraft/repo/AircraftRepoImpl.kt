@@ -12,6 +12,7 @@ import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
 import com.jordankurtz.piawaremobile.settings.Server
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -43,6 +44,8 @@ class AircraftRepoImpl(
                             try {
                                 val dataSource = dataSourceFactory.getDataSource(server.type)
                                 dataSource.getAircraft(server).map { aircraft -> aircraft to server }
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (e: Exception) {
                                 Logger.e("Failed to fetch aircraft from server $server", e)
                                 emptyList()
@@ -113,6 +116,8 @@ class AircraftRepoImpl(
                     ident = ident,
                 )
             Async.Success(response)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.e("Failed to fetch flight for ident $ident", e)
             Async.Error("Failed to fetch flight for ident $ident", e)
