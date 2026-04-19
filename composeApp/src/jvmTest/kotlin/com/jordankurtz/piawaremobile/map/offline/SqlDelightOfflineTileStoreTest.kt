@@ -320,17 +320,19 @@ class SqlDelightOfflineTileStoreTest {
         )
     }
 
-    private fun baseRegion(name: String) =
-        OfflineRegion(
-            name = name,
-            minZoom = 8,
-            maxZoom = 12,
-            minLat = 0.0,
-            maxLat = 1.0,
-            minLon = 0.0,
-            maxLon = 1.0,
-            providerId = "osm",
-            createdAt = 1000L,
-            status = status,
-        )
+    private fun baseRegion(
+        name: String,
+        status: DownloadStatus = DownloadStatus.DOWNLOADING,
+    ) = OfflineRegion(
+        name = name,
+        minZoom = 8,
+        maxZoom = 12,
+        minLat = 0.0,
+        maxLat = 1.0,
+        minLon = 0.0,
+        maxLon = 1.0,
+        providerId = "osm",
+        createdAt = 1000L,
+        status = status,
+    )
 }
