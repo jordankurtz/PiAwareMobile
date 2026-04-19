@@ -44,8 +44,9 @@ class AircraftRepoImpl(
                             try {
                                 val dataSource = dataSourceFactory.getDataSource(server.type)
                                 dataSource.getAircraft(server).map { aircraft -> aircraft to server }
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (e: Exception) {
-                                if (e is CancellationException) throw e
                                 Logger.e("Failed to fetch aircraft from server $server", e)
                                 emptyList()
                             }
@@ -115,8 +116,9 @@ class AircraftRepoImpl(
                     ident = ident,
                 )
             Async.Success(response)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             Logger.e("Failed to fetch flight for ident $ident", e)
             Async.Error("Failed to fetch flight for ident $ident", e)
         }

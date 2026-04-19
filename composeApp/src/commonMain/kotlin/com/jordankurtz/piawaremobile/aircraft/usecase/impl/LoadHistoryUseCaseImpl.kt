@@ -22,8 +22,9 @@ class LoadHistoryUseCaseImpl(
                 async {
                     try {
                         aircraftRepo.fetchAndMergeHistory(server)
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
-                        if (e is CancellationException) throw e
                         Logger.e("Failed to fetch history from server $server", e)
                     }
                 }

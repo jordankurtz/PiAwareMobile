@@ -22,8 +22,9 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
             val response: PiAwareResponse =
                 httpClient.get("http://$host/data/aircraft.json").body<PiAwareResponse>()
             response.aircraft
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             Logger.e("Error fetching aircraft", e)
             emptyList()
         }
@@ -33,8 +34,9 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
         return try {
             httpClient.get("http://$host/db/aircraft_types/icao_aircraft_types.json")
                 .body<Map<String, ICAOAircraftType>>()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             Logger.e("Error fetching aircraft types", e)
             emptyMap()
         }
@@ -50,8 +52,9 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
                 httpClient.get(
                     key,
                 ).body<JsonObject>().also { aircraftInfoMap[key] = it }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
                 Logger.e("Error fetching aircraft info", e)
                 null
             }
@@ -62,8 +65,9 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
         return try {
             httpClient.get("http://$host/data/receiver.json")
                 .body<Receiver>()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             Logger.e("Failed to get dump1090 receiver info", e)
             null
         }
@@ -73,8 +77,9 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
         return try {
             httpClient.get("http://$host/data-978/receiver.json")
                 .body<Receiver>()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             Logger.e("Failed to get dump978 receiver info", e)
             null
         }
@@ -86,8 +91,9 @@ class PiAwareApiImpl(private val httpClient: HttpClient) : PiAwareApi {
     ): PiAwareResponse? {
         return try {
             httpClient.get("http://$host/data/history_$index.json").body<PiAwareResponse>()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             Logger.e("Error fetching history file $index", e)
             null
         }

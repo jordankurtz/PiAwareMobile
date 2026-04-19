@@ -48,8 +48,9 @@ class ConfigurableTileProvider(
             tileCache.put(zoomLvl, col, row, configFlow.value.id, bytes)
             statsTracker.recordNetworkFetch()
             Buffer().apply { write(bytes) }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             Logger.e("Failed to load tile", e)
             statsTracker.recordError()
             null

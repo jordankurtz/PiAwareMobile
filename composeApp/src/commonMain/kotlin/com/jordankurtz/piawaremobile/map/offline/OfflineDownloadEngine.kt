@@ -128,8 +128,9 @@ class OfflineDownloadEngine(
                     header("User-Agent", userAgent)
                 }
             if (response.status.isSuccess()) response.body() else null
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is CancellationException) throw e
             Logger.e("Failed to download tile $zoom/$col/$row", e)
             null
         }

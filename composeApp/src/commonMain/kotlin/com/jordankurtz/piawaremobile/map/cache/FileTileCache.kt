@@ -68,8 +68,9 @@ class FileTileCache(
             val bytes =
                 try {
                     cacheFileSystem.read(tileKey)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
-                    if (e is CancellationException) throw e
                     Logger.e("Failed to read cached tile $tileKey", e)
                     null
                 }
@@ -119,8 +120,9 @@ class FileTileCache(
                     now,
                 )
                 Logger.d("Cached tile: $tileKey (${data.size} bytes)")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
                 Logger.e("Failed to write cached tile $tileKey", e)
                 return@withContext
             }
