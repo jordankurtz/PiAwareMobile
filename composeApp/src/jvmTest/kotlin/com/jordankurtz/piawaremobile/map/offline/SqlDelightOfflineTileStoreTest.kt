@@ -69,6 +69,27 @@ class SqlDelightOfflineTileStoreTest {
         }
 
     @Test
+    fun `saveRegion persists the initial status`() =
+        runTest(testDispatcher) {
+            val region =
+                OfflineRegion(
+                    name = "Pending",
+                    minZoom = 8,
+                    maxZoom = 12,
+                    minLat = 0.0,
+                    maxLat = 1.0,
+                    minLon = 0.0,
+                    maxLon = 1.0,
+                    providerId = "osm",
+                    createdAt = 1000L,
+                    status = DownloadStatus.DOWNLOADING,
+                )
+            val id = store.saveRegion(region)
+            val saved = store.getRegion(id)
+            assertEquals(DownloadStatus.DOWNLOADING, saved?.status)
+        }
+
+    @Test
     fun `getRegion returns null for unknown id`() =
         runTest(testDispatcher) {
             assertNull(store.getRegion(999L))
@@ -253,7 +274,7 @@ class SqlDelightOfflineTileStoreTest {
     @Test
     fun `resetStuckDownloads leaves COMPLETE, FAILED, and PARTIAL regions unchanged`() =
         runTest(testDispatcher) {
-            val completeId = store.saveRegion(baseRegion("Complete"))
+            val completeId = store.saveRegion(baseRegion("Complete", status = DownloadStatus.COMPLETE))
             val failedId = store.saveRegion(baseRegion("Failed"))
             val partialId = store.saveRegion(baseRegion("Partial"))
 
@@ -299,16 +320,19 @@ class SqlDelightOfflineTileStoreTest {
         )
     }
 
-    private fun baseRegion(name: String) =
-        OfflineRegion(
-            name = name,
-            minZoom = 8,
-            maxZoom = 12,
-            minLat = 0.0,
-            maxLat = 1.0,
-            minLon = 0.0,
-            maxLon = 1.0,
-            providerId = "osm",
-            createdAt = 1000L,
-        )
+    private fun baseRegion(
+        name: String,
+        status: DownloadStatus = DownloadStatus.DOWNLOADING,
+    ) = OfflineRegion(
+        name = name,
+        minZoom = 8,
+        maxZoom = 12,
+        minLat = 0.0,
+        maxLat = 1.0,
+        minLon = 0.0,
+        maxLon = 1.0,
+        providerId = "osm",
+        createdAt = 1000L,
+        status = status,
+    )
 }
