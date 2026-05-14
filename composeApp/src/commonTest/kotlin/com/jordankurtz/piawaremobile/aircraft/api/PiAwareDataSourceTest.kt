@@ -2,10 +2,12 @@ package com.jordankurtz.piawaremobile.aircraft.api
 
 import com.jordankurtz.piawaremobile.aircraft.api.impl.PiAwareDataSource
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.settings.Server
+import dev.mokkery.answering.calls
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
@@ -79,11 +81,6 @@ class PiAwareDataSourceTest {
         }
 
     @Test
-    fun `supportsHistory returns true`() {
-        assertTrue(dataSource.supportsHistory)
-    }
-
-    @Test
     fun `getAircraftTypes delegates to PiAwareApi`() =
         runTest {
             val expected = mapOf("A320" to ICAOAircraftType("Airbus A320", "L2J"))
@@ -106,13 +103,84 @@ class PiAwareDataSourceTest {
         }
 
     @Test
-    fun `getHistory delegates to PiAwareApi getHistoryFile`() =
+    fun `fetchTrails returns empty map when receiver is null`() =
         runTest {
-            val expected = PiAwareResponse(now = 1000.0, aircraft = emptyList())
-            everySuspend { piAwareApi.getHistoryFile("test-host", 0) } returns expected
+            everySuspend { piAwareApi.getDump1090ReceiverInfo("test-host") } returns null
 
-            val result = dataSource.getHistory(server, 0)
+            val result = dataSource.fetchTrails(server)
 
-            assertEquals(expected, result)
+            assertEquals(emptyMap(), result)
+        }
+
+    @Test
+    fun `fetchTrails returns empty map when history count is null`() =
+        runTest {
+            everySuspend { piAwareApi.getDump1090ReceiverInfo("test-host") } returns
+                Receiver(latitude = 32.7f, longitude = -96.8f, history = null)
+
+            val result = dataSource.fetchTrails(server)
+
+            assertEquals(emptyMap(), result)
+        }
+
+    @Test
+    fun `fetchTrails returns empty map when history count is zero`() =
+        runTest {
+            everySuspend { piAwareApi.getDump1090ReceiverInfo("test-host") } returns
+                Receiver(latitude = 32.7f, longitude = -96.8f, history = 0)
+
+            val result = dataSource.fetchTrails(server)
+
+            assertEquals(emptyMap(), result)
+        }
+
+    @Test
+    fun `fetchTrails converts history responses to positions keyed by hex`() =
+        runTest {
+            val aircraft = Aircraft(hex = "abc123", lat = 32.7, lon = -96.8, seenPos = 2f)
+            everySuspend { piAwareApi.getDump1090ReceiverInfo("test-host") } returns
+                Receiver(latitude = 32.7f, longitude = -96.8f, history = 1)
+            everySuspend { piAwareApi.getHistoryFile("test-host", 0) } returns
+                PiAwareResponse(now = 1000.0, aircraft = listOf(aircraft))
+
+            val result = dataSource.fetchTrails(server)
+
+            assertEquals(1, result.size)
+            val positions = result["abc123"]!!
+            assertEquals(1, positions.size)
+            assertEquals(32.7, positions[0].latitude)
+            assertEquals(-96.8, positions[0].longitude)
+            assertEquals(998.0, positions[0].timestamp) // now - seenPos = 1000 - 2
+        }
+
+    @Test
+    fun `fetchTrails retries failed history fetches up to 3 times`() =
+        runTest {
+            everySuspend { piAwareApi.getDump1090ReceiverInfo("test-host") } returns
+                Receiver(latitude = 32.7f, longitude = -96.8f, history = 1)
+            var callCount = 0
+            everySuspend { piAwareApi.getHistoryFile("test-host", 0) } calls { _ ->
+                callCount++
+                if (callCount < 3) null else PiAwareResponse(now = 1000.0, aircraft = emptyList())
+            }
+
+            val result = dataSource.fetchTrails(server)
+
+            assertEquals(3, callCount)
+            assertEquals(emptyMap(), result)
+        }
+
+    @Test
+    fun `fetchTrails skips history responses with null timestamp`() =
+        runTest {
+            val aircraft = Aircraft(hex = "abc123", lat = 32.7, lon = -96.8)
+            everySuspend { piAwareApi.getDump1090ReceiverInfo("test-host") } returns
+                Receiver(latitude = 32.7f, longitude = -96.8f, history = 1)
+            everySuspend { piAwareApi.getHistoryFile("test-host", 0) } returns
+                PiAwareResponse(now = null, aircraft = listOf(aircraft))
+
+            val result = dataSource.fetchTrails(server)
+
+            assertEquals(emptyMap(), result)
         }
 }

@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.aircraft.api.impl
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.aircraft.api.AircraftDataSource
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
@@ -18,7 +19,6 @@ import org.koin.core.annotation.Single
 class ReadsbDataSource(
     private val httpClient: HttpClient,
 ) : AircraftDataSource {
-    override val supportsHistory: Boolean = false
 
     override suspend fun getAircraft(server: Server): List<Aircraft> {
         return try {
@@ -74,13 +74,10 @@ class ReadsbDataSource(
         }
     }
 
-    override suspend fun getHistory(
-        server: Server,
-        index: Int,
-    ): PiAwareResponse? {
+    override suspend fun fetchTrails(server: Server): Map<String, List<AircraftPosition>> {
         // readsb uses a trace API (/data/traces/) instead of history files.
         // Trace API support will be added in a follow-up issue.
-        Logger.d("History files not supported for readsb server ${server.address}, use trace API instead")
-        return null
+        Logger.d("fetchTrails not yet supported for readsb server ${server.address}, use trace API instead")
+        return emptyMap()
     }
 }

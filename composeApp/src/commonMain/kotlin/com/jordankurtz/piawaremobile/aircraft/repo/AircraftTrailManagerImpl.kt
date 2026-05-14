@@ -85,6 +85,29 @@ class AircraftTrailManagerImpl : AircraftTrailManager {
         }
     }
 
+    override suspend fun mergeTrails(trails: Map<String, List<AircraftPosition>>) {
+        trailMutex.withLock {
+            trails.forEach { (hex, newPositions) ->
+                val positions = trailPositions.getOrPut(hex) { mutableListOf() }
+                positions.addAll(newPositions)
+            }
+
+            // Sort positions by timestamp and deduplicate
+            trailPositions.forEach { (_, positions) ->
+                val sorted = positions.sortedBy { it.timestamp }.distinctBy { it.timestamp }
+                positions.clear()
+                sorted.forEach { pos ->
+                    val last = positions.lastOrNull()
+                    if (last == null || last.latitude != pos.latitude || last.longitude != pos.longitude) {
+                        positions.add(pos)
+                    }
+                }
+            }
+
+            updateTrailsStateFlow()
+        }
+    }
+
     override suspend fun clearTrails() {
         trailMutex.withLock {
             trailPositions.clear()

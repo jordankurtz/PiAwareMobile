@@ -21,7 +21,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -201,7 +200,7 @@ class ReadsbDataSourceTest {
         }
 
     @Test
-    fun `getHistory returns null for readsb servers`() =
+    fun `fetchTrails returns empty map for readsb servers`() =
         runTest {
             val mockEngine =
                 MockEngine {
@@ -209,19 +208,8 @@ class ReadsbDataSourceTest {
                 }
             val dataSource = createDataSource(mockEngine)
 
-            val result = dataSource.getHistory(server, 0)
+            val result = dataSource.fetchTrails(server)
 
-            assertNull(result)
+            assertEquals(emptyMap(), result)
         }
-
-    @Test
-    fun `supportsHistory returns false`() {
-        val mockEngine =
-            MockEngine {
-                error("Should not make any HTTP requests")
-            }
-        val dataSource = createDataSource(mockEngine)
-
-        assertFalse(dataSource.supportsHistory)
-    }
 }

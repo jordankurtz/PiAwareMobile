@@ -4,17 +4,16 @@ import com.jordankurtz.piawaremobile.aircraft.api.AeroApi
 import com.jordankurtz.piawaremobile.aircraft.api.AircraftDataSource
 import com.jordankurtz.piawaremobile.aircraft.api.AircraftDataSourceFactory
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
-import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.ServerType
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
-import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
@@ -59,9 +58,8 @@ class AircraftRepoImplTest {
         dataSourceFactory = mock()
         aeroApi = mock()
         trailManager = mock()
-        every { dataSource.supportsHistory } returns true
         everySuspend { trailManager.updateTrailsFromAircraft(any()) } returns Unit
-        everySuspend { trailManager.mergeHistoryResponses(any()) } returns Unit
+        everySuspend { trailManager.mergeTrails(any()) } returns Unit
         everySuspend { dataSourceFactory.getDataSource(any()) } returns dataSource
         repo = AircraftRepoImpl(dataSourceFactory, aeroApi, trailManager)
     }
@@ -282,56 +280,31 @@ class AircraftRepoImplTest {
     @Test
     fun `fetchAndMergeHistory delegates to trail manager`() =
         runTest {
-            val historyReceiver = mockReceiver1090.copy(history = 2)
-            val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 5f)
-
-            everySuspend { dataSource.getReceiverInfo(server1) } returns historyReceiver
-            everySuspend { dataSource.getHistory(server1, 0) } returns
-                PiAwareResponse(now = 1000.0, aircraft = listOf(historyAircraft))
-            everySuspend { dataSource.getHistory(server1, 1) } returns
-                PiAwareResponse(now = 1030.0, aircraft = listOf(historyAircraft.copy(lat = 32.6, seenPos = 5f)))
+            val trails =
+                mapOf(
+                    "abc123" to
+                        listOf(
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 995.0),
+                        ),
+                )
+            everySuspend { dataSource.fetchTrails(server1) } returns trails
 
             repo.fetchAndMergeHistory(server1)
 
             verifySuspend(mode = VerifyMode.exactly(1)) {
-                trailManager.mergeHistoryResponses(any())
+                trailManager.mergeTrails(any())
             }
         }
 
     @Test
-    fun `fetchAndMergeHistory handles null receiver`() =
+    fun `fetchAndMergeHistory skips mergeTrails when fetchTrails returns empty`() =
         runTest {
-            everySuspend { dataSource.getReceiverInfo(server1) } returns null
+            everySuspend { dataSource.fetchTrails(server1) } returns emptyMap()
 
             repo.fetchAndMergeHistory(server1)
 
             verifySuspend(mode = VerifyMode.exactly(0)) {
-                trailManager.mergeHistoryResponses(any())
-            }
-        }
-
-    @Test
-    fun `fetchAndMergeHistory handles null history count`() =
-        runTest {
-            everySuspend { dataSource.getReceiverInfo(server1) } returns mockReceiver1090
-
-            repo.fetchAndMergeHistory(server1)
-
-            verifySuspend(mode = VerifyMode.exactly(0)) {
-                trailManager.mergeHistoryResponses(any())
-            }
-        }
-
-    @Test
-    fun `fetchAndMergeHistory handles zero history count`() =
-        runTest {
-            everySuspend { dataSource.getReceiverInfo(server1) } returns
-                mockReceiver1090.copy(history = 0)
-
-            repo.fetchAndMergeHistory(server1)
-
-            verifySuspend(mode = VerifyMode.exactly(0)) {
-                trailManager.mergeHistoryResponses(any())
+                trailManager.mergeTrails(any())
             }
         }
 
@@ -429,21 +402,4 @@ class AircraftRepoImplTest {
             verifySuspend { dataSourceFactory.getDataSource(ServerType.READSB) }
         }
 
-    @Test
-    fun `fetchAndMergeHistory skips entirely when supportsHistory is false`() =
-        runTest {
-            val readsbServer = Server(name = "Readsb", address = "readsb.local", type = ServerType.READSB)
-            val readsbDs: AircraftDataSource = mock()
-            every { readsbDs.supportsHistory } returns false
-            everySuspend { dataSourceFactory.getDataSource(ServerType.READSB) } returns readsbDs
-
-            repo.fetchAndMergeHistory(readsbServer)
-
-            verifySuspend(mode = VerifyMode.exactly(0)) {
-                readsbDs.getReceiverInfo(readsbServer)
-            }
-            verifySuspend(mode = VerifyMode.exactly(0)) {
-                trailManager.mergeHistoryResponses(any())
-            }
-        }
 }
