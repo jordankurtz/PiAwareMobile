@@ -11,6 +11,7 @@ import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
+import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
@@ -409,5 +410,34 @@ class AircraftViewModelTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             assertEquals(stateBefore, viewModel.flightDetails.value)
+        }
+
+    @Test
+    fun `showReceiverLocations true loads receiver locations for all servers`() =
+        runTest {
+            val server = servers.first()
+            val location = Location(latitude = 47.6, longitude = -122.3)
+            val settingsWithLocations = settings.copy(showReceiverLocations = true)
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(settingsWithLocations))
+            everySuspend { getReceiverLocationUseCase(server) } returns location
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(mapOf(server to location), viewModel.receiverLocations.value)
+        }
+
+    @Test
+    fun `showReceiverLocations true filters out null locations`() =
+        runTest {
+            val server = servers.first()
+            val settingsWithLocations = settings.copy(showReceiverLocations = true)
+            every { loadSettingsUseCase() } returns flowOf(Async.Success(settingsWithLocations))
+            everySuspend { getReceiverLocationUseCase(server) } returns null
+
+            val viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(emptyMap(), viewModel.receiverLocations.value)
         }
 }
