@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -39,6 +40,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 @ExperimentalCoroutinesApi
 class AircraftViewModelTest {
@@ -439,5 +441,40 @@ class AircraftViewModelTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             assertEquals(emptyMap(), viewModel.receiverLocations.value)
+        }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class DefaultTickerFlowTest {
+    @Test
+    fun `defaultTickerFlow emits Unit on each interval`() =
+        runTest {
+            val flow = defaultTickerFlow(100.milliseconds)
+            val emissions = mutableListOf<Unit>()
+
+            val job = launch {
+                flow.collect { emissions.add(it) }
+            }
+
+            testScheduler.advanceTimeBy(250)
+            job.cancel()
+
+            assertEquals(3, emissions.size)
+        }
+
+    @Test
+    fun `defaultTickerFlow respects custom interval`() =
+        runTest {
+            val flow = defaultTickerFlow(50.milliseconds)
+            val emissions = mutableListOf<Unit>()
+
+            val job = launch {
+                flow.collect { emissions.add(it) }
+            }
+
+            testScheduler.advanceTimeBy(175)
+            job.cancel()
+
+            assertEquals(4, emissions.size)
         }
 }
