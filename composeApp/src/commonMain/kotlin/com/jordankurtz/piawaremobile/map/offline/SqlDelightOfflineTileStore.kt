@@ -128,6 +128,14 @@ class SqlDelightOfflineTileStore(
         withContext(ioDispatcher) {
             queries.resetStuckDownloads()
         }
+
+    override suspend fun updateThumbnail(
+        id: Long,
+        zoom: Int,
+        path: String,
+    ) = withContext(ioDispatcher) {
+        queries.updateRegionThumbnail(thumbnailZoom = zoom.toLong(), thumbnailPath = path, id = id)
+    }
 }
 
 private fun Offline_region.toOfflineRegion() =

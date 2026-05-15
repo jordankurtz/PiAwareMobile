@@ -43,4 +43,10 @@ interface OfflineTileStore {
     suspend fun getFreedBytesForRegion(id: Long): Long
 
     suspend fun resetStuckDownloads()
+
+    suspend fun updateThumbnail(
+        id: Long,
+        zoom: Int,
+        path: String,
+    )
 }
