@@ -16,9 +16,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.koin.core.annotation.Single
 
 @Single
@@ -119,26 +117,12 @@ class ReadsbDataSource(
         val result = mutableMapOf<String, MutableList<AircraftPosition>>()
         forEach { response ->
             val positions =
-                response.trace.mapNotNull { entry ->
-                    val timeOffset =
-                        entry.getOrNull(0)?.jsonPrimitive?.content?.toDoubleOrNull()
-                            ?: return@mapNotNull null
-                    val lat =
-                        entry.getOrNull(1)?.jsonPrimitive?.content?.toDoubleOrNull()
-                            ?: return@mapNotNull null
-                    val lon =
-                        entry.getOrNull(2)?.jsonPrimitive?.content?.toDoubleOrNull()
-                            ?: return@mapNotNull null
-                    val altBaro =
-                        when (val altEl = entry.getOrNull(3)) {
-                            null, JsonNull -> null
-                            else -> altEl.jsonPrimitive.content
-                        }
+                response.trace.map { entry ->
                     AircraftPosition(
-                        latitude = lat,
-                        longitude = lon,
-                        altitude = altBaro,
-                        timestamp = response.timestamp + timeOffset,
+                        latitude = entry.latitude,
+                        longitude = entry.longitude,
+                        altitude = entry.altitude,
+                        timestamp = response.timestamp + entry.timeOffset,
                     )
                 }
             if (positions.isNotEmpty()) {

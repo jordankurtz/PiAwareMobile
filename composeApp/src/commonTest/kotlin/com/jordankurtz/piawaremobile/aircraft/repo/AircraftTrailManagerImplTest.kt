@@ -105,10 +105,11 @@ class AircraftTrailManagerImplTest {
 
             trailManager.mergeTrails(
                 mapOf(
-                    "abc123" to listOf(
-                        AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
-                        AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = "35000", timestamp = 200.0),
-                    ),
+                    "abc123" to
+                        listOf(
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
+                            AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = "35000", timestamp = 200.0),
+                        ),
                 ),
             )
 
@@ -139,10 +140,11 @@ class AircraftTrailManagerImplTest {
 
             trailManager.mergeTrails(
                 mapOf(
-                    "abc123" to listOf(
-                        AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = null, timestamp = 200.0),
-                        AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
-                    ),
+                    "abc123" to
+                        listOf(
+                            AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = null, timestamp = 200.0),
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
+                        ),
                 ),
             )
 
@@ -158,11 +160,12 @@ class AircraftTrailManagerImplTest {
 
             trailManager.mergeTrails(
                 mapOf(
-                    "abc123" to listOf(
-                        AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
-                        AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 200.0),
-                        AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = null, timestamp = 300.0),
-                    ),
+                    "abc123" to
+                        listOf(
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 200.0),
+                            AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = null, timestamp = 300.0),
+                        ),
                 ),
             )
 
