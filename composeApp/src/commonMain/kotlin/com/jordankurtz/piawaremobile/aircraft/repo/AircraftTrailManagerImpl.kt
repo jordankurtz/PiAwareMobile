@@ -3,7 +3,6 @@ package com.jordankurtz.piawaremobile.aircraft.repo
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.AircraftTrail
-import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,42 +43,6 @@ class AircraftTrailManagerImpl : AircraftTrailManager {
                         positions.add(newPosition)
                     }
                 }
-
-            updateTrailsStateFlow()
-        }
-    }
-
-    override suspend fun mergeHistoryResponses(responses: List<PiAwareResponse>) {
-        trailMutex.withLock {
-            responses.forEach { response ->
-                val snapshotTime = response.now ?: return@forEach
-                response.aircraft
-                    .filter { it.hasPosition }
-                    .forEach { aircraft ->
-                        val positions = trailPositions.getOrPut(aircraft.hex) { mutableListOf() }
-                        val positionAge = aircraft.seenPos ?: aircraft.seen ?: 0f
-                        val newPosition =
-                            AircraftPosition(
-                                latitude = aircraft.lat,
-                                longitude = aircraft.lon,
-                                altitude = aircraft.altBaro,
-                                timestamp = snapshotTime - positionAge,
-                            )
-                        positions.add(newPosition)
-                    }
-            }
-
-            // Sort positions by timestamp and deduplicate
-            trailPositions.forEach { (_, positions) ->
-                val sorted = positions.sortedBy { it.timestamp }.distinctBy { it.timestamp }
-                positions.clear()
-                sorted.forEach { pos ->
-                    val last = positions.lastOrNull()
-                    if (last == null || last.latitude != pos.latitude || last.longitude != pos.longitude) {
-                        positions.add(pos)
-                    }
-                }
-            }
 
             updateTrailsStateFlow()
         }
