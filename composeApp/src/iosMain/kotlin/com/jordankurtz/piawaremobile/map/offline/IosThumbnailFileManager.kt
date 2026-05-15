@@ -13,6 +13,5 @@ class IosThumbnailFileManager(
         NSFileManager.defaultManager.removeItemAtPath(thumbnailPath(regionId), error = null)
     }
 
-    override fun exists(path: String): Boolean =
-        NSFileManager.defaultManager.fileExistsAtPath(path)
+    override fun exists(path: String): Boolean = NSFileManager.defaultManager.fileExistsAtPath(path)
 }

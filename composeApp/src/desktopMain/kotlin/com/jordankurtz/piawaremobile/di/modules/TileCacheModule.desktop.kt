@@ -34,10 +34,11 @@ actual class TileCacheModule {
     @Single
     fun provideThumbnailGenerator(
         @IODispatcher ioDispatcher: CoroutineDispatcher,
-    ): ThumbnailGenerator = DesktopThumbnailGenerator(
-        tileCacheDir = desktopCacheDir(),
-        ioDispatcher = ioDispatcher,
-    )
+    ): ThumbnailGenerator =
+        DesktopThumbnailGenerator(
+            tileCacheDir = desktopCacheDir(),
+            ioDispatcher = ioDispatcher,
+        )
 
     @Single
     fun provideThumbnailFileManager(): ThumbnailFileManager =

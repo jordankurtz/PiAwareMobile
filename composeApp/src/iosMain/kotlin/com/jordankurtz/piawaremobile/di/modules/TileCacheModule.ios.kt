@@ -38,14 +38,14 @@ actual class TileCacheModule {
     @Single
     fun provideThumbnailGenerator(
         @IODispatcher ioDispatcher: CoroutineDispatcher,
-    ): ThumbnailGenerator = IosThumbnailGenerator(
-        tileCacheDir = iosCacheDir(),
-        ioDispatcher = ioDispatcher,
-    )
+    ): ThumbnailGenerator =
+        IosThumbnailGenerator(
+            tileCacheDir = iosCacheDir(),
+            ioDispatcher = ioDispatcher,
+        )
 
     @Single
-    fun provideThumbnailFileManager(): ThumbnailFileManager =
-        IosThumbnailFileManager(iosThumbnailDir())
+    fun provideThumbnailFileManager(): ThumbnailFileManager = IosThumbnailFileManager(iosThumbnailDir())
 }
 
 private fun iosCacheDir(): String {

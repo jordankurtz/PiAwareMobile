@@ -21,8 +21,7 @@ val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = TILE_SIZE)
 
 const val GROUND_ALTITUDE = "ground"
 
-fun scaleToOsmZoom(scale: Float): Int =
-    (MAX_LEVEL + log2(scale.toDouble())).roundToInt().coerceIn(MIN_LEVEL, MAX_LEVEL)
+fun scaleToOsmZoom(scale: Float): Int = (MAX_LEVEL + log2(scale.toDouble())).roundToInt().coerceIn(MIN_LEVEL, MAX_LEVEL)
 
 fun mapSizeAtLevel(
     wmtsLevel: Int,
