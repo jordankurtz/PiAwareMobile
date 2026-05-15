@@ -401,5 +401,4 @@ class AircraftRepoImplTest {
             verifySuspend { dataSourceFactory.getDataSource(ServerType.PIAWARE) }
             verifySuspend { dataSourceFactory.getDataSource(ServerType.READSB) }
         }
-
 }

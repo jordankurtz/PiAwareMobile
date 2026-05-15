@@ -2,7 +2,6 @@ package com.jordankurtz.piawaremobile.aircraft.api
 
 import com.jordankurtz.piawaremobile.aircraft.api.impl.PiAwareDataSource
 import com.jordankurtz.piawaremobile.model.Aircraft
-import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
 import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
@@ -18,7 +17,6 @@ import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class PiAwareDataSourceTest {
     private val piAwareApi: PiAwareApi = mock()
