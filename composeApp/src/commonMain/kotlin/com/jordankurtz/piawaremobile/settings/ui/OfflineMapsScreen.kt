@@ -62,7 +62,7 @@ fun OfflineMapsScreen(
     regions: List<OfflineRegion> = emptyList(),
     onDeleteRegion: (OfflineRegion) -> Unit = {},
     onRetry: (OfflineRegion) -> Unit = {},
-    onStartDownload: (name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int) -> Unit = { _, _, _, _ -> },
+    onStartDownload: (name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int, viewportZoom: Int) -> Unit = { _, _, _, _, _ -> },
     onCancelDownload: () -> Unit = {},
 ) {
     var showDownloadDialog by remember { mutableStateOf(false) }
@@ -70,11 +70,13 @@ fun OfflineMapsScreen(
     var pendingBounds by remember { mutableStateOf<BoundingBox?>(null) }
     // Hoisted so the name survives round-trips to the map picker
     var pendingName by remember { mutableStateOf("") }
+    var pendingViewportZoom by remember { mutableStateOf(0) }
 
     if (showMapPicker) {
         MapRegionPickerScreen(
-            onRegionSelected = { bounds ->
+            onRegionSelected = { bounds, viewportZoom ->
                 pendingBounds = bounds
+                pendingViewportZoom = viewportZoom
                 showMapPicker = false
                 showDownloadDialog = true
             },
@@ -95,16 +97,18 @@ fun OfflineMapsScreen(
                 pendingBounds = null
                 pendingName = ""
             },
-            onConfirm = { minZoom, maxZoom ->
+            onConfirm = { minZoom, maxZoom, viewportZoom ->
                 val bounds = pendingBounds
                 if (bounds != null) {
-                    onStartDownload(pendingName, bounds, minZoom, maxZoom)
+                    onStartDownload(pendingName, bounds, minZoom, maxZoom, viewportZoom)
                     showDownloadDialog = false
                     pendingBounds = null
                     pendingName = ""
+                    pendingViewportZoom = 0
                 }
             },
             selectedBounds = pendingBounds,
+            selectedViewportZoom = pendingViewportZoom,
             onSelectOnMap = {
                 showDownloadDialog = false
                 showMapPicker = true

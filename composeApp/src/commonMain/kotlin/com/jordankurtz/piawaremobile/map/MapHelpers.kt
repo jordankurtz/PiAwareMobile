@@ -7,7 +7,9 @@ import kotlin.math.abs
 import kotlin.math.asin
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.log2
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 const val MAX_LEVEL = 16
@@ -18,6 +20,9 @@ private const val X0 = -2.0037508342789248E7
 val mapSize = mapSizeAtLevel(MAX_LEVEL, tileSize = TILE_SIZE)
 
 const val GROUND_ALTITUDE = "ground"
+
+fun scaleToOsmZoom(scale: Float): Int =
+    (MAX_LEVEL + log2(scale.toDouble())).roundToInt().coerceIn(MIN_LEVEL, MAX_LEVEL)
 
 fun mapSizeAtLevel(
     wmtsLevel: Int,

@@ -55,7 +55,7 @@ fun SettingsScreen() {
                     val onRetryDownload = remember(vm) { { region: OfflineRegion -> vm.retryDownload(region) } }
                     val onStartDownloadFn =
                         remember(vm) {
-                            { name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int ->
+                            { name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int, viewportZoom: Int ->
                                 vm.startDownload(name, bounds, minZoom, maxZoom)
                             }
                         }

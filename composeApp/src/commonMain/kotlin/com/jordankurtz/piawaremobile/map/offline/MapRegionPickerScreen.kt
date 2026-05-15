@@ -38,6 +38,7 @@ import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMap
 import com.jordankurtz.piawaremobile.map.invertProjection
 import com.jordankurtz.piawaremobile.map.mapSize
+import com.jordankurtz.piawaremobile.map.scaleToOsmZoom
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -66,7 +67,7 @@ private enum class InteractionMode {
 
 @Composable
 fun MapRegionPickerScreen(
-    onRegionSelected: (BoundingBox) -> Unit,
+    onRegionSelected: (BoundingBox, viewportZoom: Int) -> Unit,
     onDismiss: () -> Unit,
     mapViewModel: MapViewModel = koinViewModel(),
 ) {
@@ -90,7 +91,7 @@ fun MapRegionPickerScreen(
 
 @Composable
 internal fun MapRegionPickerContent(
-    onRegionSelected: (BoundingBox) -> Unit,
+    onRegionSelected: (BoundingBox, viewportZoom: Int) -> Unit,
     onDismiss: () -> Unit,
     mapLayer: @Composable () -> Unit,
     scrollX: Double = 0.0,
@@ -312,6 +313,7 @@ internal fun MapRegionPickerContent(
                                 minLon = leftLon,
                                 maxLon = rightLon,
                             ),
+                            scaleToOsmZoom(scale.toFloat()),
                         )
                     },
                     modifier = Modifier.weight(1f),
