@@ -15,4 +15,6 @@ data class OfflineRegion(
     val sizeBytes: Long = 0L,
     val status: DownloadStatus = DownloadStatus.DOWNLOADING,
     val downloadedTileCount: Long = 0L,
+    val thumbnailZoom: Int? = null,
+    val thumbnailPath: String? = null,
 )

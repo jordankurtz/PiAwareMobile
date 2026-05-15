@@ -23,6 +23,7 @@ class SqlDelightOfflineTileStore(
                     provider_id = region.providerId,
                     created_at = region.createdAt,
                     status = region.status.name,
+                    thumbnail_zoom = region.thumbnailZoom?.toLong(),
                 )
                 queries.lastInsertedRegionId().executeAsOne()
             }
@@ -145,4 +146,6 @@ private fun Offline_region.toOfflineRegion() =
         sizeBytes = size_bytes,
         status = DownloadStatus.entries.find { it.name == status } ?: DownloadStatus.FAILED,
         downloadedTileCount = downloaded_tile_count,
+        thumbnailZoom = thumbnail_zoom?.toInt(),
+        thumbnailPath = thumbnail_path,
     )
