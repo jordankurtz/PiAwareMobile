@@ -3,7 +3,6 @@ package com.jordankurtz.piawaremobile.aircraft.repo
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.AircraftTrail
-import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,28 +48,16 @@ class AircraftTrailManagerImpl : AircraftTrailManager {
         }
     }
 
-    override suspend fun mergeHistoryResponses(responses: List<PiAwareResponse>) {
+    override suspend fun mergeTrails(trails: Map<String, List<AircraftPosition>>) {
         trailMutex.withLock {
-            responses.forEach { response ->
-                val snapshotTime = response.now ?: return@forEach
-                response.aircraft
-                    .filter { it.hasPosition }
-                    .forEach { aircraft ->
-                        val positions = trailPositions.getOrPut(aircraft.hex) { mutableListOf() }
-                        val positionAge = aircraft.seenPos ?: aircraft.seen ?: 0f
-                        val newPosition =
-                            AircraftPosition(
-                                latitude = aircraft.lat,
-                                longitude = aircraft.lon,
-                                altitude = aircraft.altBaro,
-                                timestamp = snapshotTime - positionAge,
-                            )
-                        positions.add(newPosition)
-                    }
+            trails.forEach { (hex, newPositions) ->
+                val positions = trailPositions.getOrPut(hex) { mutableListOf() }
+                positions.addAll(newPositions)
             }
 
-            // Sort positions by timestamp and deduplicate
-            trailPositions.forEach { (_, positions) ->
+            // Sort positions by timestamp and deduplicate only the updated entries
+            trails.keys.forEach { hex ->
+                val positions = trailPositions[hex] ?: return@forEach
                 val sorted = positions.sortedBy { it.timestamp }.distinctBy { it.timestamp }
                 positions.clear()
                 sorted.forEach { pos ->

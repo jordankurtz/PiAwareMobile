@@ -1,7 +1,7 @@
 package com.jordankurtz.piawaremobile.aircraft.repo
 
 import com.jordankurtz.piawaremobile.model.Aircraft
-import com.jordankurtz.piawaremobile.model.PiAwareResponse
+import com.jordankurtz.piawaremobile.model.AircraftPosition
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -88,82 +88,6 @@ class AircraftTrailManagerImplTest {
         }
 
     @Test
-    fun `mergeHistoryResponses builds trails from history`() =
-        runTest {
-            val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 5f)
-            val responses =
-                listOf(
-                    PiAwareResponse(
-                        now = 1000.0,
-                        aircraft = listOf(historyAircraft),
-                    ),
-                    PiAwareResponse(
-                        now = 1030.0,
-                        aircraft = listOf(historyAircraft.copy(lat = 32.6, seenPos = 5f)),
-                    ),
-                )
-
-            trailManager.mergeHistoryResponses(responses)
-
-            // History positions are stored but not emitted until aircraft becomes current
-            trailManager.updateTrailsFromAircraft(listOf(historyAircraft))
-
-            val trails = trailManager.aircraftTrails.value
-            assertTrue(trails.containsKey(historyAircraft.hex))
-            assertTrue(trails[historyAircraft.hex]!!.positions.size >= 2)
-        }
-
-    @Test
-    fun `mergeHistoryResponses deduplicates positions on repeated calls`() =
-        runTest {
-            val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 5f)
-            val responses =
-                listOf(
-                    PiAwareResponse(
-                        now = 1000.0,
-                        aircraft = listOf(historyAircraft),
-                    ),
-                    PiAwareResponse(
-                        now = 1030.0,
-                        aircraft = listOf(historyAircraft.copy(lat = 32.6, seenPos = 5f)),
-                    ),
-                )
-
-            trailManager.mergeHistoryResponses(responses)
-            trailManager.mergeHistoryResponses(responses) // Same data again
-
-            trailManager.updateTrailsFromAircraft(listOf(historyAircraft))
-
-            val trails = trailManager.aircraftTrails.value
-            val positions = trails[historyAircraft.hex]!!.positions
-            // 2 deduped history positions + 1 current = 3
-            assertEquals(3, positions.size)
-        }
-
-    @Test
-    fun `mergeHistoryResponses sorts positions by timestamp`() =
-        runTest {
-            val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 0f)
-            val responses =
-                listOf(
-                    PiAwareResponse(now = 1060.0, aircraft = listOf(historyAircraft.copy(lat = 32.6))),
-                    PiAwareResponse(now = 1000.0, aircraft = listOf(historyAircraft.copy(lat = 32.5))),
-                    PiAwareResponse(now = 1120.0, aircraft = listOf(historyAircraft.copy(lat = 32.7))),
-                )
-
-            trailManager.mergeHistoryResponses(responses)
-            trailManager.updateTrailsFromAircraft(listOf(historyAircraft.copy(lat = 32.7)))
-
-            val trails = trailManager.aircraftTrails.value
-            val positions = trails[historyAircraft.hex]!!.positions
-
-            assertEquals(3, positions.size)
-            assertEquals(32.5, positions[0].latitude)
-            assertEquals(32.6, positions[1].latitude)
-            assertEquals(32.7, positions[2].latitude)
-        }
-
-    @Test
     fun `updateTrailsFromAircraft with empty list clears current aircraft`() =
         runTest {
             trailManager.updateTrailsFromAircraft(listOf(aircraft1))
@@ -174,86 +98,103 @@ class AircraftTrailManagerImplTest {
         }
 
     @Test
-    fun `mergeHistoryResponses with empty list does not crash`() =
+    fun `mergeTrails adds positions from input map`() =
         runTest {
-            trailManager.mergeHistoryResponses(emptyList())
+            val aircraft = listOf(Aircraft(hex = "abc123", lat = 32.7, lon = -96.8))
+            trailManager.updateTrailsFromAircraft(aircraft)
 
-            val trails = trailManager.aircraftTrails.value
-            assertTrue(trails.isEmpty())
+            trailManager.mergeTrails(
+                mapOf(
+                    "abc123" to
+                        listOf(
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
+                            AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = "35000", timestamp = 200.0),
+                        ),
+                ),
+            )
+
+            val trail = trailManager.aircraftTrails.value["abc123"]!!
+            assertTrue(trail.positions.any { it.timestamp == 100.0 })
+            assertTrue(trail.positions.any { it.timestamp == 200.0 })
         }
 
     @Test
-    fun `mergeHistoryResponses uses seenPos for position age`() =
+    fun `mergeTrails deduplicates positions with identical timestamps`() =
         runTest {
-            val aircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 10f, seen = 20f)
-            val responses =
-                listOf(
-                    PiAwareResponse(now = 1000.0, aircraft = listOf(aircraft)),
-                )
+            val aircraft = listOf(Aircraft(hex = "abc123", lat = 32.7, lon = -96.8))
+            trailManager.updateTrailsFromAircraft(aircraft)
 
-            trailManager.mergeHistoryResponses(responses)
-            trailManager.updateTrailsFromAircraft(listOf(aircraft))
+            val position = AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0)
+            trailManager.mergeTrails(mapOf("abc123" to listOf(position)))
+            trailManager.mergeTrails(mapOf("abc123" to listOf(position)))
 
-            val trails = trailManager.aircraftTrails.value
-            val positions = trails[aircraft.hex]!!.positions
-            // History position timestamp should be now - seenPos = 1000 - 10 = 990
-            assertEquals(990.0, positions.first().timestamp)
+            val trail = trailManager.aircraftTrails.value["abc123"]!!
+            assertEquals(1, trail.positions.count { it.timestamp == 100.0 })
         }
 
     @Test
-    fun `mergeHistoryResponses falls back to seen when seenPos is null`() =
+    fun `mergeTrails sorts positions by timestamp`() =
         runTest {
-            val aircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = null, seen = 15f)
-            val responses =
-                listOf(
-                    PiAwareResponse(now = 1000.0, aircraft = listOf(aircraft)),
-                )
+            val aircraft = listOf(Aircraft(hex = "abc123", lat = 32.7, lon = -96.8))
+            trailManager.updateTrailsFromAircraft(aircraft)
 
-            trailManager.mergeHistoryResponses(responses)
-            trailManager.updateTrailsFromAircraft(listOf(aircraft))
+            trailManager.mergeTrails(
+                mapOf(
+                    "abc123" to
+                        listOf(
+                            AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = null, timestamp = 200.0),
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
+                        ),
+                ),
+            )
 
-            val trails = trailManager.aircraftTrails.value
-            val positions = trails[aircraft.hex]!!.positions
-            // History position timestamp should be now - seen = 1000 - 15 = 985
-            assertEquals(985.0, positions.first().timestamp)
+            val positions = trailManager.aircraftTrails.value["abc123"]!!.positions
+            assertTrue(positions[0].timestamp < positions[1].timestamp)
         }
 
     @Test
-    fun `mergeHistoryResponses deduplicates by location after sort`() =
+    fun `mergeTrails deduplicates consecutive identical locations`() =
         runTest {
-            val aircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 0f)
-            val responses =
-                listOf(
-                    PiAwareResponse(now = 1000.0, aircraft = listOf(aircraft)),
-                    // Same location, different timestamp
-                    PiAwareResponse(now = 1030.0, aircraft = listOf(aircraft)),
-                )
+            val aircraft = listOf(Aircraft(hex = "abc123", lat = 32.7, lon = -96.8))
+            trailManager.updateTrailsFromAircraft(aircraft)
 
-            trailManager.mergeHistoryResponses(responses)
-            trailManager.updateTrailsFromAircraft(listOf(aircraft))
+            trailManager.mergeTrails(
+                mapOf(
+                    "abc123" to
+                        listOf(
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 100.0),
+                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 200.0),
+                            AircraftPosition(latitude = 32.6, longitude = -96.6, altitude = null, timestamp = 300.0),
+                        ),
+                ),
+            )
 
-            val trails = trailManager.aircraftTrails.value
-            val positions = trails[aircraft.hex]!!.positions
-            // Should deduplicate same lat/lon even with different timestamps
-            assertEquals(1, positions.size)
+            val positions = trailManager.aircraftTrails.value["abc123"]!!.positions
+            // 32.5/-96.5 appears twice in input; consecutive same-location dedup removes one.
+            // Plus the current position (32.7/-96.8) added by updateTrailsFromAircraft = 3 total.
+            assertEquals(3, positions.size)
         }
 
     @Test
-    fun `mergeHistoryResponses skips responses with null timestamp`() =
+    fun `mergeTrails with empty map does not crash`() =
         runTest {
-            val historyAircraft = Aircraft(hex = "abc123", lat = 32.5, lon = -96.5, seenPos = 0f)
-            val responses =
-                listOf(
-                    PiAwareResponse(now = null, aircraft = listOf(historyAircraft)),
-                    PiAwareResponse(now = 1000.0, aircraft = listOf(historyAircraft)),
-                )
+            trailManager.mergeTrails(emptyMap())
+        }
 
-            trailManager.mergeHistoryResponses(responses)
-            trailManager.updateTrailsFromAircraft(listOf(historyAircraft))
+    @Test
+    fun `mergeTrails accumulates across multiple calls`() =
+        runTest {
+            val aircraft = listOf(Aircraft(hex = "abc123", lat = 32.7, lon = -96.8))
+            trailManager.updateTrailsFromAircraft(aircraft)
 
-            val trails = trailManager.aircraftTrails.value
-            val positions = trails[historyAircraft.hex]!!.positions
-            // Only 1 from history (null timestamp skipped), current position deduped (same lat/lon)
-            assertEquals(1, positions.size)
+            trailManager.mergeTrails(
+                mapOf("abc123" to listOf(AircraftPosition(32.5, -96.5, null, 100.0))),
+            )
+            trailManager.mergeTrails(
+                mapOf("abc123" to listOf(AircraftPosition(32.6, -96.6, null, 200.0))),
+            )
+
+            val trail = trailManager.aircraftTrails.value["abc123"]!!
+            assertTrue(trail.positions.size >= 2)
         }
 }

@@ -1,15 +1,13 @@
 package com.jordankurtz.piawaremobile.aircraft.api
 
 import com.jordankurtz.piawaremobile.model.Aircraft
+import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
-import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.settings.Server
 import kotlinx.serialization.json.JsonObject
 
 interface AircraftDataSource {
-    val supportsHistory: Boolean
-
     suspend fun getAircraft(server: Server): List<Aircraft>
 
     suspend fun getReceiverInfo(server: Server): Receiver?
@@ -23,8 +21,5 @@ interface AircraftDataSource {
         bkey: String,
     ): JsonObject?
 
-    suspend fun getHistory(
-        server: Server,
-        index: Int,
-    ): PiAwareResponse?
+    suspend fun fetchTrails(server: Server): Map<String, List<AircraftPosition>>
 }
