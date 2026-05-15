@@ -60,6 +60,7 @@ class AircraftRepoImplTest {
         trailManager = mock()
         everySuspend { trailManager.updateTrailsFromAircraft(any()) } returns Unit
         everySuspend { trailManager.mergeTrails(any()) } returns Unit
+        everySuspend { dataSource.fetchTrails(any()) } returns emptyMap()
         everySuspend { dataSourceFactory.getDataSource(any()) } returns dataSource
         repo = AircraftRepoImpl(dataSourceFactory, aeroApi, trailManager)
     }
@@ -278,34 +279,30 @@ class AircraftRepoImplTest {
         }
 
     @Test
-    fun `fetchAndMergeHistory delegates to trail manager`() =
+    fun `fetchAndMergeHistory delegates to trail manager with trails from data source`() =
         runTest {
             val trails =
                 mapOf(
                     "abc123" to
                         listOf(
-                            AircraftPosition(latitude = 32.5, longitude = -96.5, altitude = null, timestamp = 995.0),
+                            AircraftPosition(latitude = 32.7, longitude = -96.8, altitude = null, timestamp = 1000.0),
                         ),
                 )
             everySuspend { dataSource.fetchTrails(server1) } returns trails
 
             repo.fetchAndMergeHistory(server1)
 
-            verifySuspend(mode = VerifyMode.exactly(1)) {
-                trailManager.mergeTrails(any())
-            }
+            verifySuspend(mode = VerifyMode.exactly(1)) { trailManager.mergeTrails(trails) }
         }
 
     @Test
-    fun `fetchAndMergeHistory skips mergeTrails when fetchTrails returns empty`() =
+    fun `fetchAndMergeHistory does not call trail manager when fetchTrails returns empty map`() =
         runTest {
             everySuspend { dataSource.fetchTrails(server1) } returns emptyMap()
 
             repo.fetchAndMergeHistory(server1)
 
-            verifySuspend(mode = VerifyMode.exactly(0)) {
-                trailManager.mergeTrails(any())
-            }
+            verifySuspend(mode = VerifyMode.exactly(0)) { trailManager.mergeTrails(any()) }
         }
 
     @Test
