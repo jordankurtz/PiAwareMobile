@@ -7,6 +7,7 @@ import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.matcher.matching
 import dev.mokkery.mock
+import dev.mokkery.verify
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +37,8 @@ class OfflineMapsViewModelTest {
     private lateinit var store: OfflineTileStore
     private lateinit var engine: DownloadEngine
     private lateinit var tileCache: TileCache
+    private lateinit var thumbnailGenerator: ThumbnailGenerator
+    private lateinit var thumbnailFileManager: ThumbnailFileManager
     private lateinit var vm: OfflineMapsViewModel
 
     private val savedRegion =
@@ -53,12 +56,25 @@ class OfflineMapsViewModelTest {
             status = DownloadStatus.COMPLETE,
         )
 
+    private fun makeVm() =
+        OfflineMapsViewModel(
+            store,
+            engine,
+            tileCache,
+            downloadScopeHolder,
+            thumbnailGenerator,
+            thumbnailFileManager,
+            testDispatcher,
+        )
+
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         store = mock()
         engine = mock()
         tileCache = mock()
+        thumbnailGenerator = mock()
+        thumbnailFileManager = mock()
         everySuspend { store.resetStuckDownloads() } returns Unit
         everySuspend { store.updateDownloadStatus(any(), any(), any()) } returns Unit
         everySuspend { store.updateRegionStats(any(), any(), any()) } returns Unit
@@ -74,7 +90,7 @@ class OfflineMapsViewModelTest {
         runTest {
             everySuspend { store.getRegions() } returns listOf(savedRegion)
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             assertEquals(listOf(savedRegion), vm.regions.value)
@@ -87,8 +103,9 @@ class OfflineMapsViewModelTest {
             everySuspend { store.deleteRegion(any()) } returns Unit
             everySuspend { store.getExclusiveTilesForRegion(any()) } returns emptyList()
             everySuspend { store.getFreedBytesForRegion(any()) } returns 0L
+            every { thumbnailFileManager.delete(any()) } returns Unit
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             everySuspend { store.getRegions() } returns emptyList()
@@ -108,13 +125,15 @@ class OfflineMapsViewModelTest {
 
             everySuspend { store.getRegions() } returns emptyList()
             everySuspend { store.saveRegion(any()) } returns 2L
+            everySuspend { thumbnailGenerator.generate(any(), any(), any(), any()) } returns false
+            every { thumbnailFileManager.thumbnailPath(any()) } returns "/cache/thumbnails/2.png"
             every { engine.download(any(), any()) } returns flowOf(progress1, progress2)
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
-            vm.startDownload("Airport area", bounds, minZoom = 8, maxZoom = 12)
+            vm.startDownload("Airport area", bounds, minZoom = 8, maxZoom = 12, viewportZoom = 10)
 
             assertTrue(vm.isDownloading.value)
 
@@ -128,31 +147,34 @@ class OfflineMapsViewModelTest {
         runTest(testDispatcher) {
             everySuspend { store.getRegions() } returns emptyList()
             everySuspend { store.saveRegion(any()) } returns 1L
+            everySuspend { thumbnailGenerator.generate(any(), any(), any(), any()) } returns false
+            every { thumbnailFileManager.thumbnailPath(any()) } returns "/cache/thumbnails/1.png"
             val progress = DownloadProgress(regionId = 1L, downloaded = 5L, total = 10L)
             every { engine.download(any(), any()) } returns flowOf(progress)
 
-            val vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            val localVm = makeVm()
             advanceUntilIdle()
 
             val collected = mutableListOf<DownloadProgress?>()
             val collectorJob =
                 launch {
-                    vm.downloadProgress.collect { collected.add(it) }
+                    localVm.downloadProgress.collect { collected.add(it) }
                 }
 
-            assertNull(vm.downloadProgress.value)
+            assertNull(localVm.downloadProgress.value)
 
-            vm.startDownload(
+            localVm.startDownload(
                 name = "Test",
                 bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0),
                 minZoom = 8,
                 maxZoom = 10,
+                viewportZoom = 9,
             )
             advanceUntilIdle()
 
             // Progress should have been emitted and then cleared
             assertTrue(collected.any { it != null })
-            assertNull(vm.downloadProgress.value)
+            assertNull(localVm.downloadProgress.value)
             collectorJob.cancel()
         }
 
@@ -161,13 +183,15 @@ class OfflineMapsViewModelTest {
         runTest {
             everySuspend { store.getRegions() } returns emptyList()
             everySuspend { store.saveRegion(any()) } returns 2L
+            everySuspend { thumbnailGenerator.generate(any(), any(), any(), any()) } returns false
+            every { thumbnailFileManager.thumbnailPath(any()) } returns "/cache/thumbnails/2.png"
             every { engine.download(any(), any()) } returns flowOf()
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
-            vm.startDownload("Airport area", bounds, minZoom = 8, maxZoom = 12)
+            vm.startDownload("Airport area", bounds, minZoom = 8, maxZoom = 12, viewportZoom = 10)
             advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(1)) {
@@ -195,13 +219,22 @@ class OfflineMapsViewModelTest {
                 )
             everySuspend { store.getRegions() } returns emptyList()
             everySuspend { store.saveRegion(any()) } returns 3L
+            everySuspend { thumbnailGenerator.generate(any(), any(), any(), any()) } returns false
+            every { thumbnailFileManager.thumbnailPath(any()) } returns "/cache/thumbnails/3.png"
             every { engine.download(any(), any()) } returns flowOf()
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
-            vm.startDownload("Custom area", bounds, minZoom = 8, maxZoom = 12, provider = customProvider)
+            vm.startDownload(
+                "Custom area",
+                bounds,
+                minZoom = 8,
+                maxZoom = 12,
+                viewportZoom = 10,
+                provider = customProvider,
+            )
             advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(1)) {
@@ -216,7 +249,7 @@ class OfflineMapsViewModelTest {
         runTest {
             everySuspend { store.getRegions() } returns emptyList()
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(1)) { store.resetStuckDownloads() }
@@ -227,6 +260,8 @@ class OfflineMapsViewModelTest {
         runTest {
             val partialRegion = savedRegion.copy(status = DownloadStatus.PARTIAL)
             everySuspend { store.saveRegion(any()) } returns 1L
+            everySuspend { thumbnailGenerator.generate(any(), any(), any(), any()) } returns false
+            every { thumbnailFileManager.thumbnailPath(any()) } returns "/cache/thumbnails/1.png"
             val downloadFlow =
                 flow<DownloadProgress> {
                     emit(DownloadProgress(regionId = 1L, downloaded = 5L, total = 10L))
@@ -235,11 +270,11 @@ class OfflineMapsViewModelTest {
             every { engine.download(any(), any()) } returns downloadFlow
             everySuspend { store.getRegions() } returns listOf(partialRegion)
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             val bounds = BoundingBox(minLat = 40.0, maxLat = 41.0, minLon = -75.0, maxLon = -74.0)
-            vm.startDownload("Home", bounds, minZoom = 8, maxZoom = 12)
+            vm.startDownload("Home", bounds, minZoom = 8, maxZoom = 12, viewportZoom = 10)
             advanceUntilIdle()
 
             vm.cancelDownload()
@@ -262,7 +297,7 @@ class OfflineMapsViewModelTest {
             val progress = DownloadProgress(regionId = 1L, downloaded = 2L, total = 2L)
             every { engine.download(any(), any()) } returns flowOf(progress)
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             vm.retryDownload(failedRegion)
@@ -281,7 +316,7 @@ class OfflineMapsViewModelTest {
             val downloadingRegion = savedRegion.copy(status = DownloadStatus.DOWNLOADING)
             everySuspend { store.getRegions() } returns listOf(downloadingRegion)
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             vm.requestDeleteRegion(downloadingRegion)
@@ -297,12 +332,135 @@ class OfflineMapsViewModelTest {
             everySuspend { store.getRegions() } returns listOf(partialRegion)
             everySuspend { store.getFreedBytesForRegion(any()) } returns 0L
 
-            vm = OfflineMapsViewModel(store, engine, tileCache, downloadScopeHolder, testDispatcher)
+            vm = makeVm()
             advanceUntilIdle()
 
             vm.requestDeleteRegion(partialRegion)
             advanceUntilIdle()
 
             assertEquals(partialRegion, vm.pendingDeleteRegion.value)
+        }
+
+    @Test
+    fun `startDownload generates thumbnail and persists path`() =
+        runTest {
+            everySuspend { store.getRegions() } returns emptyList()
+            everySuspend { store.saveRegion(any()) } returns 42L
+            everySuspend { thumbnailGenerator.generate(any(), any(), any(), any()) } returns true
+            every { thumbnailFileManager.thumbnailPath(42L) } returns "/cache/thumbnails/42.png"
+            everySuspend { store.updateThumbnail(any(), any(), any()) } returns Unit
+            every { engine.download(any(), any()) } returns flowOf()
+
+            vm = makeVm()
+            advanceUntilIdle()
+
+            val bounds = BoundingBox(minLat = 47.0, maxLat = 48.0, minLon = -122.5, maxLon = -122.0)
+            vm.startDownload("Test", bounds, minZoom = 8, maxZoom = 14, viewportZoom = 12)
+            advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                thumbnailGenerator.generate(
+                    bounds = bounds,
+                    providerId = any(),
+                    thumbnailZoom = 12,
+                    outputPath = "/cache/thumbnails/42.png",
+                )
+            }
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                store.updateThumbnail(42L, 12, "/cache/thumbnails/42.png")
+            }
+        }
+
+    @Test
+    fun `startDownload gracefully handles thumbnail failure`() =
+        runTest {
+            everySuspend { store.getRegions() } returns emptyList()
+            everySuspend { store.saveRegion(any()) } returns 42L
+            everySuspend { thumbnailGenerator.generate(any(), any(), any(), any()) } returns false
+            every { thumbnailFileManager.thumbnailPath(any()) } returns "/cache/thumbnails/42.png"
+            every { engine.download(any(), any()) } returns flowOf()
+
+            vm = makeVm()
+            advanceUntilIdle()
+
+            val bounds = BoundingBox(minLat = 47.0, maxLat = 48.0, minLon = -122.5, maxLon = -122.0)
+            vm.startDownload("Test", bounds, minZoom = 8, maxZoom = 14, viewportZoom = 12)
+            advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                store.updateThumbnail(any(), any(), any())
+            }
+        }
+
+    @Test
+    fun `onLoad auto-regenerates missing thumbnail for complete region`() =
+        runTest {
+            val regionWithMissingThumbnail =
+                savedRegion.copy(
+                    id = 5L,
+                    thumbnailZoom = 12,
+                    thumbnailPath = null,
+                    status = DownloadStatus.COMPLETE,
+                )
+            everySuspend { store.getRegions() } returns listOf(regionWithMissingThumbnail)
+            every { thumbnailFileManager.thumbnailPath(5L) } returns "/cache/thumbnails/5.png"
+            everySuspend { thumbnailGenerator.generate(any(), any(), any(), any()) } returns true
+            everySuspend { store.updateThumbnail(any(), any(), any()) } returns Unit
+
+            vm = makeVm()
+            advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                thumbnailGenerator.generate(
+                    bounds = any(),
+                    providerId = any(),
+                    thumbnailZoom = 12,
+                    outputPath = "/cache/thumbnails/5.png",
+                )
+            }
+            verifySuspend(mode = VerifyMode.exactly(1)) {
+                store.updateThumbnail(5L, 12, "/cache/thumbnails/5.png")
+            }
+        }
+
+    @Test
+    fun `onLoad skips regeneration for incomplete region`() =
+        runTest {
+            val downloadingRegion =
+                savedRegion.copy(
+                    id = 6L,
+                    thumbnailZoom = 12,
+                    thumbnailPath = null,
+                    status = DownloadStatus.DOWNLOADING,
+                )
+            everySuspend { store.getRegions() } returns listOf(downloadingRegion)
+
+            vm = makeVm()
+            advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(0)) {
+                thumbnailGenerator.generate(any(), any(), any(), any())
+            }
+        }
+
+    @Test
+    fun `confirmDelete deletes thumbnail file`() =
+        runTest {
+            val regionToDelete = savedRegion.copy(id = 3L)
+            everySuspend { store.getRegions() } returns listOf(regionToDelete)
+            everySuspend { store.deleteRegion(any()) } returns Unit
+            everySuspend { store.getExclusiveTilesForRegion(any()) } returns emptyList()
+            everySuspend { store.getFreedBytesForRegion(any()) } returns 0L
+            every { thumbnailFileManager.delete(any()) } returns Unit
+
+            vm = makeVm()
+            advanceUntilIdle()
+
+            everySuspend { store.getRegions() } returns emptyList()
+            vm.requestDeleteRegion(regionToDelete)
+            vm.confirmDelete()
+            advanceUntilIdle()
+
+            verify(mode = VerifyMode.exactly(1)) { thumbnailFileManager.delete(3L) }
         }
 }

@@ -56,7 +56,7 @@ fun SettingsScreen() {
                     val onStartDownloadFn =
                         remember(vm) {
                             { name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int, viewportZoom: Int ->
-                                vm.startDownload(name, bounds, minZoom, maxZoom)
+                                vm.startDownload(name, bounds, minZoom, maxZoom, viewportZoom)
                             }
                         }
                     pendingDelete?.let { region ->
