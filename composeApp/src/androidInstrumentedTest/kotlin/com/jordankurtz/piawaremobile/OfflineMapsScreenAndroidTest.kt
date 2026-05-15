@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.jordankurtz.piawaremobile.map.offline.DownloadStatus
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import com.jordankurtz.piawaremobile.settings.ui.OfflineMapsScreen
 import org.junit.Rule
@@ -41,6 +42,7 @@ class OfflineMapsScreenAndroidTest {
                     createdAt = 1700000000000L,
                     tileCount = 2400L,
                     sizeBytes = 50L * 1024 * 1024,
+                    status = DownloadStatus.COMPLETE,
                 ),
             )
         composeTestRule.setContent {
