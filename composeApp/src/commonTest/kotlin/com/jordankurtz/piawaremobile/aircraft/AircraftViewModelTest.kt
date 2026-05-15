@@ -452,9 +452,10 @@ class DefaultTickerFlowTest {
             val flow = defaultTickerFlow(100.milliseconds)
             val emissions = mutableListOf<Unit>()
 
-            val job = launch {
-                flow.collect { emissions.add(it) }
-            }
+            val job =
+                launch {
+                    flow.collect { emissions.add(it) }
+                }
 
             testScheduler.advanceTimeBy(250)
             job.cancel()
@@ -468,9 +469,10 @@ class DefaultTickerFlowTest {
             val flow = defaultTickerFlow(50.milliseconds)
             val emissions = mutableListOf<Unit>()
 
-            val job = launch {
-                flow.collect { emissions.add(it) }
-            }
+            val job =
+                launch {
+                    flow.collect { emissions.add(it) }
+                }
 
             testScheduler.advanceTimeBy(175)
             job.cancel()
