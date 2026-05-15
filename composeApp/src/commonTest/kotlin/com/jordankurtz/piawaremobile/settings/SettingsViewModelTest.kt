@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.settings
 
 import app.cash.turbine.test
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import dev.mokkery.answering.returns
@@ -62,6 +63,7 @@ class SettingsViewModelTest {
         everySuspend { settingsService.setOpenUrlsExternally(any()) } returns Unit
         everySuspend { settingsService.setEnableFlightAwareApi(any()) } returns Unit
         everySuspend { settingsService.setFlightAwareApiKey(any()) } returns Unit
+        everySuspend { settingsService.setMapProviderId(any()) } returns Unit
 
         viewModel = SettingsViewModel(settingsService)
     }
@@ -196,5 +198,52 @@ class SettingsViewModelTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setOpenUrlsExternally(true) }
+        }
+
+    @Test
+    fun `updateTrailDisplayMode delegates to settings service`() =
+        runTest {
+            viewModel.updateTrailDisplayMode(TrailDisplayMode.ALL)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setTrailDisplayMode(TrailDisplayMode.ALL) }
+        }
+
+    @Test
+    fun `updateShowMinimapTrails delegates to settings service`() =
+        runTest {
+            viewModel.updateShowMinimapTrails(true)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setShowMinimapTrails(true) }
+        }
+
+    @Test
+    fun `updateEnableFlightAwareApi delegates to settings service`() =
+        runTest {
+            viewModel.updateEnableFlightAwareApi(true)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setEnableFlightAwareApi(true) }
+        }
+
+    @Test
+    fun `updateFlightAwareApiKey delegates to settings service`() =
+        runTest {
+            viewModel.updateFlightAwareApiKey("my_api_key")
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(mode = VerifyMode.exactly(1)) { settingsService.setFlightAwareApiKey("my_api_key") }
+        }
+
+    @Test
+    fun `updateMapProvider delegates provider id to settings service`() =
+        runTest {
+            viewModel.updateMapProvider(TileProviders.OPENSTREETMAP)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verifySuspend(
+                mode = VerifyMode.exactly(1),
+            ) { settingsService.setMapProviderId(TileProviders.OPENSTREETMAP.id) }
         }
 }
