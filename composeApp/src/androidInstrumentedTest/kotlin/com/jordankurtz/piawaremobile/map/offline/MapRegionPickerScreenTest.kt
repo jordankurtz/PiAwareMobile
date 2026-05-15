@@ -14,7 +14,7 @@ class MapRegionPickerScreenTest {
     @Test
     fun pickerRendersConfirmAndCancelButtons() {
         composeTestRule.setContent {
-            MapRegionPickerContent(onRegionSelected = {}, onDismiss = {}, mapLayer = {})
+            MapRegionPickerContent(onRegionSelected = { _, _ -> }, onDismiss = {}, mapLayer = {})
         }
         composeTestRule.onNodeWithText("Confirm", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("Cancel", substring = true).assertIsDisplayed()
@@ -23,7 +23,7 @@ class MapRegionPickerScreenTest {
     @Test
     fun modeToggleButtonRendersInDefaultBoxMode() {
         composeTestRule.setContent {
-            MapRegionPickerContent(onRegionSelected = {}, onDismiss = {}, mapLayer = {})
+            MapRegionPickerContent(onRegionSelected = { _, _ -> }, onDismiss = {}, mapLayer = {})
         }
         composeTestRule.onNodeWithContentDescription("Switch to map mode").assertIsDisplayed()
     }
