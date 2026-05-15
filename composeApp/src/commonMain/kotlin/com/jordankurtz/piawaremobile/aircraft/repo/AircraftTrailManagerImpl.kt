@@ -55,8 +55,9 @@ class AircraftTrailManagerImpl : AircraftTrailManager {
                 positions.addAll(newPositions)
             }
 
-            // Sort positions by timestamp and deduplicate
-            trailPositions.forEach { (_, positions) ->
+            // Sort positions by timestamp and deduplicate only the updated entries
+            trails.keys.forEach { hex ->
+                val positions = trailPositions[hex] ?: return@forEach
                 val sorted = positions.sortedBy { it.timestamp }.distinctBy { it.timestamp }
                 positions.clear()
                 sorted.forEach { pos ->
