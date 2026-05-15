@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map.offline
 
+@Suppress("TooManyFunctions")
 interface OfflineTileStore {
     suspend fun saveRegion(region: OfflineRegion): Long
 
