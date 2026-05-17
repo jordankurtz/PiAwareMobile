@@ -32,7 +32,7 @@ actual class TileCacheModule {
     }
 
     @Single
-    fun provideThumbnailGenerator(
+    actual fun provideThumbnailGenerator(
         contextWrapper: ContextWrapper,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): ThumbnailGenerator =
@@ -42,6 +42,6 @@ actual class TileCacheModule {
         )
 
     @Single
-    fun provideThumbnailFileManager(contextWrapper: ContextWrapper): ThumbnailFileManager =
+    actual fun provideThumbnailFileManager(contextWrapper: ContextWrapper): ThumbnailFileManager =
         AndroidThumbnailFileManager(File(contextWrapper.context.cacheDir, "thumbnails"))
 }

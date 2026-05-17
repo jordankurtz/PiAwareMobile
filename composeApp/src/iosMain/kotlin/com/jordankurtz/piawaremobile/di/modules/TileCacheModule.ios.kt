@@ -36,7 +36,8 @@ actual class TileCacheModule {
     }
 
     @Single
-    fun provideThumbnailGenerator(
+    actual fun provideThumbnailGenerator(
+        contextWrapper: ContextWrapper,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): ThumbnailGenerator =
         IosThumbnailGenerator(
@@ -45,7 +46,8 @@ actual class TileCacheModule {
         )
 
     @Single
-    fun provideThumbnailFileManager(): ThumbnailFileManager = IosThumbnailFileManager(iosThumbnailDir())
+    actual fun provideThumbnailFileManager(contextWrapper: ContextWrapper): ThumbnailFileManager =
+        IosThumbnailFileManager(iosThumbnailDir())
 }
 
 private fun iosCacheDir(): String {

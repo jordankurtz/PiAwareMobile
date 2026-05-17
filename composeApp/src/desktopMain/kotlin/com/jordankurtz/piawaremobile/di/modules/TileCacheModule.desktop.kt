@@ -32,7 +32,8 @@ actual class TileCacheModule {
     }
 
     @Single
-    fun provideThumbnailGenerator(
+    actual fun provideThumbnailGenerator(
+        contextWrapper: ContextWrapper,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): ThumbnailGenerator =
         DesktopThumbnailGenerator(
@@ -41,7 +42,7 @@ actual class TileCacheModule {
         )
 
     @Single
-    fun provideThumbnailFileManager(): ThumbnailFileManager =
+    actual fun provideThumbnailFileManager(contextWrapper: ContextWrapper): ThumbnailFileManager =
         DesktopThumbnailFileManager(File(desktopCacheDir().parent, "thumbnails"))
 }
 
