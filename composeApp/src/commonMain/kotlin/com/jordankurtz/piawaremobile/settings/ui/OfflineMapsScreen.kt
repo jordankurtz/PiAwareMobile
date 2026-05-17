@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -240,12 +242,12 @@ internal fun OfflineRegionItem(
             AsyncImage(
                 model = "file://${region.thumbnailPath}",
                 contentDescription = stringResource(Res.string.offline_map_thumbnail),
-                modifier = Modifier.size(64.dp),
+                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)),
             )
         } else {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(64.dp),
+                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Map,
