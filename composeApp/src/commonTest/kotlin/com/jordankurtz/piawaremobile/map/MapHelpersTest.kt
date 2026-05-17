@@ -186,4 +186,29 @@ class MapHelpersTest {
         val result = computeFitTarget(coordinates)
         assertIs<FitTarget.BoundingRegion>(result)
     }
+
+    // --- scaleToOsmZoom tests ---
+
+    @Test
+    fun scaleToOsmZoomScaleOneReturnsMaxLevel() {
+        assertEquals(MAX_LEVEL, scaleToOsmZoom(1.0f))
+    }
+
+    @Test
+    fun scaleToOsmZoomMidRangeScale() {
+        // scale = 0.25 → log2(0.25) = -2 → 16 + (-2) = 14
+        assertEquals(14, scaleToOsmZoom(0.25f))
+    }
+
+    @Test
+    fun scaleToOsmZoomLargeScaleClampsToMaxLevel() {
+        // scale = 2.0 → log2(2.0) = 1 → 17, clamped to MAX_LEVEL (16)
+        assertEquals(MAX_LEVEL, scaleToOsmZoom(2.0f))
+    }
+
+    @Test
+    fun scaleToOsmZoomVerySmallScaleClampsToMinLevel() {
+        // scale ≈ 1e-6 → log2 ≈ -19.9 → well below MIN_LEVEL, clamped to 1
+        assertEquals(MIN_LEVEL, scaleToOsmZoom(1e-6f))
+    }
 }
