@@ -23,6 +23,7 @@ class SqlDelightOfflineTileStore(
                     provider_id = region.providerId,
                     created_at = region.createdAt,
                     status = region.status.name,
+                    thumbnail_zoom = region.thumbnailZoom?.toLong(),
                 )
                 queries.lastInsertedRegionId().executeAsOne()
             }
@@ -127,6 +128,14 @@ class SqlDelightOfflineTileStore(
         withContext(ioDispatcher) {
             queries.resetStuckDownloads()
         }
+
+    override suspend fun updateThumbnail(
+        id: Long,
+        zoom: Int,
+        path: String,
+    ) = withContext(ioDispatcher) {
+        queries.updateRegionThumbnail(thumbnailZoom = zoom.toLong(), thumbnailPath = path, id = id)
+    }
 }
 
 private fun Offline_region.toOfflineRegion() =
@@ -145,4 +154,6 @@ private fun Offline_region.toOfflineRegion() =
         sizeBytes = size_bytes,
         status = DownloadStatus.entries.find { it.name == status } ?: DownloadStatus.FAILED,
         downloadedTileCount = downloaded_tile_count,
+        thumbnailZoom = thumbnail_zoom?.toInt(),
+        thumbnailPath = thumbnail_path,
     )

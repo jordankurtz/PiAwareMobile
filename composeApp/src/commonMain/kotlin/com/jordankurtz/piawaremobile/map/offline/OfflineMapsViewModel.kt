@@ -24,6 +24,8 @@ class OfflineMapsViewModel(
     private val engine: DownloadEngine,
     private val tileCache: TileCache,
     private val downloadScopeHolder: DownloadScopeHolder,
+    private val thumbnailGenerator: ThumbnailGenerator,
+    private val thumbnailFileManager: ThumbnailFileManager,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _regions = MutableStateFlow<List<OfflineRegion>>(emptyList())
@@ -41,6 +43,7 @@ class OfflineMapsViewModel(
         viewModelScope.launch(ioDispatcher) {
             store.resetStuckDownloads()
             _regions.value = store.getRegions()
+            regenerateMissingThumbnails(_regions.value)
         }
     }
 
@@ -76,6 +79,7 @@ class OfflineMapsViewModel(
                 tileCache.delete(zoom, col, row, region.providerId)
             }
             store.deleteRegion(region.id)
+            thumbnailFileManager.delete(region.id)
             _regions.value = store.getRegions()
         }
     }
@@ -85,6 +89,7 @@ class OfflineMapsViewModel(
         bounds: BoundingBox,
         minZoom: Int,
         maxZoom: Int,
+        viewportZoom: Int,
         provider: TileProviderConfig = TileProviders.OPENSTREETMAP,
     ) {
         if (!_isDownloading.compareAndSet(expect = false, update = true)) return
@@ -99,12 +104,26 @@ class OfflineMapsViewModel(
                 maxLon = bounds.maxLon,
                 providerId = provider.id,
                 createdAt = Clock.System.now().toEpochMilliseconds(),
+                thumbnailZoom = viewportZoom,
             )
         downloadJob =
             downloadScopeHolder.scope.launch {
                 val regionId = store.saveRegion(region)
                 // Show the region immediately in the list before tiles start downloading
                 _regions.value = _regions.value + region.copy(id = regionId, status = DownloadStatus.DOWNLOADING)
+
+                val outputPath = thumbnailFileManager.thumbnailPath(regionId)
+                val generated =
+                    thumbnailGenerator.generate(
+                        bounds = bounds,
+                        providerId = provider.id,
+                        thumbnailZoom = viewportZoom,
+                        outputPath = outputPath,
+                    )
+                if (generated) {
+                    store.updateThumbnail(regionId, viewportZoom, outputPath)
+                }
+
                 doDownload(regionId)
             }
     }
@@ -155,6 +174,7 @@ class OfflineMapsViewModel(
             }
             // Refresh from DB on completion to pick up final stats and COMPLETE status
             _regions.value = store.getRegions()
+            regenerateMissingThumbnails(_regions.value)
         } catch (e: CancellationException) {
             withContext(NonCancellable) {
                 store.updateRegionStats(regionId, lastTileCount, 0L)
@@ -171,5 +191,28 @@ class OfflineMapsViewModel(
             _downloadProgress.value = null
             downloadJob = null
         }
+    }
+
+    private suspend fun regenerateMissingThumbnails(regions: List<OfflineRegion>) {
+        regions
+            .filter { region ->
+                region.thumbnailZoom != null &&
+                    region.status == DownloadStatus.COMPLETE &&
+                    (region.thumbnailPath == null || !thumbnailFileManager.exists(region.thumbnailPath!!))
+            }
+            .forEach { region ->
+                val path = thumbnailFileManager.thumbnailPath(region.id)
+                val ok =
+                    thumbnailGenerator.generate(
+                        bounds = BoundingBox(region.minLat, region.maxLat, region.minLon, region.maxLon),
+                        providerId = region.providerId,
+                        thumbnailZoom = region.thumbnailZoom!!,
+                        outputPath = path,
+                    )
+                if (ok) {
+                    store.updateThumbnail(region.id, region.thumbnailZoom!!, path)
+                    _regions.value = store.getRegions()
+                }
+            }
     }
 }

@@ -17,7 +17,7 @@ class MapRegionPickerScreenTest {
         runComposeUiTest {
             setContent {
                 MapRegionPickerContent(
-                    onRegionSelected = {},
+                    onRegionSelected = { _, _ -> },
                     onDismiss = {},
                     mapLayer = {},
                 )
@@ -32,7 +32,7 @@ class MapRegionPickerScreenTest {
             var dismissed = false
             setContent {
                 MapRegionPickerContent(
-                    onRegionSelected = {},
+                    onRegionSelected = { _, _ -> },
                     onDismiss = { dismissed = true },
                     mapLayer = {},
                 )
@@ -47,7 +47,7 @@ class MapRegionPickerScreenTest {
             var selectedBounds: BoundingBox? = null
             setContent {
                 MapRegionPickerContent(
-                    onRegionSelected = { selectedBounds = it },
+                    onRegionSelected = { bounds, _ -> selectedBounds = bounds },
                     onDismiss = {},
                     mapLayer = {},
                 )
@@ -61,7 +61,7 @@ class MapRegionPickerScreenTest {
         runComposeUiTest {
             setContent {
                 MapRegionPickerContent(
-                    onRegionSelected = {},
+                    onRegionSelected = { _, _ -> },
                     onDismiss = {},
                     mapLayer = {},
                 )
@@ -76,7 +76,7 @@ class MapRegionPickerScreenTest {
         runComposeUiTest {
             setContent {
                 MapRegionPickerContent(
-                    onRegionSelected = {},
+                    onRegionSelected = { _, _ -> },
                     onDismiss = {},
                     mapLayer = {},
                 )
@@ -92,7 +92,7 @@ class MapRegionPickerScreenTest {
         runComposeUiTest {
             setContent {
                 MapRegionPickerContent(
-                    onRegionSelected = {},
+                    onRegionSelected = { _, _ -> },
                     onDismiss = {},
                     mapLayer = {},
                 )

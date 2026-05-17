@@ -4,11 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -26,9 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.DownloadStatus
 import com.jordankurtz.piawaremobile.map.offline.MapRegionPickerScreen
@@ -42,6 +50,8 @@ import piawaremobile.composeapp.generated.resources.ic_clear
 import piawaremobile.composeapp.generated.resources.ic_delete
 import piawaremobile.composeapp.generated.resources.ic_refresh
 import piawaremobile.composeapp.generated.resources.navigate_back
+import piawaremobile.composeapp.generated.resources.offline_map_thumbnail
+import piawaremobile.composeapp.generated.resources.offline_map_thumbnail_placeholder
 import piawaremobile.composeapp.generated.resources.offline_maps_add_region
 import piawaremobile.composeapp.generated.resources.offline_maps_cancel_download
 import piawaremobile.composeapp.generated.resources.offline_maps_empty_message
@@ -62,7 +72,13 @@ fun OfflineMapsScreen(
     regions: List<OfflineRegion> = emptyList(),
     onDeleteRegion: (OfflineRegion) -> Unit = {},
     onRetry: (OfflineRegion) -> Unit = {},
-    onStartDownload: (name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int) -> Unit = { _, _, _, _ -> },
+    onStartDownload: (
+        name: String,
+        bounds: BoundingBox,
+        minZoom: Int,
+        maxZoom: Int,
+        viewportZoom: Int,
+    ) -> Unit = { _, _, _, _, _ -> },
     onCancelDownload: () -> Unit = {},
 ) {
     var showDownloadDialog by remember { mutableStateOf(false) }
@@ -70,11 +86,13 @@ fun OfflineMapsScreen(
     var pendingBounds by remember { mutableStateOf<BoundingBox?>(null) }
     // Hoisted so the name survives round-trips to the map picker
     var pendingName by remember { mutableStateOf("") }
+    var pendingViewportZoom by remember { mutableStateOf(0) }
 
     if (showMapPicker) {
         MapRegionPickerScreen(
-            onRegionSelected = { bounds ->
+            onRegionSelected = { bounds, viewportZoom ->
                 pendingBounds = bounds
+                pendingViewportZoom = viewportZoom
                 showMapPicker = false
                 showDownloadDialog = true
             },
@@ -95,16 +113,18 @@ fun OfflineMapsScreen(
                 pendingBounds = null
                 pendingName = ""
             },
-            onConfirm = { minZoom, maxZoom ->
+            onConfirm = { minZoom, maxZoom, viewportZoom ->
                 val bounds = pendingBounds
                 if (bounds != null) {
-                    onStartDownload(pendingName, bounds, minZoom, maxZoom)
+                    onStartDownload(pendingName, bounds, minZoom, maxZoom, viewportZoom)
                     showDownloadDialog = false
                     pendingBounds = null
                     pendingName = ""
+                    pendingViewportZoom = 0
                 }
             },
             selectedBounds = pendingBounds,
+            selectedViewportZoom = pendingViewportZoom,
             onSelectOnMap = {
                 showDownloadDialog = false
                 showMapPicker = true
@@ -204,7 +224,7 @@ private fun OfflineRegionList(
 }
 
 @Composable
-private fun OfflineRegionItem(
+internal fun OfflineRegionItem(
     region: OfflineRegion,
     onDelete: () -> Unit,
     onRetry: () -> Unit,
@@ -218,6 +238,25 @@ private fun OfflineRegionItem(
                 .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (region.thumbnailPath != null) {
+            AsyncImage(
+                model = "file://${region.thumbnailPath}",
+                contentDescription = stringResource(Res.string.offline_map_thumbnail),
+                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)),
+            )
+        } else {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Map,
+                    contentDescription = stringResource(Res.string.offline_map_thumbnail_placeholder),
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = region.name,

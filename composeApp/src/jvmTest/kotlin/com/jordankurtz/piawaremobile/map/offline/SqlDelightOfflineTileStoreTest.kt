@@ -303,6 +303,31 @@ class SqlDelightOfflineTileStoreTest {
             assertFalse(store.isPinned(zoomLevel = 8, col = 3, row = 4, providerId = "osm"))
         }
 
+    @Test
+    fun `updateThumbnail persists zoom and path`() =
+        runTest(testDispatcher) {
+            val regionId =
+                store.saveRegion(
+                    OfflineRegion(
+                        name = "Test",
+                        minZoom = 8,
+                        maxZoom = 14,
+                        minLat = 47.0,
+                        maxLat = 48.0,
+                        minLon = -122.5,
+                        maxLon = -122.0,
+                        providerId = "openstreetmap",
+                        createdAt = 0L,
+                    ),
+                )
+
+            store.updateThumbnail(regionId, zoom = 12, path = "/cache/thumbnails/1.png")
+
+            val region = store.getRegion(regionId)
+            assertEquals(12, region?.thumbnailZoom)
+            assertEquals("/cache/thumbnails/1.png", region?.thumbnailPath)
+        }
+
     private fun insertTile(
         zoom: Int,
         col: Int,

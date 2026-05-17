@@ -65,8 +65,9 @@ fun DownloadRegionDialog(
     name: String,
     onNameChange: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (minZoom: Int, maxZoom: Int) -> Unit,
+    onConfirm: (minZoom: Int, maxZoom: Int, viewportZoom: Int) -> Unit,
     selectedBounds: BoundingBox? = null,
+    selectedViewportZoom: Int = 0,
     onSelectOnMap: () -> Unit = {},
 ) {
     var minZoom by remember { mutableFloatStateOf(DEFAULT_MIN_ZOOM) }
@@ -217,7 +218,7 @@ fun DownloadRegionDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
-                        onClick = { onConfirm(minZoom.toInt(), maxZoom.toInt()) },
+                        onClick = { onConfirm(minZoom.toInt(), maxZoom.toInt(), selectedViewportZoom) },
                         enabled = isValid,
                     ) {
                         Text(stringResource(Res.string.offline_maps_dialog_download))

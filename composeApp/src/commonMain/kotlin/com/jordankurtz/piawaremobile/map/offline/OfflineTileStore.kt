@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map.offline
 
+@Suppress("TooManyFunctions")
 interface OfflineTileStore {
     suspend fun saveRegion(region: OfflineRegion): Long
 
@@ -43,4 +44,10 @@ interface OfflineTileStore {
     suspend fun getFreedBytesForRegion(id: Long): Long
 
     suspend fun resetStuckDownloads()
+
+    suspend fun updateThumbnail(
+        id: Long,
+        zoom: Int,
+        path: String,
+    )
 }

@@ -100,7 +100,8 @@ kotlin {
             implementation(libs.datastore.preferences)
             implementation(libs.multiplatform.settings.datastore)
             implementation(libs.multiplatform.settings.coroutines)
-
+            implementation(libs.coil.compose)
+            implementation(compose.materialIconsExtended)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

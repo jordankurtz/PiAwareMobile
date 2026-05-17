@@ -22,7 +22,7 @@ class DownloadRegionDialogTest {
     fun displaysDialogElements() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
+                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _, _ -> })
             }
             onNodeWithText("Download Region").assertIsDisplayed()
             onNodeWithText("Region name").assertIsDisplayed()
@@ -37,7 +37,7 @@ class DownloadRegionDialogTest {
     fun downloadButtonDisabledWhenNameBlank() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
+                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _, _ -> })
             }
             onNodeWithText("Download").assertIsNotEnabled()
         }
@@ -51,7 +51,7 @@ class DownloadRegionDialogTest {
                     name = "My Region",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     selectedBounds = bounds,
                 )
             }
@@ -66,7 +66,7 @@ class DownloadRegionDialogTest {
                     name = "My Region",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     selectedBounds = null,
                 )
             }
@@ -83,7 +83,7 @@ class DownloadRegionDialogTest {
                     name = "World",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     selectedBounds = bounds,
                 )
             }
@@ -104,7 +104,7 @@ class DownloadRegionDialogTest {
                         capturedName = it
                     },
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                 )
             }
             onNodeWithText("Region name").performClick()
@@ -117,11 +117,12 @@ class DownloadRegionDialogTest {
         runComposeUiTest {
             var dismissed = false
             setContent {
-                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = { dismissed = true }, onConfirm = {
-                        _,
-                        _,
-                    ->
-                })
+                DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
+                    onDismiss = { dismissed = true },
+                    onConfirm = { _, _, _ -> },
+                )
             }
             onNodeWithText("Cancel").performClick()
             assertTrue(dismissed)
@@ -137,7 +138,7 @@ class DownloadRegionDialogTest {
                     name = "Airport Area",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> confirmCalled = true },
+                    onConfirm = { _, _, _ -> confirmCalled = true },
                     selectedBounds = bounds,
                 )
             }
@@ -149,7 +150,7 @@ class DownloadRegionDialogTest {
     fun selectOnMapButtonIsVisible() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _ -> })
+                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _, _ -> })
             }
             onNodeWithText("Select on map").assertIsDisplayed()
         }
@@ -163,7 +164,7 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     onSelectOnMap = { selectOnMapCalled = true },
                 )
             }
@@ -180,7 +181,7 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     selectedBounds = bounds,
                 )
             }
@@ -195,7 +196,7 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     selectedBounds = null,
                 )
             }
@@ -211,7 +212,7 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     selectedBounds = bounds,
                 )
             }
@@ -226,7 +227,7 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     selectedBounds = null,
                 )
             }
