@@ -196,21 +196,23 @@ class OfflineMapsViewModel(
     private suspend fun regenerateMissingThumbnails(regions: List<OfflineRegion>) {
         regions
             .filter { region ->
+                val existingPath = region.thumbnailPath
                 region.thumbnailZoom != null &&
                     region.status == DownloadStatus.COMPLETE &&
-                    (region.thumbnailPath == null || !thumbnailFileManager.exists(region.thumbnailPath!!))
+                    (existingPath == null || !thumbnailFileManager.exists(existingPath))
             }
             .forEach { region ->
+                val zoom = region.thumbnailZoom ?: return@forEach
                 val path = thumbnailFileManager.thumbnailPath(region.id)
                 val ok =
                     thumbnailGenerator.generate(
                         bounds = BoundingBox(region.minLat, region.maxLat, region.minLon, region.maxLon),
                         providerId = region.providerId,
-                        thumbnailZoom = region.thumbnailZoom!!,
+                        thumbnailZoom = zoom,
                         outputPath = path,
                     )
                 if (ok) {
-                    store.updateThumbnail(region.id, region.thumbnailZoom!!, path)
+                    store.updateThumbnail(region.id, zoom, path)
                     _regions.value = store.getRegions()
                 }
             }
