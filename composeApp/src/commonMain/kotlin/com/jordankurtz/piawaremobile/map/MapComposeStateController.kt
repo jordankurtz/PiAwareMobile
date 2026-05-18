@@ -110,5 +110,5 @@ class MapComposeStateController : MapStateController {
 
     override fun removePath(id: String) = mapState.removePath(id)
 
-    override fun shutdown() = mapState.shutdown()
+    fun shutdown() = mapState.shutdown()
 }

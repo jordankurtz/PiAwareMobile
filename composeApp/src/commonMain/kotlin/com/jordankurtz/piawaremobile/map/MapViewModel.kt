@@ -429,4 +429,9 @@ class MapViewModel(
         previousPathIds.forEach { mapStateController.removePath(it) }
         previousPathIds.clear()
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        (mapStateController as? MapComposeStateController)?.shutdown()
+    }
 }

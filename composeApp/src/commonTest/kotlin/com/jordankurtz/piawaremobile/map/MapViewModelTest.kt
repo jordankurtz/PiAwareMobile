@@ -80,7 +80,6 @@ class MapViewModelTest {
     @AfterTest
     fun tearDown() {
         viewModel?.viewModelScope?.cancel()
-        viewModel?.mapStateController?.shutdown()
         viewModel = null
         Dispatchers.resetMain()
     }

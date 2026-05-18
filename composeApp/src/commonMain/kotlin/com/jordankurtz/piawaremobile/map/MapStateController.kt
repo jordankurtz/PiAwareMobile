@@ -67,6 +67,4 @@ interface MapStateController {
     )
 
     fun removePath(id: String)
-
-    fun shutdown()
 }

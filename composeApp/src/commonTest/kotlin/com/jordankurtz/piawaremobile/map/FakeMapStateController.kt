@@ -64,6 +64,4 @@ class FakeMapStateController : MapStateController {
     ) = Unit
 
     override fun removePath(id: String) = Unit
-
-    override fun shutdown() = Unit
 }
