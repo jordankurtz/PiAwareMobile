@@ -41,9 +41,6 @@ import kotlin.test.assertTrue
 
 @ExperimentalCoroutinesApi
 class MapViewModelTest {
-    // Runs in desktopTest because MapCompose's MapState requires a working Compose runtime
-    // and snapshot system. Android JVM unit tests lack a Looper, causing snapshot coroutines
-    // to leak IllegalStateException via HandlerDispatcher when Dispatchers.Main is reset.
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var mapProvider: TileStreamProvider
@@ -83,7 +80,7 @@ class MapViewModelTest {
     @AfterTest
     fun tearDown() {
         viewModel?.viewModelScope?.cancel()
-        viewModel?.state?.shutdown()
+        viewModel?.mapStateController?.shutdown()
         viewModel = null
         Dispatchers.resetMain()
     }
@@ -99,6 +96,7 @@ class MapViewModelTest {
                 saveMapStateUseCase = saveMapStateUseCase,
                 loadSettingsUseCase = loadSettingsUseCase,
                 tileCacheStatsTracker = TileCacheStatsTracker(),
+                mapStateController = FakeMapStateController(),
             )
         viewModel = vm
         return vm
