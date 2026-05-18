@@ -22,21 +22,46 @@ class FakeMapStateController : MapStateController {
 
     override fun onTouchDown(handler: () -> Unit) = Unit
 
-    override fun replaceLayer(layerId: String, provider: TileStreamProvider): String? = null
+    override fun replaceLayer(
+        layerId: String,
+        provider: TileStreamProvider,
+    ): String? = null
 
-    override suspend fun setScroll(x: Double, y: Double) = Unit
+    override suspend fun setScroll(
+        x: Double,
+        y: Double,
+    ) = Unit
 
     override var scale: Double = 1.0
 
-    override suspend fun scrollTo(x: Double, y: Double, animationSpec: AnimationSpec<Float>) = Unit
+    override suspend fun scrollTo(
+        x: Double,
+        y: Double,
+        animationSpec: AnimationSpec<Float>,
+    ) = Unit
 
-    override suspend fun scrollTo(area: BoundingBox, padding: Offset, animationSpec: AnimationSpec<Float>) = Unit
+    override suspend fun scrollTo(
+        area: BoundingBox,
+        padding: Offset,
+        animationSpec: AnimationSpec<Float>,
+    ) = Unit
 
-    override fun addMarker(id: String, x: Double, y: Double, relativeOffset: Offset, content: @Composable () -> Unit) = Unit
+    override fun addMarker(
+        id: String,
+        x: Double,
+        y: Double,
+        relativeOffset: Offset,
+        content: @Composable () -> Unit,
+    ) = Unit
 
     override fun removeMarker(id: String) = Unit
 
-    override fun addPath(id: String, color: Color, width: Dp, init: PathDataBuilder.() -> Unit) = Unit
+    override fun addPath(
+        id: String,
+        color: Color,
+        width: Dp,
+        init: PathDataBuilder.() -> Unit,
+    ) = Unit
 
     override fun removePath(id: String) = Unit
 

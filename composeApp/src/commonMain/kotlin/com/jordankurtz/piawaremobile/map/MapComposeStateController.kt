@@ -29,19 +29,21 @@ import ovh.plrapps.mapcompose.ui.state.MapState
 import kotlin.math.pow
 
 class MapComposeStateController : MapStateController {
-    val mapState: MapState = MapState(
-        levelCount = MAX_LEVEL + 1,
-        mapSize,
-        mapSize,
-        workerCount = 16,
-    ) {
-        minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
-    }
+    val mapState: MapState =
+        MapState(
+            levelCount = MAX_LEVEL + 1,
+            mapSize,
+            mapSize,
+            workerCount = 16,
+        ) {
+            minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
+        }
 
-    override val scrollAndScaleFlow: Flow<MapScrollPosition> = snapshotFlow {
-        val s = mapState.scroll
-        MapScrollPosition(s.x, s.y, mapState.scale)
-    }
+    override val scrollAndScaleFlow: Flow<MapScrollPosition> =
+        snapshotFlow {
+            val s = mapState.scroll
+            MapScrollPosition(s.x, s.y, mapState.scale)
+        }
 
     override fun addLayer(provider: TileStreamProvider): String = mapState.addLayer(provider)
 
@@ -57,29 +59,52 @@ class MapComposeStateController : MapStateController {
         mapState.onTouchDown { handler() }
     }
 
-    override fun replaceLayer(layerId: String, provider: TileStreamProvider): String? =
-        mapState.replaceLayer(layerId, provider)
+    override fun replaceLayer(
+        layerId: String,
+        provider: TileStreamProvider,
+    ): String? = mapState.replaceLayer(layerId, provider)
 
-    override suspend fun setScroll(x: Double, y: Double) = mapState.setScroll(x, y)
+    override suspend fun setScroll(
+        x: Double,
+        y: Double,
+    ) = mapState.setScroll(x, y)
 
     override var scale: Double
         get() = mapState.scale
-        set(value) { mapState.scale = value }
+        set(value) {
+            mapState.scale = value
+        }
 
-    override suspend fun scrollTo(x: Double, y: Double, animationSpec: AnimationSpec<Float>) =
-        mapState.scrollTo(x, y, animationSpec = animationSpec)
+    override suspend fun scrollTo(
+        x: Double,
+        y: Double,
+        animationSpec: AnimationSpec<Float>,
+    ) = mapState.scrollTo(x, y, animationSpec = animationSpec)
 
-    override suspend fun scrollTo(area: BoundingBox, padding: Offset, animationSpec: AnimationSpec<Float>) =
-        mapState.scrollTo(area = area, padding = padding, animationSpec = animationSpec)
+    override suspend fun scrollTo(
+        area: BoundingBox,
+        padding: Offset,
+        animationSpec: AnimationSpec<Float>,
+    ) = mapState.scrollTo(area = area, padding = padding, animationSpec = animationSpec)
 
-    override fun addMarker(id: String, x: Double, y: Double, relativeOffset: Offset, content: @Composable () -> Unit) =
-        mapState.addMarker(id, x, y, relativeOffset = relativeOffset, c = content)
+    override fun addMarker(
+        id: String,
+        x: Double,
+        y: Double,
+        relativeOffset: Offset,
+        content: @Composable () -> Unit,
+    ) = mapState.addMarker(id, x, y, relativeOffset = relativeOffset, c = content)
 
     override fun removeMarker(id: String) {
         mapState.removeMarker(id)
     }
 
-    override fun addPath(id: String, color: Color, width: Dp, init: PathDataBuilder.() -> Unit) {
+    override fun addPath(
+        id: String,
+        color: Color,
+        width: Dp,
+        init: PathDataBuilder.() -> Unit,
+    ) {
         mapState.addPath(id, color = color, width = width, builder = init)
     }
 

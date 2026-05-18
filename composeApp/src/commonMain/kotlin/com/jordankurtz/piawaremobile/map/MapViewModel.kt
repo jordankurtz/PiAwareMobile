@@ -46,7 +46,6 @@ import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_receiver
 import piawaremobile.composeapp.generated.resources.ic_user_location
 import piawaremobile.composeapp.generated.resources.user_location_content_description
-import kotlin.math.pow
 import kotlin.time.Duration.Companion.milliseconds
 
 private const val USER_LOCATION_MARKER_ID = "user_location"
@@ -63,7 +62,6 @@ class MapViewModel(
     private val tileCacheStatsTracker: TileCacheStatsTracker,
     internal val mapStateController: MapStateController,
 ) : ViewModel() {
-
     val activeProvider: StateFlow<TileProviderConfig> = providerConfigFlow
 
     /** The underlying MapCompose state — for use by composables only, not for testing. */

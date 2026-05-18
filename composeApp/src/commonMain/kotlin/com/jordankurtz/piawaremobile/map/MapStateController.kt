@@ -9,8 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.flow.Flow
 import ovh.plrapps.mapcompose.api.BoundingBox
-import ovh.plrapps.mapcompose.ui.paths.PathDataBuilder
 import ovh.plrapps.mapcompose.core.TileStreamProvider
+import ovh.plrapps.mapcompose.ui.paths.PathDataBuilder
 
 data class MapScrollPosition(val scrollX: Double, val scrollY: Double, val scale: Double)
 
@@ -25,9 +25,15 @@ interface MapStateController {
 
     fun onTouchDown(handler: () -> Unit)
 
-    fun replaceLayer(layerId: String, provider: TileStreamProvider): String?
+    fun replaceLayer(
+        layerId: String,
+        provider: TileStreamProvider,
+    ): String?
 
-    suspend fun setScroll(x: Double, y: Double)
+    suspend fun setScroll(
+        x: Double,
+        y: Double,
+    )
 
     var scale: Double
 
