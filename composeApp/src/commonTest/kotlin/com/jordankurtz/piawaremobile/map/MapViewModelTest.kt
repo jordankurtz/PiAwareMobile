@@ -17,7 +17,6 @@ import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.testutil.mockAircraft
 import com.jordankurtz.piawaremobile.testutil.mockServer
-import com.jordankurtz.piawaremobile.map.osmZoomToScale
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -534,9 +533,10 @@ class MapViewModelTest {
     @Test
     fun `restored zoom below min is clamped up to min`() =
         runTest {
-            settingsFlow.value = Async.Success(
-                settings.copy(minZoomLevel = 8, maxZoomLevel = 14, restoreMapStateOnStart = true),
-            )
+            settingsFlow.value =
+                Async.Success(
+                    settings.copy(minZoomLevel = 8, maxZoomLevel = 14, restoreMapStateOnStart = true),
+                )
             everySuspend { getSavedMapStateUseCase.invoke() } returns
                 com.jordankurtz.piawaremobile.model.MapState(0.5, 0.5, osmZoomToScale(3))
             val controller = FakeMapStateController()
@@ -548,9 +548,10 @@ class MapViewModelTest {
     @Test
     fun `restored zoom above max is clamped down to max`() =
         runTest {
-            settingsFlow.value = Async.Success(
-                settings.copy(minZoomLevel = 5, maxZoomLevel = 10, restoreMapStateOnStart = true),
-            )
+            settingsFlow.value =
+                Async.Success(
+                    settings.copy(minZoomLevel = 5, maxZoomLevel = 10, restoreMapStateOnStart = true),
+                )
             everySuspend { getSavedMapStateUseCase.invoke() } returns
                 com.jordankurtz.piawaremobile.model.MapState(0.5, 0.5, osmZoomToScale(15))
             val controller = FakeMapStateController()

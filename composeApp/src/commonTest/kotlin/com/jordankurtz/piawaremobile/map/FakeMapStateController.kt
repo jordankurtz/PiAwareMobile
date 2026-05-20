@@ -37,7 +37,10 @@ class FakeMapStateController : MapStateController {
     var lastMinScale: Double = 0.0
     var lastMaxScale: Double = Double.MAX_VALUE
 
-    override fun setScaleLimits(minScale: Double, maxScale: Double) {
+    override fun setScaleLimits(
+        minScale: Double,
+        maxScale: Double,
+    ) {
         lastMinScale = minScale
         lastMaxScale = maxScale
     }

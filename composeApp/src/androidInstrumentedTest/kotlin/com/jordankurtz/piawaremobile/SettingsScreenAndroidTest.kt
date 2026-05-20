@@ -67,4 +67,17 @@ class SettingsScreenAndroidTest {
         composeTestRule.onNode(hasText("Servers") and hasClickAction()).performClick()
         assertTrue(clicked)
     }
+
+    @Test
+    fun zoomSettingsLabelsAreDisplayed() {
+        composeTestRule.setContent {
+            MainScreen(onServersClicked = {}, viewModel = createViewModel())
+        }
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Default Zoom"))
+        composeTestRule.onNodeWithText("Default Zoom").assertIsDisplayed()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Min Zoom"))
+        composeTestRule.onNodeWithText("Min Zoom").assertIsDisplayed()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Max Zoom"))
+        composeTestRule.onNodeWithText("Max Zoom").assertIsDisplayed()
+    }
 }

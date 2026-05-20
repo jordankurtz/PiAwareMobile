@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
-import com.jordankurtz.piawaremobile.map.osmZoomToScale
 import com.jordankurtz.piawaremobile.extensions.overlayColor
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStats
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
@@ -192,14 +191,18 @@ class MapViewModel(
         }
     }
 
-    private suspend fun loadMapState(minZoom: Int, maxZoom: Int) {
+    private suspend fun loadMapState(
+        minZoom: Int,
+        maxZoom: Int,
+    ) {
         val savedState = getSavedMapStateUseCase()
         Logger.d("Restored map state $savedState")
         mapStateController.setScroll(savedState.scrollX, savedState.scrollY)
-        mapStateController.scale = savedState.zoom.coerceIn(
-            osmZoomToScale(minZoom),
-            osmZoomToScale(maxZoom),
-        )
+        mapStateController.scale =
+            savedState.zoom.coerceIn(
+                osmZoomToScale(minZoom),
+                osmZoomToScale(maxZoom),
+            )
     }
 
     private fun startSaveMapStateJob() {

@@ -48,6 +48,7 @@ class SettingsScreenTest {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
             // "Servers" appears as a section header and as a clickable item
+            onNode(hasScrollAction()).performScrollToNode(hasText("Servers"))
             onAllNodesWithText("Servers")[0].assertIsDisplayed()
         }
 
@@ -131,6 +132,7 @@ class SettingsScreenTest {
             setContent {
                 MainScreen(onServersClicked = {}, viewModel = createViewModel())
             }
+            onNode(hasScrollAction()).performScrollToNode(hasText("Offline Maps"))
             onNodeWithText("Offline Maps").assertIsDisplayed()
         }
 
@@ -145,6 +147,7 @@ class SettingsScreenTest {
                     viewModel = createViewModel(),
                 )
             }
+            onNode(hasScrollAction()).performScrollToNode(hasText("Offline Maps"))
             onNodeWithText("Offline Maps").performClick()
             assertTrue(clicked)
         }

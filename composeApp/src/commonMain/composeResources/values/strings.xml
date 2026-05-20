@@ -193,4 +193,7 @@
     <string name="offline_maps_detail_size">Size</string>
     <string name="offline_maps_detail_provider">Tile provider</string>
     <string name="offline_maps_detail_created">Created</string>
+    <string name="zoom_default_title">Default Zoom</string>
+    <string name="zoom_min_title">Min Zoom</string>
+    <string name="zoom_max_title">Max Zoom</string>
 </resources>

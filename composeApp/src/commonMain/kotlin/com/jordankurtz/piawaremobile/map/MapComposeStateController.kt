@@ -112,7 +112,10 @@ class MapComposeStateController : MapStateController {
 
     override fun removePath(id: String) = mapState.removePath(id)
 
-    override fun setScaleLimits(minScale: Double, maxScale: Double) {
+    override fun setScaleLimits(
+        minScale: Double,
+        maxScale: Double,
+    ) {
         mapState.minimumScaleMode = Forced(minScale)
         mapState.maxScale = maxScale
     }
