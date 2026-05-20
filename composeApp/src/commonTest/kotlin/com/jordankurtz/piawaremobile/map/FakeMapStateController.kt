@@ -34,6 +34,14 @@ class FakeMapStateController : MapStateController {
 
     override var scale: Double = 1.0
 
+    var lastMinScale: Double = 0.0
+    var lastMaxScale: Double = Double.MAX_VALUE
+
+    override fun setScaleLimits(minScale: Double, maxScale: Double) {
+        lastMinScale = minScale
+        lastMaxScale = maxScale
+    }
+
     override suspend fun scrollTo(
         x: Double,
         y: Double,

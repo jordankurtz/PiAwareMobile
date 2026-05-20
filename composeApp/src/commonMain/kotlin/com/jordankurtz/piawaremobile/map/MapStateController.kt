@@ -37,6 +37,8 @@ interface MapStateController {
 
     var scale: Double
 
+    fun setScaleLimits(minScale: Double, maxScale: Double)
+
     suspend fun scrollTo(
         x: Double,
         y: Double,
