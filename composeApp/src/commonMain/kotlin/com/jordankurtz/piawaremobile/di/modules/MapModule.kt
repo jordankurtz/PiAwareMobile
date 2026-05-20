@@ -1,6 +1,8 @@
 package com.jordankurtz.piawaremobile.di.modules
 
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
+import com.jordankurtz.piawaremobile.map.MapComposeStateController
+import com.jordankurtz.piawaremobile.map.MapStateController
 import com.jordankurtz.piawaremobile.map.TileProviderConfig
 import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.runBlocking
+import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 
@@ -31,4 +34,7 @@ class MapModule {
             .map { TileProviders.findById(it.mapProviderId) }
             .stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = initial)
     }
+
+    @Factory
+    fun provideMapStateController(): MapStateController = MapComposeStateController()
 }
