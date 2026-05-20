@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.settings.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -176,6 +177,7 @@ fun OfflineMapsScreen(
                     onDeleteRegion = onDeleteRegion,
                     onRetryRegion = onRetry,
                     onCancelRegion = onCancelDownload,
+                    onRegionClick = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -208,6 +210,7 @@ private fun OfflineRegionList(
     onDeleteRegion: (OfflineRegion) -> Unit,
     onRetryRegion: (OfflineRegion) -> Unit,
     onCancelRegion: () -> Unit,
+    onRegionClick: (OfflineRegion) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier) {
@@ -217,6 +220,7 @@ private fun OfflineRegionList(
                 onDelete = { onDeleteRegion(region) },
                 onRetry = { onRetryRegion(region) },
                 onCancel = onCancelRegion,
+                onClick = { onRegionClick(region) },
             )
             HorizontalDivider()
         }
@@ -229,12 +233,14 @@ internal fun OfflineRegionItem(
     onDelete: () -> Unit,
     onRetry: () -> Unit,
     onCancel: () -> Unit,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
+                .clickable(onClick = onClick)
                 .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
