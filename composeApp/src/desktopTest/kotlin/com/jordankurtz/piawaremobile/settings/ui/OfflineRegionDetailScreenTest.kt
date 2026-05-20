@@ -85,6 +85,15 @@ class OfflineRegionDetailScreenTest {
         }
 
     @Test
+    fun statusCompleteDisplayedAsComplete() =
+        runComposeUiTest {
+            setContent {
+                OfflineRegionDetailContent(region = testRegion, mapLayer = {}, onBack = {})
+            }
+            onNodeWithText("Complete").assertIsDisplayed()
+        }
+
+    @Test
     fun backButtonInvokesCallback() =
         runComposeUiTest {
             var clicked = false

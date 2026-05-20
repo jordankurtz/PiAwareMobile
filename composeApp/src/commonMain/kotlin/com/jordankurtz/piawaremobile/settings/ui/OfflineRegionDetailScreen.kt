@@ -26,12 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.jordankurtz.piawaremobile.extensions.formattedDate
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.OpenStreetMap
 import com.jordankurtz.piawaremobile.map.doProjection
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -48,6 +47,7 @@ import piawaremobile.composeapp.generated.resources.offline_maps_detail_zoom
 import kotlin.time.Instant
 
 private const val DETAIL_BOUNDS_PATH_ID = "detail_bounds"
+private val BoundsPathColor = Color(0xFF2196F3)
 
 @Composable
 fun OfflineRegionDetailScreen(
@@ -62,7 +62,7 @@ fun OfflineRegionDetailScreen(
         mapViewModel.mapStateController.scrollTo(area = mapBounds, padding = Offset(0.15f, 0.15f))
         mapViewModel.mapStateController.addPath(
             id = DETAIL_BOUNDS_PATH_ID,
-            color = Color(0xFF2196F3),
+            color = BoundsPathColor,
             width = 2.dp,
         ) {
             addPoints(
@@ -154,7 +154,7 @@ internal fun OfflineRegionDetailContent(
                 )
                 DetailRow(
                     label = stringResource(Res.string.offline_maps_detail_created),
-                    value = formatEpochDate(region.createdAt),
+                    value = Instant.fromEpochMilliseconds(region.createdAt).formattedDate,
                 )
             }
         }
@@ -178,13 +178,4 @@ private fun DetailRow(
         Text(text = value, style = MaterialTheme.typography.bodyMedium)
     }
     HorizontalDivider()
-}
-
-private fun formatEpochDate(epochMillis: Long): String {
-    val local = Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(TimeZone.currentSystemDefault())
-    @Suppress("DEPRECATION")
-    return "${local.year}-${local.monthNumber.toString().padStart(
-        2,
-        '0',
-    )}-${local.dayOfMonth.toString().padStart(2, '0')}"
 }
