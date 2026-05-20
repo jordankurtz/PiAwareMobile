@@ -91,4 +91,19 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsService.setMapProviderId(config.id)
         }
+
+    fun updateDefaultZoomLevel(zoom: Int) =
+        viewModelScope.launch {
+            settingsService.setDefaultZoomLevel(zoom)
+        }
+
+    fun updateMinZoomLevel(zoom: Int) =
+        viewModelScope.launch {
+            settingsService.setMinZoomLevel(zoom)
+        }
+
+    fun updateMaxZoomLevel(zoom: Int) =
+        viewModelScope.launch {
+            settingsService.setMaxZoomLevel(zoom)
+        }
 }
