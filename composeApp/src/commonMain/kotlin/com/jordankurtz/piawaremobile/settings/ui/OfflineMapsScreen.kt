@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.settings.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,6 +81,7 @@ fun OfflineMapsScreen(
         viewportZoom: Int,
     ) -> Unit = { _, _, _, _, _ -> },
     onCancelDownload: () -> Unit = {},
+    onRegionClick: (OfflineRegion) -> Unit = {},
 ) {
     var showDownloadDialog by remember { mutableStateOf(false) }
     var showMapPicker by remember { mutableStateOf(false) }
@@ -87,6 +89,15 @@ fun OfflineMapsScreen(
     // Hoisted so the name survives round-trips to the map picker
     var pendingName by remember { mutableStateOf("") }
     var pendingViewportZoom by remember { mutableStateOf(0) }
+    var selectedRegion by remember { mutableStateOf<OfflineRegion?>(null) }
+
+    selectedRegion?.let { region ->
+        OfflineRegionDetailScreen(
+            region = region,
+            onBack = { selectedRegion = null },
+        )
+        return
+    }
 
     if (showMapPicker) {
         MapRegionPickerScreen(
@@ -176,6 +187,10 @@ fun OfflineMapsScreen(
                     onDeleteRegion = onDeleteRegion,
                     onRetryRegion = onRetry,
                     onCancelRegion = onCancelDownload,
+                    onRegionClick = { region ->
+                        selectedRegion = region
+                        onRegionClick(region)
+                    },
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -208,6 +223,7 @@ private fun OfflineRegionList(
     onDeleteRegion: (OfflineRegion) -> Unit,
     onRetryRegion: (OfflineRegion) -> Unit,
     onCancelRegion: () -> Unit,
+    onRegionClick: (OfflineRegion) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier) {
@@ -217,6 +233,7 @@ private fun OfflineRegionList(
                 onDelete = { onDeleteRegion(region) },
                 onRetry = { onRetryRegion(region) },
                 onCancel = onCancelRegion,
+                onClick = { onRegionClick(region) },
             )
             HorizontalDivider()
         }
@@ -229,12 +246,14 @@ internal fun OfflineRegionItem(
     onDelete: () -> Unit,
     onRetry: () -> Unit,
     onCancel: () -> Unit,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
+                .clickable(onClick = onClick)
                 .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

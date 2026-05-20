@@ -187,4 +187,10 @@
     <string name="offline_maps_delete_confirm_cancel">Cancel</string>
     <string name="offline_map_thumbnail">Map thumbnail</string>
     <string name="offline_map_thumbnail_placeholder">Map thumbnail placeholder</string>
+    <string name="offline_maps_detail_status">Status</string>
+    <string name="offline_maps_detail_zoom">Zoom levels</string>
+    <string name="offline_maps_detail_tile_count">Tile count</string>
+    <string name="offline_maps_detail_size">Size</string>
+    <string name="offline_maps_detail_provider">Tile provider</string>
+    <string name="offline_maps_detail_created">Created</string>
 </resources>
