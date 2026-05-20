@@ -81,6 +81,7 @@ fun OfflineMapsScreen(
         viewportZoom: Int,
     ) -> Unit = { _, _, _, _, _ -> },
     onCancelDownload: () -> Unit = {},
+    onRegionClick: (OfflineRegion) -> Unit = {},
 ) {
     var showDownloadDialog by remember { mutableStateOf(false) }
     var showMapPicker by remember { mutableStateOf(false) }
@@ -88,6 +89,15 @@ fun OfflineMapsScreen(
     // Hoisted so the name survives round-trips to the map picker
     var pendingName by remember { mutableStateOf("") }
     var pendingViewportZoom by remember { mutableStateOf(0) }
+    var selectedRegion by remember { mutableStateOf<OfflineRegion?>(null) }
+
+    selectedRegion?.let { region ->
+        OfflineRegionDetailScreen(
+            region = region,
+            onBack = { selectedRegion = null },
+        )
+        return
+    }
 
     if (showMapPicker) {
         MapRegionPickerScreen(
@@ -177,7 +187,10 @@ fun OfflineMapsScreen(
                     onDeleteRegion = onDeleteRegion,
                     onRetryRegion = onRetry,
                     onCancelRegion = onCancelDownload,
-                    onRegionClick = {},
+                    onRegionClick = { region ->
+                        selectedRegion = region
+                        onRegionClick(region)
+                    },
                     modifier = Modifier.fillMaxSize(),
                 )
             }
