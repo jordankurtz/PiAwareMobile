@@ -16,4 +16,7 @@ data class Settings(
     val enableFlightAwareApi: Boolean = false,
     val flightAwareApiKey: String = "",
     val mapProviderId: String = TileProviders.OPENSTREETMAP.id,
+    val defaultZoomLevel: Int = SettingsRepository.DEFAULT_ZOOM_LEVEL,
+    val minZoomLevel: Int = SettingsRepository.MIN_ZOOM_LEVEL,
+    val maxZoomLevel: Int = SettingsRepository.MAX_ZOOM_LEVEL,
 )
