@@ -17,6 +17,7 @@ import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import com.jordankurtz.piawaremobile.testutil.mockAircraft
 import com.jordankurtz.piawaremobile.testutil.mockServer
+import com.jordankurtz.piawaremobile.map.osmZoomToScale
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -86,6 +87,7 @@ class MapViewModelTest {
 
     private fun createViewModel(
         providerConfigFlow: MutableStateFlow<TileProviderConfig> = MutableStateFlow(TileProviders.OPENSTREETMAP),
+        mapStateController: FakeMapStateController = FakeMapStateController(),
     ): MapViewModel {
         val vm =
             MapViewModel(
@@ -95,7 +97,7 @@ class MapViewModelTest {
                 saveMapStateUseCase = saveMapStateUseCase,
                 loadSettingsUseCase = loadSettingsUseCase,
                 tileCacheStatsTracker = TileCacheStatsTracker(),
-                mapStateController = FakeMapStateController(),
+                mapStateController = mapStateController,
             )
         viewModel = vm
         return vm
@@ -506,5 +508,54 @@ class MapViewModelTest {
                 )
             vm.onAircraftTrailsUpdated(trails)
             advanceUntilIdle()
+        }
+
+    @Test
+    fun `scale limits are set from settings on load`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(minZoomLevel = 5, maxZoomLevel = 12))
+            val controller = FakeMapStateController()
+            createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            assertEquals(osmZoomToScale(5), controller.lastMinScale, 0.0001)
+            assertEquals(osmZoomToScale(12), controller.lastMaxScale, 0.0001)
+        }
+
+    @Test
+    fun `default zoom applied when restoreMapStateOnStart is false`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(defaultZoomLevel = 10, restoreMapStateOnStart = false))
+            val controller = FakeMapStateController()
+            createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            assertEquals(osmZoomToScale(10), controller.scale, 0.0001)
+        }
+
+    @Test
+    fun `restored zoom below min is clamped up to min`() =
+        runTest {
+            settingsFlow.value = Async.Success(
+                settings.copy(minZoomLevel = 8, maxZoomLevel = 14, restoreMapStateOnStart = true),
+            )
+            everySuspend { getSavedMapStateUseCase.invoke() } returns
+                com.jordankurtz.piawaremobile.model.MapState(0.5, 0.5, osmZoomToScale(3))
+            val controller = FakeMapStateController()
+            createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            assertEquals(osmZoomToScale(8), controller.scale, 0.0001)
+        }
+
+    @Test
+    fun `restored zoom above max is clamped down to max`() =
+        runTest {
+            settingsFlow.value = Async.Success(
+                settings.copy(minZoomLevel = 5, maxZoomLevel = 10, restoreMapStateOnStart = true),
+            )
+            everySuspend { getSavedMapStateUseCase.invoke() } returns
+                com.jordankurtz.piawaremobile.model.MapState(0.5, 0.5, osmZoomToScale(15))
+            val controller = FakeMapStateController()
+            createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            assertEquals(osmZoomToScale(10), controller.scale, 0.0001)
         }
 }
