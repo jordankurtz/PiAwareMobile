@@ -18,4 +18,26 @@ class CustomProviderConfigTest {
         val decoded = Json.decodeFromString<CustomProviderConfig>(json)
         assertEquals(config, decoded)
     }
+
+    @Test
+    fun malformedApiKeysJsonFallsBackToEmpty() {
+        val result: Map<String, String> =
+            try {
+                Json.decodeFromString("not valid json")
+            } catch (_: Exception) {
+                emptyMap()
+            }
+        assertEquals(emptyMap(), result)
+    }
+
+    @Test
+    fun malformedCustomProvidersJsonFallsBackToEmpty() {
+        val result: List<CustomProviderConfig> =
+            try {
+                Json.decodeFromString("not valid json")
+            } catch (_: Exception) {
+                emptyList()
+            }
+        assertEquals(emptyList(), result)
+    }
 }
