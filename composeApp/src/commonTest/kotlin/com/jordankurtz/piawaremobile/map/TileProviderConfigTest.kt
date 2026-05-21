@@ -55,26 +55,28 @@ class TileProviderConfigTest {
 
     @Test
     fun buildUrlSubstitutesApiKey() {
-        val config = TileProviderConfig(
-            id = "test",
-            displayName = "Test",
-            urlTemplate = "https://example.com/{z}/{x}/{y}.png?api_key={api_key}",
-            copyrightUrl = "",
-            requiresApiKey = true,
-        )
+        val config =
+            TileProviderConfig(
+                id = "test",
+                displayName = "Test",
+                urlTemplate = "https://example.com/{z}/{x}/{y}.png?api_key={api_key}",
+                copyrightUrl = "",
+                requiresApiKey = true,
+            )
         val url = config.buildUrl(zoom = 10, col = 512, row = 512, apiKey = "my-secret-key")
         assertEquals("https://example.com/10/512/512.png?api_key=my-secret-key", url)
     }
 
     @Test
     fun buildUrlWithoutApiKeyLeavesPlaceholderEmpty() {
-        val config = TileProviderConfig(
-            id = "test",
-            displayName = "Test",
-            urlTemplate = "https://example.com/{z}/{x}/{y}.png?api_key={api_key}",
-            copyrightUrl = "",
-            requiresApiKey = true,
-        )
+        val config =
+            TileProviderConfig(
+                id = "test",
+                displayName = "Test",
+                urlTemplate = "https://example.com/{z}/{x}/{y}.png?api_key={api_key}",
+                copyrightUrl = "",
+                requiresApiKey = true,
+            )
         val url = config.buildUrl(zoom = 5, col = 10, row = 20)
         assertEquals("https://example.com/5/10/20.png?api_key=", url)
     }
