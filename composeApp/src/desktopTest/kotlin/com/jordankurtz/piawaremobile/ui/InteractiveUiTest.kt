@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
@@ -34,6 +35,7 @@ class InteractiveUiTest {
 
         return SettingsViewModel(
             settingsService = settingsService,
+            tileCache = mock<TileCache>(),
         )
     }
 

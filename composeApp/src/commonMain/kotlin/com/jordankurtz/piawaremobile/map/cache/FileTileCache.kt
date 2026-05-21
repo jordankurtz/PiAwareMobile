@@ -156,6 +156,18 @@ class FileTileCache(
         }
     }
 
+    override suspend fun clearAll() {
+        withContext(ioDispatcher) {
+            val tiles = queries.selectNonPinnedTiles().executeAsList()
+            tiles.forEach { tile ->
+                val key = tileKey(tile.zoom_level.toInt(), tile.col.toInt(), tile.row.toInt(), tile.provider_id)
+                cacheFileSystem.delete(key)
+            }
+            queries.deleteAllNonPinnedTiles()
+            Logger.d("Cleared ${tiles.size} cached tiles")
+        }
+    }
+
     private suspend fun evictIfNeeded() {
         evictionMutex.withLock {
             evictionScheduled = false

@@ -26,4 +26,7 @@ interface TileCache {
         row: Int,
         providerId: String,
     )
+
+    /** Delete all cached tiles that are not part of an offline region. */
+    suspend fun clearAll()
 }

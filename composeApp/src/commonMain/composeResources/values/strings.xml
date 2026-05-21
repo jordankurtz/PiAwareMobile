@@ -227,4 +227,10 @@
     <string name="map_providers_thunderforest_key_info">Get a free key at thunderforest.com</string>
     <string name="map_providers_jawg_key_info">Get a free key at jawg.io</string>
     <string name="map_providers_generic_key_info">Enter your API key for this provider</string>
+    <string name="clear_map_cache_title">Clear map cache</string>
+    <string name="clear_map_cache_description">Delete cached tiles (offline maps are kept)</string>
+    <string name="clear_map_cache_confirm_title">Clear map cache?</string>
+    <string name="clear_map_cache_confirm_message">Cached tiles will be deleted. Offline maps will not be affected.</string>
+    <string name="clear_map_cache_confirm_clear">Clear</string>
+    <string name="clear_map_cache_confirm_cancel">Cancel</string>
 </resources>

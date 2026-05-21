@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.settings
 
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import dev.mokkery.answering.returns
@@ -23,12 +24,14 @@ import kotlin.test.Test
 class SettingsViewModelProviderTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var settingsService: SettingsService
+    private lateinit var tileCache: TileCache
     private lateinit var viewModel: SettingsViewModel
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         settingsService = mock()
+        tileCache = mock()
         every { settingsService.loadSettings() } returns flowOf(Async.Success(Settings()))
         everySuspend { settingsService.setApiKey(any(), any()) } returns Unit
         everySuspend {
@@ -39,7 +42,7 @@ class SettingsViewModelProviderTest {
             )
         } returns Unit
         everySuspend { settingsService.deleteCustomProvider(any()) } returns Unit
-        viewModel = SettingsViewModel(settingsService)
+        viewModel = SettingsViewModel(settingsService, tileCache)
     }
 
     @AfterTest

@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.settings
 
 import app.cash.turbine.test
 import com.jordankurtz.piawaremobile.map.TileProviders
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import dev.mokkery.answering.returns
@@ -29,6 +30,7 @@ class SettingsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var settingsService: SettingsService
+    private lateinit var tileCache: TileCache
     private lateinit var viewModel: SettingsViewModel
 
     private val settings =
@@ -48,6 +50,7 @@ class SettingsViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         settingsService = mock()
+        tileCache = mock()
 
         every { settingsService.loadSettings() } returns flowOf(Async.Success(settings))
         everySuspend { settingsService.addServer(any(), any(), any()) } returns Unit
@@ -65,7 +68,7 @@ class SettingsViewModelTest {
         everySuspend { settingsService.setFlightAwareApiKey(any()) } returns Unit
         everySuspend { settingsService.setMapProviderId(any()) } returns Unit
 
-        viewModel = SettingsViewModel(settingsService)
+        viewModel = SettingsViewModel(settingsService, tileCache)
     }
 
     @AfterTest
@@ -85,7 +88,7 @@ class SettingsViewModelTest {
                 )
             every { settingsService.loadSettings() } returns flowOf(Async.Success(customSettings))
 
-            val newViewModel = SettingsViewModel(settingsService)
+            val newViewModel = SettingsViewModel(settingsService, tileCache)
             newViewModel.settings.test {
                 assertEquals(Async.NotStarted, awaitItem())
                 assertEquals(Async.Success(customSettings), awaitItem())

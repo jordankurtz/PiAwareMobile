@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.piawaremobile.extensions.stateIn
 import com.jordankurtz.piawaremobile.map.TileProviderConfig
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import kotlin.uuid.Uuid
 @Factory
 class SettingsViewModel(
     private val settingsService: SettingsService,
+    private val tileCache: TileCache,
 ) : ViewModel() {
     val settings: StateFlow<Async<Settings>>
         get() = _settings
@@ -135,5 +137,10 @@ class SettingsViewModel(
     fun deleteCustomProvider(id: String) =
         viewModelScope.launch {
             settingsService.deleteCustomProvider(id)
+        }
+
+    fun clearTileCache() =
+        viewModelScope.launch {
+            tileCache.clearAll()
         }
 }
