@@ -51,7 +51,6 @@ import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
 import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 import piawaremobile.composeapp.generated.resources.flightaware_section_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
-import piawaremobile.composeapp.generated.resources.map_provider_description
 import piawaremobile.composeapp.generated.resources.map_provider_title
 import piawaremobile.composeapp.generated.resources.map_section_title
 import piawaremobile.composeapp.generated.resources.offline_maps_settings_title
@@ -81,6 +80,7 @@ import piawaremobile.composeapp.generated.resources.zoom_min_title
 fun MainScreen(
     onServersClicked: () -> Unit,
     onOfflineMapsClicked: () -> Unit = {},
+    onMapProviderClicked: () -> Unit = {},
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val settingsState by viewModel.settings.collectAsState()
@@ -108,15 +108,23 @@ fun MainScreen(
             }
 
             item {
-                SettingsDropdown(
+                val activeProviderId = settings.getValue()?.mapProviderId ?: TileProviders.OPENSTREETMAP.id
+                val builtInMatch = TileProviders.ALL.find { it.id == activeProviderId }
+                val providerDisplayName =
+                    builtInMatch?.displayNameRes?.let { stringResource(it) }
+                        ?: settings.getValue()?.customProviders?.find { it.id == activeProviderId }?.displayName
+                        ?: activeProviderId
+                SettingsItem(
                     title = stringResource(Res.string.map_provider_title),
-                    description = stringResource(Res.string.map_provider_description),
-                    selectedValue =
-                        settings.getValue()?.mapProviderId?.let { TileProviders.findById(it) }
-                            ?: TileProviders.OPENSTREETMAP,
-                    values = TileProviders.ALL.toTypedArray(),
-                    onValueSelected = viewModel::updateMapProvider,
-                    stringFor = { stringResource(it.displayNameRes!!) },
+                    description = providerDisplayName,
+                    onClick = onMapProviderClicked,
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_chevron_right),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                        )
+                    },
                 )
             }
 
@@ -306,6 +314,7 @@ fun SettingsSection(title: String) {
 fun SettingsItem(
     title: String,
     onClick: () -> Unit,
+    description: String? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     Column {
@@ -317,12 +326,19 @@ fun SettingsItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f),
-            )
-
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                if (description != null) {
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             trailingIcon?.invoke()
         }
         HorizontalDivider()

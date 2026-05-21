@@ -20,6 +20,7 @@ import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import com.jordankurtz.piawaremobile.settings.SettingsScreens
+import com.jordankurtz.piawaremobile.settings.ui.MapProvidersScreen
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
@@ -41,8 +42,13 @@ fun SettingsScreen() {
                     MainScreen(
                         onServersClicked = { currentScreen = SettingsScreens.Servers },
                         onOfflineMapsClicked = { currentScreen = SettingsScreens.OfflineMaps },
+                        onMapProviderClicked = { currentScreen = SettingsScreens.MapProviders },
                     )
                 SettingsScreens.Servers -> ServersScreen(onBack = {})
+                SettingsScreens.MapProviders ->
+                    MapProvidersScreen(
+                        onBack = { currentScreen = SettingsScreens.Main },
+                    )
                 SettingsScreens.OfflineMaps -> {
                     val vm: OfflineMapsViewModel = koinViewModel()
                     val regions by vm.regions.collectAsState()
