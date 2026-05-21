@@ -48,6 +48,8 @@ fun MapWithListLayout(
     val receiverLocations by aircraftViewModel.receiverLocations.collectAsState()
     val numberOfPlanes by aircraftViewModel.numberOfPlanes.collectAsState()
     val tileStats by mapViewModel.tileStats.collectAsState()
+    val currentZoom by mapViewModel.currentZoomLevel.collectAsState()
+    val zoomSettings by mapViewModel.zoomSettings.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val mapSelectedHex by mapViewModel.selectedAircraft.collectAsState()
     val activeProvider by mapViewModel.activeProvider.collectAsState()
@@ -113,6 +115,8 @@ fun MapWithListLayout(
             if (isDebugBuild) {
                 TileCacheDebugOverlay(
                     stats = tileStats,
+                    currentZoom = currentZoom,
+                    zoomSettings = zoomSettings,
                     modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
                 )
             }
