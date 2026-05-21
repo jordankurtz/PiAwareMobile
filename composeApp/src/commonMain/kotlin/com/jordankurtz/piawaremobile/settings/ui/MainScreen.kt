@@ -72,6 +72,9 @@ import piawaremobile.composeapp.generated.resources.show_user_location_descripti
 import piawaremobile.composeapp.generated.resources.show_user_location_title
 import piawaremobile.composeapp.generated.resources.trail_display_mode_description
 import piawaremobile.composeapp.generated.resources.trail_display_mode_title
+import piawaremobile.composeapp.generated.resources.zoom_default_title
+import piawaremobile.composeapp.generated.resources.zoom_max_title
+import piawaremobile.composeapp.generated.resources.zoom_min_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -169,6 +172,33 @@ fun MainScreen(
                     description = stringResource(Res.string.show_user_location_description),
                     checked = settings.getValue()?.showUserLocationOnMap ?: true,
                     onCheckedChange = viewModel::updateShowUserLocationOnMap,
+                )
+            }
+
+            item {
+                SettingsNumberInput(
+                    title = stringResource(Res.string.zoom_default_title),
+                    value = settings.getValue()?.defaultZoomLevel ?: SettingsRepository.DEFAULT_ZOOM_LEVEL,
+                    onValueChange = viewModel::updateDefaultZoomLevel,
+                    range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
+                )
+            }
+
+            item {
+                SettingsNumberInput(
+                    title = stringResource(Res.string.zoom_min_title),
+                    value = settings.getValue()?.minZoomLevel ?: SettingsRepository.MIN_ZOOM_LEVEL,
+                    onValueChange = viewModel::updateMinZoomLevel,
+                    range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
+                )
+            }
+
+            item {
+                SettingsNumberInput(
+                    title = stringResource(Res.string.zoom_max_title),
+                    value = settings.getValue()?.maxZoomLevel ?: SettingsRepository.MAX_ZOOM_LEVEL,
+                    onValueChange = viewModel::updateMaxZoomLevel,
+                    range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
                 )
             }
 
@@ -361,9 +391,11 @@ fun SettingsNumberInput(
     value: Int,
     onValueChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    range: IntRange? = null,
 ) {
     var textValue by remember { mutableStateOf(value.toString()) }
-    val isValid = textValue.toIntOrNull() != null
+    val parsedValue = textValue.toIntOrNull()
+    val isValid = parsedValue != null && (range == null || parsedValue in range)
 
     LaunchedEffect(value) {
         if (textValue.toIntOrNull() != value) {
@@ -390,7 +422,9 @@ fun SettingsNumberInput(
                 value = textValue,
                 onValueChange = {
                     textValue = it
-                    it.toIntOrNull()?.let(onValueChange)
+                    it.toIntOrNull()?.let { v ->
+                        if (range == null || v in range) onValueChange(v)
+                    }
                 },
                 singleLine = true,
                 modifier =

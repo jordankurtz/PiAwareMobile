@@ -14,6 +14,7 @@ import ovh.plrapps.mapcompose.ui.paths.PathDataBuilder
 
 data class MapScrollPosition(val scrollX: Double, val scrollY: Double, val scale: Double)
 
+@Suppress("TooManyFunctions")
 interface MapStateController {
     val scrollAndScaleFlow: Flow<MapScrollPosition>
 
@@ -36,6 +37,11 @@ interface MapStateController {
     )
 
     var scale: Double
+
+    fun setScaleLimits(
+        minScale: Double,
+        maxScale: Double,
+    )
 
     suspend fun scrollTo(
         x: Double,

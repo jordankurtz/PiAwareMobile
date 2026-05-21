@@ -12,6 +12,8 @@ import ovh.plrapps.mapcompose.api.BoundingBox
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
+import ovh.plrapps.mapcompose.api.maxScale
+import ovh.plrapps.mapcompose.api.minimumScaleMode
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.onTouchDown
@@ -109,6 +111,14 @@ class MapComposeStateController : MapStateController {
     }
 
     override fun removePath(id: String) = mapState.removePath(id)
+
+    override fun setScaleLimits(
+        minScale: Double,
+        maxScale: Double,
+    ) {
+        mapState.minimumScaleMode = Forced(minScale)
+        mapState.maxScale = maxScale
+    }
 
     fun shutdown() = mapState.shutdown()
 }

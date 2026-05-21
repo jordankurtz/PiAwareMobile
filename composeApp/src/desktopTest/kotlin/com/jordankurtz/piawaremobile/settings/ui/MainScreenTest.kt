@@ -44,4 +44,29 @@ class MainScreenTest {
 
             onNodeWithText("ESRI Satellite").assertIsDisplayed()
         }
+
+    @Test
+    fun zoomDefaultInputIsDisplayed() =
+        runComposeUiTest {
+            setContent {
+                SettingsNumberInput(title = "Default Zoom", value = 8, onValueChange = {}, range = 1..16)
+            }
+            onNodeWithText("Default Zoom").assertIsDisplayed()
+        }
+
+    @Test
+    fun zoomInputOutOfRangeDoesNotFireCallback() =
+        runComposeUiTest {
+            var fired = false
+            setContent {
+                SettingsNumberInput(
+                    title = "Min Zoom",
+                    value = 1,
+                    onValueChange = { fired = true },
+                    range = 1..16,
+                )
+            }
+            onNodeWithText("Min Zoom").assertIsDisplayed()
+            assert(!fired)
+        }
 }

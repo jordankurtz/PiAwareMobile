@@ -29,11 +29,14 @@ import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -87,6 +90,14 @@ class MapViewModel(
     val showUserLocationOnMap: StateFlow<Boolean> = _showUserLocationOnMap
 
     val tileStats: StateFlow<TileCacheStats> = tileCacheStatsTracker.stats
+
+    val currentZoomLevel: StateFlow<Int> =
+        mapStateController.scrollAndScaleFlow
+            .map { scaleToOsmZoom(it.scale.toFloat()) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MIN_LEVEL)
+
+    private val _zoomSettings = MutableStateFlow<Triple<Int, Int, Int>?>(null)
+    val zoomSettings: StateFlow<Triple<Int, Int, Int>?> = _zoomSettings
 
     /** Exposes the last location passed to [recenterOnLocation] for test verification. */
     internal val lastRecenteredLocation = MutableStateFlow<Location?>(null)
@@ -173,23 +184,37 @@ class MapViewModel(
 
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
+        _zoomSettings.value = Triple(settings.minZoomLevel, settings.maxZoomLevel, settings.defaultZoomLevel)
         _showUserLocationOnMap.value = settings.showUserLocationOnMap
         if (!settings.showUserLocationOnMap) {
             _followingUserLocation.value = false
         }
         onAircraftTrailsUpdated(lastTrails)
+        mapStateController.setScaleLimits(
+            osmZoomToScale(settings.minZoomLevel),
+            osmZoomToScale(settings.maxZoomLevel),
+        )
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
-            loadMapState()
+            loadMapState(settings.minZoomLevel, settings.maxZoomLevel)
             startSaveMapStateJob()
+        } else {
+            mapStateController.scale = osmZoomToScale(settings.defaultZoomLevel)
         }
     }
 
-    private suspend fun loadMapState() {
+    private suspend fun loadMapState(
+        minZoom: Int,
+        maxZoom: Int,
+    ) {
         val savedState = getSavedMapStateUseCase()
         Logger.d("Restored map state $savedState")
         mapStateController.setScroll(savedState.scrollX, savedState.scrollY)
-        mapStateController.scale = savedState.zoom
+        mapStateController.scale =
+            savedState.zoom.coerceIn(
+                osmZoomToScale(minZoom),
+                osmZoomToScale(maxZoom),
+            )
     }
 
     private fun startSaveMapStateJob() {

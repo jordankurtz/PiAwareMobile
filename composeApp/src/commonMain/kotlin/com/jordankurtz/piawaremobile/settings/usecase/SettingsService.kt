@@ -47,4 +47,10 @@ interface SettingsService {
     suspend fun setFlightAwareApiKey(apiKey: String)
 
     suspend fun setMapProviderId(providerId: String)
+
+    suspend fun setDefaultZoomLevel(zoom: Int)
+
+    suspend fun setMinZoomLevel(zoom: Int)
+
+    suspend fun setMaxZoomLevel(zoom: Int)
 }

@@ -115,4 +115,10 @@ class SettingsServiceImpl(
     override suspend fun setFlightAwareApiKey(apiKey: String) = updateSetting { it.copy(flightAwareApiKey = apiKey) }
 
     override suspend fun setMapProviderId(providerId: String) = updateSetting { it.copy(mapProviderId = providerId) }
+
+    override suspend fun setDefaultZoomLevel(zoom: Int) = updateSetting { it.copy(defaultZoomLevel = zoom) }
+
+    override suspend fun setMinZoomLevel(zoom: Int) = updateSetting { it.copy(minZoomLevel = zoom) }
+
+    override suspend fun setMaxZoomLevel(zoom: Int) = updateSetting { it.copy(maxZoomLevel = zoom) }
 }

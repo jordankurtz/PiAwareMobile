@@ -16,7 +16,7 @@ class TileCacheDebugOverlayTest {
     fun overlayRendersWithTileStats() {
         val stats = TileCacheStats(diskHits = 10L, networkFetches = 5L, errors = 1L)
         composeTestRule.setContent {
-            TileCacheDebugOverlay(stats = stats)
+            TileCacheDebugOverlay(stats = stats, currentZoom = 12, zoomSettings = null)
         }
         composeTestRule.onNodeWithText("D:10", substring = true).assertExists()
         composeTestRule.onNodeWithText("N:5", substring = true).assertExists()

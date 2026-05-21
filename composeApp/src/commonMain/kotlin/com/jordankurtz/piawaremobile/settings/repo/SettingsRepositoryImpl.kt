@@ -39,6 +39,15 @@ class SettingsRepositoryImpl(
                 enableFlightAwareApi = preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] ?: false,
                 flightAwareApiKey = preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] ?: "",
                 mapProviderId = preferences[SettingsRepository.MAP_PROVIDER_ID] ?: TileProviders.OPENSTREETMAP.id,
+                defaultZoomLevel =
+                    preferences[SettingsRepository.DEFAULT_ZOOM_LEVEL_KEY]
+                        ?: SettingsRepository.DEFAULT_ZOOM_LEVEL,
+                minZoomLevel =
+                    preferences[SettingsRepository.MIN_ZOOM_LEVEL_KEY]
+                        ?: SettingsRepository.MIN_ZOOM_LEVEL,
+                maxZoomLevel =
+                    preferences[SettingsRepository.MAX_ZOOM_LEVEL_KEY]
+                        ?: SettingsRepository.MAX_ZOOM_LEVEL,
             )
         }
     }
@@ -57,6 +66,9 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] = settings.enableFlightAwareApi
             preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] = settings.flightAwareApiKey
             preferences[SettingsRepository.MAP_PROVIDER_ID] = settings.mapProviderId
+            preferences[SettingsRepository.DEFAULT_ZOOM_LEVEL_KEY] = settings.defaultZoomLevel
+            preferences[SettingsRepository.MIN_ZOOM_LEVEL_KEY] = settings.minZoomLevel
+            preferences[SettingsRepository.MAX_ZOOM_LEVEL_KEY] = settings.maxZoomLevel
         }
     }
 

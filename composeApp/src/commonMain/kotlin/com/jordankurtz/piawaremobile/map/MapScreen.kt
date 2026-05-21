@@ -53,6 +53,8 @@ fun MapScreen(
     val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
     val showUserLocationOnMap by mapViewModel.showUserLocationOnMap.collectAsState()
     val tileStats by mapViewModel.tileStats.collectAsState()
+    val currentZoom by mapViewModel.currentZoomLevel.collectAsState()
+    val zoomSettings by mapViewModel.zoomSettings.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val sheetState =
@@ -134,6 +136,8 @@ fun MapScreen(
         if (isDebugBuild) {
             TileCacheDebugOverlay(
                 stats = tileStats,
+                currentZoom = currentZoom,
+                zoomSettings = zoomSettings,
                 modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
             )
         }
