@@ -14,6 +14,8 @@ class TileCacheDebugOverlayTest {
             setContent {
                 TileCacheDebugOverlay(
                     stats = TileCacheStats(diskHits = 42L, networkFetches = 8L),
+                    currentZoom = 12,
+                    zoomSettings = null,
                 )
             }
             onNodeWithText("Tiles  D:42  O:0  N:8  84% cache", substring = false)
@@ -26,6 +28,8 @@ class TileCacheDebugOverlayTest {
             setContent {
                 TileCacheDebugOverlay(
                     stats = TileCacheStats(diskHits = 3L, networkFetches = 7L),
+                    currentZoom = 12,
+                    zoomSettings = null,
                 )
             }
             onNodeWithText("30% cache", substring = true)
@@ -38,6 +42,8 @@ class TileCacheDebugOverlayTest {
             setContent {
                 TileCacheDebugOverlay(
                     stats = TileCacheStats(diskHits = 5L, networkFetches = 3L, errors = 2L),
+                    currentZoom = 12,
+                    zoomSettings = null,
                 )
             }
             onNodeWithText("E:2", substring = true)
@@ -50,6 +56,8 @@ class TileCacheDebugOverlayTest {
             setContent {
                 TileCacheDebugOverlay(
                     stats = TileCacheStats(diskHits = 5L, networkFetches = 3L, errors = 0L),
+                    currentZoom = 12,
+                    zoomSettings = null,
                 )
             }
             onNodeWithText("Tiles  D:5  O:0  N:3  62% cache", substring = false)
@@ -62,6 +70,8 @@ class TileCacheDebugOverlayTest {
             setContent {
                 TileCacheDebugOverlay(
                     stats = TileCacheStats(),
+                    currentZoom = 12,
+                    zoomSettings = null,
                 )
             }
             onNodeWithText("Tiles  D:0  O:0  N:0  0% cache", substring = false)
@@ -74,6 +84,8 @@ class TileCacheDebugOverlayTest {
             setContent {
                 TileCacheDebugOverlay(
                     stats = TileCacheStats(diskHits = 10L, offlineHits = 5L, networkFetches = 3L),
+                    currentZoom = 12,
+                    zoomSettings = null,
                 )
             }
             onNodeWithText("O:5", substring = true).assertIsDisplayed()

@@ -19,18 +19,20 @@ fun TileCacheDebugOverlay(
     modifier: Modifier = Modifier,
 ) {
     val hitPct = (stats.hitRate * 100).toInt()
-    val tilesLine = buildString {
-        append("Tiles  D:${stats.diskHits}  O:${stats.offlineHits}  N:${stats.networkFetches}")
-        if (stats.errors > 0) append("  E:${stats.errors}")
-        append("  $hitPct% cache")
-    }
-    val zoomLine = buildString {
-        append("Zoom $currentZoom")
-        if (zoomSettings != null) {
-            val (min, max, default) = zoomSettings
-            append("  (min:$min  max:$max  default:$default)")
+    val tilesLine =
+        buildString {
+            append("Tiles  D:${stats.diskHits}  O:${stats.offlineHits}  N:${stats.networkFetches}")
+            if (stats.errors > 0) append("  E:${stats.errors}")
+            append("  $hitPct% cache")
         }
-    }
+    val zoomLine =
+        buildString {
+            append("Zoom $currentZoom")
+            if (zoomSettings != null) {
+                val (min, max, default) = zoomSettings
+                append("  (min:$min  max:$max  default:$default)")
+            }
+        }
     androidx.compose.foundation.layout.Column(
         modifier =
             modifier
