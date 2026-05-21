@@ -19,9 +19,16 @@ import piawaremobile.composeapp.generated.resources.tile_provider_stadia_alidade
 import piawaremobile.composeapp.generated.resources.tile_provider_stadia_alidade_smooth
 import piawaremobile.composeapp.generated.resources.tile_provider_stadia_toner
 import piawaremobile.composeapp.generated.resources.tile_provider_stadia_watercolor
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_atlas
 import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_cycle
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_landscape
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_mobile_atlas
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_neighbourhood
 import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_outdoors
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_pioneer
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_spinal_map
 import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_transport
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_transport_dark
 
 data class TileProviderConfig(
     val id: String,
@@ -255,6 +262,85 @@ object TileProviders {
             apiKeyGroup = "thunderforest",
         )
 
+    val THUNDERFOREST_LANDSCAPE =
+        TileProviderConfig(
+            id = "thunderforest_landscape",
+            displayNameRes = Res.string.tile_provider_thunderforest_landscape,
+            urlTemplate = "https://tile.thunderforest.com/landscape/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
+        )
+
+    val THUNDERFOREST_TRANSPORT_DARK =
+        TileProviderConfig(
+            id = "thunderforest_transport_dark",
+            displayNameRes = Res.string.tile_provider_thunderforest_transport_dark,
+            urlTemplate = "https://tile.thunderforest.com/transport-dark/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            isDarkMap = true,
+            requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
+        )
+
+    val THUNDERFOREST_SPINAL_MAP =
+        TileProviderConfig(
+            id = "thunderforest_spinal_map",
+            displayNameRes = Res.string.tile_provider_thunderforest_spinal_map,
+            urlTemplate = "https://tile.thunderforest.com/spinal-map/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            isDarkMap = true,
+            requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
+        )
+
+    val THUNDERFOREST_PIONEER =
+        TileProviderConfig(
+            id = "thunderforest_pioneer",
+            displayNameRes = Res.string.tile_provider_thunderforest_pioneer,
+            urlTemplate = "https://tile.thunderforest.com/pioneer/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
+        )
+
+    val THUNDERFOREST_MOBILE_ATLAS =
+        TileProviderConfig(
+            id = "thunderforest_mobile_atlas",
+            displayNameRes = Res.string.tile_provider_thunderforest_mobile_atlas,
+            urlTemplate = "https://tile.thunderforest.com/mobile-atlas/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
+        )
+
+    val THUNDERFOREST_NEIGHBOURHOOD =
+        TileProviderConfig(
+            id = "thunderforest_neighbourhood",
+            displayNameRes = Res.string.tile_provider_thunderforest_neighbourhood,
+            urlTemplate = "https://tile.thunderforest.com/neighbourhood/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
+        )
+
+    val THUNDERFOREST_ATLAS =
+        TileProviderConfig(
+            id = "thunderforest_atlas",
+            displayNameRes = Res.string.tile_provider_thunderforest_atlas,
+            urlTemplate = "https://tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
+        )
+
     val JAWG_STREETS =
         TileProviderConfig(
             id = "jawg_streets",
@@ -300,8 +386,15 @@ object TileProviders {
             STADIA_ALIDADE_SMOOTH,
             STADIA_ALIDADE_DARK,
             THUNDERFOREST_TRANSPORT,
+            THUNDERFOREST_TRANSPORT_DARK,
             THUNDERFOREST_CYCLE,
             THUNDERFOREST_OUTDOORS,
+            THUNDERFOREST_LANDSCAPE,
+            THUNDERFOREST_PIONEER,
+            THUNDERFOREST_ATLAS,
+            THUNDERFOREST_NEIGHBOURHOOD,
+            THUNDERFOREST_MOBILE_ATLAS,
+            THUNDERFOREST_SPINAL_MAP,
             JAWG_STREETS,
             JAWG_DARK,
         )

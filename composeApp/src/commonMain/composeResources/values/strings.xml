@@ -203,6 +203,13 @@
     <string name="tile_provider_thunderforest_transport">Thunderforest Transport</string>
     <string name="tile_provider_thunderforest_cycle">Thunderforest Cycle</string>
     <string name="tile_provider_thunderforest_outdoors">Thunderforest Outdoors</string>
+    <string name="tile_provider_thunderforest_landscape">Thunderforest Landscape</string>
+    <string name="tile_provider_thunderforest_transport_dark">Thunderforest Transport Dark</string>
+    <string name="tile_provider_thunderforest_spinal_map">Thunderforest Spinal Map</string>
+    <string name="tile_provider_thunderforest_pioneer">Thunderforest Pioneer</string>
+    <string name="tile_provider_thunderforest_mobile_atlas">Thunderforest Mobile Atlas</string>
+    <string name="tile_provider_thunderforest_neighbourhood">Thunderforest Neighbourhood</string>
+    <string name="tile_provider_thunderforest_atlas">Thunderforest Atlas</string>
     <string name="tile_provider_jawg_streets">Jawg Streets</string>
     <string name="tile_provider_jawg_dark">Jawg Dark</string>
     <string name="map_providers_title">Map Providers</string>

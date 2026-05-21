@@ -50,6 +50,33 @@ class ProviderResolutionTest {
     }
 
     @Test
+    fun thunderforestGroupKeyAppliesToAllThunderforestProviders() {
+        val settings =
+            Settings(
+                apiKeys = mapOf("thunderforest" to "tf-key"),
+            )
+        listOf(
+            "thunderforest_transport",
+            "thunderforest_transport_dark",
+            "thunderforest_cycle",
+            "thunderforest_outdoors",
+            "thunderforest_landscape",
+            "thunderforest_pioneer",
+            "thunderforest_atlas",
+            "thunderforest_neighbourhood",
+            "thunderforest_mobile_atlas",
+            "thunderforest_spinal_map",
+        ).forEach { id ->
+            val result = resolveActiveProviderConfig(settings.copy(mapProviderId = id))
+            assertContains(
+                result.urlTemplate,
+                "tf-key",
+                message = "Provider $id should use the shared thunderforest key",
+            )
+        }
+    }
+
+    @Test
     fun usesBlankKeyWhenNotConfigured() {
         val settings = Settings(mapProviderId = "stadia_toner")
         val result = resolveActiveProviderConfig(settings)
