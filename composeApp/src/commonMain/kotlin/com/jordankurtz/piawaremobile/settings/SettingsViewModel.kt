@@ -115,6 +115,15 @@ class SettingsViewModel(
         settingsService.setApiKey(providerId, key)
     }
 
+    fun setApiKeyAndActivateProvider(
+        keyGroup: String,
+        key: String,
+        provider: TileProviderConfig,
+    ) = viewModelScope.launch {
+        settingsService.setApiKey(keyGroup, key)
+        settingsService.setMapProviderId(provider.id)
+    }
+
     fun addCustomProvider(
         id: String,
         displayName: String,

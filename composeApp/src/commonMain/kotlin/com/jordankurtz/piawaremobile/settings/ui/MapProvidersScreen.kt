@@ -170,8 +170,7 @@ fun MapProvidersScreen(
             providerName = providerName,
             keyInfo = keyInfo,
             onSave = { key ->
-                viewModel.updateApiKey(keyGroup, key)
-                viewModel.updateMapProvider(provider)
+                viewModel.setApiKeyAndActivateProvider(keyGroup, key, provider)
                 pendingApiKeyProvider = null
             },
             onDismiss = { pendingApiKeyProvider = null },
