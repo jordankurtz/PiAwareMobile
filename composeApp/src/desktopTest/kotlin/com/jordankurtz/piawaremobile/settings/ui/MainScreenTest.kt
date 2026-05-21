@@ -20,7 +20,7 @@ class MainScreenTest {
                     selectedValue = TileProviders.OPENSTREETMAP,
                     values = TileProviders.ALL.toTypedArray(),
                     onValueSelected = {},
-                    stringFor = { stringResource(it.displayNameRes) },
+                    stringFor = { stringResource(it.displayNameRes!!) },
                 )
             }
 
@@ -38,7 +38,7 @@ class MainScreenTest {
                     selectedValue = TileProviders.ESRI_SATELLITE,
                     values = TileProviders.ALL.toTypedArray(),
                     onValueSelected = {},
-                    stringFor = { stringResource(it.displayNameRes) },
+                    stringFor = { stringResource(it.displayNameRes!!) },
                 )
             }
 

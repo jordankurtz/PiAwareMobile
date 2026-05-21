@@ -11,12 +11,22 @@ import piawaremobile.composeapp.generated.resources.tile_provider_cyclosm
 import piawaremobile.composeapp.generated.resources.tile_provider_esri_satellite
 import piawaremobile.composeapp.generated.resources.tile_provider_esri_street
 import piawaremobile.composeapp.generated.resources.tile_provider_esri_topo
+import piawaremobile.composeapp.generated.resources.tile_provider_jawg_dark
+import piawaremobile.composeapp.generated.resources.tile_provider_jawg_streets
 import piawaremobile.composeapp.generated.resources.tile_provider_openstreetmap
 import piawaremobile.composeapp.generated.resources.tile_provider_opentopomap
+import piawaremobile.composeapp.generated.resources.tile_provider_stadia_alidade_dark
+import piawaremobile.composeapp.generated.resources.tile_provider_stadia_alidade_smooth
+import piawaremobile.composeapp.generated.resources.tile_provider_stadia_toner
+import piawaremobile.composeapp.generated.resources.tile_provider_stadia_watercolor
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_cycle
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_outdoors
+import piawaremobile.composeapp.generated.resources.tile_provider_thunderforest_transport
 
 data class TileProviderConfig(
     val id: String,
-    val displayNameRes: StringResource,
+    val displayNameRes: StringResource? = null,
+    val displayName: String = "",
     val urlTemplate: String,
     val subdomains: List<String> = emptyList(),
     val requestDelayMs: Long = 0L,
@@ -25,18 +35,21 @@ data class TileProviderConfig(
     val attribution: String = "",
     val copyrightUrl: String,
     val isDarkMap: Boolean = false,
+    val requiresApiKey: Boolean = false,
 ) {
     fun buildUrl(
         zoom: Int,
         col: Int,
         row: Int,
         subdomain: String = "",
+        apiKey: String = "",
     ): String =
         urlTemplate
             .replace("{z}", zoom.toString())
             .replace("{x}", col.toString())
             .replace("{y}", row.toString())
             .replace("{s}", subdomain)
+            .replace("{api_key}", apiKey)
 }
 
 object TileProviders {
@@ -162,7 +175,100 @@ object TileProviders {
             copyrightUrl = "https://www.esri.com/",
         )
 
-    val ALL: List<TileProviderConfig> =
+    // API-key providers
+    val STADIA_TONER =
+        TileProviderConfig(
+            id = "stadia_toner",
+            displayNameRes = Res.string.tile_provider_stadia_toner,
+            urlTemplate = "https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png?api_key={api_key}",
+            attribution = "© Stadia Maps, © Stamen Design, © OpenStreetMap contributors",
+            copyrightUrl = "https://stadiamaps.com/",
+            requiresApiKey = true,
+        )
+
+    val STADIA_WATERCOLOR =
+        TileProviderConfig(
+            id = "stadia_watercolor",
+            displayNameRes = Res.string.tile_provider_stadia_watercolor,
+            urlTemplate = "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg?api_key={api_key}",
+            attribution = "© Stadia Maps, © Stamen Design, © OpenStreetMap contributors",
+            copyrightUrl = "https://stadiamaps.com/",
+            requiresApiKey = true,
+        )
+
+    val STADIA_ALIDADE_SMOOTH =
+        TileProviderConfig(
+            id = "stadia_alidade_smooth",
+            displayNameRes = Res.string.tile_provider_stadia_alidade_smooth,
+            urlTemplate = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png?api_key={api_key}",
+            attribution = "© Stadia Maps, © OpenStreetMap contributors",
+            copyrightUrl = "https://stadiamaps.com/",
+            requiresApiKey = true,
+        )
+
+    val STADIA_ALIDADE_DARK =
+        TileProviderConfig(
+            id = "stadia_alidade_dark",
+            displayNameRes = Res.string.tile_provider_stadia_alidade_dark,
+            urlTemplate = "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png?api_key={api_key}",
+            attribution = "© Stadia Maps, © OpenStreetMap contributors",
+            copyrightUrl = "https://stadiamaps.com/",
+            isDarkMap = true,
+            requiresApiKey = true,
+        )
+
+    val THUNDERFOREST_TRANSPORT =
+        TileProviderConfig(
+            id = "thunderforest_transport",
+            displayNameRes = Res.string.tile_provider_thunderforest_transport,
+            urlTemplate = "https://tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            requiresApiKey = true,
+        )
+
+    val THUNDERFOREST_CYCLE =
+        TileProviderConfig(
+            id = "thunderforest_cycle",
+            displayNameRes = Res.string.tile_provider_thunderforest_cycle,
+            urlTemplate = "https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            requiresApiKey = true,
+        )
+
+    val THUNDERFOREST_OUTDOORS =
+        TileProviderConfig(
+            id = "thunderforest_outdoors",
+            displayNameRes = Res.string.tile_provider_thunderforest_outdoors,
+            urlTemplate = "https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey={api_key}",
+            attribution = "© Thunderforest, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.thunderforest.com/",
+            requiresApiKey = true,
+        )
+
+    val JAWG_STREETS =
+        TileProviderConfig(
+            id = "jawg_streets",
+            displayNameRes = Res.string.tile_provider_jawg_streets,
+            urlTemplate = "https://tile.jawg.io/jawg-streets/{z}/{x}/{y}.png?access-token={api_key}",
+            attribution = "© Jawg Maps, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.jawg.io/",
+            requiresApiKey = true,
+        )
+
+    val JAWG_DARK =
+        TileProviderConfig(
+            id = "jawg_dark",
+            displayNameRes = Res.string.tile_provider_jawg_dark,
+            urlTemplate = "https://tile.jawg.io/jawg-dark/{z}/{x}/{y}.png?access-token={api_key}",
+            attribution = "© Jawg Maps, © OpenStreetMap contributors",
+            copyrightUrl = "https://www.jawg.io/",
+            isDarkMap = true,
+            requiresApiKey = true,
+        )
+
+    val BUILT_IN: List<TileProviderConfig> =
         listOf(
             OPENSTREETMAP,
             CARTO_VOYAGER,
@@ -176,6 +282,21 @@ object TileProviders {
             ESRI_TOPO,
             ESRI_STREET,
         )
+
+    val API_KEY_REQUIRED: List<TileProviderConfig> =
+        listOf(
+            STADIA_TONER,
+            STADIA_WATERCOLOR,
+            STADIA_ALIDADE_SMOOTH,
+            STADIA_ALIDADE_DARK,
+            THUNDERFOREST_TRANSPORT,
+            THUNDERFOREST_CYCLE,
+            THUNDERFOREST_OUTDOORS,
+            JAWG_STREETS,
+            JAWG_DARK,
+        )
+
+    val ALL: List<TileProviderConfig> = BUILT_IN + API_KEY_REQUIRED
 
     fun findById(id: String): TileProviderConfig = ALL.find { it.id == id } ?: OPENSTREETMAP
 }

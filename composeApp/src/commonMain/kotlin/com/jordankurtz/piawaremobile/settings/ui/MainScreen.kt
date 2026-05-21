@@ -116,7 +116,7 @@ fun MainScreen(
                             ?: TileProviders.OPENSTREETMAP,
                     values = TileProviders.ALL.toTypedArray(),
                     onValueSelected = viewModel::updateMapProvider,
-                    stringFor = { stringResource(it.displayNameRes) },
+                    stringFor = { stringResource(it.displayNameRes!!) },
                 )
             }
 
