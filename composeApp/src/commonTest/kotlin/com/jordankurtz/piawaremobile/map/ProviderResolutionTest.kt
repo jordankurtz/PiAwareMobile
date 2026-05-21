@@ -26,10 +26,27 @@ class ProviderResolutionTest {
         val settings =
             Settings(
                 mapProviderId = "stadia_toner",
-                apiKeys = mapOf("stadia_toner" to "my-key"),
+                apiKeys = mapOf("stadia" to "my-key"),
             )
         val result = resolveActiveProviderConfig(settings)
         assertContains(result.urlTemplate, "my-key")
+    }
+
+    @Test
+    fun groupKeyAppliesToAllProvidersInGroup() {
+        val settings =
+            Settings(
+                apiKeys = mapOf("stadia" to "shared-key"),
+            )
+        listOf("stadia_toner", "stadia_watercolor", "stadia_alidade_smooth", "stadia_alidade_dark")
+            .forEach { id ->
+                val result = resolveActiveProviderConfig(settings.copy(mapProviderId = id))
+                assertContains(
+                    result.urlTemplate,
+                    "shared-key",
+                    message = "Provider $id should use the shared stadia key",
+                )
+            }
     }
 
     @Test

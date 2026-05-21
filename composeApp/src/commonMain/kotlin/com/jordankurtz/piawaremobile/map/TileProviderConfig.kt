@@ -36,6 +36,7 @@ data class TileProviderConfig(
     val copyrightUrl: String,
     val isDarkMap: Boolean = false,
     val requiresApiKey: Boolean = false,
+    val apiKeyGroup: String? = null,
 ) {
     fun buildUrl(
         zoom: Int,
@@ -184,6 +185,7 @@ object TileProviders {
             attribution = "© Stadia Maps, © Stamen Design, © OpenStreetMap contributors",
             copyrightUrl = "https://stadiamaps.com/",
             requiresApiKey = true,
+            apiKeyGroup = "stadia",
         )
 
     val STADIA_WATERCOLOR =
@@ -194,6 +196,7 @@ object TileProviders {
             attribution = "© Stadia Maps, © Stamen Design, © OpenStreetMap contributors",
             copyrightUrl = "https://stadiamaps.com/",
             requiresApiKey = true,
+            apiKeyGroup = "stadia",
         )
 
     val STADIA_ALIDADE_SMOOTH =
@@ -204,6 +207,7 @@ object TileProviders {
             attribution = "© Stadia Maps, © OpenStreetMap contributors",
             copyrightUrl = "https://stadiamaps.com/",
             requiresApiKey = true,
+            apiKeyGroup = "stadia",
         )
 
     val STADIA_ALIDADE_DARK =
@@ -215,6 +219,7 @@ object TileProviders {
             copyrightUrl = "https://stadiamaps.com/",
             isDarkMap = true,
             requiresApiKey = true,
+            apiKeyGroup = "stadia",
         )
 
     val THUNDERFOREST_TRANSPORT =
@@ -225,6 +230,7 @@ object TileProviders {
             attribution = "© Thunderforest, © OpenStreetMap contributors",
             copyrightUrl = "https://www.thunderforest.com/",
             requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
         )
 
     val THUNDERFOREST_CYCLE =
@@ -235,6 +241,7 @@ object TileProviders {
             attribution = "© Thunderforest, © OpenStreetMap contributors",
             copyrightUrl = "https://www.thunderforest.com/",
             requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
         )
 
     val THUNDERFOREST_OUTDOORS =
@@ -245,6 +252,7 @@ object TileProviders {
             attribution = "© Thunderforest, © OpenStreetMap contributors",
             copyrightUrl = "https://www.thunderforest.com/",
             requiresApiKey = true,
+            apiKeyGroup = "thunderforest",
         )
 
     val JAWG_STREETS =
@@ -255,6 +263,7 @@ object TileProviders {
             attribution = "© Jawg Maps, © OpenStreetMap contributors",
             copyrightUrl = "https://www.jawg.io/",
             requiresApiKey = true,
+            apiKeyGroup = "jawg",
         )
 
     val JAWG_DARK =
@@ -266,6 +275,7 @@ object TileProviders {
             copyrightUrl = "https://www.jawg.io/",
             isDarkMap = true,
             requiresApiKey = true,
+            apiKeyGroup = "jawg",
         )
 
     val BUILT_IN: List<TileProviderConfig> =

@@ -112,12 +112,13 @@ fun MapProvidersScreen(
             }
 
             items(TileProviders.API_KEY_REQUIRED) { config ->
+                val keyLookup = config.apiKeyGroup ?: config.id
                 ApiKeyProviderRow(
                     config = config,
                     isSelected = config.id == activeProviderId,
-                    hasKey = apiKeys.containsKey(config.id),
+                    hasKey = apiKeys.containsKey(keyLookup),
                     onClick = {
-                        if (apiKeys.containsKey(config.id)) {
+                        if (apiKeys.containsKey(keyLookup)) {
                             viewModel.updateMapProvider(config)
                         } else {
                             pendingApiKeyProvider = config
@@ -150,20 +151,26 @@ fun MapProvidersScreen(
     }
 
     pendingApiKeyProvider?.let { provider ->
+        val keyGroup = provider.apiKeyGroup ?: provider.id
+        val providerName =
+            when (provider.apiKeyGroup) {
+                "stadia" -> "Stadia Maps"
+                "thunderforest" -> "Thunderforest"
+                "jawg" -> "Jawg"
+                else -> provider.displayNameRes?.let { stringResource(it) } ?: provider.displayName
+            }
         val keyInfo =
-            when {
-                provider.id.startsWith("stadia") -> stringResource(Res.string.map_providers_stadia_key_info)
-                provider.id.startsWith(
-                    "thunderforest",
-                ) -> stringResource(Res.string.map_providers_thunderforest_key_info)
-                provider.id.startsWith("jawg") -> stringResource(Res.string.map_providers_jawg_key_info)
+            when (provider.apiKeyGroup) {
+                "stadia" -> stringResource(Res.string.map_providers_stadia_key_info)
+                "thunderforest" -> stringResource(Res.string.map_providers_thunderforest_key_info)
+                "jawg" -> stringResource(Res.string.map_providers_jawg_key_info)
                 else -> stringResource(Res.string.map_providers_generic_key_info)
             }
         ApiKeyBottomSheet(
-            providerName = provider.displayNameRes?.let { stringResource(it) } ?: provider.displayName,
+            providerName = providerName,
             keyInfo = keyInfo,
             onSave = { key ->
-                viewModel.updateApiKey(provider.id, key)
+                viewModel.updateApiKey(keyGroup, key)
                 viewModel.updateMapProvider(provider)
                 pendingApiKeyProvider = null
             },

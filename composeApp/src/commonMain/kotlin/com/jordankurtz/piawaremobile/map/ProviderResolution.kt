@@ -10,7 +10,7 @@ fun resolveActiveProviderConfig(
     val allProviders = builtIns + settings.customProviders.map { it.toTileProviderConfig() }
     val config = allProviders.find { it.id == settings.mapProviderId } ?: TileProviders.OPENSTREETMAP
     return if (config.requiresApiKey) {
-        val key = settings.apiKeys[config.id] ?: ""
+        val key = settings.apiKeys[config.apiKeyGroup ?: config.id] ?: ""
         config.copy(urlTemplate = config.urlTemplate.replace("{api_key}", key))
     } else {
         config
