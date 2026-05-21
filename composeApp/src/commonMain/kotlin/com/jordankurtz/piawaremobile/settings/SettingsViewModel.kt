@@ -107,4 +107,24 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsService.setMaxZoomLevel(zoom)
         }
+
+    fun updateApiKey(
+        providerId: String,
+        key: String,
+    ) = viewModelScope.launch {
+        settingsService.setApiKey(providerId, key)
+    }
+
+    fun addCustomProvider(
+        id: String,
+        displayName: String,
+        urlTemplate: String,
+    ) = viewModelScope.launch {
+        settingsService.addCustomProvider(id, displayName, urlTemplate)
+    }
+
+    fun deleteCustomProvider(id: String) =
+        viewModelScope.launch {
+            settingsService.deleteCustomProvider(id)
+        }
 }

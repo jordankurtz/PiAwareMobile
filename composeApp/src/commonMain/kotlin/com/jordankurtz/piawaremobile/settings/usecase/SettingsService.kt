@@ -53,4 +53,17 @@ interface SettingsService {
     suspend fun setMinZoomLevel(zoom: Int)
 
     suspend fun setMaxZoomLevel(zoom: Int)
+
+    suspend fun setApiKey(
+        providerId: String,
+        key: String,
+    )
+
+    suspend fun addCustomProvider(
+        id: String,
+        displayName: String,
+        urlTemplate: String,
+    )
+
+    suspend fun deleteCustomProvider(id: String)
 }
