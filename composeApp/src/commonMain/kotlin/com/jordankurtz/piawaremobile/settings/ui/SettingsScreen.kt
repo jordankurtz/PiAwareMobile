@@ -41,8 +41,13 @@ fun SettingsScreen() {
                     MainScreen(
                         onServersClicked = { currentScreen = SettingsScreens.Servers },
                         onOfflineMapsClicked = { currentScreen = SettingsScreens.OfflineMaps },
+                        onMapProviderClicked = { currentScreen = SettingsScreens.MapProviders },
                     )
                 SettingsScreens.Servers -> ServersScreen(onBack = {})
+                SettingsScreens.MapProviders ->
+                    MapProvidersScreen(
+                        onBack = { currentScreen = SettingsScreens.Main },
+                    )
                 SettingsScreens.OfflineMaps -> {
                     val vm: OfflineMapsViewModel = koinViewModel()
                     val regions by vm.regions.collectAsState()

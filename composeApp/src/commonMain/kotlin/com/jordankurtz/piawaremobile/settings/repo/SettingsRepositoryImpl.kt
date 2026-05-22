@@ -48,6 +48,22 @@ class SettingsRepositoryImpl(
                 maxZoomLevel =
                     preferences[SettingsRepository.MAX_ZOOM_LEVEL_KEY]
                         ?: SettingsRepository.MAX_ZOOM_LEVEL,
+                apiKeys =
+                    preferences[SettingsRepository.API_KEYS_JSON]?.let {
+                        try {
+                            Json.decodeFromString(it)
+                        } catch (_: Exception) {
+                            emptyMap()
+                        }
+                    } ?: emptyMap(),
+                customProviders =
+                    preferences[SettingsRepository.CUSTOM_PROVIDERS_JSON]?.let {
+                        try {
+                            Json.decodeFromString(it)
+                        } catch (_: Exception) {
+                            emptyList()
+                        }
+                    } ?: emptyList(),
             )
         }
     }
@@ -69,6 +85,8 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.DEFAULT_ZOOM_LEVEL_KEY] = settings.defaultZoomLevel
             preferences[SettingsRepository.MIN_ZOOM_LEVEL_KEY] = settings.minZoomLevel
             preferences[SettingsRepository.MAX_ZOOM_LEVEL_KEY] = settings.maxZoomLevel
+            preferences[SettingsRepository.API_KEYS_JSON] = Json.encodeToString(settings.apiKeys)
+            preferences[SettingsRepository.CUSTOM_PROVIDERS_JSON] = Json.encodeToString(settings.customProviders)
         }
     }
 

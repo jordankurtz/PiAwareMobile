@@ -35,6 +35,7 @@ class ConfigurableTileProviderTest {
 
     private fun mockHttpClient(
         responseBytes: ByteArray = tileBytes,
+        status: HttpStatusCode = HttpStatusCode.OK,
         captureUrls: MutableList<String>? = null,
     ): HttpClient =
         HttpClient(MockEngine) {
@@ -43,7 +44,7 @@ class ConfigurableTileProviderTest {
                     captureUrls?.add(request.url.toString())
                     respond(
                         content = ByteReadChannel(responseBytes),
-                        status = HttpStatusCode.OK,
+                        status = status,
                         headers = headersOf(HttpHeaders.ContentType, "image/png"),
                     )
                 }
@@ -124,6 +125,32 @@ class ConfigurableTileProviderTest {
 
             assertNull(result)
             verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun doesNotCacheTileOnUnauthorizedResponse() =
+        runTest {
+            val provider = createProvider(httpClient = mockHttpClient(status = HttpStatusCode.Unauthorized))
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+
+            val result = provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertNull(result)
+            verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any(), any()) }
+            assertEquals(1, statsTracker.stats.value.errors)
+        }
+
+    @Test
+    fun doesNotCacheTileOnServerErrorResponse() =
+        runTest {
+            val provider = createProvider(httpClient = mockHttpClient(status = HttpStatusCode.InternalServerError))
+            everySuspend { tileCache.get(any(), any(), any(), any()) } returns null
+
+            val result = provider.getTileStream(row = 0, col = 1, zoomLvl = 5)
+
+            assertNull(result)
+            verifySuspend(VerifyMode.not) { tileCache.put(any(), any(), any(), any(), any()) }
+            assertEquals(1, statsTracker.stats.value.errors)
         }
 
     @Test

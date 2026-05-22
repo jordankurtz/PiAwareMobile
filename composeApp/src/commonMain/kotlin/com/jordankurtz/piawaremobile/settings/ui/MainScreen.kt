@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,12 +47,17 @@ import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.app_section_title
 import piawaremobile.composeapp.generated.resources.center_map_on_user_description
 import piawaremobile.composeapp.generated.resources.center_map_on_user_title
+import piawaremobile.composeapp.generated.resources.clear_map_cache_confirm_cancel
+import piawaremobile.composeapp.generated.resources.clear_map_cache_confirm_clear
+import piawaremobile.composeapp.generated.resources.clear_map_cache_confirm_message
+import piawaremobile.composeapp.generated.resources.clear_map_cache_confirm_title
+import piawaremobile.composeapp.generated.resources.clear_map_cache_description
+import piawaremobile.composeapp.generated.resources.clear_map_cache_title
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_description
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
 import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 import piawaremobile.composeapp.generated.resources.flightaware_section_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
-import piawaremobile.composeapp.generated.resources.map_provider_description
 import piawaremobile.composeapp.generated.resources.map_provider_title
 import piawaremobile.composeapp.generated.resources.map_section_title
 import piawaremobile.composeapp.generated.resources.offline_maps_settings_title
@@ -81,10 +87,33 @@ import piawaremobile.composeapp.generated.resources.zoom_min_title
 fun MainScreen(
     onServersClicked: () -> Unit,
     onOfflineMapsClicked: () -> Unit = {},
+    onMapProviderClicked: () -> Unit = {},
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val settingsState by viewModel.settings.collectAsState()
     val settings = settingsState
+    var showClearCacheConfirm by remember { mutableStateOf(false) }
+
+    if (showClearCacheConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearCacheConfirm = false },
+            title = { Text(stringResource(Res.string.clear_map_cache_confirm_title)) },
+            text = { Text(stringResource(Res.string.clear_map_cache_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearTileCache()
+                    showClearCacheConfirm = false
+                }) {
+                    Text(stringResource(Res.string.clear_map_cache_confirm_clear))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCacheConfirm = false }) {
+                    Text(stringResource(Res.string.clear_map_cache_confirm_cancel))
+                }
+            },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -108,15 +137,23 @@ fun MainScreen(
             }
 
             item {
-                SettingsDropdown(
+                val activeProviderId = settings.getValue()?.mapProviderId ?: TileProviders.OPENSTREETMAP.id
+                val builtInMatch = TileProviders.ALL.find { it.id == activeProviderId }
+                val providerDisplayName =
+                    builtInMatch?.displayNameRes?.let { stringResource(it) }
+                        ?: settings.getValue()?.customProviders?.find { it.id == activeProviderId }?.displayName
+                        ?: activeProviderId
+                SettingsItem(
                     title = stringResource(Res.string.map_provider_title),
-                    description = stringResource(Res.string.map_provider_description),
-                    selectedValue =
-                        settings.getValue()?.mapProviderId?.let { TileProviders.findById(it) }
-                            ?: TileProviders.OPENSTREETMAP,
-                    values = TileProviders.ALL.toTypedArray(),
-                    onValueSelected = viewModel::updateMapProvider,
-                    stringFor = { stringResource(it.displayNameRes) },
+                    description = providerDisplayName,
+                    onClick = onMapProviderClicked,
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_chevron_right),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                        )
+                    },
                 )
             }
 
@@ -199,6 +236,14 @@ fun MainScreen(
                     value = settings.getValue()?.maxZoomLevel ?: SettingsRepository.MAX_ZOOM_LEVEL,
                     onValueChange = viewModel::updateMaxZoomLevel,
                     range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
+                )
+            }
+
+            item {
+                SettingsItem(
+                    title = stringResource(Res.string.clear_map_cache_title),
+                    description = stringResource(Res.string.clear_map_cache_description),
+                    onClick = { showClearCacheConfirm = true },
                 )
             }
 
@@ -306,6 +351,7 @@ fun SettingsSection(title: String) {
 fun SettingsItem(
     title: String,
     onClick: () -> Unit,
+    description: String? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     Column {
@@ -317,12 +363,19 @@ fun SettingsItem(
                     .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f),
-            )
-
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                if (description != null) {
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             trailingIcon?.invoke()
         }
         HorizontalDivider()

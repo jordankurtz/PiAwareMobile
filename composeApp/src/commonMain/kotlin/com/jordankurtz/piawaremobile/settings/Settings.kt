@@ -19,4 +19,6 @@ data class Settings(
     val defaultZoomLevel: Int = SettingsRepository.DEFAULT_ZOOM_LEVEL,
     val minZoomLevel: Int = SettingsRepository.MIN_ZOOM_LEVEL,
     val maxZoomLevel: Int = SettingsRepository.MAX_ZOOM_LEVEL,
+    val apiKeys: Map<String, String> = emptyMap(),
+    val customProviders: List<CustomProviderConfig> = emptyList(),
 )

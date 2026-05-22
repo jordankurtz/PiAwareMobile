@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
@@ -27,7 +28,7 @@ class ServersScreenTest {
             mock<SettingsService> {
                 every { loadSettings() } returns flowOf(Async.Success(settings))
             }
-        return SettingsViewModel(settingsService)
+        return SettingsViewModel(settingsService, mock<TileCache>())
     }
 
     @Test

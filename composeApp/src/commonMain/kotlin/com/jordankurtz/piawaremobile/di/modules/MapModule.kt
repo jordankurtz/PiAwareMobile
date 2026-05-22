@@ -4,7 +4,7 @@ import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.MapComposeStateController
 import com.jordankurtz.piawaremobile.map.MapStateController
 import com.jordankurtz.piawaremobile.map.TileProviderConfig
-import com.jordankurtz.piawaremobile.map.TileProviders
+import com.jordankurtz.piawaremobile.map.resolveActiveProviderConfig
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -28,10 +28,10 @@ class MapModule {
     ): StateFlow<TileProviderConfig> {
         val initial =
             runBlocking(ioDispatcher) {
-                TileProviders.findById(settingsRepository.getSettings().first().mapProviderId)
+                resolveActiveProviderConfig(settingsRepository.getSettings().first())
             }
         return settingsRepository.getSettings()
-            .map { TileProviders.findById(it.mapProviderId) }
+            .map { resolveActiveProviderConfig(it) }
             .stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = initial)
     }
 

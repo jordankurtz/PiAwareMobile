@@ -187,3 +187,25 @@ WHERE EXISTS (
 
 resetStuckDownloads:
 UPDATE offline_region SET status = 'PARTIAL' WHERE status = 'DOWNLOADING';
+
+-- Used by clearAll(): list non-pinned tiles so their files can be deleted
+selectNonPinnedTiles:
+SELECT zoom_level, col, row, provider_id FROM tile
+WHERE NOT EXISTS (
+    SELECT 1 FROM pinned_tile pt
+    WHERE pt.zoom_level = tile.zoom_level
+      AND pt.col = tile.col
+      AND pt.row = tile.row
+      AND pt.provider_id = tile.provider_id
+);
+
+-- Used by clearAll(): remove all non-pinned tiles (cascades to cache_entry)
+deleteAllNonPinnedTiles:
+DELETE FROM tile
+WHERE NOT EXISTS (
+    SELECT 1 FROM pinned_tile pt
+    WHERE pt.zoom_level = tile.zoom_level
+      AND pt.col = tile.col
+      AND pt.row = tile.row
+      AND pt.provider_id = tile.provider_id
+);

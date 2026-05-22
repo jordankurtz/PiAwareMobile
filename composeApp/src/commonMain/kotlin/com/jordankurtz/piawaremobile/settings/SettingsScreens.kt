@@ -6,4 +6,6 @@ sealed class SettingsScreens {
     object Servers : SettingsScreens()
 
     object OfflineMaps : SettingsScreens()
+
+    object MapProviders : SettingsScreens()
 }
