@@ -110,7 +110,6 @@ fun MapWithListLayout(
             )
             Overlay(
                 numberOfPlanes = numberOfPlanes,
-                provider = activeProvider,
                 modifier =
                     Modifier
                         .align(Alignment.BottomEnd)

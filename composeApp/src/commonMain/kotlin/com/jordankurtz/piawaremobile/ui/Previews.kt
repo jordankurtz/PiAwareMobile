@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.Overlay
-import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.Location
@@ -46,7 +45,6 @@ private fun OverlayPreview() {
     Theme {
         Overlay(
             numberOfPlanes = 42,
-            provider = TileProviders.DEFAULT,
             modifier = Modifier.fillMaxWidth(),
         )
     }

@@ -133,7 +133,6 @@ fun MapScreen(
         }
         Overlay(
             numberOfPlanes = numberOfPlanes,
-            provider = activeProvider,
             modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
         )
         if (isDebugBuild) {
