@@ -1,4 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import io.github.frankois944.spmForKmp.swiftPackageConfig
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -15,6 +16,7 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.sentry)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.spmForKmp)
 }
 
 kotlin {
@@ -59,6 +61,16 @@ kotlin {
         iosTarget.binaries.all {
             linkerOpts("-lsqlite3")
         }
+        iosTarget.swiftPackageConfig(cinteropName = "maplibre") {
+            dependency {
+                remotePackageVersion(
+                    url = uri("https://github.com/maplibre/maplibre-gl-native-distribution.git"),
+                    products = { add("MapLibre", exportToKotlin = true) },
+                    packageName = "maplibre-gl-native-distribution",
+                    version = "6.17.1",
+                )
+            }
+        }
     }
 
     sourceSets {
@@ -83,7 +95,7 @@ kotlin {
             implementation(compose.ui)
             implementation(libs.compose.foundation)
             implementation(libs.compose.runtime)
-            implementation(libs.compose.map)
+            implementation(libs.maplibre.compose)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
@@ -133,6 +145,18 @@ kotlin {
                 implementation(libs.androidx.compose.ui.test.junit4)
             }
         }
+    }
+}
+
+// Force lifecycle-viewmodel-compose to 2.9.5 across all configurations.
+// koin-compose-viewmodel:4.1.1 requires the 2.9.3 klib, whose manifest
+// incorrectly lists "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-savedstate"
+// as a direct dep — an artifact with no native klib. The 2.9.5 klib drops that
+// reference and delegates to the standard androidx.lifecycle namespace instead,
+// so the Kotlin/Native KLIB resolver can find it.
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.9.5")
     }
 }
 
