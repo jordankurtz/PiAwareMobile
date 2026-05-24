@@ -133,6 +133,7 @@ class MapViewModel(
         _selectedAircraft.value = null
         _followingAircraft.value = null
         _trailSelectedAircraft.value = null
+        mapStateController.setSelectedMarker(null)
         onAircraftTrailsUpdated(lastTrails)
     }
 
@@ -148,6 +149,7 @@ class MapViewModel(
         if (_selectedAircraft.value != hex) {
             _selectedAircraft.value = hex
             _trailSelectedAircraft.value = hex
+            mapStateController.setSelectedMarker(hex)
             onAircraftTrailsUpdated(lastTrails)
         }
     }
