@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -108,19 +109,18 @@ fun MapWithListLayout(
                 controller = mapViewModel.mapStateController as MapLibreStateController,
                 styleUrl = activeProvider.styleUrl,
             )
-            Overlay(
-                numberOfPlanes = numberOfPlanes,
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(horizontal = 8.dp),
-            )
-            if (isDebugBuild) {
-                TileCacheDebugOverlay(
-                    stats = tileStats,
-                    currentZoom = currentZoom,
-                    zoomSettings = zoomSettings,
-                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            Column(modifier = Modifier.align(Alignment.TopStart)) {
+                if (isDebugBuild) {
+                    TileCacheDebugOverlay(
+                        stats = tileStats,
+                        currentZoom = currentZoom,
+                        zoomSettings = zoomSettings,
+                        modifier = Modifier.padding(8.dp),
+                    )
+                }
+                Overlay(
+                    numberOfPlanes = numberOfPlanes,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
             // Settings button

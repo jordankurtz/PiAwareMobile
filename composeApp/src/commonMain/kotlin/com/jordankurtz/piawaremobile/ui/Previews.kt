@@ -3,7 +3,6 @@
 package com.jordankurtz.piawaremobile.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -43,10 +42,7 @@ private val previewAircraftInfo =
 @Composable
 private fun OverlayPreview() {
     Theme {
-        Overlay(
-            numberOfPlanes = 42,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        Overlay(numberOfPlanes = 42)
     }
 }
 
