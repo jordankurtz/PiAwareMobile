@@ -54,6 +54,9 @@ class FakeMapStateController : MapStateController {
     var touchDownHandler: (() -> Unit)? = null
     override fun onTouchDown(handler: () -> Unit) { touchDownHandler = handler }
 
+    var selectedMarkerId: String? = null
+    override fun setSelectedMarker(id: String?) { selectedMarkerId = id }
+
     val addedMarkers = mutableMapOf<String, Pair<Double, Double>>()
     override fun addMarker(id: String, latitude: Double, longitude: Double, content: @Composable () -> Unit) {
         addedMarkers[id] = latitude to longitude

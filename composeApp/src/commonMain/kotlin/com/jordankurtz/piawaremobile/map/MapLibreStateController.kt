@@ -234,7 +234,7 @@ class MapLibreStateController : MapStateController {
         touchDownHandler?.invoke()
     }
 
-    fun setSelectedMarker(id: String?) {
+    override fun setSelectedMarker(id: String?) {
         selectedMarkerId = id
     }
 

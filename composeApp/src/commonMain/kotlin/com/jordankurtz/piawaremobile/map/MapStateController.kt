@@ -41,6 +41,8 @@ interface MapStateController {
 
     fun onTouchDown(handler: () -> Unit)
 
+    fun setSelectedMarker(id: String?)
+
     fun addMarker(
         id: String,
         latitude: Double,

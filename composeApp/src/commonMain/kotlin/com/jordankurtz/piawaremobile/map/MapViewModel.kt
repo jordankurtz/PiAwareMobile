@@ -98,6 +98,7 @@ class MapViewModel(
                 val newSelection = if (_selectedAircraft.value == id) null else id
                 _selectedAircraft.value = newSelection
                 _trailSelectedAircraft.value = newSelection
+                mapStateController.setSelectedMarker(newSelection)
                 onAircraftTrailsUpdated(lastTrails)
             }
         }
@@ -107,6 +108,7 @@ class MapViewModel(
                 _selectedAircraft.value = null
                 _followingAircraft.value = null
                 _trailSelectedAircraft.value = null
+                mapStateController.setSelectedMarker(null)
                 onAircraftTrailsUpdated(lastTrails)
             }
         }
