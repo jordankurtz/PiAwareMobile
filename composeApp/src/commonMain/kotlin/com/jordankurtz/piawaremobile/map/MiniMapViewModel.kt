@@ -104,13 +104,15 @@ class MiniMapViewModel(
             }
 
             if (aircraftLat != null && aircraftLon != null && userLat != null && userLon != null) {
+                val latPad = max(aircraftLat, userLat) - min(aircraftLat, userLat)
+                val lonPad = max(aircraftLon, userLon) - min(aircraftLon, userLon)
                 mapStateController.scrollTo(
                     bounds =
                         MapBounds(
-                            north = max(aircraftLat, userLat),
-                            south = min(aircraftLat, userLat),
-                            east = max(aircraftLon, userLon),
-                            west = min(aircraftLon, userLon),
+                            north = max(aircraftLat, userLat) + latPad * 0.2,
+                            south = min(aircraftLat, userLat) - latPad * 0.2,
+                            east = max(aircraftLon, userLon) + lonPad * 0.2,
+                            west = min(aircraftLon, userLon) - lonPad * 0.2,
                         ),
                     padding = Offset(0.2f, 0.2f),
                     animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
