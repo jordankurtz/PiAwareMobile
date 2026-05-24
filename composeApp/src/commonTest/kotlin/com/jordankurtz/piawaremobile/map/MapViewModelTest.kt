@@ -20,6 +20,7 @@ import com.jordankurtz.piawaremobile.testutil.mockServer
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
+import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +31,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ovh.plrapps.mapcompose.core.TileStreamProvider
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -43,7 +43,6 @@ import kotlin.test.assertTrue
 class MapViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var mapProvider: TileStreamProvider
     private lateinit var getSavedMapStateUseCase: GetSavedMapStateUseCase
     private lateinit var saveMapStateUseCase: SaveMapStateUseCase
     private lateinit var loadSettingsUseCase: LoadSettingsUseCase
@@ -67,7 +66,6 @@ class MapViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
-        mapProvider = TileStreamProvider { _, _, _ -> null }
         getSavedMapStateUseCase = mock()
         saveMapStateUseCase = mock()
         loadSettingsUseCase = mock()
@@ -75,6 +73,7 @@ class MapViewModelTest {
 
         every { loadSettingsUseCase.invoke() } returns settingsFlow
         everySuspend { getSavedMapStateUseCase.invoke() } returns MapState(0.5, 0.5, 1.0)
+        everySuspend { saveMapStateUseCase.invoke(any(), any(), any()) } returns Unit
     }
 
     @AfterTest
@@ -85,12 +84,11 @@ class MapViewModelTest {
     }
 
     private fun createViewModel(
-        providerConfigFlow: MutableStateFlow<TileProviderConfig> = MutableStateFlow(TileProviders.OPENSTREETMAP),
+        providerConfigFlow: MutableStateFlow<TileProviderConfig> = MutableStateFlow(TileProviders.DEFAULT),
         mapStateController: FakeMapStateController = FakeMapStateController(),
     ): MapViewModel {
         val vm =
             MapViewModel(
-                mapProvider = mapProvider,
                 providerConfigFlow = providerConfigFlow,
                 getSavedMapStateUseCase = getSavedMapStateUseCase,
                 saveMapStateUseCase = saveMapStateUseCase,
@@ -396,16 +394,16 @@ class MapViewModelTest {
     @Test
     fun `switching providerConfigFlow updates activeProvider`() =
         runTest {
-            val providerFlow = MutableStateFlow<TileProviderConfig>(TileProviders.OPENSTREETMAP)
+            val providerFlow = MutableStateFlow<TileProviderConfig>(TileProviders.DEFAULT)
             val vm = createViewModel(providerConfigFlow = providerFlow)
             advanceUntilIdle()
 
-            assertEquals(TileProviders.OPENSTREETMAP, vm.activeProvider.value)
+            assertEquals(TileProviders.DEFAULT, vm.activeProvider.value)
 
-            providerFlow.value = TileProviders.CARTO_DARK_ALL
+            providerFlow.value = TileProviders.STADIA_ALIDADE_SMOOTH
             advanceUntilIdle()
 
-            assertEquals(TileProviders.CARTO_DARK_ALL, vm.activeProvider.value)
+            assertEquals(TileProviders.STADIA_ALIDADE_SMOOTH, vm.activeProvider.value)
         }
 
     private fun makeTrail(
@@ -510,14 +508,14 @@ class MapViewModelTest {
         }
 
     @Test
-    fun `scale limits are set from settings on load`() =
+    fun `setZoomLimits is called with min and max zoom from settings`() =
         runTest {
-            settingsFlow.value = Async.Success(settings.copy(minZoomLevel = 5, maxZoomLevel = 12))
             val controller = FakeMapStateController()
-            createViewModel(mapStateController = controller)
+            val vm = createViewModel(mapStateController = controller)
+            settingsFlow.value = Async.Success(settings.copy(minZoomLevel = 5, maxZoomLevel = 12))
             advanceUntilIdle()
-            assertEquals(osmZoomToScale(5), controller.lastMinScale, 0.0001)
-            assertEquals(osmZoomToScale(12), controller.lastMaxScale, 0.0001)
+            assertEquals(5.0, controller.lastMinZoom, 0.0001)
+            assertEquals(12.0, controller.lastMaxZoom, 0.0001)
         }
 
     @Test
@@ -527,7 +525,7 @@ class MapViewModelTest {
             val controller = FakeMapStateController()
             createViewModel(mapStateController = controller)
             advanceUntilIdle()
-            assertEquals(osmZoomToScale(10), controller.scale, 0.0001)
+            assertEquals(10.0, controller.zoom, 0.0001)
         }
 
     @Test
@@ -537,12 +535,11 @@ class MapViewModelTest {
                 Async.Success(
                     settings.copy(minZoomLevel = 8, maxZoomLevel = 14, restoreMapStateOnStart = true),
                 )
-            everySuspend { getSavedMapStateUseCase.invoke() } returns
-                com.jordankurtz.piawaremobile.model.MapState(0.5, 0.5, osmZoomToScale(3))
+            everySuspend { getSavedMapStateUseCase.invoke() } returns MapState(0.5, 0.5, 3.0)
             val controller = FakeMapStateController()
             createViewModel(mapStateController = controller)
             advanceUntilIdle()
-            assertEquals(osmZoomToScale(8), controller.scale, 0.0001)
+            assertEquals(8.0, controller.zoom, 0.0001)
         }
 
     @Test
@@ -552,11 +549,10 @@ class MapViewModelTest {
                 Async.Success(
                     settings.copy(minZoomLevel = 5, maxZoomLevel = 10, restoreMapStateOnStart = true),
                 )
-            everySuspend { getSavedMapStateUseCase.invoke() } returns
-                com.jordankurtz.piawaremobile.model.MapState(0.5, 0.5, osmZoomToScale(15))
+            everySuspend { getSavedMapStateUseCase.invoke() } returns MapState(0.5, 0.5, 15.0)
             val controller = FakeMapStateController()
             createViewModel(mapStateController = controller)
             advanceUntilIdle()
-            assertEquals(osmZoomToScale(10), controller.scale, 0.0001)
+            assertEquals(10.0, controller.zoom, 0.0001)
         }
 }
