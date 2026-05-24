@@ -5,100 +5,84 @@ import com.jordankurtz.piawaremobile.settings.Settings
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class ProviderResolutionTest {
     @Test
     fun resolvesBuiltInProvider() {
-        val settings = Settings(mapProviderId = "openstreetmap")
+        val settings = Settings(mapProviderId = "openfreemap-bright")
         val result = resolveActiveProviderConfig(settings)
-        assertEquals("openstreetmap", result.id)
+        assertEquals("openfreemap-bright", result.id)
     }
 
     @Test
-    fun fallsBackToOpenStreetMapForUnknownId() {
+    fun fallsBackToDefaultForUnknownId() {
         val settings = Settings(mapProviderId = "does_not_exist")
         val result = resolveActiveProviderConfig(settings)
-        assertEquals("openstreetmap", result.id)
+        assertEquals(TileProviders.DEFAULT.id, result.id)
     }
 
     @Test
-    fun injectsApiKeyForKeyGatedProvider() {
-        val settings =
-            Settings(
-                mapProviderId = "stadia_toner",
-                apiKeys = mapOf("stadia" to "my-key"),
-            )
+    fun injectsApiKeyForStadiaProvider() {
+        val settings = Settings(
+            mapProviderId = "stadia-alidade-smooth",
+            apiKeys = mapOf("stadia" to "my-key"),
+        )
         val result = resolveActiveProviderConfig(settings)
-        assertContains(result.urlTemplate, "my-key")
+        assertContains(result.styleUrl, "my-key")
+        assertFalse(result.styleUrl.contains("{api_key}"))
     }
 
     @Test
-    fun groupKeyAppliesToAllProvidersInGroup() {
-        val settings =
-            Settings(
-                apiKeys = mapOf("stadia" to "shared-key"),
-            )
-        listOf("stadia_toner", "stadia_watercolor", "stadia_alidade_smooth", "stadia_alidade_dark")
-            .forEach { id ->
-                val result = resolveActiveProviderConfig(settings.copy(mapProviderId = id))
-                assertContains(
-                    result.urlTemplate,
-                    "shared-key",
-                    message = "Provider $id should use the shared stadia key",
-                )
-            }
-    }
-
-    @Test
-    fun thunderforestGroupKeyAppliesToAllThunderforestProviders() {
-        val settings =
-            Settings(
-                apiKeys = mapOf("thunderforest" to "tf-key"),
-            )
-        listOf(
-            "thunderforest_transport",
-            "thunderforest_transport_dark",
-            "thunderforest_cycle",
-            "thunderforest_outdoors",
-            "thunderforest_landscape",
-            "thunderforest_pioneer",
-            "thunderforest_atlas",
-            "thunderforest_neighbourhood",
-            "thunderforest_mobile_atlas",
-            "thunderforest_spinal_map",
-        ).forEach { id ->
+    fun stadiaGroupKeyAppliesToAllStadiaProviders() {
+        val settings = Settings(
+            apiKeys = mapOf("stadia" to "shared-key"),
+        )
+        listOf("stadia-alidade-smooth", "stadia-outdoors").forEach { id ->
             val result = resolveActiveProviderConfig(settings.copy(mapProviderId = id))
             assertContains(
-                result.urlTemplate,
-                "tf-key",
-                message = "Provider $id should use the shared thunderforest key",
+                result.styleUrl,
+                "shared-key",
+                message = "Provider $id should use the shared stadia key",
+            )
+        }
+    }
+
+    @Test
+    fun maptilerGroupKeyAppliesToAllMaptilerProviders() {
+        val settings = Settings(
+            apiKeys = mapOf("maptiler" to "mt-key"),
+        )
+        listOf("maptiler-streets", "maptiler-outdoor").forEach { id ->
+            val result = resolveActiveProviderConfig(settings.copy(mapProviderId = id))
+            assertContains(
+                result.styleUrl,
+                "mt-key",
+                message = "Provider $id should use the shared maptiler key",
             )
         }
     }
 
     @Test
     fun usesBlankKeyWhenNotConfigured() {
-        val settings = Settings(mapProviderId = "stadia_toner")
+        val settings = Settings(mapProviderId = "stadia-alidade-smooth")
         val result = resolveActiveProviderConfig(settings)
-        assertContains(result.urlTemplate, "api_key=")
-        assertEquals(false, result.urlTemplate.contains("{api_key}"))
+        assertFalse(result.styleUrl.contains("{api_key}"))
     }
 
     @Test
     fun resolvesCustomProvider() {
-        val custom =
-            CustomProviderConfig(
-                id = "my-custom",
-                displayName = "My Tiles",
-                urlTemplate = "https://example.com/{z}/{x}/{y}.png",
-            )
-        val settings =
-            Settings(
-                mapProviderId = "my-custom",
-                customProviders = listOf(custom),
-            )
+        val custom = CustomProviderConfig(
+            id = "my-custom",
+            displayName = "My Style",
+            styleUrl = "https://example.com/style.json",
+        )
+        val settings = Settings(
+            mapProviderId = "my-custom",
+            customProviders = listOf(custom),
+        )
         val result = resolveActiveProviderConfig(settings)
         assertEquals("my-custom", result.id)
-        assertEquals("https://example.com/{z}/{x}/{y}.png", result.urlTemplate)
+        assertEquals("https://example.com/style.json", result.styleUrl)
     }
 }

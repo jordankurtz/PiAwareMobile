@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map.offline
 
+import com.jordankurtz.piawaremobile.map.TileProviderConfig as MapTileProviderConfig
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -200,7 +201,7 @@ class OfflineMapsViewModelTest {
                         region.name == "Airport area" &&
                             region.minZoom == 8 &&
                             region.maxZoom == 12 &&
-                            region.providerId == "openstreetmap"
+                            region.providerId == "openfreemap-bright"
                     },
                 )
             }
@@ -210,12 +211,10 @@ class OfflineMapsViewModelTest {
     fun `startDownload uses provider id for region and download`() =
         runTest {
             val customProvider =
-                TileProviderConfig(
+                MapTileProviderConfig(
                     id = "custom",
-                    urlTemplate = "https://example.com/{z}/{x}/{y}.png",
-                    requestDelayMs = 0L,
-                    avgTileSizeBytes = 10_000L,
-                    userAgent = "Test",
+                    displayName = "Custom Provider",
+                    styleUrl = "https://example.com/styles/custom",
                 )
             everySuspend { store.getRegions() } returns emptyList()
             everySuspend { store.saveRegion(any()) } returns 3L

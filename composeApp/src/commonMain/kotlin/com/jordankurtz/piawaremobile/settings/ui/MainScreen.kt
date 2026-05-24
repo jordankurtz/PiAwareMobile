@@ -137,7 +137,7 @@ fun MainScreen(
             }
 
             item {
-                val activeProviderId = settings.getValue()?.mapProviderId ?: TileProviders.OPENSTREETMAP.id
+                val activeProviderId = settings.getValue()?.mapProviderId ?: TileProviders.DEFAULT.id
                 val builtInMatch = TileProviders.ALL.find { it.id == activeProviderId }
                 val providerDisplayName =
                     builtInMatch?.displayNameRes?.let { stringResource(it) }

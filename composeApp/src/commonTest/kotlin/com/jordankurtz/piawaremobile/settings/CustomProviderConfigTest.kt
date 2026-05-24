@@ -8,12 +8,11 @@ import kotlin.test.assertEquals
 class CustomProviderConfigTest {
     @Test
     fun serializationRoundTrip() {
-        val config =
-            CustomProviderConfig(
-                id = "abc-123",
-                displayName = "My Tiles",
-                urlTemplate = "https://example.com/{z}/{x}/{y}.png",
-            )
+        val config = CustomProviderConfig(
+            id = "abc-123",
+            displayName = "My Style",
+            styleUrl = "https://example.com/style.json",
+        )
         val json = Json.encodeToString(config)
         val decoded = Json.decodeFromString<CustomProviderConfig>(json)
         assertEquals(config, decoded)

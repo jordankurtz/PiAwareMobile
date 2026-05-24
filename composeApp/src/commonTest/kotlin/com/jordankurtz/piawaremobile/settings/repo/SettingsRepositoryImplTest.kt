@@ -70,10 +70,10 @@ class SettingsRepositoryImplTest {
         }
 
     @Test
-    fun `getSettings returns openstreetmap as default mapProviderId`() =
+    fun `getSettings returns default provider as default mapProviderId`() =
         runTest {
             val settings = repository.getSettings().first()
 
-            assertEquals(TileProviders.OPENSTREETMAP.id, settings.mapProviderId)
+            assertEquals(TileProviders.DEFAULT.id, settings.mapProviderId)
         }
 }

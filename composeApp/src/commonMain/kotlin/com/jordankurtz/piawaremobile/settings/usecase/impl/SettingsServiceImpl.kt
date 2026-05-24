@@ -131,7 +131,7 @@ class SettingsServiceImpl(
     override suspend fun addCustomProvider(
         id: String,
         displayName: String,
-        urlTemplate: String,
+        styleUrl: String,
     ) = updateSetting {
         it.copy(
             customProviders =
@@ -139,7 +139,7 @@ class SettingsServiceImpl(
                     CustomProviderConfig(
                         id = id,
                         displayName = displayName,
-                        urlTemplate = urlTemplate,
+                        styleUrl = styleUrl,
                     ),
         )
     }

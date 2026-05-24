@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
+import com.jordankurtz.piawaremobile.map.TileProviderConfig as MapTileProviderConfig
+import com.jordankurtz.piawaremobile.map.TileProviders as MapTileProviders
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -90,7 +92,7 @@ class OfflineMapsViewModel(
         minZoom: Int,
         maxZoom: Int,
         viewportZoom: Int,
-        provider: TileProviderConfig = TileProviders.OPENSTREETMAP,
+        provider: MapTileProviderConfig = MapTileProviders.DEFAULT,
     ) {
         if (!_isDownloading.compareAndSet(expect = false, update = true)) return
         val region =

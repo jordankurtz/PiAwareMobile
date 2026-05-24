@@ -46,7 +46,7 @@ private fun OverlayPreview() {
     Theme {
         Overlay(
             numberOfPlanes = 42,
-            provider = TileProviders.OPENSTREETMAP,
+            provider = TileProviders.DEFAULT,
             modifier = Modifier.fillMaxWidth(),
         )
     }

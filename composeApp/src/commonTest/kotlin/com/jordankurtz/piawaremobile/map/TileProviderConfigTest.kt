@@ -2,82 +2,57 @@ package com.jordankurtz.piawaremobile.map
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class TileProviderConfigTest {
     @Test
-    fun osmUrlIsBuiltCorrectly() {
-        val url = TileProviders.OPENSTREETMAP.buildUrl(zoom = 10, col = 512, row = 340)
-        assertEquals("https://tile.openstreetmap.org/10/512/340.png", url)
+    fun `OPENFREEMAP_BRIGHT has expected styleUrl`() {
+        assertEquals("https://tiles.openfreemap.org/styles/bright", TileProviders.OPENFREEMAP_BRIGHT.styleUrl)
     }
 
     @Test
-    fun cartoUrlSubstitutesSubdomain() {
-        val url = TileProviders.CARTO_DARK_ALL.buildUrl(zoom = 10, col = 512, row = 340, subdomain = "b")
-        assertEquals("https://b.basemaps.cartocdn.com/dark_all/10/512/340.png", url)
+    fun `STADIA_ALIDADE_SMOOTH requires api key`() {
+        assertTrue(TileProviders.STADIA_ALIDADE_SMOOTH.requiresApiKey)
+        assertEquals("stadia", TileProviders.STADIA_ALIDADE_SMOOTH.apiKeyGroup)
     }
 
     @Test
-    fun esriSatelliteUrlUsesRowBeforeCol() {
-        // ESRI template is {z}/{y}/{x} — {y}=row, {x}=col
-        val url = TileProviders.ESRI_SATELLITE.buildUrl(zoom = 10, col = 512, row = 340)
-        assertEquals(
-            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/10/340/512",
-            url,
-        )
+    fun `OPENFREEMAP_BRIGHT does not require api key`() {
+        assertFalse(TileProviders.OPENFREEMAP_BRIGHT.requiresApiKey)
     }
 
     @Test
-    fun esriTopoUrlUsesRowBeforeCol() {
-        val url = TileProviders.ESRI_TOPO.buildUrl(zoom = 5, col = 2, row = 3)
-        assertEquals(
-            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/5/3/2",
-            url,
-        )
+    fun `TileProviders ALL contains six providers`() {
+        assertEquals(6, TileProviders.ALL.size)
     }
 
     @Test
-    fun findByIdReturnsMatchingProvider() {
-        val config = TileProviders.findById("carto_dark_all")
-        assertEquals(TileProviders.CARTO_DARK_ALL, config)
-    }
-
-    @Test
-    fun findByIdReturnsOsmForUnknownId() {
-        val config = TileProviders.findById("unknown_provider_xyz")
-        assertEquals(TileProviders.OPENSTREETMAP, config)
-    }
-
-    @Test
-    fun allProviderIdsAreUnique() {
+    fun `all provider ids are unique`() {
         val ids = TileProviders.ALL.map { it.id }
         assertEquals(ids, ids.distinct())
     }
 
     @Test
-    fun buildUrlSubstitutesApiKey() {
-        val config =
-            TileProviderConfig(
-                id = "test",
-                displayName = "Test",
-                urlTemplate = "https://example.com/{z}/{x}/{y}.png?api_key={api_key}",
-                copyrightUrl = "",
-                requiresApiKey = true,
-            )
-        val url = config.buildUrl(zoom = 10, col = 512, row = 512, apiKey = "my-secret-key")
-        assertEquals("https://example.com/10/512/512.png?api_key=my-secret-key", url)
+    fun `resolvedStyleUrl substitutes api key`() {
+        val config = TileProviderConfig(
+            id = "test",
+            displayName = "Test",
+            styleUrl = "https://example.com/style.json?api_key={api_key}",
+            requiresApiKey = true,
+        )
+        val resolved = config.resolvedStyleUrl("my-secret-key")
+        assertEquals("https://example.com/style.json?api_key=my-secret-key", resolved)
     }
 
     @Test
-    fun buildUrlWithoutApiKeyLeavesPlaceholderEmpty() {
-        val config =
-            TileProviderConfig(
-                id = "test",
-                displayName = "Test",
-                urlTemplate = "https://example.com/{z}/{x}/{y}.png?api_key={api_key}",
-                copyrightUrl = "",
-                requiresApiKey = true,
-            )
-        val url = config.buildUrl(zoom = 5, col = 10, row = 20)
-        assertEquals("https://example.com/5/10/20.png?api_key=", url)
+    fun `MAPTILER_STREETS has maptiler apiKeyGroup`() {
+        assertEquals("maptiler", TileProviders.MAPTILER_STREETS.apiKeyGroup)
+        assertTrue(TileProviders.MAPTILER_STREETS.requiresApiKey)
+    }
+
+    @Test
+    fun `DEFAULT is OPENFREEMAP_BRIGHT`() {
+        assertEquals(TileProviders.OPENFREEMAP_BRIGHT, TileProviders.DEFAULT)
     }
 }
