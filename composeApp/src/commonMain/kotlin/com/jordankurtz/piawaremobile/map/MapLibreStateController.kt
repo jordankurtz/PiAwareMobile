@@ -68,6 +68,9 @@ class MapLibreStateController : MapStateController {
     private var _minZoom by mutableStateOf(0.0)
     private var _maxZoom by mutableStateOf(22.0)
 
+    var selectedMarkerId: String? by mutableStateOf(null)
+        private set
+
     private var markerClickHandler: ((String) -> Unit)? = null
     private var tapHandler: (() -> Unit)? = null
     private var touchDownHandler: (() -> Unit)? = null
@@ -229,6 +232,10 @@ class MapLibreStateController : MapStateController {
 
     fun handleTouchDown() {
         touchDownHandler?.invoke()
+    }
+
+    fun setSelectedMarker(id: String?) {
+        selectedMarkerId = id
     }
 
     override fun addMarker(
