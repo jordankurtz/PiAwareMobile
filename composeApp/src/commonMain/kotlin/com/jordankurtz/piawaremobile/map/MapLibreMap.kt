@@ -1,10 +1,13 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -95,9 +99,18 @@ fun MapLibreMap(
                     modifier = Modifier
                         .size(0.dp)
                         .absoluteOffset { IntOffset(screenPos.x.roundToPx(), screenPos.y.roundToPx()) }
-                        .wrapContentSize(unbounded = true),
+                        .wrapContentSize(unbounded = true)
+                        .clickable { controller.handleMarkerTap(marker.id) },
                     contentAlignment = Alignment.Center,
                 ) {
+                    val isSelected = marker.id == controller.selectedMarkerId
+                    if (isSelected) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .border(2.dp, Color.White, CircleShape)
+                        )
+                    }
                     marker.content()
                 }
             }
