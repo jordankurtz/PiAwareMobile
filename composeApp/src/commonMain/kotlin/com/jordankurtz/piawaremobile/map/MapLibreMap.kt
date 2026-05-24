@@ -28,13 +28,13 @@ import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
-import org.maplibre.compose.map.MaplibreMap as MaplibreComposeMap
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Position
+import org.maplibre.compose.map.MaplibreMap as MaplibreComposeMap
 
 @Composable
 fun MapLibreMap(
@@ -67,9 +67,10 @@ fun MapLibreMap(
 
     val gestureOptions =
         if (gesturesEnabled) GestureOptions.Standard else GestureOptions.AllDisabled
-    val mapOptions = remember(gestureOptions) {
-        MapOptions(gestureOptions = gestureOptions)
-    }
+    val mapOptions =
+        remember(gestureOptions) {
+            MapOptions(gestureOptions = gestureOptions)
+        }
 
     val zoomRange = controller.zoomLimits()
 
@@ -90,25 +91,29 @@ fun MapLibreMap(
 
         val projection = cameraState.projection
         if (projection != null) {
-            @Suppress("UNUSED_EXPRESSION") cameraPosition
+            @Suppress("UNUSED_EXPRESSION")
+            cameraPosition
             controller.markers.values.forEach { marker ->
-                val screenPos = projection.screenLocationFromPosition(
-                    Position(longitude = marker.longitude, latitude = marker.latitude)
-                )
+                val screenPos =
+                    projection.screenLocationFromPosition(
+                        Position(longitude = marker.longitude, latitude = marker.latitude),
+                    )
                 Box(
-                    modifier = Modifier
-                        .size(0.dp)
-                        .absoluteOffset { IntOffset(screenPos.x.roundToPx(), screenPos.y.roundToPx()) }
-                        .wrapContentSize(unbounded = true)
-                        .clickable { controller.handleMarkerTap(marker.id) },
+                    modifier =
+                        Modifier
+                            .size(0.dp)
+                            .absoluteOffset { IntOffset(screenPos.x.roundToPx(), screenPos.y.roundToPx()) }
+                            .wrapContentSize(unbounded = true)
+                            .clickable { controller.handleMarkerTap(marker.id) },
                     contentAlignment = Alignment.Center,
                 ) {
                     val isSelected = marker.id == controller.selectedMarkerId
                     if (isSelected) {
                         Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .border(2.dp, Color.White, CircleShape)
+                            modifier =
+                                Modifier
+                                    .size(38.dp)
+                                    .border(2.dp, Color.White, CircleShape),
                         )
                     }
                     marker.content()
@@ -120,12 +125,14 @@ fun MapLibreMap(
 
 @Composable
 private fun PathLayer(path: MapLibreStateController.PathData) {
-    val positions = remember(path.points) {
-        path.points.map { Position(longitude = it.longitude, latitude = it.latitude) }
-    }
-    val geoJson = remember(positions) {
-        GeoJsonData.Features(LineString(positions))
-    }
+    val positions =
+        remember(path.points) {
+            path.points.map { Position(longitude = it.longitude, latitude = it.latitude) }
+        }
+    val geoJson =
+        remember(positions) {
+            GeoJsonData.Features(LineString(positions))
+        }
     val source = rememberGeoJsonSource(data = geoJson)
     LineLayer(
         id = "path-${path.id}",

@@ -1,6 +1,5 @@
 package com.jordankurtz.piawaremobile.map.offline
 
-import com.jordankurtz.piawaremobile.map.TileProviderConfig as MapTileProviderConfig
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -29,6 +28,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import com.jordankurtz.piawaremobile.map.TileProviderConfig as MapTileProviderConfig
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OfflineMapsViewModelTest {

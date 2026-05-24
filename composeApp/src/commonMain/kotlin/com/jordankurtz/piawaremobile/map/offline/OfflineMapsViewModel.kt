@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
-import com.jordankurtz.piawaremobile.map.TileProviderConfig as MapTileProviderConfig
-import com.jordankurtz.piawaremobile.map.TileProviders as MapTileProviders
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,6 +17,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.koin.core.annotation.Factory
 import kotlin.time.Clock
+import com.jordankurtz.piawaremobile.map.TileProviderConfig as MapTileProviderConfig
+import com.jordankurtz.piawaremobile.map.TileProviders as MapTileProviders
 
 @Factory
 class OfflineMapsViewModel(

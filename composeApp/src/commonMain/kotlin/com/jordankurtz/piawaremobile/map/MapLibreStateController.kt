@@ -13,16 +13,16 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import kotlin.concurrent.Volatile
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.spatialk.geojson.Position
+import kotlin.concurrent.Volatile
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Holds Compose-observable marker and path collections plus a reference to a
@@ -38,8 +38,8 @@ import org.maplibre.spatialk.geojson.Position
  *
  * Paths are rendered by the composable as GeoJSON line layers.
  */
+@Suppress("TooManyFunctions")
 class MapLibreStateController : MapStateController {
-
     data class MarkerData(
         val id: String,
         val latitude: Double,
@@ -95,7 +95,11 @@ class MapLibreStateController : MapStateController {
      * Called by [MapLibreMap] whenever the maplibre-compose camera state
      * changes. Emits a new [MapPosition] on [cameraFlow].
      */
-    fun onCameraChanged(latitude: Double, longitude: Double, zoom: Double) {
+    fun onCameraChanged(
+        latitude: Double,
+        longitude: Double,
+        zoom: Double,
+    ) {
         cameraFlowState.value = MapPosition(latitude, longitude, zoom)
     }
 
@@ -107,55 +111,68 @@ class MapLibreStateController : MapStateController {
             state.position = current.copy(zoom = value)
         }
 
-    override fun setZoomLimits(min: Double, max: Double) {
+    override fun setZoomLimits(
+        min: Double,
+        max: Double,
+    ) {
         _minZoom = min
         _maxZoom = max
         // Limits applied to the live MapAdapter inside the composable; here we
         // simply record them so the composable can pick them up.
     }
 
-    fun zoomLimits(): ClosedFloatingPointRange<Float> =
-        _minZoom.toFloat().._maxZoom.toFloat()
+    fun zoomLimits(): ClosedFloatingPointRange<Float> = _minZoom.toFloat().._maxZoom.toFloat()
 
-    override suspend fun setCamera(latitude: Double, longitude: Double, zoom: Double) {
-        val state = cameraState ?: run {
-            cameraFlowState.value = MapPosition(latitude, longitude, zoom)
-            return
-        }
-        state.position = state.position.copy(
-            target = Position(longitude = longitude, latitude = latitude),
-            zoom = zoom,
-        )
+    override suspend fun setCamera(
+        latitude: Double,
+        longitude: Double,
+        zoom: Double,
+    ) {
+        val state =
+            cameraState ?: run {
+                cameraFlowState.value = MapPosition(latitude, longitude, zoom)
+                return
+            }
+        state.position =
+            state.position.copy(
+                target = Position(longitude = longitude, latitude = latitude),
+                zoom = zoom,
+            )
     }
 
     override suspend fun scrollTo(
         latitude: Double,
         longitude: Double,
         zoom: Double,
-        animationSpec: AnimationSpec<Float>, // animationSpec is not used; maplibre-compose animates with a fixed duration
+        // animationSpec is not used; maplibre-compose animates with a fixed duration
+        animationSpec: AnimationSpec<Float>,
     ) {
-        val state = cameraState ?: run {
-            cameraFlowState.value = MapPosition(latitude, longitude, zoom)
-            return
-        }
-        val target = state.position.copy(
-            target = Position(longitude = longitude, latitude = latitude),
-            zoom = zoom,
-        )
+        val state =
+            cameraState ?: run {
+                cameraFlowState.value = MapPosition(latitude, longitude, zoom)
+                return
+            }
+        val target =
+            state.position.copy(
+                target = Position(longitude = longitude, latitude = latitude),
+                zoom = zoom,
+            )
         state.animateTo(target, duration = DEFAULT_ANIMATION_DURATION_MS.milliseconds)
     }
 
     override suspend fun scrollTo(
         bounds: MapBounds,
         padding: Offset,
-        animationSpec: AnimationSpec<Float>, // animationSpec is not used; maplibre-compose animates with a fixed duration
+        // animationSpec is not used; maplibre-compose animates with a fixed duration
+        animationSpec: AnimationSpec<Float>,
     ) {
         val state = cameraState ?: return
         val bbox = bounds.toBoundingBox()
-        val paddingValues = PaddingValues(
-            horizontal = padding.x.dp,
-            vertical = padding.y.dp,
-        )
+        val paddingValues =
+            PaddingValues(
+                horizontal = padding.x.dp,
+                vertical = padding.y.dp,
+            )
         state.animateTo(
             boundingBox = bbox,
             bearing = state.position.bearing,
@@ -202,11 +219,15 @@ class MapLibreStateController : MapStateController {
         )
     }
 
-    override fun screenToLatLon(screenX: Float, screenY: Float): LatLon {
+    override fun screenToLatLon(
+        screenX: Float,
+        screenY: Float,
+    ): LatLon {
         val d = pixelDensity
         val dpOffset = DpOffset(x = (screenX / d).dp, y = (screenY / d).dp)
-        val position = cameraState?.projection?.positionFromScreenLocation(dpOffset)
-            ?: return LatLon(0.0, 0.0)
+        val position =
+            cameraState?.projection?.positionFromScreenLocation(dpOffset)
+                ?: return LatLon(0.0, 0.0)
         return LatLon(latitude = position.latitude, longitude = position.longitude)
     }
 

@@ -9,14 +9,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.flow.Flow
 
+@Suppress("TooManyFunctions")
 interface MapStateController {
     val cameraFlow: Flow<MapPosition>
 
     var zoom: Double
 
-    fun setZoomLimits(min: Double, max: Double)
+    fun setZoomLimits(
+        min: Double,
+        max: Double,
+    )
 
-    suspend fun setCamera(latitude: Double, longitude: Double, zoom: Double)
+    suspend fun setCamera(
+        latitude: Double,
+        longitude: Double,
+        zoom: Double,
+    )
 
     suspend fun scrollTo(
         latitude: Double,
@@ -33,7 +41,10 @@ interface MapStateController {
 
     fun visibleBounds(): MapBounds
 
-    fun screenToLatLon(screenX: Float, screenY: Float): LatLon
+    fun screenToLatLon(
+        screenX: Float,
+        screenY: Float,
+    ): LatLon
 
     fun onMarkerClick(handler: (id: String) -> Unit)
 

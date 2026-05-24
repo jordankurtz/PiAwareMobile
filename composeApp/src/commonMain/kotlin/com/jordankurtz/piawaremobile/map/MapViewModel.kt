@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
@@ -23,7 +24,6 @@ import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
-import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -173,7 +173,10 @@ class MapViewModel(
         }
     }
 
-    private suspend fun loadMapState(minZoom: Int, maxZoom: Int) {
+    private suspend fun loadMapState(
+        minZoom: Int,
+        maxZoom: Int,
+    ) {
         val savedState = getSavedMapStateUseCase()
         mapStateController.setCamera(
             latitude = savedState.latitude,
@@ -183,32 +186,34 @@ class MapViewModel(
     }
 
     private fun startSaveMapStateJob() {
-        saveStateJob = mapStateController.cameraFlow
-            .debounce(500.milliseconds)
-            .onEach { position ->
-                saveMapStateUseCase(
-                    latitude = position.latitude,
-                    longitude = position.longitude,
-                    zoom = position.zoom,
-                )
-            }
-            .launchIn(viewModelScope)
+        saveStateJob =
+            mapStateController.cameraFlow
+                .debounce(500.milliseconds)
+                .onEach { position ->
+                    saveMapStateUseCase(
+                        latitude = position.latitude,
+                        longitude = position.longitude,
+                        zoom = position.zoom,
+                    )
+                }
+                .launchIn(viewModelScope)
     }
 
-    fun onReceiverLocation(receiver: Map.Entry<Server, Location>) = viewModelScope.launch {
-        mapStateController.addMarker(
-            id = receiver.key.id.toString(),
-            latitude = receiver.value.latitude,
-            longitude = receiver.value.longitude,
-        ) {
-            Image(
-                painter = painterResource(Res.drawable.ic_receiver),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(Color.Black),
-                modifier = Modifier.size(20.dp),
-            )
+    fun onReceiverLocation(receiver: Map.Entry<Server, Location>) =
+        viewModelScope.launch {
+            mapStateController.addMarker(
+                id = receiver.key.id.toString(),
+                latitude = receiver.value.latitude,
+                longitude = receiver.value.longitude,
+            ) {
+                Image(
+                    painter = painterResource(Res.drawable.ic_receiver),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(Color.Black),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
-    }
 
     fun recenterOnLocation(location: Location) {
         lastRecenteredLocation.value = location
@@ -219,9 +224,10 @@ class MapViewModel(
     }
 
     fun fitToAircraft(aircraft: List<AircraftWithServers>) {
-        val coordinates = aircraft
-            .filter { it.aircraft.hasPosition }
-            .map { it.aircraft.lat to it.aircraft.lon }
+        val coordinates =
+            aircraft
+                .filter { it.aircraft.hasPosition }
+                .map { it.aircraft.lat to it.aircraft.lon }
         when (val target = computeFitTarget(coordinates)) {
             null -> return
             is FitTarget.SinglePoint -> {
@@ -232,12 +238,13 @@ class MapViewModel(
             is FitTarget.BoundingRegion -> {
                 viewModelScope.launch {
                     mapStateController.scrollTo(
-                        bounds = MapBounds(
-                            north = target.north,
-                            south = target.south,
-                            east = target.east,
-                            west = target.west,
-                        ),
+                        bounds =
+                            MapBounds(
+                                north = target.north,
+                                south = target.south,
+                                east = target.east,
+                                west = target.west,
+                            ),
                         padding = Offset(x = 0.15f, y = 0.15f),
                     )
                 }
@@ -313,19 +320,23 @@ class MapViewModel(
 
         val mode = settings?.trailDisplayMode ?: TrailDisplayMode.ALL
 
-        val trailsToDisplay = when (mode) {
-            TrailDisplayMode.NONE -> emptyMap()
-            TrailDisplayMode.ALL -> trails
-            TrailDisplayMode.SELECTED -> {
-                val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
-                if (selectedHex != null) trails.filterKeys { it == selectedHex } else emptyMap()
+        val trailsToDisplay =
+            when (mode) {
+                TrailDisplayMode.NONE -> emptyMap()
+                TrailDisplayMode.ALL -> trails
+                TrailDisplayMode.SELECTED -> {
+                    val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
+                    if (selectedHex != null) trails.filterKeys { it == selectedHex } else emptyMap()
+                }
             }
-        }
 
         trailsToDisplay.forEach { (hex, trail) -> drawTrail(hex, trail) }
     }
 
-    private fun drawTrail(hex: String, trail: AircraftTrail) {
+    private fun drawTrail(
+        hex: String,
+        trail: AircraftTrail,
+    ) {
         if (trail.positions.size >= 2) {
             val colorSegments = groupPositionsByAltitudeColor(trail.positions)
             colorSegments.forEachIndexed { index, segment ->

@@ -17,9 +17,10 @@ fun resolveActiveProviderConfig(
     }
 }
 
-fun CustomProviderConfig.toTileProviderConfig() = TileProviderConfig(
-    id = id,
-    displayName = displayName,
-    styleUrl = styleUrl,
-    isBuiltIn = false,
-)
+fun CustomProviderConfig.toTileProviderConfig() =
+    TileProviderConfig(
+        id = id,
+        displayName = displayName,
+        styleUrl = styleUrl,
+        isBuiltIn = false,
+    )

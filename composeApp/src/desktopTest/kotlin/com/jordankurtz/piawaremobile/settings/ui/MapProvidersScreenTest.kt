@@ -148,7 +148,11 @@ class MapProvidersScreenTest {
     fun customProviderRowDisplaysName() =
         runComposeUiTest {
             val config =
-                CustomProviderConfig(id = "c1", displayName = "My Tiles", styleUrl = "https://tiles.example.com/style.json")
+                CustomProviderConfig(
+                    id = "c1",
+                    displayName = "My Tiles",
+                    styleUrl = "https://tiles.example.com/style.json",
+                )
             setContent {
                 CustomProviderRow(
                     config = config,

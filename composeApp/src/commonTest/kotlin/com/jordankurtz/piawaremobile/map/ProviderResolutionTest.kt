@@ -24,10 +24,11 @@ class ProviderResolutionTest {
 
     @Test
     fun injectsApiKeyForStadiaProvider() {
-        val settings = Settings(
-            mapProviderId = "stadia-alidade-smooth",
-            apiKeys = mapOf("stadia" to "my-key"),
-        )
+        val settings =
+            Settings(
+                mapProviderId = "stadia-alidade-smooth",
+                apiKeys = mapOf("stadia" to "my-key"),
+            )
         val result = resolveActiveProviderConfig(settings)
         assertContains(result.styleUrl, "my-key")
         assertFalse(result.styleUrl.contains("{api_key}"))
@@ -35,9 +36,10 @@ class ProviderResolutionTest {
 
     @Test
     fun stadiaGroupKeyAppliesToAllStadiaProviders() {
-        val settings = Settings(
-            apiKeys = mapOf("stadia" to "shared-key"),
-        )
+        val settings =
+            Settings(
+                apiKeys = mapOf("stadia" to "shared-key"),
+            )
         listOf("stadia-alidade-smooth", "stadia-outdoors").forEach { id ->
             val result = resolveActiveProviderConfig(settings.copy(mapProviderId = id))
             assertContains(
@@ -50,9 +52,10 @@ class ProviderResolutionTest {
 
     @Test
     fun maptilerGroupKeyAppliesToAllMaptilerProviders() {
-        val settings = Settings(
-            apiKeys = mapOf("maptiler" to "mt-key"),
-        )
+        val settings =
+            Settings(
+                apiKeys = mapOf("maptiler" to "mt-key"),
+            )
         listOf("maptiler-streets", "maptiler-outdoor").forEach { id ->
             val result = resolveActiveProviderConfig(settings.copy(mapProviderId = id))
             assertContains(
@@ -72,15 +75,17 @@ class ProviderResolutionTest {
 
     @Test
     fun resolvesCustomProvider() {
-        val custom = CustomProviderConfig(
-            id = "my-custom",
-            displayName = "My Style",
-            styleUrl = "https://example.com/style.json",
-        )
-        val settings = Settings(
-            mapProviderId = "my-custom",
-            customProviders = listOf(custom),
-        )
+        val custom =
+            CustomProviderConfig(
+                id = "my-custom",
+                displayName = "My Style",
+                styleUrl = "https://example.com/style.json",
+            )
+        val settings =
+            Settings(
+                mapProviderId = "my-custom",
+                customProviders = listOf(custom),
+            )
         val result = resolveActiveProviderConfig(settings)
         assertEquals("my-custom", result.id)
         assertEquals("https://example.com/style.json", result.styleUrl)

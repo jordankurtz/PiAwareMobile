@@ -54,16 +54,20 @@ class MiniMapViewModel(
         }
     }
 
-    fun updateMapState(aircraft: Aircraft?, location: Location?) {
+    fun updateMapState(
+        aircraft: Aircraft?,
+        location: Location?,
+    ) {
         currentAircraft = aircraft
         currentLocation = location
         updateMarkersAndScroll()
         trailJob?.cancel()
-        trailJob = aircraft?.hex?.let { hex ->
-            viewModelScope.launch {
-                getAircraftTrailUseCase(hex).collect { trail -> updateTrail(trail) }
+        trailJob =
+            aircraft?.hex?.let { hex ->
+                viewModelScope.launch {
+                    getAircraftTrailUseCase(hex).collect { trail -> updateTrail(trail) }
+                }
             }
-        }
     }
 
     private fun updateMarkersAndScroll() {
@@ -101,12 +105,13 @@ class MiniMapViewModel(
 
             if (aircraftLat != null && aircraftLon != null && userLat != null && userLon != null) {
                 mapStateController.scrollTo(
-                    bounds = MapBounds(
-                        north = max(aircraftLat, userLat),
-                        south = min(aircraftLat, userLat),
-                        east = max(aircraftLon, userLon),
-                        west = min(aircraftLon, userLon),
-                    ),
+                    bounds =
+                        MapBounds(
+                            north = max(aircraftLat, userLat),
+                            south = min(aircraftLat, userLat),
+                            east = max(aircraftLon, userLon),
+                            west = min(aircraftLon, userLon),
+                        ),
                     padding = Offset(0.2f, 0.2f),
                     animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
                 )

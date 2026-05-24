@@ -24,70 +24,77 @@ data class TileProviderConfig(
 }
 
 object TileProviders {
-    val OPENFREEMAP_BRIGHT = TileProviderConfig(
-        id = "openfreemap-bright",
-        displayNameRes = Res.string.tile_provider_openfreemap_bright,
-        styleUrl = "https://tiles.openfreemap.org/styles/bright",
-        attribution = "© OpenFreeMap, © OpenStreetMap contributors",
-        copyrightUrl = "https://openfreemap.org",
-    )
+    val OPENFREEMAP_BRIGHT =
+        TileProviderConfig(
+            id = "openfreemap-bright",
+            displayNameRes = Res.string.tile_provider_openfreemap_bright,
+            styleUrl = "https://tiles.openfreemap.org/styles/bright",
+            attribution = "© OpenFreeMap, © OpenStreetMap contributors",
+            copyrightUrl = "https://openfreemap.org",
+        )
 
-    val OPENFREEMAP_POSITRON = TileProviderConfig(
-        id = "openfreemap-positron",
-        displayNameRes = Res.string.tile_provider_openfreemap_positron,
-        styleUrl = "https://tiles.openfreemap.org/styles/positron",
-        attribution = "© OpenFreeMap, © OpenStreetMap contributors",
-        copyrightUrl = "https://openfreemap.org",
-    )
+    val OPENFREEMAP_POSITRON =
+        TileProviderConfig(
+            id = "openfreemap-positron",
+            displayNameRes = Res.string.tile_provider_openfreemap_positron,
+            styleUrl = "https://tiles.openfreemap.org/styles/positron",
+            attribution = "© OpenFreeMap, © OpenStreetMap contributors",
+            copyrightUrl = "https://openfreemap.org",
+        )
 
-    val STADIA_ALIDADE_SMOOTH = TileProviderConfig(
-        id = "stadia-alidade-smooth",
-        displayNameRes = Res.string.tile_provider_stadia_alidade_smooth,
-        styleUrl = "https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key={api_key}",
-        attribution = "© Stadia Maps, © OpenStreetMap contributors",
-        copyrightUrl = "https://stadiamaps.com",
-        requiresApiKey = true,
-        apiKeyGroup = "stadia",
-    )
+    val STADIA_ALIDADE_SMOOTH =
+        TileProviderConfig(
+            id = "stadia-alidade-smooth",
+            displayNameRes = Res.string.tile_provider_stadia_alidade_smooth,
+            styleUrl = "https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key={api_key}",
+            attribution = "© Stadia Maps, © OpenStreetMap contributors",
+            copyrightUrl = "https://stadiamaps.com",
+            requiresApiKey = true,
+            apiKeyGroup = "stadia",
+        )
 
-    val STADIA_OUTDOORS = TileProviderConfig(
-        id = "stadia-outdoors",
-        displayNameRes = Res.string.tile_provider_stadia_outdoors,
-        styleUrl = "https://tiles.stadiamaps.com/styles/outdoors.json?api_key={api_key}",
-        attribution = "© Stadia Maps, © OpenStreetMap contributors",
-        copyrightUrl = "https://stadiamaps.com",
-        requiresApiKey = true,
-        apiKeyGroup = "stadia",
-    )
+    val STADIA_OUTDOORS =
+        TileProviderConfig(
+            id = "stadia-outdoors",
+            displayNameRes = Res.string.tile_provider_stadia_outdoors,
+            styleUrl = "https://tiles.stadiamaps.com/styles/outdoors.json?api_key={api_key}",
+            attribution = "© Stadia Maps, © OpenStreetMap contributors",
+            copyrightUrl = "https://stadiamaps.com",
+            requiresApiKey = true,
+            apiKeyGroup = "stadia",
+        )
 
-    val MAPTILER_STREETS = TileProviderConfig(
-        id = "maptiler-streets",
-        displayNameRes = Res.string.tile_provider_maptiler_streets,
-        styleUrl = "https://api.maptiler.com/maps/streets/style.json?key={api_key}",
-        attribution = "© MapTiler, © OpenStreetMap contributors",
-        copyrightUrl = "https://maptiler.com",
-        requiresApiKey = true,
-        apiKeyGroup = "maptiler",
-    )
+    val MAPTILER_STREETS =
+        TileProviderConfig(
+            id = "maptiler-streets",
+            displayNameRes = Res.string.tile_provider_maptiler_streets,
+            styleUrl = "https://api.maptiler.com/maps/streets/style.json?key={api_key}",
+            attribution = "© MapTiler, © OpenStreetMap contributors",
+            copyrightUrl = "https://maptiler.com",
+            requiresApiKey = true,
+            apiKeyGroup = "maptiler",
+        )
 
-    val MAPTILER_OUTDOOR = TileProviderConfig(
-        id = "maptiler-outdoor",
-        displayNameRes = Res.string.tile_provider_maptiler_outdoor,
-        styleUrl = "https://api.maptiler.com/maps/outdoor/style.json?key={api_key}",
-        attribution = "© MapTiler, © OpenStreetMap contributors",
-        copyrightUrl = "https://maptiler.com",
-        requiresApiKey = true,
-        apiKeyGroup = "maptiler",
-    )
+    val MAPTILER_OUTDOOR =
+        TileProviderConfig(
+            id = "maptiler-outdoor",
+            displayNameRes = Res.string.tile_provider_maptiler_outdoor,
+            styleUrl = "https://api.maptiler.com/maps/outdoor/style.json?key={api_key}",
+            attribution = "© MapTiler, © OpenStreetMap contributors",
+            copyrightUrl = "https://maptiler.com",
+            requiresApiKey = true,
+            apiKeyGroup = "maptiler",
+        )
 
-    val ALL: List<TileProviderConfig> = listOf(
-        OPENFREEMAP_BRIGHT,
-        OPENFREEMAP_POSITRON,
-        STADIA_ALIDADE_SMOOTH,
-        STADIA_OUTDOORS,
-        MAPTILER_STREETS,
-        MAPTILER_OUTDOOR,
-    )
+    val ALL: List<TileProviderConfig> =
+        listOf(
+            OPENFREEMAP_BRIGHT,
+            OPENFREEMAP_POSITRON,
+            STADIA_ALIDADE_SMOOTH,
+            STADIA_OUTDOORS,
+            MAPTILER_STREETS,
+            MAPTILER_OUTDOOR,
+        )
 
     val DEFAULT = OPENFREEMAP_BRIGHT
 }

@@ -22,22 +22,22 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.extensions.formattedDate
-import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.LatLon
 import com.jordankurtz.piawaremobile.map.MapBounds
 import com.jordankurtz.piawaremobile.map.MapLibreMap
 import com.jordankurtz.piawaremobile.map.MapLibreStateController
+import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_arrow_back
 import piawaremobile.composeapp.generated.resources.navigate_back
@@ -60,24 +60,26 @@ fun OfflineRegionDetailScreen(
 ) {
     val activeProvider by mapViewModel.activeProvider.collectAsState()
     LaunchedEffect(region.id) {
-        val bounds = MapBounds(
-            north = region.maxLat,
-            south = region.minLat,
-            east = region.maxLon,
-            west = region.minLon,
-        )
+        val bounds =
+            MapBounds(
+                north = region.maxLat,
+                south = region.minLat,
+                east = region.maxLon,
+                west = region.minLon,
+            )
         mapViewModel.mapStateController.scrollTo(bounds = bounds, padding = Offset(0.15f, 0.15f))
         mapViewModel.mapStateController.addPath(
             id = DETAIL_BOUNDS_PATH_ID,
             color = BoundsPathColor,
             width = 2.dp,
-            points = listOf(
-                LatLon(region.maxLat, region.minLon),
-                LatLon(region.maxLat, region.maxLon),
-                LatLon(region.minLat, region.maxLon),
-                LatLon(region.minLat, region.minLon),
-                LatLon(region.maxLat, region.minLon),
-            ),
+            points =
+                listOf(
+                    LatLon(region.maxLat, region.minLon),
+                    LatLon(region.maxLat, region.maxLon),
+                    LatLon(region.minLat, region.maxLon),
+                    LatLon(region.minLat, region.minLon),
+                    LatLon(region.maxLat, region.minLon),
+                ),
         )
     }
     DisposableEffect(region.id) {

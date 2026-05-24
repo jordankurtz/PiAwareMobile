@@ -35,12 +35,13 @@ class TileProviderConfigTest {
 
     @Test
     fun `resolvedStyleUrl substitutes api key`() {
-        val config = TileProviderConfig(
-            id = "test",
-            displayName = "Test",
-            styleUrl = "https://example.com/style.json?api_key={api_key}",
-            requiresApiKey = true,
-        )
+        val config =
+            TileProviderConfig(
+                id = "test",
+                displayName = "Test",
+                styleUrl = "https://example.com/style.json?api_key={api_key}",
+                requiresApiKey = true,
+            )
         val resolved = config.resolvedStyleUrl("my-secret-key")
         assertEquals("https://example.com/style.json?api_key=my-secret-key", resolved)
     }
