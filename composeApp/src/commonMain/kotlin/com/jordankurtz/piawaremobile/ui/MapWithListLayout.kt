@@ -25,7 +25,8 @@ import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.list.TabletAircraftListPanel
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.MapViewModel
-import com.jordankurtz.piawaremobile.map.OpenStreetMap
+import com.jordankurtz.piawaremobile.map.MapLibreMap
+import com.jordankurtz.piawaremobile.map.MapLibreStateController
 import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -103,7 +104,10 @@ fun MapWithListLayout(
                     .weight(0.6f)
                     .fillMaxHeight(),
         ) {
-            OpenStreetMap(state = mapViewModel.state)
+            MapLibreMap(
+                controller = mapViewModel.mapStateController as MapLibreStateController,
+                styleUrl = activeProvider.styleUrl,
+            )
             Overlay(
                 numberOfPlanes = numberOfPlanes,
                 provider = activeProvider,

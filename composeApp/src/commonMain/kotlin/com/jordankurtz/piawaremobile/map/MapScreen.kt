@@ -93,7 +93,10 @@ fun MapScreen(
     }
 
     Box {
-        OpenStreetMap(state = mapViewModel.state)
+        MapLibreMap(
+            controller = mapViewModel.mapStateController as MapLibreStateController,
+            styleUrl = activeProvider.styleUrl,
+        )
         Column(
             modifier =
                 Modifier
