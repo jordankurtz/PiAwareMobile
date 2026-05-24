@@ -20,12 +20,12 @@ class MapProvidersScreenTest {
         runComposeUiTest {
             setContent {
                 BuiltInProviderRow(
-                    config = TileProviders.OPENSTREETMAP,
+                    config = TileProviders.OPENFREEMAP_BRIGHT,
                     isSelected = true,
                     onClick = {},
                 )
             }
-            onNodeWithText("OpenStreetMap").assertIsDisplayed()
+            onNodeWithText("OpenFreeMap Bright").assertIsDisplayed()
         }
 
     @Test
@@ -33,13 +33,13 @@ class MapProvidersScreenTest {
         runComposeUiTest {
             setContent {
                 ApiKeyProviderRow(
-                    config = TileProviders.STADIA_TONER,
+                    config = TileProviders.STADIA_ALIDADE_SMOOTH,
                     isSelected = false,
                     hasKey = false,
                     onClick = {},
                 )
             }
-            onNodeWithText("Stadia Toner").assertIsDisplayed()
+            onNodeWithText("Stadia Alidade Smooth").assertIsDisplayed()
             onNodeWithText("API key required").assertIsDisplayed()
         }
 
@@ -48,7 +48,7 @@ class MapProvidersScreenTest {
         runComposeUiTest {
             setContent {
                 ApiKeyProviderRow(
-                    config = TileProviders.STADIA_TONER,
+                    config = TileProviders.STADIA_ALIDADE_SMOOTH,
                     isSelected = false,
                     hasKey = true,
                     onClick = {},
@@ -104,7 +104,7 @@ class MapProvidersScreenTest {
         }
 
     @Test
-    fun customProviderBottomSheetSaveDisabledWithInvalidUrl() =
+    fun customProviderBottomSheetSaveDisabledWhenEmpty() =
         runComposeUiTest {
             setContent {
                 AddCustomProviderBottomSheet(
@@ -112,8 +112,6 @@ class MapProvidersScreenTest {
                     onDismiss = {},
                 )
             }
-            onNodeWithText("Name").performTextInput("My Tiles")
-            onNodeWithText("https://example.com/{z}/{x}/{y}.png").performTextInput("https://bad.url/no-placeholders")
             onNodeWithText("Save").assertIsNotEnabled()
         }
 
@@ -127,8 +125,8 @@ class MapProvidersScreenTest {
                 )
             }
             onNodeWithText("Name").performTextInput("My Tiles")
-            onNodeWithText("https://example.com/{z}/{x}/{y}.png")
-                .performTextInput("https://tiles.example.com/{z}/{x}/{y}.png")
+            onNodeWithText("Style JSON URL (MapLibre format)")
+                .performTextInput("https://tiles.example.com/style.json")
             onNodeWithText("Save").assertIsEnabled()
         }
 
@@ -141,8 +139,8 @@ class MapProvidersScreenTest {
                     onDismiss = {},
                 )
             }
-            onNodeWithText("https://example.com/{z}/{x}/{y}.png")
-                .performTextInput("https://tiles.example.com/{z}/{x}/{y}.png")
+            onNodeWithText("Style JSON URL (MapLibre format)")
+                .performTextInput("https://tiles.example.com/style.json")
             onNodeWithText("Save").assertIsNotEnabled()
         }
 
@@ -150,7 +148,7 @@ class MapProvidersScreenTest {
     fun customProviderRowDisplaysName() =
         runComposeUiTest {
             val config =
-                CustomProviderConfig(id = "c1", displayName = "My Tiles", urlTemplate = "https://x.com/{z}/{x}/{y}.png")
+                CustomProviderConfig(id = "c1", displayName = "My Tiles", styleUrl = "https://tiles.example.com/style.json")
             setContent {
                 CustomProviderRow(
                     config = config,
