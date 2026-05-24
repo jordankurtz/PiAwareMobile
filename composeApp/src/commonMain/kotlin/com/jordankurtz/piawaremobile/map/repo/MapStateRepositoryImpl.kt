@@ -14,25 +14,26 @@ class MapStateRepositoryImpl(
     private val dataStore: DataStore<Preferences>,
 ) : MapStateRepository {
     companion object Companion {
-        private val KEY_SCROLL_X = doublePreferencesKey("map_scroll_x")
-        private val KEY_SCROLL_Y = doublePreferencesKey("map_scroll_y")
-        private val KEY_ZOOM = doublePreferencesKey("map_zoom")
+        private val KEY_LATITUDE = doublePreferencesKey("map_latitude")
+        private val KEY_LONGITUDE = doublePreferencesKey("map_longitude")
+        private val KEY_ZOOM_LEVEL = doublePreferencesKey("map_zoom_level")
 
-        val DEFAULT_STATE = MapState(scrollX = 0.5, scrollY = 0.5, zoom = 4.0)
+        // Center of the continental US, zoom 5
+        val DEFAULT_STATE = MapState(latitude = 39.5, longitude = -98.35, zoom = 5.0)
     }
 
     /**
      * Saves the map's current state to persistent settings.
      */
     override suspend fun saveMapState(
-        scrollX: Double,
-        scrollY: Double,
+        latitude: Double,
+        longitude: Double,
         zoom: Double,
     ) {
         dataStore.edit { preferences ->
-            preferences[KEY_SCROLL_X] = scrollX
-            preferences[KEY_SCROLL_Y] = scrollY
-            preferences[KEY_ZOOM] = zoom
+            preferences[KEY_LATITUDE] = latitude
+            preferences[KEY_LONGITUDE] = longitude
+            preferences[KEY_ZOOM_LEVEL] = zoom
         }
     }
 
@@ -42,12 +43,12 @@ class MapStateRepositoryImpl(
      */
     override suspend fun getSavedMapState(): MapState {
         return dataStore.data.map { preferences ->
-            val scrollX = preferences[KEY_SCROLL_X]
-            val scrollY = preferences[KEY_SCROLL_Y]
-            val zoom = preferences[KEY_ZOOM]
+            val latitude = preferences[KEY_LATITUDE]
+            val longitude = preferences[KEY_LONGITUDE]
+            val zoom = preferences[KEY_ZOOM_LEVEL]
 
-            if (scrollX != null && scrollY != null && zoom != null) {
-                MapState(scrollX, scrollY, zoom)
+            if (latitude != null && longitude != null && zoom != null) {
+                MapState(latitude, longitude, zoom)
             } else {
                 DEFAULT_STATE
             }

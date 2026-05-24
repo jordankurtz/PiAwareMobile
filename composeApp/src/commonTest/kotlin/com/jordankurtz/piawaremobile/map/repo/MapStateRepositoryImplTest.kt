@@ -22,15 +22,15 @@ class MapStateRepositoryImplTest {
     @Test
     fun `saveMapState should store the map state`() =
         runTest {
-            val scrollX = 0.1
-            val scrollY = 0.2
+            val latitude = 0.1
+            val longitude = 0.2
             val zoom = 5.0
-            repository.saveMapState(scrollX, scrollY, zoom)
+            repository.saveMapState(latitude, longitude, zoom)
 
             val savedState = repository.getSavedMapState()
 
-            assertEquals(scrollX, savedState.scrollX)
-            assertEquals(scrollY, savedState.scrollY)
+            assertEquals(latitude, savedState.latitude)
+            assertEquals(longitude, savedState.longitude)
             assertEquals(zoom, savedState.zoom)
         }
 
@@ -46,15 +46,15 @@ class MapStateRepositoryImplTest {
     fun `getSavedMapState should return saved state`() =
         runTest {
             // Given
-            val scrollX = 0.3
-            val scrollY = 0.4
+            val latitude = 0.3
+            val longitude = 0.4
             val zoom = 6.0
-            repository.saveMapState(scrollX, scrollY, zoom)
+            repository.saveMapState(latitude, longitude, zoom)
 
             // When
             val result = repository.getSavedMapState()
 
             // Then
-            assertEquals(MapState(scrollX = scrollX, scrollY = scrollY, zoom = zoom), result)
+            assertEquals(MapState(latitude = latitude, longitude = longitude, zoom = zoom), result)
         }
 }

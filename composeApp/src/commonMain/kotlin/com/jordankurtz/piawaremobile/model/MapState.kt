@@ -1,7 +1,7 @@
 package com.jordankurtz.piawaremobile.model
 
 data class MapState(
-    val scrollX: Double,
-    val scrollY: Double,
+    val latitude: Double,
+    val longitude: Double,
     val zoom: Double,
 )
