@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.map
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
@@ -70,7 +71,7 @@ fun MapLibreMap(
 
     Box(modifier = modifier) {
         MaplibreComposeMap(
-            modifier = Modifier.matchParentSize(),
+            modifier = Modifier.fillMaxSize(),
             baseStyle = BaseStyle.Uri(styleUrl),
             cameraState = cameraState,
             zoomRange = zoomRange,
