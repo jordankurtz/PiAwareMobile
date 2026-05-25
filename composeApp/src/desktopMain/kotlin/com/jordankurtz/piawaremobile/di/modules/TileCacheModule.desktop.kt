@@ -37,7 +37,6 @@ actual class TileCacheModule {
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): ThumbnailGenerator =
         DesktopThumbnailGenerator(
-            tileCacheDir = desktopCacheDir(),
             ioDispatcher = ioDispatcher,
         )
 
