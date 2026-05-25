@@ -154,6 +154,7 @@
     <string name="offline_maps_region_size">%1$d MB</string>
     <string name="offline_maps_dialog_title">Download Region</string>
     <string name="offline_maps_dialog_name_label">Region name</string>
+    <string name="offline_maps_dialog_provider_label">Map Style</string>
     <string name="offline_maps_dialog_min_zoom">Min zoom: %1$d</string>
     <string name="offline_maps_dialog_max_zoom">Max zoom: %1$d</string>
     <string name="offline_maps_dialog_estimate">Estimated size depends on zoom levels and area</string>
