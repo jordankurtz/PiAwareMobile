@@ -84,6 +84,7 @@ kotlin {
             implementation(libs.play.services.location)
             implementation(libs.androidx.browser)
             implementation(libs.sqldelight.android.driver)
+            implementation(libs.maplibre.android.sdk)
         }
         commonMain.dependencies {
             implementation(project(":console-logger"))

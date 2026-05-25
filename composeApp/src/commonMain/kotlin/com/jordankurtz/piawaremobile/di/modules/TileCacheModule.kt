@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.di.modules
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.cache.TileCacheDatabase
+import com.jordankurtz.piawaremobile.map.offline.MapLibreOfflineApi
 import com.jordankurtz.piawaremobile.map.offline.ThumbnailFileManager
 import com.jordankurtz.piawaremobile.map.offline.ThumbnailGenerator
 import kotlinx.coroutines.CoroutineDispatcher
@@ -26,4 +27,7 @@ expect class TileCacheModule() {
 
     @Single
     fun provideThumbnailFileManager(contextWrapper: ContextWrapper): ThumbnailFileManager
+
+    @Single
+    fun provideMapLibreOfflineApi(contextWrapper: ContextWrapper): MapLibreOfflineApi
 }
