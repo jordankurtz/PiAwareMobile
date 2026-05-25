@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftTrailUseCase
+import com.jordankurtz.piawaremobile.map.model.LatLon
+import com.jordankurtz.piawaremobile.map.model.MapBounds
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftPosition
 import com.jordankurtz.piawaremobile.model.AircraftTrail

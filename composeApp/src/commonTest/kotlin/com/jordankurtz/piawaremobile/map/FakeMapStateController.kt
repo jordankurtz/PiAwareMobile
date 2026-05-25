@@ -5,6 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import com.jordankurtz.piawaremobile.map.model.LatLon
+import com.jordankurtz.piawaremobile.map.model.MapBounds
+import com.jordankurtz.piawaremobile.map.model.MapPosition
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 

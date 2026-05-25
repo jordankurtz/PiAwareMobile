@@ -29,11 +29,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.extensions.formattedDate
-import com.jordankurtz.piawaremobile.map.LatLon
-import com.jordankurtz.piawaremobile.map.MapBounds
 import com.jordankurtz.piawaremobile.map.MapLibreMap
 import com.jordankurtz.piawaremobile.map.MapLibreStateController
 import com.jordankurtz.piawaremobile.map.MapViewModel
+import com.jordankurtz.piawaremobile.map.model.LatLon
+import com.jordankurtz.piawaremobile.map.model.MapBounds
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource

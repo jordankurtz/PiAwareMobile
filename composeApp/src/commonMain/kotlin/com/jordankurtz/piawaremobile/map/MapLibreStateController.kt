@@ -13,6 +13,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.jordankurtz.piawaremobile.map.model.LatLon
+import com.jordankurtz.piawaremobile.map.model.MapBounds
+import com.jordankurtz.piawaremobile.map.model.MapPosition
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

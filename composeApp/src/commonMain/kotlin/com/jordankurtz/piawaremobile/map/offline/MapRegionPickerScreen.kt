@@ -35,10 +35,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import com.jordankurtz.piawaremobile.map.LatLon
 import com.jordankurtz.piawaremobile.map.MapLibreMap
 import com.jordankurtz.piawaremobile.map.MapLibreStateController
 import com.jordankurtz.piawaremobile.map.MapViewModel
+import com.jordankurtz.piawaremobile.map.model.LatLon
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
