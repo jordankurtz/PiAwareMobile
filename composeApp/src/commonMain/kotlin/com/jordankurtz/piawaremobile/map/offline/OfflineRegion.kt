@@ -17,4 +17,5 @@ data class OfflineRegion(
     val downloadedTileCount: Long = 0L,
     val thumbnailZoom: Int? = null,
     val thumbnailPath: String? = null,
+    val nativeRegionId: Long? = null,
 )
