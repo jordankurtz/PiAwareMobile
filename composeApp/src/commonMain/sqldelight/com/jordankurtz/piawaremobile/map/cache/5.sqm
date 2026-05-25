@@ -1,0 +1,2 @@
+-- Migration 4 → 5: add native_region_id to offline_region
+ALTER TABLE offline_region ADD COLUMN native_region_id INTEGER;
