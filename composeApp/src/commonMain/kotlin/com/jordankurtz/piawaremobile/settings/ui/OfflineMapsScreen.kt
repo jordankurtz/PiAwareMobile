@@ -38,6 +38,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.jordankurtz.piawaremobile.map.TileProviderConfig
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.DownloadStatus
 import com.jordankurtz.piawaremobile.map.offline.MapRegionPickerScreen
@@ -71,6 +73,7 @@ import piawaremobile.composeapp.generated.resources.offline_maps_title
 fun OfflineMapsScreen(
     onBack: () -> Unit,
     regions: List<OfflineRegion> = emptyList(),
+    availableProviders: List<TileProviderConfig> = listOf(TileProviders.DEFAULT),
     onDeleteRegion: (OfflineRegion) -> Unit = {},
     onRetry: (OfflineRegion) -> Unit = {},
     onStartDownload: (
@@ -79,7 +82,8 @@ fun OfflineMapsScreen(
         minZoom: Int,
         maxZoom: Int,
         viewportZoom: Int,
-    ) -> Unit = { _, _, _, _, _ -> },
+        provider: TileProviderConfig,
+    ) -> Unit = { _, _, _, _, _, _ -> },
     onCancelDownload: () -> Unit = {},
     onRegionClick: (OfflineRegion) -> Unit = {},
 ) {
@@ -89,6 +93,7 @@ fun OfflineMapsScreen(
     // Hoisted so the name survives round-trips to the map picker
     var pendingName by remember { mutableStateOf("") }
     var pendingViewportZoom by remember { mutableStateOf(0) }
+    var pendingProvider by remember { mutableStateOf(availableProviders.firstOrNull() ?: TileProviders.DEFAULT) }
     var selectedRegion by remember { mutableStateOf<OfflineRegion?>(null) }
 
     selectedRegion?.let { region ->
@@ -124,16 +129,20 @@ fun OfflineMapsScreen(
                 pendingBounds = null
                 pendingName = ""
             },
-            onConfirm = { minZoom, maxZoom, viewportZoom ->
+            onConfirm = { minZoom, maxZoom, viewportZoom, provider ->
                 val bounds = pendingBounds
                 if (bounds != null) {
-                    onStartDownload(pendingName, bounds, minZoom, maxZoom, viewportZoom)
+                    onStartDownload(pendingName, bounds, minZoom, maxZoom, viewportZoom, provider)
                     showDownloadDialog = false
                     pendingBounds = null
                     pendingName = ""
                     pendingViewportZoom = 0
+                    pendingProvider = availableProviders.firstOrNull() ?: TileProviders.DEFAULT
                 }
             },
+            availableProviders = availableProviders,
+            selectedProvider = pendingProvider,
+            onProviderChange = { pendingProvider = it },
             selectedBounds = pendingBounds,
             selectedViewportZoom = pendingViewportZoom,
             onSelectOnMap = {
