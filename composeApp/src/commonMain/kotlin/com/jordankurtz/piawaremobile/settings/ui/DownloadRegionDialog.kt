@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -21,9 +22,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.jordankurtz.piawaremobile.map.TileProviderConfig
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.tileCount
 import org.jetbrains.compose.resources.stringResource
@@ -36,6 +39,7 @@ import piawaremobile.composeapp.generated.resources.offline_maps_dialog_estimate
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_max_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_min_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_name_label
+import piawaremobile.composeapp.generated.resources.offline_maps_dialog_provider_label
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_select_on_map
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_title
 import piawaremobile.composeapp.generated.resources.offline_maps_dialog_too_many_tiles
@@ -48,7 +52,7 @@ private const val MIN_ZOOM_LIMIT = 1f
 private const val MAX_ZOOM_LIMIT = 18f
 private const val COORD_DECIMAL_PLACES = 4
 private const val COORD_SCALE = 10_000.0
-private const val AVG_TILE_BYTES = 15_360L // ~15 KB average per OSM tile
+private const val AVG_TILE_BYTES = 15_360L
 private const val MAX_TILE_COUNT = 50_000
 
 private fun formatCoord(value: Double): String {
@@ -60,12 +64,16 @@ private fun formatCoord(value: Double): String {
     return "$sign$intPart.${fracPart.toString().padStart(COORD_DECIMAL_PLACES, '0')}"
 }
 
+@Suppress("LongParameterList")
 @Composable
 fun DownloadRegionDialog(
     name: String,
     onNameChange: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (minZoom: Int, maxZoom: Int, viewportZoom: Int) -> Unit,
+    onConfirm: (minZoom: Int, maxZoom: Int, viewportZoom: Int, provider: TileProviderConfig) -> Unit,
+    availableProviders: List<TileProviderConfig>,
+    selectedProvider: TileProviderConfig,
+    onProviderChange: (TileProviderConfig) -> Unit,
     selectedBounds: BoundingBox? = null,
     selectedViewportZoom: Int = 0,
     onSelectOnMap: () -> Unit = {},
@@ -84,8 +92,8 @@ fun DownloadRegionDialog(
             }
         }
 
-    val tileCount = estimatePair?.second ?: 0
-    val isValid = name.isNotBlank() && selectedBounds != null && tileCount <= MAX_TILE_COUNT
+    val tileCountVal = estimatePair?.second ?: 0
+    val isValid = name.isNotBlank() && selectedBounds != null && tileCountVal <= MAX_TILE_COUNT
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -114,6 +122,36 @@ fun DownloadRegionDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(Res.string.offline_maps_dialog_provider_label),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                availableProviders.forEach { provider ->
+                    val providerName =
+                        if (provider.displayNameRes != null) {
+                            stringResource(provider.displayNameRes)
+                        } else {
+                            provider.displayName
+                        }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        RadioButton(
+                            selected = provider.id == selectedProvider.id,
+                            onClick = { onProviderChange(provider) },
+                        )
+                        Text(
+                            text = providerName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 4.dp),
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -150,9 +188,7 @@ fun DownloadRegionDialog(
                     value = minZoom,
                     onValueChange = {
                         minZoom = it
-                        if (maxZoom < it) {
-                            maxZoom = it
-                        }
+                        if (maxZoom < it) maxZoom = it
                     },
                     valueRange = MIN_ZOOM_LIMIT..MAX_ZOOM_LIMIT,
                     steps = (MAX_ZOOM_LIMIT - MIN_ZOOM_LIMIT).toInt() - 1,
@@ -169,9 +205,7 @@ fun DownloadRegionDialog(
                     value = maxZoom,
                     onValueChange = {
                         maxZoom = it
-                        if (minZoom > it) {
-                            minZoom = it
-                        }
+                        if (minZoom > it) minZoom = it
                     },
                     valueRange = MIN_ZOOM_LIMIT..MAX_ZOOM_LIMIT,
                     steps = (MAX_ZOOM_LIMIT - MIN_ZOOM_LIMIT).toInt() - 1,
@@ -218,7 +252,9 @@ fun DownloadRegionDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
-                        onClick = { onConfirm(minZoom.toInt(), maxZoom.toInt(), selectedViewportZoom) },
+                        onClick = {
+                            onConfirm(minZoom.toInt(), maxZoom.toInt(), selectedViewportZoom, selectedProvider)
+                        },
                         enabled = isValid,
                     ) {
                         Text(stringResource(Res.string.offline_maps_dialog_download))

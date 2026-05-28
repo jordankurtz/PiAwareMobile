@@ -16,6 +16,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.jordankurtz.piawaremobile.map.TileProviderConfig
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
@@ -60,8 +62,15 @@ fun SettingsScreen() {
                     val onRetryDownload = remember(vm) { { region: OfflineRegion -> vm.retryDownload(region) } }
                     val onStartDownloadFn =
                         remember(vm) {
-                            { name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int, viewportZoom: Int ->
-                                vm.startDownload(name, bounds, minZoom, maxZoom, viewportZoom)
+                            {
+                                    name: String,
+                                    bounds: BoundingBox,
+                                    minZoom: Int,
+                                    maxZoom: Int,
+                                    viewportZoom: Int,
+                                    provider: TileProviderConfig,
+                                ->
+                                vm.startDownload(name, bounds, minZoom, maxZoom, viewportZoom, provider)
                             }
                         }
                     pendingDelete?.let { region ->
@@ -92,6 +101,7 @@ fun SettingsScreen() {
                     OfflineMapsScreen(
                         onBack = { currentScreen = SettingsScreens.Main },
                         regions = regions,
+                        availableProviders = TileProviders.OFFLINE_VECTOR,
                         onDeleteRegion = onRequestDelete,
                         onRetry = onRetryDownload,
                         onStartDownload = onStartDownloadFn,

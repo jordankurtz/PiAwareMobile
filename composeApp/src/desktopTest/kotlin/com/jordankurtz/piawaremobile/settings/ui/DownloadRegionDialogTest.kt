@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -22,7 +23,15 @@ class DownloadRegionDialogTest {
     fun displaysDialogElements() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _, _ -> })
+                DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
+                    onDismiss = {},
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
+                )
             }
             onNodeWithText("Download Region").assertIsDisplayed()
             onNodeWithText("Region name").assertIsDisplayed()
@@ -37,7 +46,15 @@ class DownloadRegionDialogTest {
     fun downloadButtonDisabledWhenNameBlank() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _, _ -> })
+                DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
+                    onDismiss = {},
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
+                )
             }
             onNodeWithText("Download").assertIsNotEnabled()
         }
@@ -51,7 +68,10 @@ class DownloadRegionDialogTest {
                     name = "My Region",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     selectedBounds = bounds,
                 )
             }
@@ -66,7 +86,10 @@ class DownloadRegionDialogTest {
                     name = "My Region",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     selectedBounds = null,
                 )
             }
@@ -83,7 +106,10 @@ class DownloadRegionDialogTest {
                     name = "World",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     selectedBounds = bounds,
                 )
             }
@@ -104,7 +130,10 @@ class DownloadRegionDialogTest {
                         capturedName = it
                     },
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                 )
             }
             onNodeWithText("Region name").performClick()
@@ -121,7 +150,10 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = { dismissed = true },
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                 )
             }
             onNodeWithText("Cancel").performClick()
@@ -138,7 +170,10 @@ class DownloadRegionDialogTest {
                     name = "Airport Area",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> confirmCalled = true },
+                    onConfirm = { _, _, _, _ -> confirmCalled = true },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     selectedBounds = bounds,
                 )
             }
@@ -150,7 +185,15 @@ class DownloadRegionDialogTest {
     fun selectOnMapButtonIsVisible() =
         runComposeUiTest {
             setContent {
-                DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _, _ -> })
+                DownloadRegionDialog(
+                    name = "",
+                    onNameChange = {},
+                    onDismiss = {},
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
+                )
             }
             onNodeWithText("Select on map").assertIsDisplayed()
         }
@@ -164,7 +207,10 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     onSelectOnMap = { selectOnMapCalled = true },
                 )
             }
@@ -181,7 +227,10 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     selectedBounds = bounds,
                 )
             }
@@ -196,7 +245,10 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     selectedBounds = null,
                 )
             }
@@ -212,7 +264,10 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     selectedBounds = bounds,
                 )
             }
@@ -227,7 +282,10 @@ class DownloadRegionDialogTest {
                     name = "",
                     onNameChange = {},
                     onDismiss = {},
-                    onConfirm = { _, _, _ -> },
+                    onConfirm = { _, _, _, _ -> },
+                    availableProviders = listOf(TileProviders.DEFAULT),
+                    selectedProvider = TileProviders.DEFAULT,
+                    onProviderChange = {},
                     selectedBounds = null,
                 )
             }

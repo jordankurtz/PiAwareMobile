@@ -96,5 +96,11 @@ object TileProviders {
             MAPTILER_OUTDOOR,
         )
 
+    val OFFLINE_VECTOR: List<TileProviderConfig> =
+        listOf(
+            OPENFREEMAP_BRIGHT,
+            OPENFREEMAP_POSITRON,
+        )
+
     val DEFAULT = OPENFREEMAP_BRIGHT
 }
