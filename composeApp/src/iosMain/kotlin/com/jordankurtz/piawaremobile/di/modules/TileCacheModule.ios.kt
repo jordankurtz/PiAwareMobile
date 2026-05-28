@@ -41,12 +41,10 @@ actual class TileCacheModule {
     actual fun provideThumbnailGenerator(
         contextWrapper: ContextWrapper,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
-    ): ThumbnailGenerator =
-        IosThumbnailGenerator(ioDispatcher = ioDispatcher)
+    ): ThumbnailGenerator = IosThumbnailGenerator(ioDispatcher = ioDispatcher)
 
     @Single
-    actual fun provideMapLibreOfflineApi(contextWrapper: ContextWrapper): MapLibreOfflineApi =
-        IosMapLibreOfflineApi()
+    actual fun provideMapLibreOfflineApi(contextWrapper: ContextWrapper): MapLibreOfflineApi = IosMapLibreOfflineApi()
 
     @Single
     actual fun provideThumbnailFileManager(contextWrapper: ContextWrapper): ThumbnailFileManager =
