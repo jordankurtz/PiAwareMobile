@@ -64,6 +64,7 @@ private fun formatCoord(value: Double): String {
     return "$sign$intPart.${fracPart.toString().padStart(COORD_DECIMAL_PLACES, '0')}"
 }
 
+@Suppress("LongParameterList")
 @Composable
 fun DownloadRegionDialog(
     name: String,
