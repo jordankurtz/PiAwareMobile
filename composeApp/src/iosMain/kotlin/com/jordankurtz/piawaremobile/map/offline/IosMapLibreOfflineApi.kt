@@ -1,121 +1,72 @@
 package com.jordankurtz.piawaremobile.map.offline
 
-import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.CValue
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.cValue
-import kotlinx.cinterop.toCValues
-import kotlinx.cinterop.useContents
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
-import platform.CoreLocation.CLLocationCoordinate2DMake
-import platform.Foundation.NSData
-import platform.Foundation.NSNotificationCenter
-import platform.Foundation.NSURL
-import platform.MapLibre.MLNCoordinateBounds
-import platform.MapLibre.MLNOfflinePack
-import platform.MapLibre.MLNOfflinePackErrorNotification
-import platform.MapLibre.MLNOfflinePackProgressChangedNotification
-import platform.MapLibre.MLNOfflinePackState
-import platform.MapLibre.MLNOfflinePackUserInfoKeyError
-import platform.MapLibre.MLNOfflineStorage
-import platform.MapLibre.MLNTilePyramidOfflineRegion
+import maplibre.MapLibreObservationToken
+import maplibre.MapLibreOfflineController
+import platform.Foundation.NSError
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.random.Random
 
 @OptIn(ExperimentalForeignApi::class)
 class IosMapLibreOfflineApi : MapLibreOfflineApi {
-    private val storage = MLNOfflineStorage.sharedOfflineStorage
+    private val controller: MapLibreOfflineController get() = MapLibreOfflineController.shared()!!
 
     override suspend fun startDownload(
         styleUrl: String,
         bounds: BoundingBox,
         minZoom: Int,
         maxZoom: Int,
-    ): Long = suspendCancellableCoroutine { cont ->
+    ): Long {
         val nativeId = Random.nextLong()
-        val coordinateBounds: CValue<MLNCoordinateBounds> = cValue {
-            sw = CLLocationCoordinate2DMake(bounds.minLat, bounds.minLon)
-            ne = CLLocationCoordinate2DMake(bounds.maxLat, bounds.maxLon)
-        }
-        val region = MLNTilePyramidOfflineRegion(
-            styleURL = NSURL(string = styleUrl),
-            bounds = coordinateBounds,
-            fromZoomLevel = minZoom.toDouble(),
-            toZoomLevel = maxZoom.toDouble(),
-        )
-        storage.addPackForRegion(
-            region,
-            withContext = nativeId.toNSData(),
-        ) { pack, error ->
-            when {
-                error != null -> cont.resumeWithException(Exception(error.localizedDescription))
-                pack != null -> {
-                    pack.resume()
+        return suspendCancellableCoroutine { cont ->
+            controller.startDownloadWithStyleUrl(
+                styleUrl = styleUrl,
+                minLat = bounds.minLat,
+                maxLat = bounds.maxLat,
+                minLon = bounds.minLon,
+                maxLon = bounds.maxLon,
+                minZoom = minZoom.toLong(),
+                maxZoom = maxZoom.toLong(),
+                nativeId = nativeId,
+            ) { error: NSError? ->
+                if (error != null) {
+                    cont.resumeWithException(Exception(error.localizedDescription))
+                } else {
                     cont.resume(nativeId)
                 }
-                else -> cont.resumeWithException(Exception("Failed to create offline pack"))
             }
         }
     }
 
-    override fun observeProgress(nativeRegionId: Long): Flow<DownloadProgress> = callbackFlow {
-        val center = NSNotificationCenter.defaultCenter
-
-        val progressObserver = center.addObserverForName(
-            name = MLNOfflinePackProgressChangedNotification,
-            `object` = null,
-            queue = null,
-        ) { notification ->
-            val pack = notification?.`object` as? MLNOfflinePack ?: return@addObserverForName
-            if (pack.context.toLong() != nativeRegionId) return@addObserverForName
-            pack.progress.useContents {
-                trySend(
-                    DownloadProgress(
-                        regionId = nativeRegionId,
-                        downloaded = countOfResourcesCompleted.toLong(),
-                        total = countOfResourcesExpected.toLong(),
-                    ),
+    override fun observeProgress(nativeRegionId: Long): Flow<DownloadProgress> =
+        callbackFlow {
+            var token: MapLibreObservationToken? = null
+            token =
+                controller.observeProgressWithNativeId(
+                    nativeId = nativeRegionId,
+                    onProgress = { downloaded: Long, total: Long ->
+                        trySend(
+                            DownloadProgress(
+                                regionId = nativeRegionId,
+                                downloaded = downloaded,
+                                total = total,
+                            ),
+                        )
+                    },
+                    onComplete = { channel.close() },
+                    onError = { message: String? -> channel.close(Exception(message ?: "Download error")) },
                 )
-            }
-            if (pack.state == MLNOfflinePackState.MLNOfflinePackStateComplete) {
-                channel.close()
-            }
+            awaitClose { token?.cancel() }
         }
-
-        val errorObserver = center.addObserverForName(
-            name = MLNOfflinePackErrorNotification,
-            `object` = null,
-            queue = null,
-        ) { notification ->
-            val pack = notification?.`object` as? MLNOfflinePack ?: return@addObserverForName
-            if (pack.context.toLong() != nativeRegionId) return@addObserverForName
-            val errorInfo = notification.userInfo
-            channel.close(
-                Exception(
-                    errorInfo?.get(MLNOfflinePackUserInfoKeyError)?.toString() ?: "Download error",
-                ),
-            )
-        }
-
-        awaitClose {
-            center.removeObserver(progressObserver)
-            center.removeObserver(errorObserver)
-        }
-    }
 
     override suspend fun deleteRegion(nativeRegionId: Long): Unit =
         suspendCancellableCoroutine { cont ->
-            val pack = findPackById(nativeRegionId)
-            if (pack == null) {
-                cont.resume(Unit)
-                return@suspendCancellableCoroutine
-            }
-            storage.removePack(pack) { error ->
+            controller.removePackWithNativeId(nativeId = nativeRegionId) { error: NSError? ->
                 if (error != null) {
                     cont.resumeWithException(Exception(error.localizedDescription))
                 } else {
@@ -123,26 +74,4 @@ class IosMapLibreOfflineApi : MapLibreOfflineApi {
                 }
             }
         }
-
-    private fun findPackById(nativeRegionId: Long): MLNOfflinePack? =
-        storage.packs
-            ?.filterIsInstance<MLNOfflinePack>()
-            ?.find { pack -> pack.context.toLong() == nativeRegionId }
-
-    @OptIn(ExperimentalForeignApi::class)
-    private fun NSData.toLong(): Long? {
-        if (length < 8uL) return null
-        var result = 0L
-        for (i in 0..7) {
-            val byte = (this.bytes as? CPointer<ByteVar>)?.get(i)?.toLong() ?: return null
-            result = result or (byte and 0xFF shl (i * 8))
-        }
-        return result
-    }
-
-    @OptIn(ExperimentalForeignApi::class)
-    private fun Long.toNSData(): NSData {
-        val bytes = ByteArray(8) { i -> ((this shr (i * 8)) and 0xFF).toByte() }
-        return NSData.dataWithBytes(bytes.toUByteArray().toCValues(), 8uL)
-    }
 }
