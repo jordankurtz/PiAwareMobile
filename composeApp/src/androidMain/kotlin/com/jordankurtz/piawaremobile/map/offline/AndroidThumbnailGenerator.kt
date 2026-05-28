@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.snapshotter.MapSnapshot
@@ -28,13 +29,19 @@ class AndroidThumbnailGenerator(
                 .include(LatLng(bounds.maxLat, bounds.maxLon))
                 .include(LatLng(bounds.minLat, bounds.minLon))
                 .build()
+        val center = latLngBounds.center
+        val cameraPosition =
+            CameraPosition.Builder()
+                .target(center)
+                .zoom(thumbnailZoom.toDouble())
+                .build()
         val options =
             MapSnapshotter.Options(OUTPUT_PX, OUTPUT_PX)
-                .withStyleUri(styleUrl)
+                .withStyle(styleUrl)
                 .withRegion(latLngBounds)
-                .withZoom(thumbnailZoom.toDouble())
+                .withCameraPosition(cameraPosition)
 
-        val snapshot =
+        val snapshot: MapSnapshot? =
             withContext(Dispatchers.Main) {
                 suspendCancellableCoroutine { cont ->
                     val snapshotter = MapSnapshotter(context, options)
@@ -44,14 +51,14 @@ class AndroidThumbnailGenerator(
                         { cont.resume(null) },
                     )
                 }
-            } ?: return false
+            }
+        snapshot ?: return false
 
         return withContext(ioDispatcher) {
             runCatching {
-                val bitmap = snapshot.bitmap
                 File(outputPath).also { it.parentFile?.mkdirs() }.let { outFile ->
                     FileOutputStream(outFile).use { out ->
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                        snapshot.bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
                     }
                 }
                 true

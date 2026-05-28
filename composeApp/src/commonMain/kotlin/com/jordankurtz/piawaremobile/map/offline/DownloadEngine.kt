@@ -1,7 +1,7 @@
 package com.jordankurtz.piawaremobile.map.offline
 
-import kotlinx.coroutines.flow.Flow
 import com.jordankurtz.piawaremobile.map.TileProviderConfig
+import kotlinx.coroutines.flow.Flow
 
 interface DownloadEngine {
     fun download(

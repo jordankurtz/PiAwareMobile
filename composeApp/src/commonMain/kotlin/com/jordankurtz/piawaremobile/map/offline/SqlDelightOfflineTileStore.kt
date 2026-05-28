@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.map.cache.TileCacheQueries
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
+@Suppress("TooManyFunctions")
 class SqlDelightOfflineTileStore(
     private val queries: TileCacheQueries,
     private val ioDispatcher: CoroutineDispatcher,
@@ -137,7 +138,10 @@ class SqlDelightOfflineTileStore(
         queries.updateRegionThumbnail(thumbnailZoom = zoom.toLong(), thumbnailPath = path, id = id)
     }
 
-    override suspend fun setNativeRegionId(regionId: Long, nativeId: Long): Unit =
+    override suspend fun setNativeRegionId(
+        regionId: Long,
+        nativeId: Long,
+    ): Unit =
         withContext(ioDispatcher) {
             queries.updateNativeRegionId(nativeRegionId = nativeId, id = regionId)
         }
