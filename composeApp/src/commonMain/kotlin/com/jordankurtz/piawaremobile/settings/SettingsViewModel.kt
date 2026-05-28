@@ -129,9 +129,9 @@ class SettingsViewModel(
     fun addCustomProvider(
         id: String,
         displayName: String,
-        urlTemplate: String,
+        styleUrl: String,
     ) = viewModelScope.launch {
-        settingsService.addCustomProvider(id, displayName, urlTemplate)
+        settingsService.addCustomProvider(id, displayName, styleUrl)
     }
 
     fun deleteCustomProvider(id: String) =

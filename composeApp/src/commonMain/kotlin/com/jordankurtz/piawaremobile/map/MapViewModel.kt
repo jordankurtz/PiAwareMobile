@@ -1,20 +1,20 @@
 package com.jordankurtz.piawaremobile.map
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
-import com.jordankurtz.piawaremobile.extensions.overlayColor
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStats
 import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
+import com.jordankurtz.piawaremobile.map.model.LatLon
+import com.jordankurtz.piawaremobile.map.model.MapBounds
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.AircraftPosition
@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -41,9 +40,6 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.annotation.Factory
-import ovh.plrapps.mapcompose.api.BoundingBox
-import ovh.plrapps.mapcompose.core.TileStreamProvider
-import ovh.plrapps.mapcompose.ui.state.MapState
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_receiver
@@ -57,7 +53,6 @@ private const val USER_LOCATION_MARKER_ID = "user_location"
 @OptIn(FlowPreview::class)
 @Factory
 class MapViewModel(
-    private val mapProvider: TileStreamProvider,
     private val providerConfigFlow: StateFlow<TileProviderConfig>,
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
@@ -67,12 +62,8 @@ class MapViewModel(
 ) : ViewModel() {
     val activeProvider: StateFlow<TileProviderConfig> = providerConfigFlow
 
-    /** The underlying MapCompose state — for use by composables only, not for testing. */
-    val state: MapState get() = (mapStateController as MapComposeStateController).mapState
-
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
-    private var tileLayerId: String = ""
     private val previousAircraftMarkerIds = mutableSetOf<String>()
     private val previousPathIds = mutableSetOf<String>()
     private var lastTrails: Map<String, AircraftTrail> = emptyMap()
@@ -92,26 +83,24 @@ class MapViewModel(
     val tileStats: StateFlow<TileCacheStats> = tileCacheStatsTracker.stats
 
     val currentZoomLevel: StateFlow<Int> =
-        mapStateController.scrollAndScaleFlow
-            .map { scaleToOsmZoom(it.scale.toFloat()) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MIN_LEVEL)
+        mapStateController.cameraFlow
+            .map { it.zoom.toInt().coerceAtLeast(1) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 5)
 
     private val _zoomSettings = MutableStateFlow<Triple<Int, Int, Int>?>(null)
     val zoomSettings: StateFlow<Triple<Int, Int, Int>?> = _zoomSettings
 
-    /** Exposes the last location passed to [recenterOnLocation] for test verification. */
     internal val lastRecenteredLocation = MutableStateFlow<Location?>(null)
 
     private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
     init {
-        tileLayerId = mapStateController.addLayer(mapProvider)
-
         mapStateController.onMarkerClick { id ->
             if (previousAircraftMarkerIds.contains(id)) {
                 val newSelection = if (_selectedAircraft.value == id) null else id
                 _selectedAircraft.value = newSelection
                 _trailSelectedAircraft.value = newSelection
+                mapStateController.setSelectedMarker(newSelection)
                 onAircraftTrailsUpdated(lastTrails)
             }
         }
@@ -121,6 +110,7 @@ class MapViewModel(
                 _selectedAircraft.value = null
                 _followingAircraft.value = null
                 _trailSelectedAircraft.value = null
+                mapStateController.setSelectedMarker(null)
                 onAircraftTrailsUpdated(lastTrails)
             }
         }
@@ -134,22 +124,8 @@ class MapViewModel(
                         settings = it.data
                         onSettingsLoaded(it.data)
                     }
-
-                    is Async.Error -> {
-                        Logger.e("Failed to load settings", it.throwable)
-                    }
-
-                    else -> {
-                        // No-op
-                    }
-                }
-            }
-        }
-
-        viewModelScope.launch {
-            providerConfigFlow.drop(1).collect { // skip initial — already loaded
-                mapStateController.replaceLayer(tileLayerId, mapProvider)?.let { newId ->
-                    tileLayerId = newId
+                    is Async.Error -> Logger.e("Failed to load settings", it.throwable)
+                    else -> Unit
                 }
             }
         }
@@ -159,6 +135,7 @@ class MapViewModel(
         _selectedAircraft.value = null
         _followingAircraft.value = null
         _trailSelectedAircraft.value = null
+        mapStateController.setSelectedMarker(null)
         onAircraftTrailsUpdated(lastTrails)
     }
 
@@ -170,14 +147,11 @@ class MapViewModel(
         _followingAircraft.value = null
     }
 
-    /**
-     * Sync selection from external source (e.g., tablet list panel).
-     * Used to keep map and list selections in sync.
-     */
     fun syncSelection(hex: String?) {
         if (_selectedAircraft.value != hex) {
             _selectedAircraft.value = hex
             _trailSelectedAircraft.value = hex
+            mapStateController.setSelectedMarker(hex)
             onAircraftTrailsUpdated(lastTrails)
         }
     }
@@ -186,20 +160,18 @@ class MapViewModel(
         this.settings = settings
         _zoomSettings.value = Triple(settings.minZoomLevel, settings.maxZoomLevel, settings.defaultZoomLevel)
         _showUserLocationOnMap.value = settings.showUserLocationOnMap
-        if (!settings.showUserLocationOnMap) {
-            _followingUserLocation.value = false
-        }
+        if (!settings.showUserLocationOnMap) _followingUserLocation.value = false
         onAircraftTrailsUpdated(lastTrails)
-        mapStateController.setScaleLimits(
-            osmZoomToScale(settings.minZoomLevel),
-            osmZoomToScale(settings.maxZoomLevel),
+        mapStateController.setZoomLimits(
+            settings.minZoomLevel.toDouble(),
+            settings.maxZoomLevel.toDouble(),
         )
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
             loadMapState(settings.minZoomLevel, settings.maxZoomLevel)
             startSaveMapStateJob()
         } else {
-            mapStateController.scale = osmZoomToScale(settings.defaultZoomLevel)
+            mapStateController.zoom = settings.defaultZoomLevel.toDouble()
         }
     }
 
@@ -208,45 +180,39 @@ class MapViewModel(
         maxZoom: Int,
     ) {
         val savedState = getSavedMapStateUseCase()
-        Logger.d("Restored map state $savedState")
-        mapStateController.setScroll(savedState.scrollX, savedState.scrollY)
-        mapStateController.scale =
-            savedState.zoom.coerceIn(
-                osmZoomToScale(minZoom),
-                osmZoomToScale(maxZoom),
-            )
+        mapStateController.setCamera(
+            latitude = savedState.latitude,
+            longitude = savedState.longitude,
+            zoom = savedState.zoom.coerceIn(minZoom.toDouble(), maxZoom.toDouble()),
+        )
     }
 
     private fun startSaveMapStateJob() {
         saveStateJob =
-            viewModelScope.launch {
-                mapStateController.scrollAndScaleFlow
-                    .debounce(500.milliseconds)
-                    .onEach { (scrollX, scrollY, scale) ->
-                        if (scrollX > 0.0 && scrollY > 0.0) {
-                            saveMapStateUseCase(scrollX, scrollY, scale)
-                            Logger.d("Saved map state $scrollX, $scrollY, $scale")
-                        }
-                    }.launchIn(this)
-            }
+            mapStateController.cameraFlow
+                .debounce(500.milliseconds)
+                .onEach { position ->
+                    saveMapStateUseCase(
+                        latitude = position.latitude,
+                        longitude = position.longitude,
+                        zoom = position.zoom,
+                    )
+                }
+                .launchIn(viewModelScope)
     }
 
     fun onReceiverLocation(receiver: Map.Entry<Server, Location>) =
         viewModelScope.launch {
-            val (x, y) = receiver.value.projected
             mapStateController.addMarker(
                 id = receiver.key.id.toString(),
-                x = x,
-                y = y,
-                relativeOffset = Offset(-0.5f, -0.5f),
+                latitude = receiver.value.latitude,
+                longitude = receiver.value.longitude,
             ) {
                 Image(
                     painter = painterResource(Res.drawable.ic_receiver),
                     contentDescription = null,
-                    colorFilter = ColorFilter.tint(providerConfigFlow.value.overlayColor),
-                    modifier =
-                        Modifier
-                            .size(20.dp),
+                    colorFilter = ColorFilter.tint(Color.Black),
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -254,39 +220,34 @@ class MapViewModel(
     fun recenterOnLocation(location: Location) {
         lastRecenteredLocation.value = location
         viewModelScope.launch {
-            val (x, y) = location.projected
-            Logger.d("Scrolling map to $x, $y")
-            mapStateController.scrollTo(x, y)
+            Logger.d("Scrolling map to ${location.latitude}, ${location.longitude}")
+            mapStateController.scrollTo(location.latitude, location.longitude, mapStateController.zoom)
         }
     }
 
     fun fitToAircraft(aircraft: List<AircraftWithServers>) {
-        val coordinates = aircraft.map { it.aircraft.lat to it.aircraft.lon }
+        val coordinates =
+            aircraft
+                .filter { it.aircraft.hasPosition }
+                .map { it.aircraft.lat to it.aircraft.lon }
         when (val target = computeFitTarget(coordinates)) {
             null -> return
             is FitTarget.SinglePoint -> {
                 viewModelScope.launch {
-                    mapStateController.scrollTo(
-                        target.x,
-                        target.y,
-                        animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
-                    )
+                    mapStateController.scrollTo(target.latitude, target.longitude, mapStateController.zoom)
                 }
             }
-
             is FitTarget.BoundingRegion -> {
-                val boundingBox =
-                    BoundingBox(
-                        xLeft = target.xLeft,
-                        yTop = target.yTop,
-                        xRight = target.xRight,
-                        yBottom = target.yBottom,
-                    )
                 viewModelScope.launch {
                     mapStateController.scrollTo(
-                        area = boundingBox,
+                        bounds =
+                            MapBounds(
+                                north = target.north,
+                                south = target.south,
+                                east = target.east,
+                                west = target.west,
+                            ),
                         padding = Offset(x = 0.15f, y = 0.15f),
-                        animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
                     )
                 }
             }
@@ -298,22 +259,16 @@ class MapViewModel(
     }
 
     internal fun onMapTouchDown() {
-        if (_followingUserLocation.value) {
-            _followingUserLocation.value = false
-        }
+        if (_followingUserLocation.value) _followingUserLocation.value = false
     }
 
     fun onUserLocationChanged(location: Location) {
-        if (_followingUserLocation.value) {
-            recenterOnLocation(location)
-        }
-        val (x, y) = location.projected
+        if (_followingUserLocation.value) recenterOnLocation(location)
         mapStateController.removeMarker(USER_LOCATION_MARKER_ID)
         mapStateController.addMarker(
             id = USER_LOCATION_MARKER_ID,
-            x = x,
-            y = y,
-            relativeOffset = Offset(-0.5f, -0.5f),
+            latitude = location.latitude,
+            longitude = location.longitude,
         ) {
             Image(
                 painter = painterResource(Res.drawable.ic_user_location),
@@ -327,44 +282,38 @@ class MapViewModel(
         previousAircraftMarkerIds.forEach(mapStateController::removeMarker)
         previousAircraftMarkerIds.clear()
 
-        var followedAircraftPosition: Pair<Double, Double>? = null
+        var followedLatLon: LatLon? = null
         val followingHex = _followingAircraft.value
 
         aircraft.forEach { item ->
             val plane = item.aircraft
-            val location = doProjection(plane.lat, plane.lon)
+            if (plane.lat == null || plane.lon == null) return@forEach
 
             if (followingHex != null && plane.hex == followingHex) {
-                followedAircraftPosition = location
+                followedLatLon = LatLon(plane.lat, plane.lon)
             }
 
             mapStateController.addMarker(
                 id = plane.hex.also { previousAircraftMarkerIds.add(it) },
-                x = location.first,
-                y = location.second,
-                relativeOffset = Offset(-0.5f, -0.5f),
+                latitude = plane.lat,
+                longitude = plane.lon,
             ) {
                 Image(
                     painter = painterResource(Res.drawable.ic_plane),
                     contentDescription = null,
-                    modifier =
-                        Modifier
-                            .size(30.dp)
-                            .rotate(plane.track ?: 0f),
+                    modifier = Modifier.size(30.dp).rotate(plane.track ?: 0f),
                     colorFilter = ColorFilter.tint(getColorForAltitude(plane.altBaro)),
                 )
             }
         }
 
-        followedAircraftPosition?.let { (x, y) ->
+        followedLatLon?.let { latLon ->
             viewModelScope.launch {
-                mapStateController.scrollTo(x, y)
+                mapStateController.scrollTo(latLon.latitude, latLon.longitude, mapStateController.zoom)
             }
         }
 
-        if (followingHex != null && followedAircraftPosition == null) {
-            _followingAircraft.value = null
-        }
+        if (followingHex != null && followedLatLon == null) _followingAircraft.value = null
     }
 
     fun onAircraftTrailsUpdated(trails: Map<String, AircraftTrail>) {
@@ -379,17 +328,11 @@ class MapViewModel(
                 TrailDisplayMode.ALL -> trails
                 TrailDisplayMode.SELECTED -> {
                     val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
-                    if (selectedHex != null) {
-                        trails.filterKeys { it == selectedHex }
-                    } else {
-                        emptyMap()
-                    }
+                    if (selectedHex != null) trails.filterKeys { it == selectedHex } else emptyMap()
                 }
             }
 
-        trailsToDisplay.forEach { (hex, trail) ->
-            drawTrail(hex, trail)
-        }
+        trailsToDisplay.forEach { (hex, trail) -> drawTrail(hex, trail) }
     }
 
     private fun drawTrail(
@@ -398,24 +341,16 @@ class MapViewModel(
     ) {
         if (trail.positions.size >= 2) {
             val colorSegments = groupPositionsByAltitudeColor(trail.positions)
-
             colorSegments.forEachIndexed { index, segment ->
                 if (segment.positions.size >= 2) {
                     val id = "trail_${hex}_$index"
                     previousPathIds.add(id)
-
-                    val projectedPoints =
-                        segment.positions.map { pos ->
-                            doProjection(pos.latitude, pos.longitude)
-                        }
-
                     mapStateController.addPath(
                         id = id,
                         color = segment.color,
                         width = 1.5.dp,
-                    ) {
-                        addPoints(projectedPoints)
-                    }
+                        points = segment.positions.map { LatLon(it.latitude, it.longitude) },
+                    )
                 }
             }
         }
@@ -428,15 +363,12 @@ class MapViewModel(
 
     private fun groupPositionsByAltitudeColor(positions: List<AircraftPosition>): List<ColorSegment> {
         if (positions.isEmpty()) return emptyList()
-
         val segments = mutableListOf<ColorSegment>()
         var currentColor = getColorForAltitude(positions.first().altitude)
         var currentSegment = ColorSegment(currentColor, mutableListOf(positions.first()))
-
         for (i in 1 until positions.size) {
             val pos = positions[i]
             val posColor = getColorForAltitude(pos.altitude)
-
             if (posColor == currentColor) {
                 currentSegment.positions.add(pos)
             } else {
@@ -445,7 +377,6 @@ class MapViewModel(
                 currentSegment = ColorSegment(currentColor, mutableListOf(positions[i - 1], pos))
             }
         }
-
         segments.add(currentSegment)
         return segments
     }
@@ -453,10 +384,5 @@ class MapViewModel(
     private fun clearPaths() {
         previousPathIds.forEach { mapStateController.removePath(it) }
         previousPathIds.clear()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        (mapStateController as? MapComposeStateController)?.shutdown()
     }
 }

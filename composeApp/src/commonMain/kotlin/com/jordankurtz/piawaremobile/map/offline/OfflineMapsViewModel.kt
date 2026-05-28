@@ -17,6 +17,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.koin.core.annotation.Factory
 import kotlin.time.Clock
+import com.jordankurtz.piawaremobile.map.TileProviderConfig as MapTileProviderConfig
+import com.jordankurtz.piawaremobile.map.TileProviders as MapTileProviders
 
 @Factory
 class OfflineMapsViewModel(
@@ -90,7 +92,7 @@ class OfflineMapsViewModel(
         minZoom: Int,
         maxZoom: Int,
         viewportZoom: Int,
-        provider: TileProviderConfig = TileProviders.OPENSTREETMAP,
+        provider: MapTileProviderConfig = MapTileProviders.DEFAULT,
     ) {
         if (!_isDownloading.compareAndSet(expect = false, update = true)) return
         val region =

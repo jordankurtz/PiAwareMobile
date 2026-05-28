@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,16 +35,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import com.jordankurtz.piawaremobile.map.MapLibreMap
+import com.jordankurtz.piawaremobile.map.MapLibreStateController
 import com.jordankurtz.piawaremobile.map.MapViewModel
-import com.jordankurtz.piawaremobile.map.OpenStreetMap
-import com.jordankurtz.piawaremobile.map.invertProjection
-import com.jordankurtz.piawaremobile.map.mapSize
-import com.jordankurtz.piawaremobile.map.scaleToOsmZoom
+import com.jordankurtz.piawaremobile.map.model.LatLon
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import ovh.plrapps.mapcompose.api.scale
-import ovh.plrapps.mapcompose.api.scroll
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_edit
 import piawaremobile.composeapp.generated.resources.ic_map
@@ -71,21 +69,21 @@ fun MapRegionPickerScreen(
     onDismiss: () -> Unit,
     mapViewModel: MapViewModel = koinViewModel(),
 ) {
-    val scrollX = mapViewModel.state.scroll.x
-    val scrollY = mapViewModel.state.scroll.y
-    val scale = mapViewModel.state.scale
+    val controller = mapViewModel.mapStateController as MapLibreStateController
+    val activeProvider by mapViewModel.activeProvider.collectAsState()
+
     MapRegionPickerContent(
         onRegionSelected = onRegionSelected,
         onDismiss = onDismiss,
         mapLayer = {
-            OpenStreetMap(
-                state = mapViewModel.state,
+            MapLibreMap(
+                controller = controller,
+                styleUrl = activeProvider.styleUrl,
                 modifier = Modifier.fillMaxSize(),
             )
         },
-        scrollX = scrollX,
-        scrollY = scrollY,
-        scale = scale,
+        screenToLatLon = { x, y -> controller.screenToLatLon(x, y) },
+        currentZoom = controller.zoom,
     )
 }
 
@@ -94,9 +92,8 @@ internal fun MapRegionPickerContent(
     onRegionSelected: (BoundingBox, viewportZoom: Int) -> Unit,
     onDismiss: () -> Unit,
     mapLayer: @Composable () -> Unit,
-    scrollX: Double = 0.0,
-    scrollY: Double = 0.0,
-    scale: Double = 1.0,
+    screenToLatLon: (Float, Float) -> LatLon = { _, _ -> LatLon(0.0, 0.0) },
+    currentZoom: Double = 10.0,
 ) {
     var bounds by remember { mutableStateOf(BoxBounds(0f, 0f, 0f, 0f)) }
     var initialized by remember { mutableStateOf(false) }
@@ -293,27 +290,16 @@ internal fun MapRegionPickerContent(
                 Button(
                     onClick = {
                         val b = bounds
-                        // state.scroll gives the top-left corner in scaled pixels.
-                        // normX = (scrollX + screenX) / (mapSize * scale)
-                        val scaledMapSize = mapSize * scale
-                        val (topLat, leftLon) =
-                            invertProjection(
-                                normX = (scrollX + b.left) / scaledMapSize,
-                                normY = (scrollY + b.top) / scaledMapSize,
-                            )
-                        val (bottomLat, rightLon) =
-                            invertProjection(
-                                normX = (scrollX + b.right) / scaledMapSize,
-                                normY = (scrollY + b.bottom) / scaledMapSize,
-                            )
+                        val topLeft = screenToLatLon(b.left, b.top)
+                        val bottomRight = screenToLatLon(b.right, b.bottom)
                         onRegionSelected(
                             BoundingBox(
-                                minLat = bottomLat,
-                                maxLat = topLat,
-                                minLon = leftLon,
-                                maxLon = rightLon,
+                                minLat = bottomRight.latitude,
+                                maxLat = topLeft.latitude,
+                                minLon = topLeft.longitude,
+                                maxLon = bottomRight.longitude,
                             ),
-                            scaleToOsmZoom(scale.toFloat()),
+                            currentZoom.toInt(),
                         )
                     },
                     modifier = Modifier.weight(1f),

@@ -17,7 +17,7 @@ class MainScreenTest {
                 SettingsDropdown(
                     title = "Map Tiles",
                     description = "Tile source used for the map",
-                    selectedValue = TileProviders.OPENSTREETMAP,
+                    selectedValue = TileProviders.OPENFREEMAP_BRIGHT,
                     values = TileProviders.ALL.toTypedArray(),
                     onValueSelected = {},
                     stringFor = { stringResource(it.displayNameRes!!) },
@@ -25,7 +25,7 @@ class MainScreenTest {
             }
 
             onNodeWithText("Map Tiles").assertIsDisplayed()
-            onNodeWithText("OpenStreetMap").assertIsDisplayed()
+            onNodeWithText("OpenFreeMap Bright").assertIsDisplayed()
         }
 
     @Test
@@ -35,14 +35,14 @@ class MainScreenTest {
                 SettingsDropdown(
                     title = "Map Tiles",
                     description = "Tile source used for the map",
-                    selectedValue = TileProviders.ESRI_SATELLITE,
+                    selectedValue = TileProviders.OPENFREEMAP_POSITRON,
                     values = TileProviders.ALL.toTypedArray(),
                     onValueSelected = {},
                     stringFor = { stringResource(it.displayNameRes!!) },
                 )
             }
 
-            onNodeWithText("ESRI Satellite").assertIsDisplayed()
+            onNodeWithText("OpenFreeMap Positron").assertIsDisplayed()
         }
 
     @Test

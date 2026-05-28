@@ -68,7 +68,7 @@ private fun CompactLayout() {
             }
         },
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             when (currentScreen) {
                 Screen.Map -> MapScreen()
                 Screen.List -> AircraftListScreen()

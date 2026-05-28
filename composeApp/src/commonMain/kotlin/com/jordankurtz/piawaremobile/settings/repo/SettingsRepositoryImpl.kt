@@ -38,7 +38,7 @@ class SettingsRepositoryImpl(
                 openUrlsExternally = preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] ?: false,
                 enableFlightAwareApi = preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] ?: false,
                 flightAwareApiKey = preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] ?: "",
-                mapProviderId = preferences[SettingsRepository.MAP_PROVIDER_ID] ?: TileProviders.OPENSTREETMAP.id,
+                mapProviderId = preferences[SettingsRepository.MAP_PROVIDER_ID] ?: TileProviders.DEFAULT.id,
                 defaultZoomLevel =
                     preferences[SettingsRepository.DEFAULT_ZOOM_LEVEL_KEY]
                         ?: SettingsRepository.DEFAULT_ZOOM_LEVEL,

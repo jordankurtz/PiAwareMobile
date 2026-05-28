@@ -3,13 +3,11 @@
 package com.jordankurtz.piawaremobile.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.Overlay
-import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.Location
@@ -44,11 +42,7 @@ private val previewAircraftInfo =
 @Composable
 private fun OverlayPreview() {
     Theme {
-        Overlay(
-            numberOfPlanes = 42,
-            provider = TileProviders.OPENSTREETMAP,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        Overlay(numberOfPlanes = 42)
     }
 }
 

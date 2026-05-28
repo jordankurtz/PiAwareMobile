@@ -2,8 +2,8 @@ package com.jordankurtz.piawaremobile.map.usecase
 
 interface SaveMapStateUseCase {
     suspend operator fun invoke(
-        scrollX: Double,
-        scrollY: Double,
+        latitude: Double,
+        longitude: Double,
         zoom: Double,
     )
 }
