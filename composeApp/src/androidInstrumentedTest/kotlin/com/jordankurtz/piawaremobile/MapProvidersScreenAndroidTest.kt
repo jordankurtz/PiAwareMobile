@@ -2,7 +2,9 @@ package com.jordankurtz.piawaremobile
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
@@ -24,7 +26,7 @@ class MapProvidersScreenAndroidTest {
             mock<SettingsService> {
                 every { loadSettings() } returns flowOf(Async.Success(Settings()))
             }
-        return SettingsViewModel(settingsService = service)
+        return SettingsViewModel(settingsService = service, tileCache = mock<TileCache>())
     }
 
     @Test
@@ -33,7 +35,7 @@ class MapProvidersScreenAndroidTest {
             MapProvidersScreen(onBack = {}, viewModel = createViewModel())
         }
         composeTestRule.onNodeWithText("Map Providers").assertIsDisplayed()
-        composeTestRule.onNodeWithText("OpenStreetMap").assertIsDisplayed()
+        composeTestRule.onNodeWithText("OpenFreeMap Bright").assertIsDisplayed()
     }
 
     @Test
@@ -41,7 +43,7 @@ class MapProvidersScreenAndroidTest {
         composeTestRule.setContent {
             MapProvidersScreen(onBack = {}, viewModel = createViewModel())
         }
-        composeTestRule.onNodeWithText("Stadia Toner").assertIsDisplayed()
-        composeTestRule.onNodeWithText("API key required").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Stadia Alidade Smooth").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("API key required")[0].assertIsDisplayed()
     }
 }

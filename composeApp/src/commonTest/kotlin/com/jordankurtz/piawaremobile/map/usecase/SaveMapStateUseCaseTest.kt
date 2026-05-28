@@ -27,15 +27,15 @@ class SaveMapStateUseCaseTest {
     fun `invoke should call saveMapState on repository`() =
         runTest(testDispatcher) {
             // Given
-            val scrollX = 0.1
-            val scrollY = 0.2
+            val latitude = 0.1
+            val longitude = 0.2
             val zoom = 5.0
-            everySuspend { mapStateRepository.saveMapState(scrollX, scrollY, zoom) } returns Unit
+            everySuspend { mapStateRepository.saveMapState(latitude, longitude, zoom) } returns Unit
 
             // When
-            saveMapStateUseCase(scrollX, scrollY, zoom)
+            saveMapStateUseCase(latitude, longitude, zoom)
 
             // Then
-            verifySuspend(exactly(1)) { mapStateRepository.saveMapState(scrollX, scrollY, zoom) }
+            verifySuspend(exactly(1)) { mapStateRepository.saveMapState(latitude, longitude, zoom) }
         }
 }

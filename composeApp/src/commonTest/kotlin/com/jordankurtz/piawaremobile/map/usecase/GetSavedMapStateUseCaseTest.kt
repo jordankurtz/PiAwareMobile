@@ -29,7 +29,7 @@ class GetSavedMapStateUseCaseTest {
     fun `invoke should return map state from repository`() =
         runTest(testDispatcher) {
             // Given
-            val expectedMapState = MapState(scrollX = 0.5, scrollY = 0.5, zoom = 4.0)
+            val expectedMapState = MapState(latitude = 0.5, longitude = 0.5, zoom = 4.0)
             everySuspend { mapStateRepository.getSavedMapState() } returns expectedMapState
 
             // When

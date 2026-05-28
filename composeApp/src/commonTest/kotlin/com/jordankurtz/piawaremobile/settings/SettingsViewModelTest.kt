@@ -242,11 +242,11 @@ class SettingsViewModelTest {
     @Test
     fun `updateMapProvider delegates provider id to settings service`() =
         runTest {
-            viewModel.updateMapProvider(TileProviders.OPENSTREETMAP)
+            viewModel.updateMapProvider(TileProviders.DEFAULT)
             testDispatcher.scheduler.advanceUntilIdle()
 
             verifySuspend(
                 mode = VerifyMode.exactly(1),
-            ) { settingsService.setMapProviderId(TileProviders.OPENSTREETMAP.id) }
+            ) { settingsService.setMapProviderId(TileProviders.DEFAULT.id) }
         }
 }

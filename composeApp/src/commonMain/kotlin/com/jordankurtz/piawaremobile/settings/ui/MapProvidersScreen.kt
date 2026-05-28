@@ -54,12 +54,9 @@ import piawaremobile.composeapp.generated.resources.map_providers_custom_name_hi
 import piawaremobile.composeapp.generated.resources.map_providers_custom_url_hint
 import piawaremobile.composeapp.generated.resources.map_providers_delete_custom
 import piawaremobile.composeapp.generated.resources.map_providers_generic_key_info
-import piawaremobile.composeapp.generated.resources.map_providers_jawg_key_info
 import piawaremobile.composeapp.generated.resources.map_providers_save
 import piawaremobile.composeapp.generated.resources.map_providers_stadia_key_info
-import piawaremobile.composeapp.generated.resources.map_providers_thunderforest_key_info
 import piawaremobile.composeapp.generated.resources.map_providers_title
-import piawaremobile.composeapp.generated.resources.map_providers_url_preview
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -71,7 +68,7 @@ fun MapProvidersScreen(
 ) {
     val settingsState by viewModel.settings.collectAsState()
     val settings = (settingsState as? Async.Success)?.data
-    val activeProviderId = settings?.mapProviderId ?: TileProviders.OPENSTREETMAP.id
+    val activeProviderId = settings?.mapProviderId ?: TileProviders.DEFAULT.id
     val apiKeys = settings?.apiKeys ?: emptyMap()
     val customProviders = settings?.customProviders ?: emptyList()
 
@@ -103,7 +100,7 @@ fun MapProvidersScreen(
             modifier = Modifier.padding(paddingValues),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
-            items(TileProviders.BUILT_IN) { config ->
+            items(TileProviders.ALL.filter { !it.requiresApiKey }) { config ->
                 BuiltInProviderRow(
                     config = config,
                     isSelected = config.id == activeProviderId,
@@ -111,7 +108,7 @@ fun MapProvidersScreen(
                 )
             }
 
-            items(TileProviders.API_KEY_REQUIRED) { config ->
+            items(TileProviders.ALL.filter { it.requiresApiKey }) { config ->
                 val keyLookup = config.apiKeyGroup ?: config.id
                 ApiKeyProviderRow(
                     config = config,
@@ -155,15 +152,12 @@ fun MapProvidersScreen(
         val providerName =
             when (provider.apiKeyGroup) {
                 "stadia" -> "Stadia Maps"
-                "thunderforest" -> "Thunderforest"
-                "jawg" -> "Jawg"
+                "maptiler" -> "MapTiler"
                 else -> provider.displayNameRes?.let { stringResource(it) } ?: provider.displayName
             }
         val keyInfo =
             when (provider.apiKeyGroup) {
                 "stadia" -> stringResource(Res.string.map_providers_stadia_key_info)
-                "thunderforest" -> stringResource(Res.string.map_providers_thunderforest_key_info)
-                "jawg" -> stringResource(Res.string.map_providers_jawg_key_info)
                 else -> stringResource(Res.string.map_providers_generic_key_info)
             }
         ApiKeyBottomSheet(
@@ -179,8 +173,8 @@ fun MapProvidersScreen(
 
     if (showAddCustom) {
         AddCustomProviderBottomSheet(
-            onSave = { name, urlTemplate ->
-                viewModel.addCustomProvider(Uuid.random().toString(), name, urlTemplate)
+            onSave = { name, styleUrl ->
+                viewModel.addCustomProvider(Uuid.random().toString(), name, styleUrl)
                 showAddCustom = false
             },
             onDismiss = { showAddCustom = false },
@@ -292,7 +286,7 @@ fun CustomProviderRow(
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Text(
-                    text = config.urlTemplate,
+                    text = config.styleUrl,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -382,21 +376,12 @@ fun ApiKeyBottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCustomProviderBottomSheet(
-    onSave: (name: String, urlTemplate: String) -> Unit,
+    onSave: (name: String, styleUrl: String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
-    var urlTemplate by remember { mutableStateOf("") }
-    val urlPreview =
-        urlTemplate
-            .replace("{z}", "10")
-            .replace("{x}", "512")
-            .replace("{y}", "512")
-    val isValid =
-        name.isNotBlank() &&
-            urlTemplate.contains("{z}") &&
-            urlTemplate.contains("{x}") &&
-            urlTemplate.contains("{y}")
+    var styleUrl by remember { mutableStateOf("") }
+    val isValid = name.isNotBlank() && styleUrl.isNotBlank()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -418,19 +403,12 @@ fun AddCustomProviderBottomSheet(
                 singleLine = true,
             )
             OutlinedTextField(
-                value = urlTemplate,
-                onValueChange = { urlTemplate = it },
+                value = styleUrl,
+                onValueChange = { styleUrl = it },
                 label = { Text(stringResource(Res.string.map_providers_custom_url_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
-            if (urlTemplate.isNotBlank()) {
-                Text(
-                    text = stringResource(Res.string.map_providers_url_preview, urlPreview),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
@@ -439,7 +417,7 @@ fun AddCustomProviderBottomSheet(
                     Text(stringResource(Res.string.map_providers_cancel))
                 }
                 Button(
-                    onClick = { onSave(name, urlTemplate) },
+                    onClick = { onSave(name, styleUrl) },
                     enabled = isValid,
                 ) {
                     Text(stringResource(Res.string.map_providers_save))

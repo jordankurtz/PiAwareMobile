@@ -1,7 +1,7 @@
 package com.jordankurtz.piawaremobile.di.modules
 
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
-import com.jordankurtz.piawaremobile.map.MapComposeStateController
+import com.jordankurtz.piawaremobile.map.MapLibreStateController
 import com.jordankurtz.piawaremobile.map.MapStateController
 import com.jordankurtz.piawaremobile.map.TileProviderConfig
 import com.jordankurtz.piawaremobile.map.resolveActiveProviderConfig
@@ -36,5 +36,5 @@ class MapModule {
     }
 
     @Factory
-    fun provideMapStateController(): MapStateController = MapComposeStateController()
+    fun provideMapStateController(): MapStateController = MapLibreStateController()
 }

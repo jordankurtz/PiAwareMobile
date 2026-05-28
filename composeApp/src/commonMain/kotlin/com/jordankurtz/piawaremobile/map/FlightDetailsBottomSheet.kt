@@ -299,8 +299,10 @@ fun MiniMap(
     }
 
     Card {
-        OpenStreetMap(
-            state = miniMapViewModel.state,
+        MapLibreMap(
+            controller = miniMapViewModel.mapStateController as MapLibreStateController,
+            styleUrl = TileProviders.DEFAULT.styleUrl,
+            gesturesEnabled = false,
             modifier = Modifier.height(height = 200.dp),
         )
     }

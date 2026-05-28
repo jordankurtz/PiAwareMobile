@@ -5,74 +5,125 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import com.jordankurtz.piawaremobile.map.model.LatLon
+import com.jordankurtz.piawaremobile.map.model.MapBounds
+import com.jordankurtz.piawaremobile.map.model.MapPosition
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-import ovh.plrapps.mapcompose.api.BoundingBox
-import ovh.plrapps.mapcompose.core.TileStreamProvider
-import ovh.plrapps.mapcompose.ui.paths.PathDataBuilder
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class FakeMapStateController : MapStateController {
-    override val scrollAndScaleFlow: Flow<MapScrollPosition> = emptyFlow()
+    val cameraStateFlow = MutableStateFlow(MapPosition(0.0, 0.0, 5.0))
+    override val cameraFlow: Flow<MapPosition> = cameraStateFlow
 
-    override fun addLayer(provider: TileStreamProvider): String = "fake-layer-id"
+    override var zoom: Double = 5.0
 
-    override fun onMarkerClick(handler: (id: String) -> Unit) = Unit
+    var lastMinZoom: Double = 0.0
+    var lastMaxZoom: Double = 22.0
 
-    override fun onTap(handler: () -> Unit) = Unit
-
-    override fun onTouchDown(handler: () -> Unit) = Unit
-
-    override fun replaceLayer(
-        layerId: String,
-        provider: TileStreamProvider,
-    ): String? = null
-
-    override suspend fun setScroll(
-        x: Double,
-        y: Double,
-    ) = Unit
-
-    override var scale: Double = 1.0
-
-    var lastMinScale: Double = 0.0
-    var lastMaxScale: Double = Double.MAX_VALUE
-
-    override fun setScaleLimits(
-        minScale: Double,
-        maxScale: Double,
+    override fun setZoomLimits(
+        min: Double,
+        max: Double,
     ) {
-        lastMinScale = minScale
-        lastMaxScale = maxScale
+        lastMinZoom = min
+        lastMaxZoom = max
+    }
+
+    val setCameraArgs = mutableListOf<Triple<Double, Double, Double>>()
+
+    override suspend fun setCamera(
+        latitude: Double,
+        longitude: Double,
+        zoom: Double,
+    ) {
+        setCameraArgs.add(Triple(latitude, longitude, zoom))
+        cameraStateFlow.value = MapPosition(latitude, longitude, zoom)
+        this.zoom = zoom
+    }
+
+    val scrolledToPositions = mutableListOf<MapPosition>()
+    val scrolledToBounds = mutableListOf<MapBounds>()
+
+    override suspend fun scrollTo(
+        latitude: Double,
+        longitude: Double,
+        zoom: Double,
+        animationSpec: AnimationSpec<Float>,
+    ) {
+        scrolledToPositions.add(MapPosition(latitude, longitude, zoom))
     }
 
     override suspend fun scrollTo(
-        x: Double,
-        y: Double,
-        animationSpec: AnimationSpec<Float>,
-    ) = Unit
-
-    override suspend fun scrollTo(
-        area: BoundingBox,
+        bounds: MapBounds,
         padding: Offset,
         animationSpec: AnimationSpec<Float>,
-    ) = Unit
+    ) {
+        scrolledToBounds.add(bounds)
+    }
+
+    override fun visibleBounds(): MapBounds = MapBounds(90.0, -90.0, 180.0, -180.0)
+
+    override fun screenToLatLon(
+        screenX: Float,
+        screenY: Float,
+    ): LatLon = LatLon(0.0, 0.0)
+
+    var markerClickHandler: ((String) -> Unit)? = null
+
+    override fun onMarkerClick(handler: (id: String) -> Unit) {
+        markerClickHandler = handler
+    }
+
+    var tapHandler: (() -> Unit)? = null
+
+    override fun onTap(handler: () -> Unit) {
+        tapHandler = handler
+    }
+
+    var touchDownHandler: (() -> Unit)? = null
+
+    override fun onTouchDown(handler: () -> Unit) {
+        touchDownHandler = handler
+    }
+
+    var selectedMarkerId: String? = null
+
+    override fun setSelectedMarker(id: String?) {
+        selectedMarkerId = id
+    }
+
+    val addedMarkers = mutableMapOf<String, Pair<Double, Double>>()
 
     override fun addMarker(
         id: String,
-        x: Double,
-        y: Double,
-        relativeOffset: Offset,
+        latitude: Double,
+        longitude: Double,
         content: @Composable () -> Unit,
-    ) = Unit
+    ) {
+        addedMarkers[id] = latitude to longitude
+    }
 
-    override fun removeMarker(id: String) = Unit
+    val removedMarkerIds = mutableListOf<String>()
+
+    override fun removeMarker(id: String) {
+        addedMarkers.remove(id)
+        removedMarkerIds.add(id)
+    }
+
+    val addedPaths = mutableMapOf<String, List<LatLon>>()
 
     override fun addPath(
         id: String,
         color: Color,
         width: Dp,
-        init: PathDataBuilder.() -> Unit,
-    ) = Unit
+        points: List<LatLon>,
+    ) {
+        addedPaths[id] = points
+    }
 
-    override fun removePath(id: String) = Unit
+    val removedPathIds = mutableListOf<String>()
+
+    override fun removePath(id: String) {
+        addedPaths.remove(id)
+        removedPathIds.add(id)
+    }
 }
