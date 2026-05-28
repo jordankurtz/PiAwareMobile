@@ -9,6 +9,7 @@ import com.jordankurtz.piawaremobile.settings.ServerType
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -127,6 +128,17 @@ class SettingsServiceImpl(
         providerId: String,
         key: String,
     ) = updateSetting { it.copy(apiKeys = it.apiKeys + (providerId to key)) }
+
+    override suspend fun removeApiKey(keyGroup: String) = updateSetting { settings ->
+        val updatedKeys = settings.apiKeys - keyGroup
+        val activeProviderUsesKey = TileProviders.ALL
+            .filter { it.requiresApiKey && (it.apiKeyGroup ?: it.id) == keyGroup }
+            .any { it.id == settings.mapProviderId }
+        settings.copy(
+            apiKeys = updatedKeys,
+            mapProviderId = if (activeProviderUsesKey) TileProviders.DEFAULT.id else settings.mapProviderId,
+        )
+    }
 
     override suspend fun addCustomProvider(
         id: String,
