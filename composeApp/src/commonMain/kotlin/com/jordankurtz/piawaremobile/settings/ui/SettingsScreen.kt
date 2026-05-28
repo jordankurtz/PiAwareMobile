@@ -62,7 +62,14 @@ fun SettingsScreen() {
                     val onRetryDownload = remember(vm) { { region: OfflineRegion -> vm.retryDownload(region) } }
                     val onStartDownloadFn =
                         remember(vm) {
-                            { name: String, bounds: BoundingBox, minZoom: Int, maxZoom: Int, viewportZoom: Int, provider: TileProviderConfig ->
+                            {
+                                    name: String,
+                                    bounds: BoundingBox,
+                                    minZoom: Int,
+                                    maxZoom: Int,
+                                    viewportZoom: Int,
+                                    provider: TileProviderConfig,
+                                ->
                                 vm.startDownload(name, bounds, minZoom, maxZoom, viewportZoom, provider)
                             }
                         }
@@ -94,7 +101,7 @@ fun SettingsScreen() {
                     OfflineMapsScreen(
                         onBack = { currentScreen = SettingsScreens.Main },
                         regions = regions,
-                        availableProviders = TileProviders.ALL,
+                        availableProviders = TileProviders.OFFLINE_VECTOR,
                         onDeleteRegion = onRequestDelete,
                         onRetry = onRetryDownload,
                         onStartDownload = onStartDownloadFn,
