@@ -93,7 +93,10 @@ fun MapScreen(
     }
 
     Box {
-        OpenStreetMap(state = mapViewModel.state)
+        MapLibreMap(
+            controller = mapViewModel.mapStateController as MapLibreStateController,
+            styleUrl = activeProvider.styleUrl,
+        )
         Column(
             modifier =
                 Modifier
@@ -128,17 +131,18 @@ fun MapScreen(
         ) {
             OfflineIndicator()
         }
-        Overlay(
-            numberOfPlanes = numberOfPlanes,
-            provider = activeProvider,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
-        )
-        if (isDebugBuild) {
-            TileCacheDebugOverlay(
-                stats = tileStats,
-                currentZoom = currentZoom,
-                zoomSettings = zoomSettings,
-                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+        Column(modifier = Modifier.align(Alignment.TopStart)) {
+            if (isDebugBuild) {
+                TileCacheDebugOverlay(
+                    stats = tileStats,
+                    currentZoom = currentZoom,
+                    zoomSettings = zoomSettings,
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
+            Overlay(
+                numberOfPlanes = numberOfPlanes,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             )
         }
     }

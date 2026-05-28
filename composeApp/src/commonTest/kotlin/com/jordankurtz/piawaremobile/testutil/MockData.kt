@@ -24,7 +24,7 @@ fun mockSettings(
     openUrlsExternally: Boolean = false,
     enableFlightAwareApi: Boolean = false,
     flightAwareApiKey: String = "",
-    mapProviderId: String = TileProviders.OPENSTREETMAP.id,
+    mapProviderId: String = TileProviders.DEFAULT.id,
 ): Settings =
     Settings(
         servers = servers,

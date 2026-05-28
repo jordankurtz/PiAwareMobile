@@ -13,13 +13,13 @@ class SaveMapStateUseCaseImpl(
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SaveMapStateUseCase {
     override suspend operator fun invoke(
-        scrollX: Double,
-        scrollY: Double,
+        latitude: Double,
+        longitude: Double,
         zoom: Double,
     ) = withContext(ioDispatcher) {
         mapStateRepository.saveMapState(
-            scrollX = scrollX,
-            scrollY = scrollY,
+            latitude = latitude,
+            longitude = longitude,
             zoom = zoom,
         )
     }

@@ -35,7 +35,7 @@ class MapProvidersScreenAndroidTest {
             MapProvidersScreen(onBack = {}, viewModel = createViewModel())
         }
         composeTestRule.onNodeWithText("Map Providers").assertIsDisplayed()
-        composeTestRule.onNodeWithText("OpenStreetMap").assertIsDisplayed()
+        composeTestRule.onNodeWithText("OpenFreeMap Bright").assertIsDisplayed()
     }
 
     @Test
@@ -43,7 +43,7 @@ class MapProvidersScreenAndroidTest {
         composeTestRule.setContent {
             MapProvidersScreen(onBack = {}, viewModel = createViewModel())
         }
-        composeTestRule.onNodeWithText("Stadia Toner").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Stadia Alidade Smooth").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("API key required")[0].assertIsDisplayed()
     }
 }

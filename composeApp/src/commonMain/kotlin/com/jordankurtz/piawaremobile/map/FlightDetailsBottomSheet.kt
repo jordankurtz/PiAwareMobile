@@ -439,9 +439,11 @@ fun MiniMap(
         miniMapViewModel.updateMapState(aircraft = aircraft, location = userLocation)
     }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        OpenStreetMap(
-            state = miniMapViewModel.state,
+    Card {
+        MapLibreMap(
+            controller = miniMapViewModel.mapStateController as MapLibreStateController,
+            styleUrl = TileProviders.DEFAULT.styleUrl,
+            gesturesEnabled = false,
             modifier = Modifier.height(height = 200.dp),
         )
     }

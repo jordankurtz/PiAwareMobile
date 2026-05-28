@@ -11,8 +11,8 @@ class CustomProviderConfigTest {
         val config =
             CustomProviderConfig(
                 id = "abc-123",
-                displayName = "My Tiles",
-                urlTemplate = "https://example.com/{z}/{x}/{y}.png",
+                displayName = "My Style",
+                styleUrl = "https://example.com/style.json",
             )
         val json = Json.encodeToString(config)
         val decoded = Json.decodeFromString<CustomProviderConfig>(json)

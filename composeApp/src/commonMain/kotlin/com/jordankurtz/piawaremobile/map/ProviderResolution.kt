@@ -8,10 +8,10 @@ fun resolveActiveProviderConfig(
     builtIns: List<TileProviderConfig> = TileProviders.ALL,
 ): TileProviderConfig {
     val allProviders = builtIns + settings.customProviders.map { it.toTileProviderConfig() }
-    val config = allProviders.find { it.id == settings.mapProviderId } ?: TileProviders.OPENSTREETMAP
+    val config = allProviders.find { it.id == settings.mapProviderId } ?: TileProviders.DEFAULT
     return if (config.requiresApiKey) {
         val key = settings.apiKeys[config.apiKeyGroup ?: config.id] ?: ""
-        config.copy(urlTemplate = config.urlTemplate.replace("{api_key}", key))
+        config.copy(styleUrl = config.resolvedStyleUrl(key))
     } else {
         config
     }
@@ -21,6 +21,6 @@ fun CustomProviderConfig.toTileProviderConfig() =
     TileProviderConfig(
         id = id,
         displayName = displayName,
-        urlTemplate = urlTemplate,
-        copyrightUrl = "",
+        styleUrl = styleUrl,
+        isBuiltIn = false,
     )

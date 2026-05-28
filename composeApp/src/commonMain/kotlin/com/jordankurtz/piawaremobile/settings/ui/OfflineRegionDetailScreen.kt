@@ -22,19 +22,22 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.extensions.formattedDate
+import com.jordankurtz.piawaremobile.map.MapLibreMap
+import com.jordankurtz.piawaremobile.map.MapLibreStateController
 import com.jordankurtz.piawaremobile.map.MapViewModel
-import com.jordankurtz.piawaremobile.map.OpenStreetMap
-import com.jordankurtz.piawaremobile.map.doProjection
+import com.jordankurtz.piawaremobile.map.model.LatLon
+import com.jordankurtz.piawaremobile.map.model.MapBounds
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import ovh.plrapps.mapcompose.api.BoundingBox
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_arrow_back
 import piawaremobile.composeapp.generated.resources.navigate_back
@@ -55,26 +58,29 @@ fun OfflineRegionDetailScreen(
     onBack: () -> Unit,
     mapViewModel: MapViewModel = koinViewModel(),
 ) {
+    val activeProvider by mapViewModel.activeProvider.collectAsState()
     LaunchedEffect(region.id) {
-        val (xLeft, yTop) = doProjection(region.maxLat, region.minLon)
-        val (xRight, yBottom) = doProjection(region.minLat, region.maxLon)
-        val mapBounds = BoundingBox(xLeft = xLeft, yTop = yTop, xRight = xRight, yBottom = yBottom)
-        mapViewModel.mapStateController.scrollTo(area = mapBounds, padding = Offset(0.15f, 0.15f))
+        val bounds =
+            MapBounds(
+                north = region.maxLat,
+                south = region.minLat,
+                east = region.maxLon,
+                west = region.minLon,
+            )
+        mapViewModel.mapStateController.scrollTo(bounds = bounds, padding = Offset(0.15f, 0.15f))
         mapViewModel.mapStateController.addPath(
             id = DETAIL_BOUNDS_PATH_ID,
             color = BoundsPathColor,
             width = 2.dp,
-        ) {
-            addPoints(
+            points =
                 listOf(
-                    Pair(xLeft, yTop),
-                    Pair(xRight, yTop),
-                    Pair(xRight, yBottom),
-                    Pair(xLeft, yBottom),
-                    Pair(xLeft, yTop),
+                    LatLon(region.maxLat, region.minLon),
+                    LatLon(region.maxLat, region.maxLon),
+                    LatLon(region.minLat, region.maxLon),
+                    LatLon(region.minLat, region.minLon),
+                    LatLon(region.maxLat, region.minLon),
                 ),
-            )
-        }
+        )
     }
     DisposableEffect(region.id) {
         onDispose {
@@ -84,8 +90,9 @@ fun OfflineRegionDetailScreen(
     OfflineRegionDetailContent(
         region = region,
         mapLayer = {
-            OpenStreetMap(
-                state = mapViewModel.state,
+            MapLibreMap(
+                controller = mapViewModel.mapStateController as MapLibreStateController,
+                styleUrl = activeProvider.styleUrl,
                 modifier = Modifier.fillMaxSize(),
             )
         },

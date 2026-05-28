@@ -62,7 +62,7 @@ interface SettingsService {
     suspend fun addCustomProvider(
         id: String,
         displayName: String,
-        urlTemplate: String,
+        styleUrl: String,
     )
 
     suspend fun deleteCustomProvider(id: String)

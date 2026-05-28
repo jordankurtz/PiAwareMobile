@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,8 +25,9 @@ import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.list.TabletAircraftListPanel
 import com.jordankurtz.piawaremobile.location.LocationViewModel
+import com.jordankurtz.piawaremobile.map.MapLibreMap
+import com.jordankurtz.piawaremobile.map.MapLibreStateController
 import com.jordankurtz.piawaremobile.map.MapViewModel
-import com.jordankurtz.piawaremobile.map.OpenStreetMap
 import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -103,21 +105,22 @@ fun MapWithListLayout(
                     .weight(0.6f)
                     .fillMaxHeight(),
         ) {
-            OpenStreetMap(state = mapViewModel.state)
-            Overlay(
-                numberOfPlanes = numberOfPlanes,
-                provider = activeProvider,
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(horizontal = 8.dp),
+            MapLibreMap(
+                controller = mapViewModel.mapStateController as MapLibreStateController,
+                styleUrl = activeProvider.styleUrl,
             )
-            if (isDebugBuild) {
-                TileCacheDebugOverlay(
-                    stats = tileStats,
-                    currentZoom = currentZoom,
-                    zoomSettings = zoomSettings,
-                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            Column(modifier = Modifier.align(Alignment.TopStart)) {
+                if (isDebugBuild) {
+                    TileCacheDebugOverlay(
+                        stats = tileStats,
+                        currentZoom = currentZoom,
+                        zoomSettings = zoomSettings,
+                        modifier = Modifier.padding(8.dp),
+                    )
+                }
+                Overlay(
+                    numberOfPlanes = numberOfPlanes,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
             // Settings button
