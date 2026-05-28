@@ -19,12 +19,13 @@ class MapLibreOfflineEngine(
             val nativeId =
                 api.startDownload(
                     styleUrl = config.styleUrl,
-                    bounds = BoundingBox(
-                        minLat = region.minLat,
-                        maxLat = region.maxLat,
-                        minLon = region.minLon,
-                        maxLon = region.maxLon,
-                    ),
+                    bounds =
+                        BoundingBox(
+                            minLat = region.minLat,
+                            maxLat = region.maxLat,
+                            minLon = region.minLon,
+                            maxLon = region.maxLon,
+                        ),
                     minZoom = region.minZoom,
                     maxZoom = region.maxZoom,
                 )

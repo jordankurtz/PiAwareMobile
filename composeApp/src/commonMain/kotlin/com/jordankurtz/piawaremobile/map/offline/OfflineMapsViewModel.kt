@@ -141,7 +141,10 @@ class OfflineMapsViewModel(
             }
     }
 
-    private suspend fun doDownload(regionId: Long, provider: MapTileProviderConfig) {
+    private suspend fun doDownload(
+        regionId: Long,
+        provider: MapTileProviderConfig,
+    ) {
         var lastDownloadedCount = 0L
         var lastTileCount = 0L
         try {
