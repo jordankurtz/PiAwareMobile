@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.jordankurtz.piawaremobile.model.Async
@@ -33,6 +34,7 @@ class SettingsScreenAndroidTest {
 
         return SettingsViewModel(
             settingsService = settingsService,
+            tileCache = mock<TileCache>(),
         )
     }
 

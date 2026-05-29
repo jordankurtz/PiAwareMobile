@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
@@ -24,7 +25,7 @@ class MapProvidersScreenAndroidTest {
             mock<SettingsService> {
                 every { loadSettings() } returns flowOf(Async.Success(Settings()))
             }
-        return SettingsViewModel(settingsService = service)
+        return SettingsViewModel(settingsService = service, tileCache = mock<TileCache>())
     }
 
     @Test
