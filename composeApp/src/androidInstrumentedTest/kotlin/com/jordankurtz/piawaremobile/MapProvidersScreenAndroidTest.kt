@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.model.Async
@@ -43,6 +44,6 @@ class MapProvidersScreenAndroidTest {
             MapProvidersScreen(onBack = {}, viewModel = createViewModel())
         }
         composeTestRule.onNodeWithText("Stadia Toner").assertIsDisplayed()
-        composeTestRule.onNodeWithText("API key required").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("API key required")[0].assertIsDisplayed()
     }
 }
