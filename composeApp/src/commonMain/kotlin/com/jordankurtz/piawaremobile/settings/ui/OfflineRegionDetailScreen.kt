@@ -10,15 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -35,12 +30,9 @@ import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.model.LatLon
 import com.jordankurtz.piawaremobile.map.model.MapBounds
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
-import piawaremobile.composeapp.generated.resources.ic_arrow_back
-import piawaremobile.composeapp.generated.resources.navigate_back
 import piawaremobile.composeapp.generated.resources.offline_maps_detail_created
 import piawaremobile.composeapp.generated.resources.offline_maps_detail_provider
 import piawaremobile.composeapp.generated.resources.offline_maps_detail_size
@@ -100,7 +92,6 @@ fun OfflineRegionDetailScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun OfflineRegionDetailContent(
     region: OfflineRegion,
@@ -109,22 +100,9 @@ internal fun OfflineRegionDetailContent(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(region.name) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_arrow_back),
-                            contentDescription = stringResource(Res.string.navigate_back),
-                        )
-                    }
-                },
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
+            SettingsTopAppBar(
+                title = region.name,
+                onBack = onBack,
             )
         },
     ) { paddingValues ->

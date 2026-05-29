@@ -34,7 +34,13 @@ fun SettingsScreen() {
     Surface(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(
             targetState = currentScreen,
-            transitionSpec = { slideInHorizontally() togetherWith slideOutHorizontally() },
+            transitionSpec = {
+                if (targetState == SettingsScreens.Main) {
+                    slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
+                } else {
+                    slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                }
+            },
         ) { screen ->
             when (screen) {
                 SettingsScreens.Main ->
@@ -43,7 +49,7 @@ fun SettingsScreen() {
                         onOfflineMapsClicked = { currentScreen = SettingsScreens.OfflineMaps },
                         onMapProviderClicked = { currentScreen = SettingsScreens.MapProviders },
                     )
-                SettingsScreens.Servers -> ServersScreen(onBack = {})
+                SettingsScreens.Servers -> ServersScreen(onBack = { currentScreen = SettingsScreens.Main })
                 SettingsScreens.MapProviders ->
                     MapProvidersScreen(
                         onBack = { currentScreen = SettingsScreens.Main },
