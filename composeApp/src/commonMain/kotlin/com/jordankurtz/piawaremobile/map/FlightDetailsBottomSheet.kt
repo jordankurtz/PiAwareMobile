@@ -25,7 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -224,7 +224,7 @@ fun FlightDetailsSheetContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                PrimaryTabRow(selectedTabIndex = tabIndex) {
+                SecondaryTabRow(selectedTabIndex = tabIndex) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
                             text = { Text(title) },
