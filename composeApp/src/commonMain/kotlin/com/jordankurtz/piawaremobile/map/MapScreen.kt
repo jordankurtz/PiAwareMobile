@@ -1,5 +1,8 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +24,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.jordankurtz.piawaremobile.Overlay
 import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
+import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.location.LocationViewModel
+import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -42,10 +47,14 @@ fun MapScreen(
     val receiverLocations by aircraftViewModel.receiverLocations.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
     val numberOfPlanes by aircraftViewModel.numberOfPlanes.collectAsState()
+    val activeProvider by mapViewModel.activeProvider.collectAsState()
     val selectedAircraftHex by mapViewModel.selectedAircraft.collectAsState()
     val followingAircraftHex by mapViewModel.followingAircraft.collectAsState()
     val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
     val showUserLocationOnMap by mapViewModel.showUserLocationOnMap.collectAsState()
+    val tileStats by mapViewModel.tileStats.collectAsState()
+    val currentZoom by mapViewModel.currentZoomLevel.collectAsState()
+    val zoomSettings by mapViewModel.zoomSettings.collectAsState()
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val sheetState =
@@ -111,10 +120,27 @@ fun MapScreen(
                 )
             }
         }
+        AnimatedVisibility(
+            visible = false,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
+        ) {
+            OfflineIndicator()
+        }
         Overlay(
-            numberOfPlanes,
+            numberOfPlanes = numberOfPlanes,
+            provider = activeProvider,
             modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
         )
+        if (isDebugBuild) {
+            TileCacheDebugOverlay(
+                stats = tileStats,
+                currentZoom = currentZoom,
+                zoomSettings = zoomSettings,
+                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            )
+        }
     }
 
     val selectedAircraft =

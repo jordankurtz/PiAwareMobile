@@ -4,6 +4,7 @@ import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.aircraft.repo.AircraftRepo
 import com.jordankurtz.piawaremobile.aircraft.usecase.LoadHistoryUseCase
 import com.jordankurtz.piawaremobile.settings.Server
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -21,6 +22,8 @@ class LoadHistoryUseCaseImpl(
                 async {
                     try {
                         aircraftRepo.fetchAndMergeHistory(server)
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         Logger.e("Failed to fetch history from server $server", e)
                     }

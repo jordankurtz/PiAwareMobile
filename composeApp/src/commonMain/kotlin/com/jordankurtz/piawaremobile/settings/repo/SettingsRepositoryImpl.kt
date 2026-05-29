@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.settings.repo
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository.Companion.DEFAULT_REFRESH_INTERVAL
@@ -37,6 +38,32 @@ class SettingsRepositoryImpl(
                 openUrlsExternally = preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] ?: false,
                 enableFlightAwareApi = preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] ?: false,
                 flightAwareApiKey = preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] ?: "",
+                mapProviderId = preferences[SettingsRepository.MAP_PROVIDER_ID] ?: TileProviders.OPENSTREETMAP.id,
+                defaultZoomLevel =
+                    preferences[SettingsRepository.DEFAULT_ZOOM_LEVEL_KEY]
+                        ?: SettingsRepository.DEFAULT_ZOOM_LEVEL,
+                minZoomLevel =
+                    preferences[SettingsRepository.MIN_ZOOM_LEVEL_KEY]
+                        ?: SettingsRepository.MIN_ZOOM_LEVEL,
+                maxZoomLevel =
+                    preferences[SettingsRepository.MAX_ZOOM_LEVEL_KEY]
+                        ?: SettingsRepository.MAX_ZOOM_LEVEL,
+                apiKeys =
+                    preferences[SettingsRepository.API_KEYS_JSON]?.let {
+                        try {
+                            Json.decodeFromString(it)
+                        } catch (_: Exception) {
+                            emptyMap()
+                        }
+                    } ?: emptyMap(),
+                customProviders =
+                    preferences[SettingsRepository.CUSTOM_PROVIDERS_JSON]?.let {
+                        try {
+                            Json.decodeFromString(it)
+                        } catch (_: Exception) {
+                            emptyList()
+                        }
+                    } ?: emptyList(),
             )
         }
     }
@@ -54,6 +81,12 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.OPEN_URLS_EXTERNALLY] = settings.openUrlsExternally
             preferences[SettingsRepository.ENABLE_FLIGHT_AWARE_API] = settings.enableFlightAwareApi
             preferences[SettingsRepository.FLIGHT_AWARE_API_KEY] = settings.flightAwareApiKey
+            preferences[SettingsRepository.MAP_PROVIDER_ID] = settings.mapProviderId
+            preferences[SettingsRepository.DEFAULT_ZOOM_LEVEL_KEY] = settings.defaultZoomLevel
+            preferences[SettingsRepository.MIN_ZOOM_LEVEL_KEY] = settings.minZoomLevel
+            preferences[SettingsRepository.MAX_ZOOM_LEVEL_KEY] = settings.maxZoomLevel
+            preferences[SettingsRepository.API_KEYS_JSON] = Json.encodeToString(settings.apiKeys)
+            preferences[SettingsRepository.CUSTOM_PROVIDERS_JSON] = Json.encodeToString(settings.customProviders)
         }
     }
 

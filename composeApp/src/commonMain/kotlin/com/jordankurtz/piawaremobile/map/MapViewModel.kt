@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
@@ -13,6 +12,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
+import com.jordankurtz.piawaremobile.extensions.overlayColor
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStats
+import com.jordankurtz.piawaremobile.map.debug.TileCacheStatsTracker
 import com.jordankurtz.piawaremobile.map.usecase.GetSavedMapStateUseCase
 import com.jordankurtz.piawaremobile.map.usecase.SaveMapStateUseCase
 import com.jordankurtz.piawaremobile.model.AircraftPosition
@@ -27,36 +29,26 @@ import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.annotation.Factory
 import ovh.plrapps.mapcompose.api.BoundingBox
-import ovh.plrapps.mapcompose.api.addLayer
-import ovh.plrapps.mapcompose.api.addMarker
-import ovh.plrapps.mapcompose.api.addPath
-import ovh.plrapps.mapcompose.api.onMarkerClick
-import ovh.plrapps.mapcompose.api.onTap
-import ovh.plrapps.mapcompose.api.onTouchDown
-import ovh.plrapps.mapcompose.api.removeMarker
-import ovh.plrapps.mapcompose.api.removePath
-import ovh.plrapps.mapcompose.api.scale
-import ovh.plrapps.mapcompose.api.scroll
-import ovh.plrapps.mapcompose.api.scrollTo
-import ovh.plrapps.mapcompose.api.setScroll
 import ovh.plrapps.mapcompose.core.TileStreamProvider
-import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_receiver
 import piawaremobile.composeapp.generated.resources.ic_user_location
 import piawaremobile.composeapp.generated.resources.user_location_content_description
-import kotlin.math.pow
 import kotlin.time.Duration.Companion.milliseconds
 
 private const val USER_LOCATION_MARKER_ID = "user_location"
@@ -66,12 +58,21 @@ private const val USER_LOCATION_MARKER_ID = "user_location"
 @Factory
 class MapViewModel(
     private val mapProvider: TileStreamProvider,
+    private val providerConfigFlow: StateFlow<TileProviderConfig>,
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
+    private val tileCacheStatsTracker: TileCacheStatsTracker,
+    internal val mapStateController: MapStateController,
 ) : ViewModel() {
+    val activeProvider: StateFlow<TileProviderConfig> = providerConfigFlow
+
+    /** The underlying MapCompose state — for use by composables only, not for testing. */
+    val state: MapState get() = (mapStateController as MapComposeStateController).mapState
+
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
+    private var tileLayerId: String = ""
     private val previousAircraftMarkerIds = mutableSetOf<String>()
     private val previousPathIds = mutableSetOf<String>()
     private var lastTrails: Map<String, AircraftTrail> = emptyMap()
@@ -88,40 +89,44 @@ class MapViewModel(
     private val _showUserLocationOnMap = MutableStateFlow(false)
     val showUserLocationOnMap: StateFlow<Boolean> = _showUserLocationOnMap
 
+    val tileStats: StateFlow<TileCacheStats> = tileCacheStatsTracker.stats
+
+    val currentZoomLevel: StateFlow<Int> =
+        mapStateController.scrollAndScaleFlow
+            .map { scaleToOsmZoom(it.scale.toFloat()) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), MIN_LEVEL)
+
+    private val _zoomSettings = MutableStateFlow<Triple<Int, Int, Int>?>(null)
+    val zoomSettings: StateFlow<Triple<Int, Int, Int>?> = _zoomSettings
+
     /** Exposes the last location passed to [recenterOnLocation] for test verification. */
     internal val lastRecenteredLocation = MutableStateFlow<Location?>(null)
 
     private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
 
-    val state =
-        MapState(levelCount = MAX_LEVEL + 1, mapSize, mapSize, workerCount = 16) {
-            minimumScaleMode(Forced((1 / 2.0.pow(MAX_LEVEL - MIN_LEVEL))))
-        }.apply {
-            addLayer(mapProvider)
+    init {
+        tileLayerId = mapStateController.addLayer(mapProvider)
 
-            onMarkerClick { id, _, _ ->
-                if (previousAircraftMarkerIds.contains(id)) {
-                    val newSelection = if (_selectedAircraft.value == id) null else id
-                    _selectedAircraft.value = newSelection
-                    _trailSelectedAircraft.value = newSelection
-                    onAircraftTrailsUpdated(lastTrails)
-                }
+        mapStateController.onMarkerClick { id ->
+            if (previousAircraftMarkerIds.contains(id)) {
+                val newSelection = if (_selectedAircraft.value == id) null else id
+                _selectedAircraft.value = newSelection
+                _trailSelectedAircraft.value = newSelection
+                onAircraftTrailsUpdated(lastTrails)
             }
-
-            onTap { _, _ ->
-                // Deselect when tapping on empty space
-                if (_selectedAircraft.value != null) {
-                    _selectedAircraft.value = null
-                    _followingAircraft.value = null
-                    _trailSelectedAircraft.value = null
-                    onAircraftTrailsUpdated(lastTrails)
-                }
-            }
-
-            onTouchDown { onMapTouchDown() }
         }
 
-    init {
+        mapStateController.onTap {
+            if (_selectedAircraft.value != null) {
+                _selectedAircraft.value = null
+                _followingAircraft.value = null
+                _trailSelectedAircraft.value = null
+                onAircraftTrailsUpdated(lastTrails)
+            }
+        }
+
+        mapStateController.onTouchDown { onMapTouchDown() }
+
         viewModelScope.launch {
             loadSettingsUseCase().collect {
                 when (it) {
@@ -129,6 +134,7 @@ class MapViewModel(
                         settings = it.data
                         onSettingsLoaded(it.data)
                     }
+
                     is Async.Error -> {
                         Logger.e("Failed to load settings", it.throwable)
                     }
@@ -136,6 +142,14 @@ class MapViewModel(
                     else -> {
                         // No-op
                     }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            providerConfigFlow.drop(1).collect { // skip initial — already loaded
+                mapStateController.replaceLayer(tileLayerId, mapProvider)?.let { newId ->
+                    tileLayerId = newId
                 }
             }
         }
@@ -170,34 +184,48 @@ class MapViewModel(
 
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
+        _zoomSettings.value = Triple(settings.minZoomLevel, settings.maxZoomLevel, settings.defaultZoomLevel)
         _showUserLocationOnMap.value = settings.showUserLocationOnMap
         if (!settings.showUserLocationOnMap) {
             _followingUserLocation.value = false
         }
         onAircraftTrailsUpdated(lastTrails)
+        mapStateController.setScaleLimits(
+            osmZoomToScale(settings.minZoomLevel),
+            osmZoomToScale(settings.maxZoomLevel),
+        )
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
-            loadMapState()
+            loadMapState(settings.minZoomLevel, settings.maxZoomLevel)
             startSaveMapStateJob()
+        } else {
+            mapStateController.scale = osmZoomToScale(settings.defaultZoomLevel)
         }
     }
 
-    private suspend fun loadMapState() {
+    private suspend fun loadMapState(
+        minZoom: Int,
+        maxZoom: Int,
+    ) {
         val savedState = getSavedMapStateUseCase()
         Logger.d("Restored map state $savedState")
-        state.setScroll(savedState.scrollX, savedState.scrollY)
-        state.scale = savedState.zoom
+        mapStateController.setScroll(savedState.scrollX, savedState.scrollY)
+        mapStateController.scale =
+            savedState.zoom.coerceIn(
+                osmZoomToScale(minZoom),
+                osmZoomToScale(maxZoom),
+            )
     }
 
     private fun startSaveMapStateJob() {
         saveStateJob =
             viewModelScope.launch {
-                snapshotFlow { Pair(state.scroll, state.scale) }
+                mapStateController.scrollAndScaleFlow
                     .debounce(500.milliseconds)
-                    .onEach { (scroll, scale) ->
-                        if (scroll.x > 0.0 && scroll.y > 0.0) {
-                            saveMapStateUseCase(scroll.x, scroll.y, scale)
-                            Logger.d("Saved map state $scroll, $scale")
+                    .onEach { (scrollX, scrollY, scale) ->
+                        if (scrollX > 0.0 && scrollY > 0.0) {
+                            saveMapStateUseCase(scrollX, scrollY, scale)
+                            Logger.d("Saved map state $scrollX, $scrollY, $scale")
                         }
                     }.launchIn(this)
             }
@@ -206,7 +234,7 @@ class MapViewModel(
     fun onReceiverLocation(receiver: Map.Entry<Server, Location>) =
         viewModelScope.launch {
             val (x, y) = receiver.value.projected
-            state.addMarker(
+            mapStateController.addMarker(
                 id = receiver.key.id.toString(),
                 x = x,
                 y = y,
@@ -215,6 +243,7 @@ class MapViewModel(
                 Image(
                     painter = painterResource(Res.drawable.ic_receiver),
                     contentDescription = null,
+                    colorFilter = ColorFilter.tint(providerConfigFlow.value.overlayColor),
                     modifier =
                         Modifier
                             .size(20.dp),
@@ -227,7 +256,7 @@ class MapViewModel(
         viewModelScope.launch {
             val (x, y) = location.projected
             Logger.d("Scrolling map to $x, $y")
-            state.scrollTo(x, y)
+            mapStateController.scrollTo(x, y)
         }
     }
 
@@ -237,13 +266,14 @@ class MapViewModel(
             null -> return
             is FitTarget.SinglePoint -> {
                 viewModelScope.launch {
-                    state.scrollTo(
+                    mapStateController.scrollTo(
                         target.x,
                         target.y,
                         animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
                     )
                 }
             }
+
             is FitTarget.BoundingRegion -> {
                 val boundingBox =
                     BoundingBox(
@@ -253,7 +283,7 @@ class MapViewModel(
                         yBottom = target.yBottom,
                     )
                 viewModelScope.launch {
-                    state.scrollTo(
+                    mapStateController.scrollTo(
                         area = boundingBox,
                         padding = Offset(x = 0.15f, y = 0.15f),
                         animationSpec = SpringSpec(stiffness = Spring.StiffnessLow),
@@ -278,8 +308,8 @@ class MapViewModel(
             recenterOnLocation(location)
         }
         val (x, y) = location.projected
-        state.removeMarker(USER_LOCATION_MARKER_ID)
-        state.addMarker(
+        mapStateController.removeMarker(USER_LOCATION_MARKER_ID)
+        mapStateController.addMarker(
             id = USER_LOCATION_MARKER_ID,
             x = x,
             y = y,
@@ -294,7 +324,7 @@ class MapViewModel(
     }
 
     fun onAircraftUpdated(aircraft: List<AircraftWithServers>) {
-        previousAircraftMarkerIds.forEach(state::removeMarker)
+        previousAircraftMarkerIds.forEach(mapStateController::removeMarker)
         previousAircraftMarkerIds.clear()
 
         var followedAircraftPosition: Pair<Double, Double>? = null
@@ -308,7 +338,7 @@ class MapViewModel(
                 followedAircraftPosition = location
             }
 
-            state.addMarker(
+            mapStateController.addMarker(
                 id = plane.hex.also { previousAircraftMarkerIds.add(it) },
                 x = location.first,
                 y = location.second,
@@ -328,7 +358,7 @@ class MapViewModel(
 
         followedAircraftPosition?.let { (x, y) ->
             viewModelScope.launch {
-                state.scrollTo(x, y)
+                mapStateController.scrollTo(x, y)
             }
         }
 
@@ -367,7 +397,6 @@ class MapViewModel(
         trail: AircraftTrail,
     ) {
         if (trail.positions.size >= 2) {
-            // Group consecutive positions by altitude color to reduce path count
             val colorSegments = groupPositionsByAltitudeColor(trail.positions)
 
             colorSegments.forEachIndexed { index, segment ->
@@ -380,7 +409,7 @@ class MapViewModel(
                             doProjection(pos.latitude, pos.longitude)
                         }
 
-                    state.addPath(
+                    mapStateController.addPath(
                         id = id,
                         color = segment.color,
                         width = 1.5.dp,
@@ -411,8 +440,6 @@ class MapViewModel(
             if (posColor == currentColor) {
                 currentSegment.positions.add(pos)
             } else {
-                // End current segment and start new one
-                // Add last point of current segment as first point of new segment for continuity
                 segments.add(currentSegment)
                 currentColor = posColor
                 currentSegment = ColorSegment(currentColor, mutableListOf(positions[i - 1], pos))
@@ -424,7 +451,12 @@ class MapViewModel(
     }
 
     private fun clearPaths() {
-        previousPathIds.forEach { state.removePath(it) }
+        previousPathIds.forEach { mapStateController.removePath(it) }
         previousPathIds.clear()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        (mapStateController as? MapComposeStateController)?.shutdown()
     }
 }

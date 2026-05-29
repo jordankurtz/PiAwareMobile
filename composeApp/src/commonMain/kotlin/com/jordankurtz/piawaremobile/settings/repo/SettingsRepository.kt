@@ -28,6 +28,15 @@ interface SettingsRepository {
         val OPEN_URLS_EXTERNALLY = booleanPreferencesKey("openUrlsExternally")
         val ENABLE_FLIGHT_AWARE_API = booleanPreferencesKey("enableFlightAwareApi")
         val FLIGHT_AWARE_API_KEY = stringPreferencesKey("flightAwareApiKey")
+        val MAP_PROVIDER_ID = stringPreferencesKey("mapProviderId")
+        val DEFAULT_ZOOM_LEVEL_KEY = intPreferencesKey("defaultZoomLevel")
+        val MIN_ZOOM_LEVEL_KEY = intPreferencesKey("minZoomLevel")
+        val MAX_ZOOM_LEVEL_KEY = intPreferencesKey("maxZoomLevel")
+        val API_KEYS_JSON = stringPreferencesKey("apiKeysJson")
+        val CUSTOM_PROVIDERS_JSON = stringPreferencesKey("customProvidersJson")
         const val DEFAULT_REFRESH_INTERVAL = 5
+        const val DEFAULT_ZOOM_LEVEL = 8
+        const val MIN_ZOOM_LEVEL = 1
+        const val MAX_ZOOM_LEVEL = 16
     }
 }

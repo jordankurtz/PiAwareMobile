@@ -186,4 +186,55 @@ class MapHelpersTest {
         val result = computeFitTarget(coordinates)
         assertIs<FitTarget.BoundingRegion>(result)
     }
+
+    // --- scaleToOsmZoom tests ---
+
+    @Test
+    fun scaleToOsmZoomScaleOneReturnsMaxLevel() {
+        assertEquals(MAX_LEVEL, scaleToOsmZoom(1.0f))
+    }
+
+    @Test
+    fun scaleToOsmZoomMidRangeScale() {
+        // scale = 0.25 → log2(0.25) = -2 → 16 + (-2) = 14
+        assertEquals(14, scaleToOsmZoom(0.25f))
+    }
+
+    @Test
+    fun scaleToOsmZoomLargeScaleClampsToMaxLevel() {
+        // scale = 2.0 → log2(2.0) = 1 → 17, clamped to MAX_LEVEL (16)
+        assertEquals(MAX_LEVEL, scaleToOsmZoom(2.0f))
+    }
+
+    @Test
+    fun scaleToOsmZoomVerySmallScaleClampsToMinLevel() {
+        // scale ≈ 1e-6 → log2 ≈ -19.9 → well below MIN_LEVEL, clamped to 1
+        assertEquals(MIN_LEVEL, scaleToOsmZoom(1e-6f))
+    }
+
+    // --- osmZoomToScale tests ---
+
+    @Test
+    fun osmZoomToScaleMaxLevel() {
+        assertEquals(1.0, osmZoomToScale(MAX_LEVEL), 0.0001)
+    }
+
+    @Test
+    fun osmZoomToScaleMinLevel() {
+        // zoom 1: 2^(1-16) = 2^-15
+        assertEquals(1.0 / 32768.0, osmZoomToScale(MIN_LEVEL), 0.0001)
+    }
+
+    @Test
+    fun osmZoomToScaleMidLevel() {
+        // zoom 8: 2^(8-16) = 2^-8 = 1/256
+        assertEquals(1.0 / 256.0, osmZoomToScale(8), 0.0001)
+    }
+
+    @Test
+    fun osmZoomToScaleRoundTrip() {
+        for (zoom in MIN_LEVEL..MAX_LEVEL) {
+            assertEquals(zoom, scaleToOsmZoom(osmZoomToScale(zoom).toFloat()), "Round-trip failed for zoom $zoom")
+        }
+    }
 }

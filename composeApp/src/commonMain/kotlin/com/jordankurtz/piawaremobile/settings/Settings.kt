@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.settings
 
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.settings.repo.SettingsRepository
 
 data class Settings(
@@ -14,4 +15,10 @@ data class Settings(
     val openUrlsExternally: Boolean = false,
     val enableFlightAwareApi: Boolean = false,
     val flightAwareApiKey: String = "",
+    val mapProviderId: String = TileProviders.OPENSTREETMAP.id,
+    val defaultZoomLevel: Int = SettingsRepository.DEFAULT_ZOOM_LEVEL,
+    val minZoomLevel: Int = SettingsRepository.MIN_ZOOM_LEVEL,
+    val maxZoomLevel: Int = SettingsRepository.MAX_ZOOM_LEVEL,
+    val apiKeys: Map<String, String> = emptyMap(),
+    val customProviders: List<CustomProviderConfig> = emptyList(),
 )

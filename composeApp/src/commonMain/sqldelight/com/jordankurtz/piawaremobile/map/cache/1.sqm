@@ -1,0 +1,23 @@
+CREATE TABLE offline_region (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    min_zoom INTEGER NOT NULL,
+    max_zoom INTEGER NOT NULL,
+    min_lat REAL NOT NULL,
+    max_lat REAL NOT NULL,
+    min_lon REAL NOT NULL,
+    max_lon REAL NOT NULL,
+    provider_id TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    tile_count INTEGER NOT NULL DEFAULT 0,
+    size_bytes INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE pinned_tile (
+    zoom_level INTEGER NOT NULL,
+    col INTEGER NOT NULL,
+    row INTEGER NOT NULL,
+    region_id INTEGER NOT NULL REFERENCES offline_region(id) ON DELETE CASCADE,
+    PRIMARY KEY (zoom_level, col, row, region_id),
+    FOREIGN KEY (zoom_level, col, row) REFERENCES tile(zoom_level, col, row) ON DELETE CASCADE
+);

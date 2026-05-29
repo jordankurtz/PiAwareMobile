@@ -1,9 +1,13 @@
 package com.jordankurtz.piawaremobile
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
@@ -38,8 +42,9 @@ class SettingsScreenAndroidTest {
             MainScreen(onServersClicked = {}, viewModel = createViewModel())
         }
         composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Servers").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Preferences").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Map").assertIsDisplayed()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Servers") and hasClickAction())
+        composeTestRule.onNode(hasText("Servers") and hasClickAction()).assertIsDisplayed()
     }
 
     @Test
@@ -58,7 +63,21 @@ class SettingsScreenAndroidTest {
         composeTestRule.setContent {
             MainScreen(onServersClicked = { clicked = true }, viewModel = createViewModel())
         }
-        composeTestRule.onNodeWithText("Servers").performClick()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Servers") and hasClickAction())
+        composeTestRule.onNode(hasText("Servers") and hasClickAction()).performClick()
         assertTrue(clicked)
+    }
+
+    @Test
+    fun zoomSettingsLabelsAreDisplayed() {
+        composeTestRule.setContent {
+            MainScreen(onServersClicked = {}, viewModel = createViewModel())
+        }
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Default Zoom"))
+        composeTestRule.onNodeWithText("Default Zoom").assertIsDisplayed()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Min Zoom"))
+        composeTestRule.onNodeWithText("Min Zoom").assertIsDisplayed()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Max Zoom"))
+        composeTestRule.onNodeWithText("Max Zoom").assertIsDisplayed()
     }
 }

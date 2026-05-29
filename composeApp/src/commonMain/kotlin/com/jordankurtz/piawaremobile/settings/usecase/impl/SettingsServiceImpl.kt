@@ -3,6 +3,7 @@ package com.jordankurtz.piawaremobile.settings.usecase.impl
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.extensions.async
 import com.jordankurtz.piawaremobile.model.Async
+import com.jordankurtz.piawaremobile.settings.CustomProviderConfig
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.ServerType
 import com.jordankurtz.piawaremobile.settings.Settings
@@ -113,4 +114,36 @@ class SettingsServiceImpl(
         updateSetting { it.copy(enableFlightAwareApi = enabled) }
 
     override suspend fun setFlightAwareApiKey(apiKey: String) = updateSetting { it.copy(flightAwareApiKey = apiKey) }
+
+    override suspend fun setMapProviderId(providerId: String) = updateSetting { it.copy(mapProviderId = providerId) }
+
+    override suspend fun setDefaultZoomLevel(zoom: Int) = updateSetting { it.copy(defaultZoomLevel = zoom) }
+
+    override suspend fun setMinZoomLevel(zoom: Int) = updateSetting { it.copy(minZoomLevel = zoom) }
+
+    override suspend fun setMaxZoomLevel(zoom: Int) = updateSetting { it.copy(maxZoomLevel = zoom) }
+
+    override suspend fun setApiKey(
+        providerId: String,
+        key: String,
+    ) = updateSetting { it.copy(apiKeys = it.apiKeys + (providerId to key)) }
+
+    override suspend fun addCustomProvider(
+        id: String,
+        displayName: String,
+        urlTemplate: String,
+    ) = updateSetting {
+        it.copy(
+            customProviders =
+                it.customProviders +
+                    CustomProviderConfig(
+                        id = id,
+                        displayName = displayName,
+                        urlTemplate = urlTemplate,
+                    ),
+        )
+    }
+
+    override suspend fun deleteCustomProvider(id: String) =
+        updateSetting { it.copy(customProviders = it.customProviders.filter { c -> c.id != id }) }
 }

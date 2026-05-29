@@ -8,14 +8,13 @@ import com.jordankurtz.piawaremobile.model.AircraftInfo
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.FlightResponse
 import com.jordankurtz.piawaremobile.model.ICAOAircraftType
-import com.jordankurtz.piawaremobile.model.PiAwareResponse
 import com.jordankurtz.piawaremobile.model.Receiver
 import com.jordankurtz.piawaremobile.model.ReceiverType
 import com.jordankurtz.piawaremobile.settings.Server
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -43,6 +42,8 @@ class AircraftRepoImpl(
                             try {
                                 val dataSource = dataSourceFactory.getDataSource(server.type)
                                 dataSource.getAircraft(server).map { aircraft -> aircraft to server }
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (e: Exception) {
                                 Logger.e("Failed to fetch aircraft from server $server", e)
                                 emptyList()
@@ -113,6 +114,8 @@ class AircraftRepoImpl(
                     ident = ident,
                 )
             Async.Success(response)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.e("Failed to fetch flight for ident $ident", e)
             Async.Error("Failed to fetch flight for ident $ident", e)
@@ -121,39 +124,9 @@ class AircraftRepoImpl(
 
     override suspend fun fetchAndMergeHistory(server: Server) {
         val dataSource = dataSourceFactory.getDataSource(server.type)
-        if (!dataSource.supportsHistory) return
-        val receiver = dataSource.getReceiverInfo(server) ?: return
-        val historyCount = receiver.history ?: return
-        if (historyCount <= 0) return
-
-        coroutineScope {
-            val historyResults =
-                (0 until historyCount).map { index ->
-                    async {
-                        fetchHistoryWithRetry(server, index)
-                    }
-                }.awaitAll()
-
-            trailManager.mergeHistoryResponses(historyResults.filterNotNull())
-        }
-    }
-
-    private suspend fun fetchHistoryWithRetry(
-        server: Server,
-        index: Int,
-        maxRetries: Int = 3,
-    ): PiAwareResponse? {
-        val dataSource = dataSourceFactory.getDataSource(server.type)
-        repeat(maxRetries) { attempt ->
-            val result = dataSource.getHistory(server, index)
-            if (result != null) return result
-
-            if (attempt < maxRetries - 1) {
-                val delayMs = (attempt + 1) * 500L
-                delay(delayMs)
-            }
-        }
-        return null
+        val trails = dataSource.fetchTrails(server)
+        if (trails.isEmpty()) return
+        trailManager.mergeTrails(trails)
     }
 
     internal suspend fun lookupAircraftInfoRecursive(

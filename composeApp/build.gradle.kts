@@ -14,9 +14,12 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.kover)
     alias(libs.plugins.sentry)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
+    jvmToolchain(17)
+
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
         freeCompilerArgs.add("-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi")
@@ -53,6 +56,9 @@ kotlin {
             baseName = "ComposeApp"
             isStatic = true
         }
+        iosTarget.binaries.all {
+            linkerOpts("-lsqlite3")
+        }
     }
 
     sourceSets {
@@ -65,6 +71,7 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.play.services.location)
             implementation(libs.androidx.browser)
+            implementation(libs.sqldelight.android.driver)
         }
         commonMain.dependencies {
             implementation(project(":console-logger"))
@@ -93,14 +100,18 @@ kotlin {
             implementation(libs.datastore.preferences)
             implementation(libs.multiplatform.settings.datastore)
             implementation(libs.multiplatform.settings.coroutines)
+            implementation(libs.coil.compose)
+            implementation(compose.materialIconsExtended)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.cio)
+            implementation(libs.sqldelight.sqlite.driver)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.sqldelight.native.driver)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -109,6 +120,11 @@ kotlin {
             implementation(libs.turbine)
             @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation(libs.sqldelight.sqlite.driver)
+            }
         }
         val androidInstrumentedTest by getting {
             dependencies {
@@ -211,6 +227,14 @@ buildkonfig {
         }
         create("desktop") {
             buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.desktop").getOrElse(""))
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("TileCacheDatabase") {
+            packageName.set("com.jordankurtz.piawaremobile.map.cache")
         }
     }
 }
