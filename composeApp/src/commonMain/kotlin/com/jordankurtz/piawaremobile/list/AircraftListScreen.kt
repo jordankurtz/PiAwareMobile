@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile.list
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -359,8 +360,8 @@ private fun AircraftListItem(
 
         AnimatedVisibility(
             visible = expanded,
-            enter = expandVertically(),
-            exit = shrinkVertically(),
+            enter = expandVertically(animationSpec = tween(200)),
+            exit = shrinkVertically(animationSpec = tween(150)),
         ) {
             Column(modifier = Modifier.padding(top = 12.dp)) {
                 MiniMap(
