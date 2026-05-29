@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Map
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,8 +23,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,11 +43,9 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_add
-import piawaremobile.composeapp.generated.resources.ic_arrow_back
 import piawaremobile.composeapp.generated.resources.ic_clear
 import piawaremobile.composeapp.generated.resources.ic_delete
 import piawaremobile.composeapp.generated.resources.ic_refresh
-import piawaremobile.composeapp.generated.resources.navigate_back
 import piawaremobile.composeapp.generated.resources.offline_map_thumbnail
 import piawaremobile.composeapp.generated.resources.offline_map_thumbnail_placeholder
 import piawaremobile.composeapp.generated.resources.offline_maps_add_region
@@ -66,7 +61,6 @@ import piawaremobile.composeapp.generated.resources.offline_maps_region_size
 import piawaremobile.composeapp.generated.resources.offline_maps_region_zoom
 import piawaremobile.composeapp.generated.resources.offline_maps_title
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OfflineMapsScreen(
     onBack: () -> Unit,
@@ -145,27 +139,11 @@ fun OfflineMapsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.offline_maps_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_arrow_back),
-                            contentDescription = stringResource(Res.string.navigate_back),
-                        )
-                    }
-                },
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                        actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
+            SettingsTopAppBar(
+                title = stringResource(Res.string.offline_maps_title),
+                onBack = onBack,
                 actions = {
-                    IconButton(
-                        onClick = { showDownloadDialog = true },
-                    ) {
+                    IconButton(onClick = { showDownloadDialog = true }) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_add),
                             contentDescription = stringResource(Res.string.offline_maps_add_region),

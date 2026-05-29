@@ -4,17 +4,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,8 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -82,7 +83,6 @@ import piawaremobile.composeapp.generated.resources.zoom_default_title
 import piawaremobile.composeapp.generated.resources.zoom_max_title
 import piawaremobile.composeapp.generated.resources.zoom_min_title
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onServersClicked: () -> Unit,
@@ -116,26 +116,12 @@ fun MainScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.settings_title)) },
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-            )
-        },
+        topBar = { SettingsTopAppBar(title = stringResource(Res.string.settings_title)) },
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.padding(paddingValues),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
-            // Section: Map
-            item {
-                SettingsSection(title = stringResource(Res.string.map_section_title))
-            }
-
             item {
                 val activeProviderId = settings.getValue()?.mapProviderId ?: TileProviders.DEFAULT.id
                 val builtInMatch = TileProviders.ALL.find { it.id == activeProviderId }
@@ -143,208 +129,186 @@ fun MainScreen(
                     builtInMatch?.displayNameRes?.let { stringResource(it) }
                         ?: settings.getValue()?.customProviders?.find { it.id == activeProviderId }?.displayName
                         ?: activeProviderId
-                SettingsItem(
-                    title = stringResource(Res.string.map_provider_title),
-                    description = providerDisplayName,
-                    onClick = onMapProviderClicked,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                        )
-                    },
-                )
+
+                SettingsGroup(title = stringResource(Res.string.map_section_title)) {
+                    SettingsItem(
+                        title = stringResource(Res.string.map_provider_title),
+                        description = providerDisplayName,
+                        onClick = onMapProviderClicked,
+                        trailingIcon = {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_chevron_right),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                    )
+                    HorizontalDivider()
+                    SettingsSwitch(
+                        title = stringResource(Res.string.center_map_on_user_title),
+                        description = stringResource(Res.string.center_map_on_user_description),
+                        checked = settings.getValue()?.centerMapOnUserOnStart ?: false,
+                        onCheckedChange = viewModel::updateCenterMapOnUserOnStart,
+                    )
+                    HorizontalDivider()
+                    SettingsSwitch(
+                        title = stringResource(Res.string.restore_map_position_title),
+                        description = stringResource(Res.string.restore_map_position_description),
+                        checked = settings.getValue()?.restoreMapStateOnStart ?: true,
+                        onCheckedChange = viewModel::updateRestoreMapStateOnStart,
+                    )
+                    HorizontalDivider()
+                    SettingsDropdown(
+                        title = stringResource(Res.string.trail_display_mode_title),
+                        description = stringResource(Res.string.trail_display_mode_description),
+                        selectedValue = settings.getValue()?.trailDisplayMode ?: TrailDisplayMode.ALL,
+                        values = TrailDisplayMode.entries.toTypedArray(),
+                        onValueSelected = viewModel::updateTrailDisplayMode,
+                    )
+                    HorizontalDivider()
+                    SettingsSwitch(
+                        title = stringResource(Res.string.show_minimap_trails_title),
+                        description = stringResource(Res.string.show_minimap_trails_description),
+                        checked = settings.getValue()?.showMinimapTrails ?: true,
+                        onCheckedChange = viewModel::updateShowMinimapTrails,
+                    )
+                    HorizontalDivider()
+                    SettingsSwitch(
+                        title = stringResource(Res.string.show_receiver_locations_title),
+                        description = stringResource(Res.string.show_receiver_locations_description),
+                        checked = settings.getValue()?.showReceiverLocations ?: true,
+                        onCheckedChange = viewModel::updateShowReceiverLocations,
+                    )
+                    HorizontalDivider()
+                    SettingsSwitch(
+                        title = stringResource(Res.string.show_user_location_title),
+                        description = stringResource(Res.string.show_user_location_description),
+                        checked = settings.getValue()?.showUserLocationOnMap ?: true,
+                        onCheckedChange = viewModel::updateShowUserLocationOnMap,
+                    )
+                    HorizontalDivider()
+                    SettingsNumberInput(
+                        title = stringResource(Res.string.zoom_default_title),
+                        value = settings.getValue()?.defaultZoomLevel ?: SettingsRepository.DEFAULT_ZOOM_LEVEL,
+                        onValueChange = viewModel::updateDefaultZoomLevel,
+                        range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
+                    )
+                    HorizontalDivider()
+                    SettingsNumberInput(
+                        title = stringResource(Res.string.zoom_min_title),
+                        value = settings.getValue()?.minZoomLevel ?: SettingsRepository.MIN_ZOOM_LEVEL,
+                        onValueChange = viewModel::updateMinZoomLevel,
+                        range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
+                    )
+                    HorizontalDivider()
+                    SettingsNumberInput(
+                        title = stringResource(Res.string.zoom_max_title),
+                        value = settings.getValue()?.maxZoomLevel ?: SettingsRepository.MAX_ZOOM_LEVEL,
+                        onValueChange = viewModel::updateMaxZoomLevel,
+                        range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
+                    )
+                    HorizontalDivider()
+                    SettingsItem(
+                        title = stringResource(Res.string.clear_map_cache_title),
+                        description = stringResource(Res.string.clear_map_cache_description),
+                        onClick = { showClearCacheConfirm = true },
+                    )
+                }
             }
 
             item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.center_map_on_user_title),
-                    description = stringResource(Res.string.center_map_on_user_description),
-                    checked = settings.getValue()?.centerMapOnUserOnStart ?: false,
-                    onCheckedChange = viewModel::updateCenterMapOnUserOnStart,
-                )
+                SettingsGroup(title = stringResource(Res.string.offline_section_title)) {
+                    SettingsItem(
+                        title = stringResource(Res.string.offline_maps_settings_title),
+                        onClick = onOfflineMapsClicked,
+                        trailingIcon = {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_chevron_right),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                    )
+                }
             }
 
             item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.restore_map_position_title),
-                    description = stringResource(Res.string.restore_map_position_description),
-                    checked = settings.getValue()?.restoreMapStateOnStart ?: true,
-                    onCheckedChange = viewModel::updateRestoreMapStateOnStart,
-                )
+                SettingsGroup(title = stringResource(Res.string.servers_section_title)) {
+                    SettingsItem(
+                        title = stringResource(Res.string.servers_title),
+                        onClick = onServersClicked,
+                        trailingIcon = {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_chevron_right),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                    )
+                    HorizontalDivider()
+                    SettingsNumberInput(
+                        title = stringResource(Res.string.refresh_interval_title),
+                        value =
+                            settings.getValue()?.refreshInterval
+                                ?: SettingsRepository.DEFAULT_REFRESH_INTERVAL,
+                        onValueChange = viewModel::updateRefreshInterval,
+                    )
+                }
             }
 
             item {
-                SettingsDropdown(
-                    title = stringResource(Res.string.trail_display_mode_title),
-                    description = stringResource(Res.string.trail_display_mode_description),
-                    selectedValue = settings.getValue()?.trailDisplayMode ?: TrailDisplayMode.ALL,
-                    values = TrailDisplayMode.entries.toTypedArray(),
-                    onValueSelected = viewModel::updateTrailDisplayMode,
-                )
+                SettingsGroup(title = stringResource(Res.string.flightaware_section_title)) {
+                    SettingsSwitch(
+                        title = stringResource(Res.string.enable_flightaware_api_title),
+                        description = stringResource(Res.string.enable_flightaware_api_description),
+                        checked = settings.getValue()?.enableFlightAwareApi ?: false,
+                        onCheckedChange = viewModel::updateEnableFlightAwareApi,
+                    )
+                    HorizontalDivider()
+                    SettingsTextInput(
+                        title = stringResource(Res.string.flightaware_api_key_title),
+                        value = settings.getValue()?.flightAwareApiKey ?: "",
+                        onValueChange = viewModel::updateFlightAwareApiKey,
+                    )
+                }
             }
 
             item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.show_minimap_trails_title),
-                    description = stringResource(Res.string.show_minimap_trails_description),
-                    checked = settings.getValue()?.showMinimapTrails ?: true,
-                    onCheckedChange = viewModel::updateShowMinimapTrails,
-                )
-            }
-
-            item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.show_receiver_locations_title),
-                    description = stringResource(Res.string.show_receiver_locations_description),
-                    checked = settings.getValue()?.showReceiverLocations ?: true,
-                    onCheckedChange = viewModel::updateShowReceiverLocations,
-                )
-            }
-
-            item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.show_user_location_title),
-                    description = stringResource(Res.string.show_user_location_description),
-                    checked = settings.getValue()?.showUserLocationOnMap ?: true,
-                    onCheckedChange = viewModel::updateShowUserLocationOnMap,
-                )
-            }
-
-            item {
-                SettingsNumberInput(
-                    title = stringResource(Res.string.zoom_default_title),
-                    value = settings.getValue()?.defaultZoomLevel ?: SettingsRepository.DEFAULT_ZOOM_LEVEL,
-                    onValueChange = viewModel::updateDefaultZoomLevel,
-                    range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
-                )
-            }
-
-            item {
-                SettingsNumberInput(
-                    title = stringResource(Res.string.zoom_min_title),
-                    value = settings.getValue()?.minZoomLevel ?: SettingsRepository.MIN_ZOOM_LEVEL,
-                    onValueChange = viewModel::updateMinZoomLevel,
-                    range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
-                )
-            }
-
-            item {
-                SettingsNumberInput(
-                    title = stringResource(Res.string.zoom_max_title),
-                    value = settings.getValue()?.maxZoomLevel ?: SettingsRepository.MAX_ZOOM_LEVEL,
-                    onValueChange = viewModel::updateMaxZoomLevel,
-                    range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
-                )
-            }
-
-            item {
-                SettingsItem(
-                    title = stringResource(Res.string.clear_map_cache_title),
-                    description = stringResource(Res.string.clear_map_cache_description),
-                    onClick = { showClearCacheConfirm = true },
-                )
-            }
-
-            // Section: Offline
-            item {
-                SettingsSection(title = stringResource(Res.string.offline_section_title))
-            }
-
-            item {
-                SettingsItem(
-                    title = stringResource(Res.string.offline_maps_settings_title),
-                    onClick = onOfflineMapsClicked,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                        )
-                    },
-                )
-            }
-
-            // Section: Servers
-            item {
-                SettingsSection(title = stringResource(Res.string.servers_section_title))
-            }
-
-            item {
-                SettingsItem(
-                    title = stringResource(Res.string.servers_title),
-                    onClick = onServersClicked,
-                    trailingIcon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                        )
-                    },
-                )
-            }
-
-            item {
-                SettingsNumberInput(
-                    title = stringResource(Res.string.refresh_interval_title),
-                    value =
-                        settings.getValue()?.refreshInterval
-                            ?: SettingsRepository.DEFAULT_REFRESH_INTERVAL,
-                    onValueChange = viewModel::updateRefreshInterval,
-                )
-            }
-
-            // Section: FlightAware
-            item {
-                SettingsSection(title = stringResource(Res.string.flightaware_section_title))
-            }
-
-            item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.enable_flightaware_api_title),
-                    description = stringResource(Res.string.enable_flightaware_api_description),
-                    checked = settings.getValue()?.enableFlightAwareApi ?: false,
-                    onCheckedChange = viewModel::updateEnableFlightAwareApi,
-                )
-            }
-
-            item {
-                SettingsTextInput(
-                    title = stringResource(Res.string.flightaware_api_key_title),
-                    value = settings.getValue()?.flightAwareApiKey ?: "",
-                    onValueChange = viewModel::updateFlightAwareApiKey,
-                )
-            }
-
-            // Section: App
-            item {
-                SettingsSection(title = stringResource(Res.string.app_section_title))
-            }
-
-            item {
-                SettingsSwitch(
-                    title = stringResource(Res.string.open_urls_externally_title),
-                    description = stringResource(Res.string.open_urls_externally_description),
-                    checked = settings.getValue()?.openUrlsExternally ?: false,
-                    onCheckedChange = viewModel::updateOpenUrlsExternally,
-                )
+                SettingsGroup(title = stringResource(Res.string.app_section_title)) {
+                    SettingsSwitch(
+                        title = stringResource(Res.string.open_urls_externally_title),
+                        description = stringResource(Res.string.open_urls_externally_description),
+                        checked = settings.getValue()?.openUrlsExternally ?: false,
+                        onCheckedChange = viewModel::updateOpenUrlsExternally,
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun SettingsSection(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-    )
+fun SettingsGroup(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+        )
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        ) {
+            Column(content = content)
+        }
+    }
 }
 
 @Composable
@@ -354,31 +318,28 @@ fun SettingsItem(
     description: String? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
-    Column {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onClick)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            if (description != null) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (description != null) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
             }
-            trailingIcon?.invoke()
         }
-        HorizontalDivider()
+        trailingIcon?.invoke()
     }
 }
 
@@ -394,47 +355,42 @@ fun <T> SettingsDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Column {
-        Row(
-            modifier =
-                modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = true }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { expanded = true }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Box {
+            TextButton(onClick = { expanded = true }) {
+                Text(stringFor(selectedValue))
             }
-            Box {
-                TextButton(onClick = { expanded = true }) {
-                    Text(stringFor(selectedValue))
-                }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    values.forEach { value ->
-                        DropdownMenuItem(
-                            text = { Text(stringFor(value)) },
-                            onClick = {
-                                onValueSelected(value)
-                                expanded = false
-                            },
-                        )
-                    }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                values.forEach { value ->
+                    DropdownMenuItem(
+                        text = { Text(stringFor(value)) },
+                        onClick = {
+                            onValueSelected(value)
+                            expanded = false
+                        },
+                    )
                 }
             }
         }
-        HorizontalDivider()
     }
 }
 
@@ -456,40 +412,37 @@ fun SettingsNumberInput(
         }
     }
 
-    Column(modifier = modifier) {
-        Row(
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+
+        OutlinedTextField(
+            value = textValue,
+            onValueChange = {
+                textValue = it
+                it.toIntOrNull()?.let { v ->
+                    if (range == null || v in range) onValueChange(v)
+                }
+            },
+            singleLine = true,
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f),
-            )
-
-            OutlinedTextField(
-                value = textValue,
-                onValueChange = {
-                    textValue = it
-                    it.toIntOrNull()?.let { v ->
-                        if (range == null || v in range) onValueChange(v)
-                    }
-                },
-                singleLine = true,
-                modifier =
-                    Modifier
-                        .width(80.dp)
-                        .padding(start = 16.dp),
-                textStyle = MaterialTheme.typography.bodyLarge,
-                isError = !isValid,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            )
-        }
-        HorizontalDivider()
+                    .width(80.dp)
+                    .padding(start = 16.dp),
+            textStyle = MaterialTheme.typography.bodyLarge,
+            isError = !isValid,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        )
     }
 }
 
@@ -531,35 +484,30 @@ fun SettingsSwitch(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column {
-        Row(
-            modifier =
-                modifier
-                    .fillMaxWidth()
-                    .clickable { onCheckedChange(!checked) }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                modifier = Modifier.padding(start = 16.dp),
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { onCheckedChange(!checked) }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        HorizontalDivider()
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.padding(start = 16.dp),
+        )
     }
 }

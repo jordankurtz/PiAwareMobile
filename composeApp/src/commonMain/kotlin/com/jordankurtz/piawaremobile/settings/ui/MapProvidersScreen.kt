@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -22,8 +25,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,7 +45,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
-import piawaremobile.composeapp.generated.resources.ic_arrow_back
 import piawaremobile.composeapp.generated.resources.ic_edit
 import piawaremobile.composeapp.generated.resources.map_providers_add_custom
 import piawaremobile.composeapp.generated.resources.map_providers_api_key_configured
@@ -63,7 +63,7 @@ import piawaremobile.composeapp.generated.resources.map_providers_title
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalUuidApi::class)
 @Composable
 fun MapProvidersScreen(
     onBack: () -> Unit,
@@ -81,22 +81,9 @@ fun MapProvidersScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.map_providers_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_arrow_back),
-                            contentDescription = null,
-                        )
-                    }
-                },
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
+            SettingsTopAppBar(
+                title = stringResource(Res.string.map_providers_title),
+                onBack = onBack,
             )
         },
     ) { paddingValues ->
@@ -233,10 +220,11 @@ fun BuiltInProviderRow(
                 modifier = Modifier.weight(1f),
             )
             if (isSelected) {
-                Text(
-                    text = "✓",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -292,10 +280,11 @@ fun ApiKeyProviderRow(
                 }
             }
             if (isSelected) {
-                Text(
-                    text = "✓",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -333,10 +322,11 @@ fun CustomProviderRow(
                 )
             }
             if (isSelected) {
-                Text(
-                    text = "✓",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
                 )
             }
             TextButton(onClick = { showDeleteConfirm = true }) {
