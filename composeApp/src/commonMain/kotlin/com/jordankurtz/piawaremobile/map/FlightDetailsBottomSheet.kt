@@ -40,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.extensions.formattedTime
 import com.jordankurtz.piawaremobile.location.LocationViewModel
@@ -58,6 +60,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.aircraft_list_loading_flight_details
+import piawaremobile.composeapp.generated.resources.aircraft_list_progress_percent
 import piawaremobile.composeapp.generated.resources.flight_details_actual
 import piawaremobile.composeapp.generated.resources.flight_details_airport_name_code
 import piawaremobile.composeapp.generated.resources.flight_details_departure
@@ -259,7 +262,8 @@ private fun DragHandle() {
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 12.dp),
+                .padding(top = 8.dp, bottom = 12.dp)
+                .semantics { contentDescription = "" },
         contentAlignment = Alignment.Center,
     ) {
         Surface(
@@ -440,7 +444,7 @@ fun FlightProgress(flight: Flight) {
 
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "$progress% complete",
+                text = stringResource(Res.string.aircraft_list_progress_percent, progress),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 4.dp),
