@@ -47,11 +47,9 @@ fun TabletAircraftListPanel(
         }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header with stats
         ListHeader(aircraft = aircraft, filteredCount = filteredAircraft.size)
 
         if (selectedAircraft != null) {
-            // Show selected aircraft details (no minimap)
             TabletAircraftDetails(
                 aircraftWithServers = selectedAircraft,
                 flightDetails = flightDetails,
@@ -64,7 +62,6 @@ fun TabletAircraftListPanel(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
             )
-            // Show aircraft list
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(
                     items = filteredAircraft,
@@ -116,12 +113,11 @@ private fun TabletAircraftListItem(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Flight info
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = aircraft.flight?.trim() ?: aircraft.hex,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                 )
                 info?.icaoType?.let {
                     Spacer(modifier = Modifier.width(8.dp))
@@ -133,7 +129,6 @@ private fun TabletAircraftListItem(
                 }
             }
 
-            // Subtitle: registration and type
             info?.subtitle?.takeIf { it.isNotEmpty() }?.let {
                 Text(
                     text = it,
@@ -143,7 +138,6 @@ private fun TabletAircraftListItem(
             }
         }
 
-        // Right side info
         Column(horizontalAlignment = Alignment.End) {
             aircraft.altBaro?.let {
                 Text(
