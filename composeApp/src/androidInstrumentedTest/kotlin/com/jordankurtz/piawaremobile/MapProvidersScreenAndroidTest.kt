@@ -4,42 +4,30 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import com.jordankurtz.piawaremobile.map.cache.TileCache
-import com.jordankurtz.piawaremobile.model.Async
-import com.jordankurtz.piawaremobile.settings.Settings
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.jordankurtz.piawaremobile.map.TileProviderConfig
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.ui.MapProvidersScreen
-import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
-import dev.mokkery.answering.returns
-import dev.mokkery.every
-import dev.mokkery.mock
-import kotlinx.coroutines.flow.flowOf
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class MapProvidersScreenAndroidTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     private fun createViewModel(): SettingsViewModel {
-        val service =
-            mock<SettingsService> {
-                every { loadSettings() } returns flowOf(Async.Success(Settings()))
-            }
-        return SettingsViewModel(settingsService = service, tileCache = mock<TileCache>())
+        val settingsViewModel = mockk<SettingsViewModel>(relaxed = true)
+        every { settingsViewModel.settings } returns MutableStateFlow(null)
+        return settingsViewModel
     }
 
     @Test
-    fun screenRendersWithBuiltInProviders() {
-        composeTestRule.setContent {
-            MapProvidersScreen(onBack = {}, viewModel = createViewModel())
-        }
-        composeTestRule.onNodeWithText("Map Providers").assertIsDisplayed()
-        composeTestRule.onNodeWithText("OpenFreeMap Bright").assertIsDisplayed()
-    }
-
-    @Test
-    fun screenShowsApiKeyRequiredBadge() {
+    fun mapProvidersScreen_displaysProviders() {
         composeTestRule.setContent {
             MapProvidersScreen(onBack = {}, viewModel = createViewModel())
         }

@@ -46,9 +46,6 @@ import piawaremobile.composeapp.generated.resources.value_speed_knots
 import piawaremobile.composeapp.generated.resources.value_vertical_speed_fpm
 import kotlin.math.roundToInt
 
-/**
- * A labeled value display with the label on top and value below.
- */
 @Composable
 fun LabeledValue(
     label: String,
@@ -59,14 +56,15 @@ fun LabeledValue(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(label, style = MaterialTheme.typography.labelSmall)
         Text(value, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
-/**
- * Primary aircraft details: Altitude, Heading, Speed
- */
 @Composable
 fun AircraftPrimaryDetails(
     aircraft: Aircraft,
@@ -98,9 +96,6 @@ fun AircraftPrimaryDetails(
     }
 }
 
-/**
- * Location details: Location coordinates, Distance, Direction
- */
 @Composable
 fun AircraftLocationDetails(
     aircraft: Aircraft,
@@ -145,9 +140,6 @@ fun AircraftLocationDetails(
     }
 }
 
-/**
- * Secondary aircraft details: Vertical Speed, Squawk
- */
 @Composable
 fun AircraftSecondaryDetails(
     aircraft: Aircraft,
@@ -173,9 +165,6 @@ fun AircraftSecondaryDetails(
     }
 }
 
-/**
- * Signal details: RSSI, Last Seen
- */
 @Composable
 fun AircraftSignalDetails(
     aircraft: Aircraft,
@@ -201,9 +190,6 @@ fun AircraftSignalDetails(
     }
 }
 
-/**
- * Flight-specific details from FlightAware: Aircraft Type, Registration
- */
 @Composable
 fun FlightAircraftDetails(
     flight: Flight,
@@ -229,9 +215,6 @@ fun FlightAircraftDetails(
     }
 }
 
-/**
- * Complete aircraft details grid with all information.
- */
 @Composable
 fun AircraftDetailsGrid(
     aircraft: Aircraft,
@@ -255,9 +238,6 @@ fun AircraftDetailsGrid(
     }
 }
 
-/**
- * Aircraft info row showing ICAO type, description, and WTC.
- */
 @Composable
 fun AircraftInfoRow(
     info: AircraftInfo,
@@ -278,8 +258,6 @@ fun AircraftInfoRow(
         }
     }
 }
-
-// Extension functions
 
 fun Double.round(decimals: Int): Double {
     var multiplier = 1.0
