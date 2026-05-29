@@ -21,7 +21,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.extensions.formattedDate
 import com.jordankurtz.piawaremobile.map.MapLibreMap
@@ -42,7 +41,6 @@ import piawaremobile.composeapp.generated.resources.offline_maps_detail_zoom
 import kotlin.time.Instant
 
 private const val DETAIL_BOUNDS_PATH_ID = "detail_bounds"
-private val BoundsPathColor = Color(0xFF2196F3)
 
 @Composable
 fun OfflineRegionDetailScreen(
@@ -51,6 +49,7 @@ fun OfflineRegionDetailScreen(
     mapViewModel: MapViewModel = koinViewModel(),
 ) {
     val activeProvider by mapViewModel.activeProvider.collectAsState()
+    val boundsPathColor = MaterialTheme.colorScheme.primary
     LaunchedEffect(region.id) {
         val bounds =
             MapBounds(
@@ -62,7 +61,7 @@ fun OfflineRegionDetailScreen(
         mapViewModel.mapStateController.scrollTo(bounds = bounds, padding = Offset(0.15f, 0.15f))
         mapViewModel.mapStateController.addPath(
             id = DETAIL_BOUNDS_PATH_ID,
-            color = BoundsPathColor,
+            color = boundsPathColor,
             width = 2.dp,
             points =
                 listOf(
