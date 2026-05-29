@@ -62,6 +62,7 @@ import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.distanceTo
 import com.jordankurtz.piawaremobile.ui.AircraftDetailsGrid
 import com.jordankurtz.piawaremobile.ui.AircraftInfoRow
+import com.jordankurtz.piawaremobile.ui.AppTheme
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -92,6 +93,8 @@ import piawaremobile.composeapp.generated.resources.unit_kilometers
 import piawaremobile.composeapp.generated.resources.unit_knots
 import piawaremobile.composeapp.generated.resources.unit_squawk
 import kotlin.math.roundToInt
+
+private val EMERGENCY_SQUAWKS = setOf("7500", "7600", "7700")
 
 @Composable
 fun AircraftListScreen(
@@ -344,7 +347,11 @@ private fun AircraftListItem(
                     SecondaryCompactStat(value = "${it.roundToInt()}", unit = unitKm)
                 }
                 aircraft.squawk?.let {
-                    SecondaryCompactStat(value = it, unit = unitSquawk)
+                    SecondaryCompactStat(
+                        value = it,
+                        unit = unitSquawk,
+                        valueColor = if (it in EMERGENCY_SQUAWKS) AppTheme.colors.aircraftEmergency else null,
+                    )
                 }
             }
         }
@@ -414,12 +421,13 @@ private fun PrimaryCompactStat(
 private fun SecondaryCompactStat(
     value: String,
     unit: String,
+    valueColor: Color? = null,
 ) {
     Row(verticalAlignment = Alignment.Bottom) {
         Text(
             value,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = valueColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.width(2.dp))
         Text(
