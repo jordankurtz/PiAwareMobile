@@ -117,9 +117,10 @@ class SettingsViewModel(
         settingsService.setApiKey(providerId, key)
     }
 
-    fun removeApiKey(keyGroup: String) = viewModelScope.launch {
-        settingsService.removeApiKey(keyGroup)
-    }
+    fun removeApiKey(keyGroup: String) =
+        viewModelScope.launch {
+            settingsService.removeApiKey(keyGroup)
+        }
 
     fun setApiKeyAndActivateProvider(
         keyGroup: String,
