@@ -3,17 +3,20 @@ package com.jordankurtz.piawaremobile.ui
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 
 @Composable
 fun Theme(
-    // Checks if your system is in dark theme mode.
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    // it would be nice to have a dark mode but we don't currently have dark map tiles
-    val colorScheme = if (!darkTheme) LightColorScheme else LightColorScheme
-    MaterialTheme(
-        colorScheme = colorScheme,
-        content = content,
-    )
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val appColors = if (darkTheme) darkAppColors else lightAppColors
+
+    CompositionLocalProvider(LocalAppColors provides appColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            content = content,
+        )
+    }
 }
