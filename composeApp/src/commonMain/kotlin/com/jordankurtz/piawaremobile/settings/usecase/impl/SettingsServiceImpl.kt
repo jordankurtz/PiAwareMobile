@@ -127,7 +127,7 @@ class SettingsServiceImpl(
     override suspend fun setApiKey(
         providerId: String,
         key: String,
-    ) = updateSetting { it.copy(apiKeys = it.apiKeys + (providerId to key)) }
+    ) = updateSetting { it.copy(apiKeys = it.apiKeys + (providerId to key.trim())) }
 
     override suspend fun removeApiKey(keyGroup: String) = updateSetting { settings ->
         val updatedKeys = settings.apiKeys - keyGroup

@@ -67,10 +67,21 @@ class ProviderResolutionTest {
     }
 
     @Test
-    fun usesBlankKeyWhenNotConfigured() {
+    fun fallsBackToDefaultWhenApiKeyNotConfigured() {
         val settings = Settings(mapProviderId = "stadia-alidade-smooth")
         val result = resolveActiveProviderConfig(settings)
-        assertFalse(result.styleUrl.contains("{api_key}"))
+        assertEquals(TileProviders.DEFAULT.id, result.id)
+    }
+
+    @Test
+    fun fallsBackToDefaultWhenApiKeyIsBlank() {
+        val settings =
+            Settings(
+                mapProviderId = "stadia-alidade-smooth",
+                apiKeys = mapOf("stadia" to ""),
+            )
+        val result = resolveActiveProviderConfig(settings)
+        assertEquals(TileProviders.DEFAULT.id, result.id)
     }
 
     @Test

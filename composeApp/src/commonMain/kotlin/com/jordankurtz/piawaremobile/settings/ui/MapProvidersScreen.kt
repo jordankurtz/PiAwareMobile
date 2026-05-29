@@ -117,7 +117,7 @@ fun MapProvidersScreen(
                 ApiKeyProviderRow(
                     config = config,
                     isSelected = config.id == activeProviderId,
-                    hasKey = apiKeys.containsKey(keyLookup),
+                    hasKey = apiKeys[keyLookup]?.isNotBlank() == true,
                     onClick = {
                         if (apiKeys.containsKey(keyLookup)) {
                             viewModel.updateMapProvider(config)
