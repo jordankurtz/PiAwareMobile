@@ -2,6 +2,7 @@ package com.jordankurtz.piawaremobile.settings.usecase.impl
 
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.extensions.async
+import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.CustomProviderConfig
 import com.jordankurtz.piawaremobile.settings.Server
@@ -126,7 +127,20 @@ class SettingsServiceImpl(
     override suspend fun setApiKey(
         providerId: String,
         key: String,
-    ) = updateSetting { it.copy(apiKeys = it.apiKeys + (providerId to key)) }
+    ) = updateSetting { it.copy(apiKeys = it.apiKeys + (providerId to key.trim())) }
+
+    override suspend fun removeApiKey(keyGroup: String) =
+        updateSetting { settings ->
+            val updatedKeys = settings.apiKeys - keyGroup
+            val activeProviderUsesKey =
+                TileProviders.ALL
+                    .filter { it.requiresApiKey && (it.apiKeyGroup ?: it.id) == keyGroup }
+                    .any { it.id == settings.mapProviderId }
+            settings.copy(
+                apiKeys = updatedKeys,
+                mapProviderId = if (activeProviderUsesKey) TileProviders.DEFAULT.id else settings.mapProviderId,
+            )
+        }
 
     override suspend fun addCustomProvider(
         id: String,

@@ -45,6 +45,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.ic_arrow_back
+import piawaremobile.composeapp.generated.resources.ic_edit
 import piawaremobile.composeapp.generated.resources.map_providers_add_custom
 import piawaremobile.composeapp.generated.resources.map_providers_api_key_configured
 import piawaremobile.composeapp.generated.resources.map_providers_api_key_hint
@@ -53,7 +54,9 @@ import piawaremobile.composeapp.generated.resources.map_providers_cancel
 import piawaremobile.composeapp.generated.resources.map_providers_custom_name_hint
 import piawaremobile.composeapp.generated.resources.map_providers_custom_url_hint
 import piawaremobile.composeapp.generated.resources.map_providers_delete_custom
+import piawaremobile.composeapp.generated.resources.map_providers_edit_api_key
 import piawaremobile.composeapp.generated.resources.map_providers_generic_key_info
+import piawaremobile.composeapp.generated.resources.map_providers_remove_api_key
 import piawaremobile.composeapp.generated.resources.map_providers_save
 import piawaremobile.composeapp.generated.resources.map_providers_stadia_key_info
 import piawaremobile.composeapp.generated.resources.map_providers_title
@@ -73,6 +76,7 @@ fun MapProvidersScreen(
     val customProviders = settings?.customProviders ?: emptyList()
 
     var pendingApiKeyProvider by remember { mutableStateOf<TileProviderConfig?>(null) }
+    var editKeyProvider by remember { mutableStateOf<TileProviderConfig?>(null) }
     var showAddCustom by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -113,7 +117,7 @@ fun MapProvidersScreen(
                 ApiKeyProviderRow(
                     config = config,
                     isSelected = config.id == activeProviderId,
-                    hasKey = apiKeys.containsKey(keyLookup),
+                    hasKey = apiKeys[keyLookup]?.isNotBlank() == true,
                     onClick = {
                         if (apiKeys.containsKey(keyLookup)) {
                             viewModel.updateMapProvider(config)
@@ -121,6 +125,7 @@ fun MapProvidersScreen(
                             pendingApiKeyProvider = config
                         }
                     },
+                    onEditKey = { editKeyProvider = config },
                 )
             }
 
@@ -149,17 +154,8 @@ fun MapProvidersScreen(
 
     pendingApiKeyProvider?.let { provider ->
         val keyGroup = provider.apiKeyGroup ?: provider.id
-        val providerName =
-            when (provider.apiKeyGroup) {
-                "stadia" -> "Stadia Maps"
-                "maptiler" -> "MapTiler"
-                else -> provider.displayNameRes?.let { stringResource(it) } ?: provider.displayName
-            }
-        val keyInfo =
-            when (provider.apiKeyGroup) {
-                "stadia" -> stringResource(Res.string.map_providers_stadia_key_info)
-                else -> stringResource(Res.string.map_providers_generic_key_info)
-            }
+        val providerName = providerDisplayName(provider)
+        val keyInfo = providerKeyInfo(provider)
         ApiKeyBottomSheet(
             providerName = providerName,
             keyInfo = keyInfo,
@@ -168,6 +164,25 @@ fun MapProvidersScreen(
                 pendingApiKeyProvider = null
             },
             onDismiss = { pendingApiKeyProvider = null },
+        )
+    }
+
+    editKeyProvider?.let { provider ->
+        val keyGroup = provider.apiKeyGroup ?: provider.id
+        val providerName = providerDisplayName(provider)
+        val keyInfo = providerKeyInfo(provider)
+        ApiKeyBottomSheet(
+            providerName = providerName,
+            keyInfo = keyInfo,
+            onSave = { key ->
+                viewModel.updateApiKey(keyGroup, key)
+                editKeyProvider = null
+            },
+            onRemove = {
+                viewModel.removeApiKey(keyGroup)
+                editKeyProvider = null
+            },
+            onDismiss = { editKeyProvider = null },
         )
     }
 
@@ -181,6 +196,21 @@ fun MapProvidersScreen(
         )
     }
 }
+
+@Composable
+private fun providerDisplayName(provider: TileProviderConfig): String =
+    when (provider.apiKeyGroup) {
+        "stadia" -> "Stadia Maps"
+        "maptiler" -> "MapTiler"
+        else -> provider.displayNameRes?.let { stringResource(it) } ?: provider.displayName
+    }
+
+@Composable
+private fun providerKeyInfo(provider: TileProviderConfig): String =
+    when (provider.apiKeyGroup) {
+        "stadia" -> stringResource(Res.string.map_providers_stadia_key_info)
+        else -> stringResource(Res.string.map_providers_generic_key_info)
+    }
 
 @Composable
 fun BuiltInProviderRow(
@@ -220,6 +250,7 @@ fun ApiKeyProviderRow(
     isSelected: Boolean,
     hasKey: Boolean,
     onClick: () -> Unit,
+    onEditKey: (() -> Unit)? = null,
 ) {
     Column {
         Row(
@@ -227,7 +258,7 @@ fun ApiKeyProviderRow(
                 Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onClick)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(start = 16.dp, end = 4.dp, top = 14.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -242,6 +273,15 @@ fun ApiKeyProviderRow(
                         text = stringResource(Res.string.map_providers_api_key_configured),
                         style = MaterialTheme.typography.labelSmall,
                     )
+                }
+                if (onEditKey != null) {
+                    IconButton(onClick = onEditKey) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_edit),
+                            contentDescription = stringResource(Res.string.map_providers_edit_api_key),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             } else {
                 Badge(containerColor = MaterialTheme.colorScheme.errorContainer) {
@@ -336,6 +376,7 @@ fun ApiKeyBottomSheet(
     keyInfo: String,
     onSave: (String) -> Unit,
     onDismiss: () -> Unit,
+    onRemove: (() -> Unit)? = null,
 ) {
     var key by remember { mutableStateOf("") }
     ModalBottomSheet(
@@ -357,16 +398,32 @@ fun ApiKeyBottomSheet(
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(Res.string.map_providers_cancel))
+                if (onRemove != null) {
+                    TextButton(onClick = onRemove) {
+                        Text(
+                            text = stringResource(Res.string.map_providers_remove_api_key),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                } else {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(Res.string.map_providers_cancel))
+                    }
                 }
-                Button(
-                    onClick = { onSave(key) },
-                    enabled = key.isNotBlank(),
-                ) {
-                    Text(stringResource(Res.string.map_providers_save))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (onRemove != null) {
+                        TextButton(onClick = onDismiss) {
+                            Text(stringResource(Res.string.map_providers_cancel))
+                        }
+                    }
+                    Button(
+                        onClick = { onSave(key) },
+                        enabled = key.isNotBlank(),
+                    ) {
+                        Text(stringResource(Res.string.map_providers_save))
+                    }
                 }
             }
         }

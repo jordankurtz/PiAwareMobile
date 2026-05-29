@@ -59,6 +59,8 @@ interface SettingsService {
         key: String,
     )
 
+    suspend fun removeApiKey(keyGroup: String)
+
     suspend fun addCustomProvider(
         id: String,
         displayName: String,
