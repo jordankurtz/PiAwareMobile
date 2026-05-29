@@ -54,6 +54,7 @@ import com.jordankurtz.piawaremobile.ui.AircraftLocationDetails
 import com.jordankurtz.piawaremobile.ui.AircraftPrimaryDetails
 import com.jordankurtz.piawaremobile.ui.AircraftSecondaryDetails
 import com.jordankurtz.piawaremobile.ui.AircraftSignalDetails
+import com.jordankurtz.piawaremobile.ui.AppTheme
 import com.jordankurtz.piawaremobile.ui.FlightAircraftDetails
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -367,6 +368,10 @@ private fun AircraftTab(
     aircraft: Aircraft?,
     flight: Flight,
 ) {
+    val emergencySquawkCodes = setOf("7500", "7600", "7700")
+    val emergencyColor = AppTheme.colors.aircraftEmergency
+    val defaultSquawkColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -375,7 +380,8 @@ private fun AircraftTab(
         FlightAircraftDetails(flight = flight)
         Spacer(modifier = Modifier.height(8.dp))
         aircraft?.let {
-            AircraftSecondaryDetails(aircraft = it)
+            val squawkColor = if (it.squawk in emergencySquawkCodes) emergencyColor else defaultSquawkColor
+            AircraftSecondaryDetails(aircraft = it, squawkValueColor = squawkColor)
             Spacer(modifier = Modifier.height(8.dp))
             AircraftSignalDetails(aircraft = it)
         }

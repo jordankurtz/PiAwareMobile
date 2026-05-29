@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
@@ -51,12 +52,13 @@ fun LabeledValue(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
+    valueColor: Color = Color.Unspecified,
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(value, style = MaterialTheme.typography.bodyLarge)
+        Text(value, style = MaterialTheme.typography.bodyLarge, color = valueColor)
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
@@ -144,6 +146,7 @@ fun AircraftLocationDetails(
 fun AircraftSecondaryDetails(
     aircraft: Aircraft,
     modifier: Modifier = Modifier,
+    squawkValueColor: Color = Color.Unspecified,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -160,6 +163,7 @@ fun AircraftSecondaryDetails(
             LabeledValue(
                 label = stringResource(Res.string.label_squawk),
                 value = it,
+                valueColor = squawkValueColor,
             )
         }
     }
