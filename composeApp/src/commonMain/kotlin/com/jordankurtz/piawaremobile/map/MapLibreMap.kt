@@ -73,7 +73,10 @@ fun MapLibreMap(
         if (gesturesEnabled) GestureOptions.Standard else GestureOptions.AllDisabled
     val mapOptions =
         remember(gestureOptions) {
-            MapOptions(gestureOptions = gestureOptions)
+            MapOptions(
+                gestureOptions = gestureOptions,
+                ornamentOptions = defaultOrnamentOptions(),
+            )
         }
 
     val zoomRange = controller.zoomLimits()
