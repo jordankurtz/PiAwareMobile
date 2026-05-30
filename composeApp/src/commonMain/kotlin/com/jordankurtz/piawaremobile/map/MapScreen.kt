@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -92,60 +90,59 @@ fun MapScreen(
         aircraftViewModel.onResume()
     }
 
-    Box {
-        MapLibreMap(
-            controller = mapViewModel.mapStateController as MapLibreStateController,
-            styleUrl = activeProvider.styleUrl,
-        )
-        Column(
-            modifier =
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (aircraft.isNotEmpty()) {
-                SmallFloatingActionButton(
-                    onClick = { mapViewModel.fitToAircraft(aircraft) },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+    MapLibreMap(
+        controller = mapViewModel.mapStateController as MapLibreStateController,
+        styleUrl = activeProvider.styleUrl,
+        topStart = {
+            Column {
+                AnimatedVisibility(
+                    visible = false,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier.padding(16.dp),
                 ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_plane),
-                        contentDescription = stringResource(Res.string.fit_to_aircraft),
-                        modifier = Modifier.size(24.dp),
+                    OfflineIndicator()
+                }
+                if (isDebugBuild) {
+                    TileCacheDebugOverlay(
+                        stats = tileStats,
+                        currentZoom = currentZoom,
+                        zoomSettings = zoomSettings,
+                        modifier = Modifier.padding(8.dp),
+                    )
+                }
+                Overlay(
+                    numberOfPlanes = numberOfPlanes,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                )
+            }
+        },
+        topEnd = {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (aircraft.isNotEmpty()) {
+                    SmallFloatingActionButton(
+                        onClick = { mapViewModel.fitToAircraft(aircraft) },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_plane),
+                            contentDescription = stringResource(Res.string.fit_to_aircraft),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+                if (showUserLocationOnMap) {
+                    FollowUserLocationFab(
+                        isFollowing = isFollowingUser,
+                        onClick = { mapViewModel.toggleFollowUserLocation() },
                     )
                 }
             }
-            if (showUserLocationOnMap) {
-                FollowUserLocationFab(
-                    isFollowing = isFollowingUser,
-                    onClick = { mapViewModel.toggleFollowUserLocation() },
-                )
-            }
-        }
-        AnimatedVisibility(
-            visible = false,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
-        ) {
-            OfflineIndicator()
-        }
-        Column(modifier = Modifier.align(Alignment.TopStart)) {
-            if (isDebugBuild) {
-                TileCacheDebugOverlay(
-                    stats = tileStats,
-                    currentZoom = currentZoom,
-                    zoomSettings = zoomSettings,
-                    modifier = Modifier.padding(8.dp),
-                )
-            }
-            Overlay(
-                numberOfPlanes = numberOfPlanes,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            )
-        }
-    }
+        },
+    )
 
     val selectedAircraft =
         selectedAircraftHex?.let { hex ->

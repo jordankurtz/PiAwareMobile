@@ -28,7 +28,6 @@ import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
-import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
@@ -43,6 +42,10 @@ fun MapLibreMap(
     styleUrl: String,
     modifier: Modifier = Modifier,
     gesturesEnabled: Boolean = true,
+    topStart: @Composable () -> Unit = {},
+    topEnd: @Composable () -> Unit = {},
+    bottomStart: @Composable () -> Unit = {},
+    bottomEnd: @Composable () -> Unit = {},
 ) {
     val cameraState = rememberCameraState()
     val density = LocalDensity.current
@@ -70,10 +73,7 @@ fun MapLibreMap(
         if (gesturesEnabled) GestureOptions.Standard else GestureOptions.AllDisabled
     val mapOptions =
         remember(gestureOptions) {
-            MapOptions(
-                gestureOptions = gestureOptions,
-                ornamentOptions = OrnamentOptions(compassAlignment = Alignment.TopStart),
-            )
+            MapOptions(gestureOptions = gestureOptions)
         }
 
     val zoomRange = controller.zoomLimits()
@@ -124,6 +124,11 @@ fun MapLibreMap(
                 }
             }
         }
+
+        Box(modifier = Modifier.align(Alignment.TopStart)) { topStart() }
+        Box(modifier = Modifier.align(Alignment.TopEnd)) { topEnd() }
+        Box(modifier = Modifier.align(Alignment.BottomStart)) { bottomStart() }
+        Box(modifier = Modifier.align(Alignment.BottomEnd)) { bottomEnd() }
     }
 }
 
