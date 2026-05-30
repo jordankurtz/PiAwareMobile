@@ -1,5 +1,10 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -229,10 +234,16 @@ fun FlightDetailsSheetContent(
                     onTabSelected = { tabIndex = it },
                 )
 
-                when (tabIndex) {
-                    0 -> DetailsTab(aircraft, userLocation)
-                    1 -> AircraftTab(aircraft, flight)
-                    2 -> RouteTab(flight)
+                AnimatedContent(
+                    targetState = tabIndex,
+                    transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) },
+                    label = "tab_content",
+                ) { index ->
+                    when (index) {
+                        0 -> DetailsTab(aircraft, userLocation)
+                        1 -> AircraftTab(aircraft, flight)
+                        else -> RouteTab(flight)
+                    }
                 }
             }
 
