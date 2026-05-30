@@ -43,7 +43,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -107,7 +106,6 @@ fun AircraftListScreen(
     val flightDetails by aircraftViewModel.flightDetails.collectAsState()
     var selectedFlightHex by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
-    val expandedHexes = remember { mutableStateSetOf<String>() }
 
     val filteredAircraft =
         remember(aircraft, searchQuery) {
@@ -134,11 +132,6 @@ fun AircraftListScreen(
                     AircraftListItem(
                         aircraftWithServers = aircraftWithServers,
                         userLocation = userLocation,
-                        expanded = aircraftWithServers.aircraft.hex in expandedHexes,
-                        onExpandedChange = { expanded ->
-                            val hex = aircraftWithServers.aircraft.hex
-                            if (expanded) expandedHexes.add(hex) else expandedHexes.remove(hex)
-                        },
                         flightDetails =
                             if (selectedFlightHex == aircraftWithServers.aircraft.hex) {
                                 flightDetails
@@ -257,12 +250,11 @@ private fun EmptyAircraftList() {
 private fun AircraftListItem(
     aircraftWithServers: AircraftWithServers,
     userLocation: Location?,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
     flightDetails: Async<Flight>,
     onLoadFlightDetails: () -> Unit,
     onOpenFlightPage: () -> Unit,
 ) {
+    var expanded by remember { mutableStateOf(false) }
     val aircraft = aircraftWithServers.aircraft
     val info = aircraftWithServers.info
 
@@ -283,7 +275,7 @@ private fun AircraftListItem(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clickable { onExpandedChange(!expanded) }
+                .clickable { expanded = !expanded }
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
