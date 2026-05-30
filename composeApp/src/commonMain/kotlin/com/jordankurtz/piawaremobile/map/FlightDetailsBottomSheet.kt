@@ -1,22 +1,38 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Tab
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -28,6 +44,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.extensions.formattedTime
 import com.jordankurtz.piawaremobile.location.LocationViewModel
@@ -40,11 +58,14 @@ import com.jordankurtz.piawaremobile.ui.AircraftLocationDetails
 import com.jordankurtz.piawaremobile.ui.AircraftPrimaryDetails
 import com.jordankurtz.piawaremobile.ui.AircraftSecondaryDetails
 import com.jordankurtz.piawaremobile.ui.AircraftSignalDetails
+import com.jordankurtz.piawaremobile.ui.AppTheme
 import com.jordankurtz.piawaremobile.ui.FlightAircraftDetails
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.aircraft_list_loading_flight_details
+import piawaremobile.composeapp.generated.resources.aircraft_list_progress_percent
 import piawaremobile.composeapp.generated.resources.flight_details_actual
 import piawaremobile.composeapp.generated.resources.flight_details_airport_name_code
 import piawaremobile.composeapp.generated.resources.flight_details_departure
@@ -66,6 +87,7 @@ import piawaremobile.composeapp.generated.resources.unfollow_aircraft
 import kotlin.time.Instant
 
 @Suppress("LongParameterList")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FlightDetailsBottomSheet(
     aircraft: Aircraft?,
@@ -85,6 +107,7 @@ fun FlightDetailsBottomSheet(
         ModalBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
+            dragHandle = null,
         ) {
             FlightDetailsSheetContent(
                 aircraft = aircraft,
@@ -99,6 +122,7 @@ fun FlightDetailsBottomSheet(
 }
 
 @Suppress("LongParameterList")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FlightDetailsSheetContent(
     aircraft: Aircraft?,
@@ -112,86 +136,152 @@ fun FlightDetailsSheetContent(
     val tabs = listOf("Details", "Aircraft", "Route")
 
     Column(
-        modifier =
-            Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        DragHandle()
+
         when (flightDetails) {
             is Async.Error -> {
-                Text(
-                    text = stringResource(Res.string.flight_details_error, flightDetails.message),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                FlightDetailsActionButtons(
-                    aircraft = aircraft,
-                    isFollowing = isFollowing,
-                    onFollowToggle = onFollowToggle,
-                    onOpenFlightPage = onOpenFlightPage,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                DetailsTab(aircraft, userLocation)
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ErrorOutline,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(32.dp),
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(Res.string.flight_details_error, flightDetails.message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FlightDetailsActionButtons(
+                        aircraft = aircraft,
+                        isFollowing = isFollowing,
+                        onFollowToggle = onFollowToggle,
+                        onOpenFlightPage = onOpenFlightPage,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    DetailsTab(aircraft, userLocation)
+                }
             }
+
             Async.Loading -> {
-                CircularProgressIndicator()
-                Spacer(modifier = Modifier.height(8.dp))
-                FlightDetailsActionButtons(
-                    aircraft = aircraft,
-                    isFollowing = isFollowing,
-                    onFollowToggle = onFollowToggle,
-                    onOpenFlightPage = onOpenFlightPage,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                DetailsTab(aircraft, userLocation)
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(Res.string.aircraft_list_loading_flight_details),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FlightDetailsActionButtons(
+                        aircraft = aircraft,
+                        isFollowing = isFollowing,
+                        onFollowToggle = onFollowToggle,
+                        onOpenFlightPage = onOpenFlightPage,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    DetailsTab(aircraft, userLocation)
+                }
             }
+
             is Async.Success -> {
                 val flight = flightDetails.data
 
-                Text(
-                    text = stringResource(Res.string.flight_details_flight_number, flight.ident),
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-                FlightDetailsActionButtons(
-                    aircraft = aircraft,
-                    isFollowing = isFollowing,
-                    onFollowToggle = onFollowToggle,
-                    onOpenFlightPage = onOpenFlightPage,
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                PrimaryTabRow(selectedTabIndex = tabIndex) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            text = { Text(title) },
-                            selected = tabIndex == index,
-                            onClick = { tabIndex = index },
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.flight_details_flight_number, flight.ident),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    flight.operator?.let { operator ->
+                        Text(
+                            text = operator,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
 
-                when (tabIndex) {
-                    0 -> DetailsTab(aircraft, userLocation)
-                    1 -> AircraftTab(aircraft, flight)
-                    2 -> RouteTab(flight)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    FlightDetailsActionButtons(
+                        aircraft = aircraft,
+                        isFollowing = isFollowing,
+                        onFollowToggle = onFollowToggle,
+                        onOpenFlightPage = onOpenFlightPage,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PillTabRow(
+                    tabs = tabs,
+                    selectedIndex = tabIndex,
+                    onTabSelected = { tabIndex = it },
+                )
+
+                AnimatedContent(
+                    targetState = tabIndex,
+                    transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) },
+                    label = "tab_content",
+                ) { index ->
+                    when (index) {
+                        0 -> DetailsTab(aircraft, userLocation)
+                        1 -> AircraftTab(aircraft, flight)
+                        else -> RouteTab(flight)
+                    }
                 }
             }
 
             Async.NotStarted -> {
-                // Aircraft has no flight number — show aircraft details without flight section
-                FlightDetailsActionButtons(
-                    aircraft = aircraft,
-                    isFollowing = isFollowing,
-                    onFollowToggle = onFollowToggle,
-                    onOpenFlightPage = onOpenFlightPage,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    FlightDetailsActionButtons(
+                        aircraft = aircraft,
+                        isFollowing = isFollowing,
+                        onFollowToggle = onFollowToggle,
+                        onOpenFlightPage = onOpenFlightPage,
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
                 DetailsTab(aircraft, userLocation)
             }
         }
+    }
+}
+
+@Composable
+private fun DragHandle() {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 12.dp)
+                .semantics { contentDescription = "" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(
+            modifier =
+                Modifier
+                    .width(32.dp)
+                    .height(4.dp),
+            shape = RoundedCornerShape(2.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            content = {},
+        )
     }
 }
 
@@ -202,20 +292,33 @@ fun FlightDetailsActionButtons(
     onFollowToggle: () -> Unit,
     onOpenFlightPage: () -> Unit,
 ) {
+    val compactPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        OutlinedButton(onClick = onFollowToggle) {
-            Text(
-                if (isFollowing) {
-                    stringResource(Res.string.unfollow_aircraft)
-                } else {
-                    stringResource(Res.string.follow_aircraft)
-                },
-            )
+        if (isFollowing) {
+            FilledTonalButton(
+                onClick = onFollowToggle,
+                contentPadding = compactPadding,
+            ) {
+                Text(stringResource(Res.string.unfollow_aircraft))
+            }
+        } else {
+            OutlinedButton(
+                onClick = onFollowToggle,
+                border = ButtonDefaults.outlinedButtonBorder(),
+                contentPadding = compactPadding,
+            ) {
+                Text(stringResource(Res.string.follow_aircraft))
+            }
         }
         if (!aircraft?.flight.isNullOrBlank()) {
-            OutlinedButton(onClick = onOpenFlightPage) {
+            OutlinedButton(
+                onClick = onOpenFlightPage,
+                border = ButtonDefaults.outlinedButtonBorder(),
+                contentPadding = compactPadding,
+            ) {
                 Text(stringResource(Res.string.open_in_flightaware))
             }
         }
@@ -227,19 +330,42 @@ private fun DetailsTab(
     aircraft: Aircraft?,
     userLocation: Location?,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Spacer(modifier = Modifier.height(16.dp))
         MiniMap(
             aircraft = aircraft,
             userLocation = userLocation,
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         aircraft?.let {
-            AircraftPrimaryDetails(aircraft = it)
+            Card(
+                shape = RoundedCornerShape(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                AircraftPrimaryDetails(
+                    aircraft = it,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
-            AircraftLocationDetails(aircraft = it, userLocation = userLocation)
+            Card(
+                shape = RoundedCornerShape(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                AircraftLocationDetails(
+                    aircraft = it,
+                    userLocation = userLocation,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -248,21 +374,33 @@ private fun AircraftTab(
     aircraft: Aircraft?,
     flight: Flight,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    val emergencySquawkCodes = setOf("7500", "7600", "7700")
+    val emergencyColor = AppTheme.colors.aircraftEmergency
+    val defaultSquawkColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Spacer(modifier = Modifier.height(16.dp))
         FlightAircraftDetails(flight = flight)
         Spacer(modifier = Modifier.height(8.dp))
         aircraft?.let {
-            AircraftSecondaryDetails(aircraft = it)
+            val squawkColor = if (it.squawk in emergencySquawkCodes) emergencyColor else defaultSquawkColor
+            AircraftSecondaryDetails(aircraft = it, squawkValueColor = squawkColor)
             Spacer(modifier = Modifier.height(8.dp))
             AircraftSignalDetails(aircraft = it)
         }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
 @Composable
 private fun RouteTab(flight: Flight) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Spacer(modifier = Modifier.height(16.dp))
         flight.origin?.let {
             AirportInfo(
@@ -272,11 +410,13 @@ private fun RouteTab(flight: Flight) {
                 actualTime = flight.actualOut,
                 estimatedTime = flight.estimatedOut,
             )
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         FlightProgress(flight = flight)
 
         flight.destination?.let {
+            Spacer(modifier = Modifier.height(8.dp))
             AirportInfo(
                 title = stringResource(Res.string.flight_details_destination),
                 airport = it,
@@ -285,6 +425,7 @@ private fun RouteTab(flight: Flight) {
                 estimatedTime = flight.estimatedIn,
             )
         }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -298,7 +439,7 @@ fun MiniMap(
         miniMapViewModel.updateMapState(aircraft = aircraft, location = userLocation)
     }
 
-    Card {
+    Card(modifier = Modifier.fillMaxWidth()) {
         OpenStreetMap(
             state = miniMapViewModel.state,
             modifier = Modifier.height(height = 200.dp),
@@ -313,32 +454,41 @@ fun FlightProgress(flight: Flight) {
     if (ete != null && progress != null && progress in 0..100) {
         val remainingSeconds = ete * (1.0 - progress / 100.0)
 
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_arrow_downward),
-                contentDescription = stringResource(Res.string.flight_details_flight_progress),
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = stringResource(Res.string.aircraft_list_progress_percent, progress),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 4.dp),
             )
-            if (remainingSeconds > 0) {
-                val remainingString = formatSecondsToHoursMinutes(remainingSeconds.toInt())
-                if (remainingString.isNotBlank()) {
-                    Text(
-                        text = stringResource(Res.string.flight_details_remaining_time, remainingString),
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                    )
+
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_arrow_downward),
+                    contentDescription = stringResource(Res.string.flight_details_flight_progress),
+                )
+                if (remainingSeconds > 0) {
+                    val remainingString = formatSecondsToHoursMinutes(remainingSeconds.toInt())
+                    if (remainingString.isNotBlank()) {
+                        Text(
+                            text = stringResource(Res.string.flight_details_remaining_time, remainingString),
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                        )
+                    }
                 }
             }
+
+            LinearProgressIndicator(
+                progress = { (progress / 100.0).toFloat() },
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
-        LinearProgressIndicator(
-            progress = { (progress / 100.0).toFloat() },
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
 
@@ -351,44 +501,88 @@ private fun AirportInfo(
     actualTime: Instant?,
     estimatedTime: Instant?,
 ) {
-    Column(
-        modifier =
-            modifier
-                .padding(horizontal = 8.dp, vertical = 8.dp)
-                .fillMaxWidth(),
-        horizontalAlignment = Alignment.Start,
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = modifier.fillMaxWidth(),
     ) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium)
-        if (!airport.city.isNullOrBlank()) {
-            Text(text = airport.city)
-        }
-        Text(
-            text =
-                stringResource(
-                    Res.string.flight_details_airport_name_code,
-                    airport.name.orEmpty(),
-                    airport.code.orEmpty(),
-                ),
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier.padding(16.dp),
+        ) {
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(4.dp))
 
-        scheduledTime?.let { scheduled ->
-            Text(text = stringResource(Res.string.flight_details_scheduled, scheduled.formattedTime))
-        }
+            airport.code?.let { code ->
+                Text(text = code, style = MaterialTheme.typography.headlineMedium)
+            }
+            if (!airport.city.isNullOrBlank()) {
+                Text(
+                    text = airport.city,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            airport.name?.let { name ->
+                if (name.isNotBlank()) {
+                    Text(
+                        text =
+                            stringResource(
+                                Res.string.flight_details_airport_name_code,
+                                name,
+                                airport.code.orEmpty(),
+                            ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
 
-        actualTime?.let { actual ->
-            val diff = calculateTimeDifference(scheduledTime, actual)
-            Text(text = stringResource(Res.string.flight_details_actual, actual.formattedTime, diff))
-        }
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Only show estimated if actual is not present
-        if (actualTime == null) {
-            estimatedTime?.let { estimated ->
-                val diff = calculateTimeDifference(scheduledTime, estimated)
-                Text(text = stringResource(Res.string.flight_details_estimated, estimated.formattedTime, diff))
+            scheduledTime?.let { scheduled ->
+                TimeRow(
+                    formattedLabel = stringResource(Res.string.flight_details_scheduled, scheduled.formattedTime),
+                    highlight = false,
+                )
+            }
+
+            actualTime?.let { actual ->
+                val diff = calculateTimeDifference(scheduledTime, actual)
+                TimeRow(
+                    formattedLabel = stringResource(Res.string.flight_details_actual, actual.formattedTime, diff),
+                    highlight = scheduledTime != null,
+                )
+            }
+
+            if (actualTime == null) {
+                estimatedTime?.let { estimated ->
+                    val diff = calculateTimeDifference(scheduledTime, estimated)
+                    TimeRow(
+                        formattedLabel =
+                            stringResource(
+                                Res.string.flight_details_estimated,
+                                estimated.formattedTime,
+                                diff,
+                            ),
+                        highlight = false,
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun TimeRow(
+    formattedLabel: String,
+    highlight: Boolean,
+) {
+    Text(
+        text = formattedLabel,
+        style = MaterialTheme.typography.bodyMedium,
+        color = if (highlight) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(vertical = 2.dp),
+    )
 }
 
 @Composable
@@ -415,5 +609,39 @@ private fun formatSecondsToHoursMinutes(seconds: Int): String {
         hours > 0 -> stringResource(Res.string.flight_details_hours_minutes_short, hours, minutes)
         minutes > 0 -> stringResource(Res.string.flight_details_minutes_short, minutes)
         else -> ""
+    }
+}
+
+@Composable
+private fun PillTabRow(
+    tabs: List<String>,
+    selectedIndex: Int,
+    onTabSelected: (Int) -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Row(modifier = Modifier.padding(4.dp)) {
+            tabs.forEachIndexed { index, title ->
+                val selected = index == selectedIndex
+                val tabColor =
+                    if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
+                val textColor =
+                    if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = tabColor,
+                    modifier = Modifier.clickable { onTabSelected(index) },
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = textColor,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                    )
+                }
+            }
+        }
     }
 }
