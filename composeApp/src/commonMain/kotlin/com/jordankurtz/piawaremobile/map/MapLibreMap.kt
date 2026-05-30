@@ -28,6 +28,7 @@ import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
@@ -75,7 +76,7 @@ fun MapLibreMap(
         remember(gestureOptions) {
             MapOptions(
                 gestureOptions = gestureOptions,
-                ornamentOptions = defaultOrnamentOptions(),
+                ornamentOptions = OrnamentOptions(compassAlignment = Alignment.TopStart),
             )
         }
 
