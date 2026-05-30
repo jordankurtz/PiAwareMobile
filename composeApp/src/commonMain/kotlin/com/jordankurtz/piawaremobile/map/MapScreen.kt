@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -102,7 +102,7 @@ fun MapScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (aircraft.isNotEmpty()) {
-                FloatingActionButton(
+                SmallFloatingActionButton(
                     onClick = { mapViewModel.fitToAircraft(aircraft) },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                 ) {
@@ -171,7 +171,7 @@ fun FollowUserLocationFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FloatingActionButton(
+    SmallFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
         containerColor =

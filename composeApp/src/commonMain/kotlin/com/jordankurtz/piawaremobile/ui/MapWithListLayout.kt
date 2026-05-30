@@ -140,7 +140,7 @@ fun MapWithListLayout(
             }
         }
 
-        VerticalDivider()
+        VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         // List panel takes 40% of width
         Surface(
