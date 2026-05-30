@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,10 +26,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -224,15 +223,11 @@ fun FlightDetailsSheetContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                SecondaryTabRow(selectedTabIndex = tabIndex) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            text = { Text(title) },
-                            selected = tabIndex == index,
-                            onClick = { tabIndex = index },
-                        )
-                    }
-                }
+                PillTabRow(
+                    tabs = tabs,
+                    selectedIndex = tabIndex,
+                    onTabSelected = { tabIndex = it },
+                )
 
                 when (tabIndex) {
                     0 -> DetailsTab(aircraft, userLocation)
@@ -603,5 +598,39 @@ private fun formatSecondsToHoursMinutes(seconds: Int): String {
         hours > 0 -> stringResource(Res.string.flight_details_hours_minutes_short, hours, minutes)
         minutes > 0 -> stringResource(Res.string.flight_details_minutes_short, minutes)
         else -> ""
+    }
+}
+
+@Composable
+private fun PillTabRow(
+    tabs: List<String>,
+    selectedIndex: Int,
+    onTabSelected: (Int) -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Row(modifier = Modifier.padding(4.dp)) {
+            tabs.forEachIndexed { index, title ->
+                val selected = index == selectedIndex
+                val tabColor =
+                    if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
+                val textColor =
+                    if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = tabColor,
+                    modifier = Modifier.clickable { onTabSelected(index) },
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = textColor,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                    )
+                }
+            }
+        }
     }
 }
