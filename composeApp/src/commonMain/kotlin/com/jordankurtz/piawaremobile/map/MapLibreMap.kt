@@ -42,6 +42,7 @@ fun MapLibreMap(
     styleUrl: String,
     modifier: Modifier = Modifier,
     gesturesEnabled: Boolean = true,
+    onBearingChanged: (Float) -> Unit = {},
     topStart: @Composable () -> Unit = {},
     topEnd: @Composable () -> Unit = {},
     bottomStart: @Composable () -> Unit = {},
@@ -66,6 +67,7 @@ fun MapLibreMap(
                     longitude = position.target.longitude,
                     zoom = position.zoom,
                 )
+                onBearingChanged(position.bearing.toFloat())
             }
     }
 

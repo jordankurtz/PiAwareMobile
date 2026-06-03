@@ -172,3 +172,11 @@ private extension Data {
         return withUnsafeBytes { $0.load(as: Int64.self) }
     }
 }
+
+// MARK: - Map FAB Blur Background
+
+@objcMembers public class MapFabBlurView: NSObject {
+    public static func create() -> UIView {
+        UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
+    }
+}

@@ -258,6 +258,10 @@ class MapViewModel(
         _followingUserLocation.value = !_followingUserLocation.value
     }
 
+    fun resetBearing() {
+        viewModelScope.launch { mapStateController.resetBearing() }
+    }
+
     internal fun onMapTouchDown() {
         if (_followingUserLocation.value) _followingUserLocation.value = false
     }
