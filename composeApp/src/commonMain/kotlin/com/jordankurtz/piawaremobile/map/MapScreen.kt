@@ -9,13 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -25,6 +26,8 @@ import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
+import com.jordankurtz.piawaremobile.map.ui.CompassFab
+import com.jordankurtz.piawaremobile.map.ui.MapFab
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -90,9 +93,12 @@ fun MapScreen(
         aircraftViewModel.onResume()
     }
 
+    var mapBearing by remember { mutableStateOf(0f) }
+
     MapLibreMap(
         controller = mapViewModel.mapStateController as MapLibreStateController,
         styleUrl = activeProvider.styleUrl,
+        onBearingChanged = { mapBearing = it },
         topStart = {
             Column {
                 AnimatedVisibility(
@@ -123,10 +129,7 @@ fun MapScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (aircraft.isNotEmpty()) {
-                    SmallFloatingActionButton(
-                        onClick = { mapViewModel.fitToAircraft(aircraft) },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    ) {
+                    MapFab(onClick = { mapViewModel.fitToAircraft(aircraft) }) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_plane),
                             contentDescription = stringResource(Res.string.fit_to_aircraft),
@@ -140,6 +143,10 @@ fun MapScreen(
                         onClick = { mapViewModel.toggleFollowUserLocation() },
                     )
                 }
+                CompassFab(
+                    bearing = mapBearing,
+                    onResetNorth = { mapViewModel.resetBearing() },
+                )
             }
         },
     )
@@ -172,15 +179,10 @@ fun FollowUserLocationFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SmallFloatingActionButton(
+    MapFab(
         onClick = onClick,
         modifier = modifier,
-        containerColor =
-            if (isFollowing) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.primaryContainer
-            },
+        active = isFollowing,
     ) {
         Icon(
             painter = painterResource(Res.drawable.ic_user_location),
