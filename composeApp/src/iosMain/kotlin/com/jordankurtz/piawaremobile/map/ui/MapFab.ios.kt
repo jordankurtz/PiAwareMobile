@@ -16,7 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
+import kotlinx.cinterop.ExperimentalForeignApi
 import maplibre.MapFabBlurView
+import platform.UIKit.UIView
 
 @Composable
 actual fun MapFab(
@@ -33,8 +35,9 @@ actual fun MapFab(
                 .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        UIKitView(
-            factory = { MapFabBlurView.create() },
+        @OptIn(ExperimentalForeignApi::class)
+        UIKitView<UIView>(
+            factory = { MapFabBlurView.create() as UIView },
             modifier = Modifier.fillMaxSize(),
             properties =
                 UIKitInteropProperties(

@@ -177,6 +177,10 @@ private extension Data {
 
 @objcMembers public class MapFabBlurView: NSObject {
     public static func create() -> UIView {
-        UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
+        if #available(iOS 13.0, *) {
+            return UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
+        } else {
+            return UIVisualEffectView(effect: UIBlurEffect(style: .light))
+        }
     }
 }
