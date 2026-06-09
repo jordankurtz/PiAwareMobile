@@ -26,6 +26,7 @@ import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,7 @@ class MapViewModel(
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
+    private val settingsService: SettingsService,
     private val tileCacheStatsTracker: TileCacheStatsTracker,
     internal val mapStateController: MapStateController,
 ) : ViewModel() {
@@ -79,6 +81,15 @@ class MapViewModel(
 
     private val _showUserLocationOnMap = MutableStateFlow(false)
     val showUserLocationOnMap: StateFlow<Boolean> = _showUserLocationOnMap
+
+    private val _showFaaCharts = MutableStateFlow(false)
+    val showFaaCharts: StateFlow<Boolean> = _showFaaCharts
+
+    private val _showAirspace = MutableStateFlow(false)
+    val showAirspace: StateFlow<Boolean> = _showAirspace
+
+    private val _openAipApiKey = MutableStateFlow("")
+    val openAipApiKey: StateFlow<String> = _openAipApiKey
 
     val tileStats: StateFlow<TileCacheStats> = tileCacheStatsTracker.stats
 
@@ -156,11 +167,22 @@ class MapViewModel(
         }
     }
 
+    fun toggleFaaCharts() {
+        viewModelScope.launch { settingsService.setShowFaaCharts(!_showFaaCharts.value) }
+    }
+
+    fun toggleAirspace() {
+        viewModelScope.launch { settingsService.setShowAirspace(!_showAirspace.value) }
+    }
+
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
         _zoomSettings.value = Triple(settings.minZoomLevel, settings.maxZoomLevel, settings.defaultZoomLevel)
         _showUserLocationOnMap.value = settings.showUserLocationOnMap
         if (!settings.showUserLocationOnMap) _followingUserLocation.value = false
+        _showFaaCharts.value = settings.showFaaCharts
+        _showAirspace.value = settings.showAirspace
+        _openAipApiKey.value = settings.apiKeys["openaip"] ?: ""
         onAircraftTrailsUpdated(lastTrails)
         mapStateController.setZoomLimits(
             settings.minZoomLevel.toDouble(),

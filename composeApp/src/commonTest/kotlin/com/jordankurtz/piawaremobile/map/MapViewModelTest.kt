@@ -15,6 +15,7 @@ import com.jordankurtz.piawaremobile.model.MapState
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import com.jordankurtz.piawaremobile.testutil.mockAircraft
 import com.jordankurtz.piawaremobile.testutil.mockServer
 import dev.mokkery.answering.returns
@@ -46,6 +47,7 @@ class MapViewModelTest {
     private lateinit var getSavedMapStateUseCase: GetSavedMapStateUseCase
     private lateinit var saveMapStateUseCase: SaveMapStateUseCase
     private lateinit var loadSettingsUseCase: LoadSettingsUseCase
+    private lateinit var settingsService: SettingsService
     private lateinit var settingsFlow: MutableStateFlow<Async<Settings>>
     private var viewModel: MapViewModel? = null
 
@@ -69,6 +71,7 @@ class MapViewModelTest {
         getSavedMapStateUseCase = mock()
         saveMapStateUseCase = mock()
         loadSettingsUseCase = mock()
+        settingsService = mock()
         settingsFlow = MutableStateFlow(Async.Success(settings))
 
         every { loadSettingsUseCase.invoke() } returns settingsFlow
@@ -93,6 +96,7 @@ class MapViewModelTest {
                 getSavedMapStateUseCase = getSavedMapStateUseCase,
                 saveMapStateUseCase = saveMapStateUseCase,
                 loadSettingsUseCase = loadSettingsUseCase,
+                settingsService = settingsService,
                 tileCacheStatsTracker = TileCacheStatsTracker(),
                 mapStateController = mapStateController,
             )
