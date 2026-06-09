@@ -68,4 +68,8 @@ interface SettingsService {
     )
 
     suspend fun deleteCustomProvider(id: String)
+
+    suspend fun setShowFaaCharts(enabled: Boolean)
+
+    suspend fun setShowAirspace(enabled: Boolean)
 }
