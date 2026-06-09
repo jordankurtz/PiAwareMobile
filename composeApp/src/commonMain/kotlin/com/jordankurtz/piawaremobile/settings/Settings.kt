@@ -21,4 +21,6 @@ data class Settings(
     val maxZoomLevel: Int = SettingsRepository.MAX_ZOOM_LEVEL,
     val apiKeys: Map<String, String> = emptyMap(),
     val customProviders: List<CustomProviderConfig> = emptyList(),
+    val showFaaCharts: Boolean = false,
+    val showAirspace: Boolean = false,
 )
