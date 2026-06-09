@@ -64,6 +64,8 @@ class SettingsRepositoryImpl(
                             emptyList()
                         }
                     } ?: emptyList(),
+                showFaaCharts = preferences[SettingsRepository.SHOW_FAA_CHARTS] ?: false,
+                showAirspace = preferences[SettingsRepository.SHOW_AIRSPACE] ?: false,
             )
         }
     }
@@ -87,6 +89,8 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.MAX_ZOOM_LEVEL_KEY] = settings.maxZoomLevel
             preferences[SettingsRepository.API_KEYS_JSON] = Json.encodeToString(settings.apiKeys)
             preferences[SettingsRepository.CUSTOM_PROVIDERS_JSON] = Json.encodeToString(settings.customProviders)
+            preferences[SettingsRepository.SHOW_FAA_CHARTS] = settings.showFaaCharts
+            preferences[SettingsRepository.SHOW_AIRSPACE] = settings.showAirspace
         }
     }
 
