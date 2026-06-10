@@ -24,17 +24,33 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.expressions.dsl.asNumber
+import org.maplibre.compose.expressions.dsl.case
 import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.feature
+import org.maplibre.compose.expressions.dsl.switch
+import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.layers.LineLayer
+import org.maplibre.compose.layers.RasterLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.sources.GeoJsonData
+import org.maplibre.compose.sources.TileCoordinateSystem
+import org.maplibre.compose.sources.TileSetOptions
 import org.maplibre.compose.sources.rememberGeoJsonSource
+import org.maplibre.compose.sources.rememberRasterSource
+import org.maplibre.compose.sources.rememberVectorSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Position
 import org.maplibre.compose.map.MaplibreMap as MaplibreComposeMap
+
+private const val FAA_SECTIONAL_TILE_URL =
+    "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/VFR_Sectional/MapServer/tile/{z}/{y}/{x}"
+
+private const val OPENAIP_TILE_URL_TEMPLATE =
+    "https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.pbf?apiKey="
 
 @Suppress("LongParameterList")
 @Composable
@@ -44,6 +60,9 @@ fun MapLibreMap(
     modifier: Modifier = Modifier,
     gesturesEnabled: Boolean = true,
     onBearingChanged: (Float) -> Unit = {},
+    faaChartsEnabled: Boolean = false,
+    airspaceEnabled: Boolean = false,
+    openAipApiKey: String = "",
     topStart: @Composable () -> Unit = {},
     topEnd: @Composable () -> Unit = {},
     bottomStart: @Composable () -> Unit = {},
@@ -97,6 +116,53 @@ fun MapLibreMap(
             },
         ) {
             controller.paths.values.forEach { path -> PathLayer(path) }
+
+            if (faaChartsEnabled) {
+                val faaSource =
+                    rememberRasterSource(
+                        tiles = listOf(FAA_SECTIONAL_TILE_URL),
+                        options = TileSetOptions(tileCoordinateSystem = TileCoordinateSystem.TMS),
+                    )
+                RasterLayer(
+                    id = "faa-sectional",
+                    source = faaSource,
+                    opacity = const(0.6f),
+                )
+            }
+
+            if (airspaceEnabled && openAipApiKey.isNotEmpty()) {
+                val airspaceSource =
+                    rememberVectorSource(
+                        tiles = listOf(OPENAIP_TILE_URL_TEMPLATE + openAipApiKey),
+                        options = TileSetOptions(minZoom = 7, maxZoom = 14),
+                    )
+                val airspaceColor =
+                    switch(
+                        feature.get("icaoClass").asNumber(),
+                        case(0, const(Color(0xFF4169E1))),
+                        case(1, const(Color(0xFF0047AB))),
+                        case(2, const(Color(0xFF800080))),
+                        case(3, const(Color(0xFF1E90FF))),
+                        case(4, const(Color(0xFFDA70D6))),
+                        case(5, const(Color(0xFF808080))),
+                        fallback = const(Color(0xFFFF4444)),
+                    )
+                FillLayer(
+                    id = "openaip-airspace-fill",
+                    source = airspaceSource,
+                    sourceLayer = "openaip",
+                    color = airspaceColor,
+                    opacity = const(0.15f),
+                )
+                LineLayer(
+                    id = "openaip-airspace-border",
+                    source = airspaceSource,
+                    sourceLayer = "openaip",
+                    color = airspaceColor,
+                    width = const(1.5.dp),
+                    opacity = const(0.8f),
+                )
+            }
         }
 
         val projection = cameraState.projection
