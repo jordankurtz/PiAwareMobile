@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -36,6 +39,8 @@ import piawaremobile.composeapp.generated.resources.fit_to_aircraft
 import piawaremobile.composeapp.generated.resources.follow_user_location
 import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_user_location
+import piawaremobile.composeapp.generated.resources.show_airspace
+import piawaremobile.composeapp.generated.resources.show_faa_charts
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +58,9 @@ fun MapScreen(
     val followingAircraftHex by mapViewModel.followingAircraft.collectAsState()
     val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
     val showUserLocationOnMap by mapViewModel.showUserLocationOnMap.collectAsState()
+    val showFaaCharts by mapViewModel.showFaaCharts.collectAsState()
+    val showAirspace by mapViewModel.showAirspace.collectAsState()
+    val openAipApiKey by mapViewModel.openAipApiKey.collectAsState()
     val tileStats by mapViewModel.tileStats.collectAsState()
     val currentZoom by mapViewModel.currentZoomLevel.collectAsState()
     val zoomSettings by mapViewModel.zoomSettings.collectAsState()
@@ -99,6 +107,9 @@ fun MapScreen(
         controller = mapViewModel.mapStateController as MapLibreStateController,
         styleUrl = activeProvider.styleUrl,
         onBearingChanged = { mapBearing = it },
+        faaChartsEnabled = showFaaCharts,
+        airspaceEnabled = showAirspace,
+        openAipApiKey = openAipApiKey,
         topStart = {
             Column {
                 AnimatedVisibility(
@@ -141,6 +152,26 @@ fun MapScreen(
                     FollowUserLocationFab(
                         isFollowing = isFollowingUser,
                         onClick = { mapViewModel.toggleFollowUserLocation() },
+                    )
+                }
+                MapFab(
+                    onClick = { mapViewModel.toggleFaaCharts() },
+                    active = showFaaCharts,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Layers,
+                        contentDescription = stringResource(Res.string.show_faa_charts),
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+                MapFab(
+                    onClick = { mapViewModel.toggleAirspace() },
+                    active = showAirspace,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Air,
+                        contentDescription = stringResource(Res.string.show_airspace),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
                 CompassFab(

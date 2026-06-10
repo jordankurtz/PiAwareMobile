@@ -216,4 +216,9 @@
     <string name="clear_map_cache_confirm_message">Cached tiles will be deleted. Offline maps will not be affected.</string>
     <string name="clear_map_cache_confirm_clear">Clear</string>
     <string name="clear_map_cache_confirm_cancel">Cancel</string>
+    <string name="show_faa_charts">FAA Sectional Charts</string>
+    <string name="show_faa_charts_description">Overlay US VFR sectional charts on the map</string>
+    <string name="show_airspace">Airspace</string>
+    <string name="show_airspace_description">Show airspace classes and restrictions (OpenAIP key required)</string>
+    <string name="openaip_api_key_title">OpenAIP API Key</string>
 </resources>
