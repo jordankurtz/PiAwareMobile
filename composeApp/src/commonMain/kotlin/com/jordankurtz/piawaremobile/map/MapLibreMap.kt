@@ -42,6 +42,10 @@ fun MapLibreMap(
     styleUrl: String,
     modifier: Modifier = Modifier,
     gesturesEnabled: Boolean = true,
+    topStart: @Composable () -> Unit = {},
+    topEnd: @Composable () -> Unit = {},
+    bottomStart: @Composable () -> Unit = {},
+    bottomEnd: @Composable () -> Unit = {},
 ) {
     val cameraState = rememberCameraState()
     val density = LocalDensity.current
@@ -69,7 +73,10 @@ fun MapLibreMap(
         if (gesturesEnabled) GestureOptions.Standard else GestureOptions.AllDisabled
     val mapOptions =
         remember(gestureOptions) {
-            MapOptions(gestureOptions = gestureOptions)
+            MapOptions(
+                gestureOptions = gestureOptions,
+                ornamentOptions = defaultOrnamentOptions(),
+            )
         }
 
     val zoomRange = controller.zoomLimits()
@@ -120,6 +127,11 @@ fun MapLibreMap(
                 }
             }
         }
+
+        Box(modifier = Modifier.align(Alignment.TopStart)) { topStart() }
+        Box(modifier = Modifier.align(Alignment.TopEnd)) { topEnd() }
+        Box(modifier = Modifier.align(Alignment.BottomStart)) { bottomStart() }
+        Box(modifier = Modifier.align(Alignment.BottomEnd)) { bottomEnd() }
     }
 }
 

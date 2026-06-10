@@ -5,8 +5,10 @@ import com.jordankurtz.piawaremobile.map.cache.FileTileCache
 import com.jordankurtz.piawaremobile.map.cache.JvmCacheFileSystem
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.cache.TileCacheDatabase
+import com.jordankurtz.piawaremobile.map.offline.DesktopMapLibreOfflineApi
 import com.jordankurtz.piawaremobile.map.offline.DesktopThumbnailFileManager
 import com.jordankurtz.piawaremobile.map.offline.DesktopThumbnailGenerator
+import com.jordankurtz.piawaremobile.map.offline.MapLibreOfflineApi
 import com.jordankurtz.piawaremobile.map.offline.ThumbnailFileManager
 import com.jordankurtz.piawaremobile.map.offline.ThumbnailGenerator
 import kotlinx.coroutines.CoroutineDispatcher
@@ -37,13 +39,16 @@ actual class TileCacheModule {
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): ThumbnailGenerator =
         DesktopThumbnailGenerator(
-            tileCacheDir = desktopCacheDir(),
             ioDispatcher = ioDispatcher,
         )
 
     @Single
     actual fun provideThumbnailFileManager(contextWrapper: ContextWrapper): ThumbnailFileManager =
         DesktopThumbnailFileManager(File(desktopCacheDir().parent, "thumbnails"))
+
+    @Single
+    actual fun provideMapLibreOfflineApi(contextWrapper: ContextWrapper): MapLibreOfflineApi =
+        DesktopMapLibreOfflineApi()
 }
 
 internal fun desktopCacheDir(): File {

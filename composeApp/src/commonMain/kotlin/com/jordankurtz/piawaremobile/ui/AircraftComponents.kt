@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
@@ -46,27 +47,26 @@ import piawaremobile.composeapp.generated.resources.value_speed_knots
 import piawaremobile.composeapp.generated.resources.value_vertical_speed_fpm
 import kotlin.math.roundToInt
 
-/**
- * A labeled value display with the label on top and value below.
- */
 @Composable
 fun LabeledValue(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
+    valueColor: Color = Color.Unspecified,
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(label, style = MaterialTheme.typography.labelSmall)
-        Text(value, style = MaterialTheme.typography.bodyLarge)
+        Text(value, style = MaterialTheme.typography.bodyLarge, color = valueColor)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
-/**
- * Primary aircraft details: Altitude, Heading, Speed
- */
 @Composable
 fun AircraftPrimaryDetails(
     aircraft: Aircraft,
@@ -98,9 +98,6 @@ fun AircraftPrimaryDetails(
     }
 }
 
-/**
- * Location details: Location coordinates, Distance, Direction
- */
 @Composable
 fun AircraftLocationDetails(
     aircraft: Aircraft,
@@ -145,13 +142,11 @@ fun AircraftLocationDetails(
     }
 }
 
-/**
- * Secondary aircraft details: Vertical Speed, Squawk
- */
 @Composable
 fun AircraftSecondaryDetails(
     aircraft: Aircraft,
     modifier: Modifier = Modifier,
+    squawkValueColor: Color = Color.Unspecified,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -168,14 +163,12 @@ fun AircraftSecondaryDetails(
             LabeledValue(
                 label = stringResource(Res.string.label_squawk),
                 value = it,
+                valueColor = squawkValueColor,
             )
         }
     }
 }
 
-/**
- * Signal details: RSSI, Last Seen
- */
 @Composable
 fun AircraftSignalDetails(
     aircraft: Aircraft,
@@ -201,9 +194,6 @@ fun AircraftSignalDetails(
     }
 }
 
-/**
- * Flight-specific details from FlightAware: Aircraft Type, Registration
- */
 @Composable
 fun FlightAircraftDetails(
     flight: Flight,
@@ -229,9 +219,6 @@ fun FlightAircraftDetails(
     }
 }
 
-/**
- * Complete aircraft details grid with all information.
- */
 @Composable
 fun AircraftDetailsGrid(
     aircraft: Aircraft,
@@ -255,9 +242,6 @@ fun AircraftDetailsGrid(
     }
 }
 
-/**
- * Aircraft info row showing ICAO type, description, and WTC.
- */
 @Composable
 fun AircraftInfoRow(
     info: AircraftInfo,
@@ -278,8 +262,6 @@ fun AircraftInfoRow(
         }
     }
 }
-
-// Extension functions
 
 fun Double.round(decimals: Int): Double {
     var multiplier = 1.0

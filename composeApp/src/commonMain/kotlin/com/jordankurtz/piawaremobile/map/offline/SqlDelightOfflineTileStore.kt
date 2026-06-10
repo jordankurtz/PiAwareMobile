@@ -5,6 +5,7 @@ import com.jordankurtz.piawaremobile.map.cache.TileCacheQueries
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
+@Suppress("TooManyFunctions")
 class SqlDelightOfflineTileStore(
     private val queries: TileCacheQueries,
     private val ioDispatcher: CoroutineDispatcher,
@@ -136,6 +137,27 @@ class SqlDelightOfflineTileStore(
     ) = withContext(ioDispatcher) {
         queries.updateRegionThumbnail(thumbnailZoom = zoom.toLong(), thumbnailPath = path, id = id)
     }
+
+    override suspend fun setNativeRegionId(
+        regionId: Long,
+        nativeId: Long,
+    ): Unit =
+        withContext(ioDispatcher) {
+            queries.updateNativeRegionId(nativeRegionId = nativeId, id = regionId)
+        }
+
+    override suspend fun markLegacyRasterRegionsFailed(validProviderIds: List<String>): Unit =
+        withContext(ioDispatcher) {
+            queries.selectAllRegions().executeAsList()
+                .filter { it.provider_id !in validProviderIds }
+                .forEach { region ->
+                    queries.updateRegionStatus(
+                        status = DownloadStatus.FAILED.name,
+                        downloaded_tile_count = 0L,
+                        id = region.id,
+                    )
+                }
+        }
 }
 
 private fun Offline_region.toOfflineRegion() =
@@ -156,4 +178,5 @@ private fun Offline_region.toOfflineRegion() =
         downloadedTileCount = downloaded_tile_count,
         thumbnailZoom = thumbnail_zoom?.toInt(),
         thumbnailPath = thumbnail_path,
+        nativeRegionId = native_region_id,
     )

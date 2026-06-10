@@ -1,6 +1,5 @@
 package com.jordankurtz.piawaremobile.map.offline
 
-import com.jordankurtz.piawaremobile.map.cache.TileCache
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -37,7 +36,7 @@ class OfflineMapsViewModelTest {
 
     private lateinit var store: OfflineTileStore
     private lateinit var engine: DownloadEngine
-    private lateinit var tileCache: TileCache
+    private lateinit var mapLibreOfflineApi: MapLibreOfflineApi
     private lateinit var thumbnailGenerator: ThumbnailGenerator
     private lateinit var thumbnailFileManager: ThumbnailFileManager
     private lateinit var vm: OfflineMapsViewModel
@@ -52,16 +51,17 @@ class OfflineMapsViewModelTest {
             maxLat = 41.0,
             minLon = -75.0,
             maxLon = -74.0,
-            providerId = "openstreetmap",
+            providerId = "openfreemap-bright",
             createdAt = 1000L,
             status = DownloadStatus.COMPLETE,
+            nativeRegionId = 42L,
         )
 
     private fun makeVm() =
         OfflineMapsViewModel(
             store,
             engine,
-            tileCache,
+            mapLibreOfflineApi,
             downloadScopeHolder,
             thumbnailGenerator,
             thumbnailFileManager,
@@ -73,12 +73,14 @@ class OfflineMapsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         store = mock()
         engine = mock()
-        tileCache = mock()
+        mapLibreOfflineApi = mock()
         thumbnailGenerator = mock()
         thumbnailFileManager = mock()
         everySuspend { store.resetStuckDownloads() } returns Unit
+        everySuspend { store.markLegacyRasterRegionsFailed(any()) } returns Unit
         everySuspend { store.updateDownloadStatus(any(), any(), any()) } returns Unit
         everySuspend { store.updateRegionStats(any(), any(), any()) } returns Unit
+        everySuspend { mapLibreOfflineApi.deleteRegion(any()) } returns Unit
     }
 
     @AfterTest
@@ -102,8 +104,6 @@ class OfflineMapsViewModelTest {
         runTest {
             everySuspend { store.getRegions() } returns listOf(savedRegion)
             everySuspend { store.deleteRegion(any()) } returns Unit
-            everySuspend { store.getExclusiveTilesForRegion(any()) } returns emptyList()
-            everySuspend { store.getFreedBytesForRegion(any()) } returns 0L
             every { thumbnailFileManager.delete(any()) } returns Unit
 
             vm = makeVm()
@@ -114,6 +114,7 @@ class OfflineMapsViewModelTest {
             vm.confirmDelete()
             advanceUntilIdle()
 
+            verifySuspend(mode = VerifyMode.exactly(1)) { mapLibreOfflineApi.deleteRegion(42L) }
             verifySuspend(mode = VerifyMode.exactly(1)) { store.deleteRegion(savedRegion.id) }
             assertEquals(emptyList(), vm.regions.value)
         }
@@ -329,7 +330,6 @@ class OfflineMapsViewModelTest {
         runTest {
             val partialRegion = savedRegion.copy(status = DownloadStatus.PARTIAL)
             everySuspend { store.getRegions() } returns listOf(partialRegion)
-            everySuspend { store.getFreedBytesForRegion(any()) } returns 0L
 
             vm = makeVm()
             advanceUntilIdle()
@@ -360,7 +360,7 @@ class OfflineMapsViewModelTest {
             verifySuspend(mode = VerifyMode.exactly(1)) {
                 thumbnailGenerator.generate(
                     bounds = bounds,
-                    providerId = any(),
+                    styleUrl = any(),
                     thumbnailZoom = 12,
                     outputPath = "/cache/thumbnails/42.png",
                 )
@@ -412,7 +412,7 @@ class OfflineMapsViewModelTest {
             verifySuspend(mode = VerifyMode.exactly(1)) {
                 thumbnailGenerator.generate(
                     bounds = any(),
-                    providerId = any(),
+                    styleUrl = any(),
                     thumbnailZoom = 12,
                     outputPath = "/cache/thumbnails/5.png",
                 )
@@ -448,8 +448,6 @@ class OfflineMapsViewModelTest {
             val regionToDelete = savedRegion.copy(id = 3L)
             everySuspend { store.getRegions() } returns listOf(regionToDelete)
             everySuspend { store.deleteRegion(any()) } returns Unit
-            everySuspend { store.getExclusiveTilesForRegion(any()) } returns emptyList()
-            everySuspend { store.getFreedBytesForRegion(any()) } returns 0L
             every { thumbnailFileManager.delete(any()) } returns Unit
 
             vm = makeVm()

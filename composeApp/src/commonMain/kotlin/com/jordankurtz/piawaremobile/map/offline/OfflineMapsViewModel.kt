@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
-import com.jordankurtz.piawaremobile.map.cache.TileCache
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -24,7 +23,7 @@ import com.jordankurtz.piawaremobile.map.TileProviders as MapTileProviders
 class OfflineMapsViewModel(
     private val store: OfflineTileStore,
     private val engine: DownloadEngine,
-    private val tileCache: TileCache,
+    private val mapLibreOfflineApi: MapLibreOfflineApi,
     private val downloadScopeHolder: DownloadScopeHolder,
     private val thumbnailGenerator: ThumbnailGenerator,
     private val thumbnailFileManager: ThumbnailFileManager,
@@ -44,6 +43,7 @@ class OfflineMapsViewModel(
     init {
         viewModelScope.launch(ioDispatcher) {
             store.resetStuckDownloads()
+            store.markLegacyRasterRegionsFailed(MapTileProviders.ALL.map { it.id })
             _regions.value = store.getRegions()
             regenerateMissingThumbnails(_regions.value)
         }
@@ -62,9 +62,7 @@ class OfflineMapsViewModel(
     fun requestDeleteRegion(region: OfflineRegion) {
         if (region.status == DownloadStatus.DOWNLOADING) return
         _pendingDeleteRegion.value = region
-        viewModelScope.launch(ioDispatcher) {
-            _pendingDeleteFreedBytes.value = store.getFreedBytesForRegion(region.id)
-        }
+        _pendingDeleteFreedBytes.value = region.sizeBytes
     }
 
     fun cancelDelete() {
@@ -76,13 +74,11 @@ class OfflineMapsViewModel(
         val region = _pendingDeleteRegion.value ?: return
         _pendingDeleteRegion.value = null
         viewModelScope.launch(ioDispatcher) {
-            val exclusiveTiles = store.getExclusiveTilesForRegion(region.id)
-            for ((zoom, col, row) in exclusiveTiles) {
-                tileCache.delete(zoom, col, row, region.providerId)
-            }
+            region.nativeRegionId?.let { mapLibreOfflineApi.deleteRegion(it) }
             store.deleteRegion(region.id)
             thumbnailFileManager.delete(region.id)
             _regions.value = store.getRegions()
+            _pendingDeleteFreedBytes.value = 0L
         }
     }
 
@@ -118,7 +114,7 @@ class OfflineMapsViewModel(
                 val generated =
                     thumbnailGenerator.generate(
                         bounds = bounds,
-                        providerId = provider.id,
+                        styleUrl = provider.styleUrl,
                         thumbnailZoom = viewportZoom,
                         outputPath = outputPath,
                     )
@@ -126,7 +122,7 @@ class OfflineMapsViewModel(
                     store.updateThumbnail(regionId, viewportZoom, outputPath)
                 }
 
-                doDownload(regionId)
+                doDownload(regionId, provider)
             }
     }
 
@@ -134,11 +130,21 @@ class OfflineMapsViewModel(
         if (!_isDownloading.compareAndSet(expect = false, update = true)) return
         downloadJob =
             downloadScopeHolder.scope.launch {
-                doDownload(region.id)
+                val provider =
+                    MapTileProviders.ALL.find { it.id == region.providerId } ?: run {
+                        store.updateDownloadStatus(region.id, DownloadStatus.FAILED, 0L)
+                        _regions.value = store.getRegions()
+                        _isDownloading.value = false
+                        return@launch
+                    }
+                doDownload(region.id, provider)
             }
     }
 
-    private suspend fun doDownload(regionId: Long) {
+    private suspend fun doDownload(
+        regionId: Long,
+        provider: MapTileProviderConfig,
+    ) {
         var lastDownloadedCount = 0L
         var lastTileCount = 0L
         try {
@@ -154,7 +160,7 @@ class OfflineMapsViewModel(
                 }
             // Preserve previously downloaded count so cancel-after-retry doesn't regress progress
             lastDownloadedCount = region.downloadedTileCount
-            engine.download(region, TileProviders.findById(region.providerId)).collect { progress ->
+            engine.download(region, provider).collect { progress ->
                 lastDownloadedCount = progress.downloaded
                 lastTileCount = progress.total
                 store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, progress.downloaded)
@@ -205,11 +211,12 @@ class OfflineMapsViewModel(
             }
             .forEach { region ->
                 val zoom = region.thumbnailZoom ?: return@forEach
+                val provider = MapTileProviders.ALL.find { it.id == region.providerId } ?: return@forEach
                 val path = thumbnailFileManager.thumbnailPath(region.id)
                 val ok =
                     thumbnailGenerator.generate(
                         bounds = BoundingBox(region.minLat, region.maxLat, region.minLon, region.maxLon),
-                        providerId = region.providerId,
+                        styleUrl = provider.styleUrl,
                         thumbnailZoom = zoom,
                         outputPath = path,
                     )

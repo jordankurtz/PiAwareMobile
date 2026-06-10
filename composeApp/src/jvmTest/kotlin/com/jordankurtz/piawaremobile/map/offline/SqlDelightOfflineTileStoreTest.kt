@@ -328,6 +328,63 @@ class SqlDelightOfflineTileStoreTest {
             assertEquals("/cache/thumbnails/1.png", region?.thumbnailPath)
         }
 
+    @Test
+    fun `setNativeRegionId stores and retrieves native region id`() =
+        runTest(testDispatcher) {
+            val region =
+                OfflineRegion(
+                    name = "Test",
+                    minZoom = 8,
+                    maxZoom = 14,
+                    minLat = 37.0,
+                    maxLat = 38.0,
+                    minLon = -122.0,
+                    maxLon = -121.0,
+                    providerId = "openfreemap-bright",
+                    createdAt = 1000L,
+                )
+            val id = store.saveRegion(region)
+            store.setNativeRegionId(id, 999L)
+            val retrieved = store.getRegion(id)
+            assertEquals(999L, retrieved?.nativeRegionId)
+        }
+
+    @Test
+    fun `markLegacyRasterRegionsFailed marks unknown providers as FAILED`() =
+        runTest(testDispatcher) {
+            val knownRegion =
+                OfflineRegion(
+                    name = "Known",
+                    minZoom = 8,
+                    maxZoom = 14,
+                    minLat = 37.0,
+                    maxLat = 38.0,
+                    minLon = -122.0,
+                    maxLon = -121.0,
+                    providerId = "openfreemap-bright",
+                    createdAt = 1000L,
+                    status = DownloadStatus.COMPLETE,
+                )
+            val legacyRegion =
+                OfflineRegion(
+                    name = "Legacy",
+                    minZoom = 8,
+                    maxZoom = 14,
+                    minLat = 37.0,
+                    maxLat = 38.0,
+                    minLon = -122.0,
+                    maxLon = -121.0,
+                    providerId = "openstreetmap",
+                    createdAt = 1001L,
+                    status = DownloadStatus.COMPLETE,
+                )
+            val knownId = store.saveRegion(knownRegion)
+            val legacyId = store.saveRegion(legacyRegion)
+            store.markLegacyRasterRegionsFailed(listOf("openfreemap-bright"))
+            assertEquals(DownloadStatus.COMPLETE, store.getRegion(knownId)?.status)
+            assertEquals(DownloadStatus.FAILED, store.getRegion(legacyId)?.status)
+        }
+
     private fun insertTile(
         zoom: Int,
         col: Int,

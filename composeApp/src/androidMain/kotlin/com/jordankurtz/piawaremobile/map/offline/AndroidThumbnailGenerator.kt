@@ -1,66 +1,72 @@
 package com.jordankurtz.piawaremobile.map.offline
 
+import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.snapshotter.MapSnapshot
+import org.maplibre.android.snapshotter.MapSnapshotter
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.coroutines.resume
 
 class AndroidThumbnailGenerator(
-    private val tileCacheDir: File,
-    private val ioDispatcher: CoroutineDispatcher,
+    private val context: Context,
+    private val ioDispatcher: kotlinx.coroutines.CoroutineDispatcher,
 ) : ThumbnailGenerator {
     override suspend fun generate(
         bounds: BoundingBox,
-        providerId: String,
+        styleUrl: String,
         thumbnailZoom: Int,
         outputPath: String,
-    ): Boolean =
-        withContext(ioDispatcher) {
-            val (colMin, rowMin) = latLonToTile(bounds.maxLat, bounds.minLon, thumbnailZoom)
-            val (colMax, rowMax) = latLonToTile(bounds.minLat, bounds.maxLon, thumbnailZoom)
-            val gridW = colMax - colMin + 1
-            val gridH = rowMax - rowMin + 1
+    ): Boolean {
+        val latLngBounds =
+            LatLngBounds.Builder()
+                .include(LatLng(bounds.maxLat, bounds.maxLon))
+                .include(LatLng(bounds.minLat, bounds.minLon))
+                .build()
+        val center = latLngBounds.center
+        val cameraPosition =
+            CameraPosition.Builder()
+                .target(center)
+                .zoom(thumbnailZoom.toDouble())
+                .build()
+        val options =
+            MapSnapshotter.Options(OUTPUT_PX, OUTPUT_PX)
+                .withStyle(styleUrl)
+                .withRegion(latLngBounds)
+                .withCameraPosition(cameraPosition)
 
-            val stitched = Bitmap.createBitmap(gridW * TILE_PX, gridH * TILE_PX, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(stitched)
-
-            for (col in colMin..colMax) {
-                for (row in rowMin..rowMax) {
-                    val tileFile = File(tileCacheDir, "$providerId/$thumbnailZoom/$col/$row.png")
-                    if (!tileFile.exists()) {
-                        stitched.recycle()
-                        return@withContext false
-                    }
-                    val tile =
-                        BitmapFactory.decodeFile(tileFile.absolutePath) ?: run {
-                            stitched.recycle()
-                            return@withContext false
-                        }
-                    canvas.drawBitmap(
-                        tile,
-                        ((col - colMin) * TILE_PX).toFloat(),
-                        ((row - rowMin) * TILE_PX).toFloat(),
-                        null,
+        val snapshot: MapSnapshot? =
+            withContext(Dispatchers.Main) {
+                suspendCancellableCoroutine { cont ->
+                    val snapshotter = MapSnapshotter(context, options)
+                    cont.invokeOnCancellation { snapshotter.cancel() }
+                    snapshotter.start(
+                        { snap: MapSnapshot -> cont.resume(snap) },
+                        { cont.resume(null) },
                     )
-                    tile.recycle()
                 }
             }
+        snapshot ?: return false
 
-            val thumbnail = Bitmap.createScaledBitmap(stitched, OUTPUT_PX, OUTPUT_PX, true)
-            stitched.recycle()
-
-            File(outputPath).also { it.parentFile?.mkdirs() }.let { outFile ->
-                FileOutputStream(outFile).use { out -> thumbnail.compress(Bitmap.CompressFormat.PNG, 100, out) }
-            }
-            thumbnail.recycle()
-            true
+        return withContext(ioDispatcher) {
+            runCatching {
+                File(outputPath).also { it.parentFile?.mkdirs() }.let { outFile ->
+                    FileOutputStream(outFile).use { out ->
+                        snapshot.bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                    }
+                }
+                true
+            }.getOrElse { false }
         }
+    }
 
     private companion object {
-        const val TILE_PX = 256
         const val OUTPUT_PX = 256
     }
 }

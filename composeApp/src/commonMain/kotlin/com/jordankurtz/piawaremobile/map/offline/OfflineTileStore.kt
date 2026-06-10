@@ -50,4 +50,11 @@ interface OfflineTileStore {
         zoom: Int,
         path: String,
     )
+
+    suspend fun setNativeRegionId(
+        regionId: Long,
+        nativeId: Long,
+    )
+
+    suspend fun markLegacyRasterRegionsFailed(validProviderIds: List<String>)
 }

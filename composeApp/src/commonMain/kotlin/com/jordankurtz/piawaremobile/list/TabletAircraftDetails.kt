@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +53,6 @@ fun TabletAircraftDetails(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
     ) {
-        // Header with back button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -80,37 +83,44 @@ fun TabletAircraftDetails(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Aircraft details grid (no MiniMap - main map is visible)
-        AircraftDetailsGrid(aircraft = aircraft, userLocation = userLocation)
-
-        // Aircraft info row
-        info?.let {
-            Spacer(modifier = Modifier.height(16.dp))
-            AircraftInfoRow(it)
-        }
-
-        // Server info
         if (aircraftWithServers.servers.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text =
                     stringResource(
                         Res.string.detected_by,
                         aircraftWithServers.servers.joinToString(", ") { it.name },
                     ),
+                modifier = Modifier.padding(start = 48.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
-        // Flight details section
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                AircraftDetailsGrid(aircraft = aircraft, userLocation = userLocation)
+
+                info?.let {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AircraftInfoRow(it)
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
         FlightDetailsSection(
             aircraft = aircraft,
             flightDetails = flightDetails,
-            onLoadFlightDetails = { /* retry handled by re-selecting */ },
+            onLoadFlightDetails = { },
             onOpenFlightPage = onOpenFlightPage,
         )
     }
