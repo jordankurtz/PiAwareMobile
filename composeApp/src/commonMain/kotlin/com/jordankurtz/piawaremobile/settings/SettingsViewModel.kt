@@ -144,6 +144,16 @@ class SettingsViewModel(
             settingsService.deleteCustomProvider(id)
         }
 
+    fun updateShowFaaCharts(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowFaaCharts(enabled)
+        }
+
+    fun updateShowAirspace(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowAirspace(enabled)
+        }
+
     fun clearTileCache() =
         viewModelScope.launch {
             tileCache.clearAll()
