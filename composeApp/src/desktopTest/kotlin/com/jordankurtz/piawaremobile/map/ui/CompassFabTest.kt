@@ -6,7 +6,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
-import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
@@ -21,25 +20,12 @@ class CompassFabTest {
         }
 
     @Test
-    fun compassHiddenWhenBearingIsZero() =
+    fun compassAlwaysDisplayedWhenBearingIsZero() =
         runComposeUiTest {
             setContent {
                 CompassFab(bearing = 0f, onResetNorth = {})
             }
-            assertFails {
-                onNodeWithContentDescription("Reset north").assertIsDisplayed()
-            }
-        }
-
-    @Test
-    fun compassHiddenWhenBearingWithinOneDegreeTolerance() =
-        runComposeUiTest {
-            setContent {
-                CompassFab(bearing = 0.5f, onResetNorth = {})
-            }
-            assertFails {
-                onNodeWithContentDescription("Reset north").assertIsDisplayed()
-            }
+            onNodeWithContentDescription("Reset north").assertIsDisplayed()
         }
 
     @Test
