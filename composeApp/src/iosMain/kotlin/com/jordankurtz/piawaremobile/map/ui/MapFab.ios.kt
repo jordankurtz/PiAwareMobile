@@ -37,7 +37,12 @@ actual fun MapFab(
     ) {
         @OptIn(ExperimentalForeignApi::class)
         UIKitView<UIView>(
-            factory = { MapFabBlurView.create() as UIView },
+            factory = {
+                val view = MapFabBlurView.create() as UIView
+                view.clipsToBounds = true
+                view.layer.cornerRadius = 9999.0
+                view
+            },
             modifier = Modifier.fillMaxSize(),
             properties =
                 UIKitInteropProperties(
