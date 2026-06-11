@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.Overlay
@@ -25,14 +28,19 @@ import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.list.TabletAircraftListPanel
 import com.jordankurtz.piawaremobile.location.LocationViewModel
+import com.jordankurtz.piawaremobile.map.FollowUserLocationFab
 import com.jordankurtz.piawaremobile.map.MapLibreMap
 import com.jordankurtz.piawaremobile.map.MapLibreStateController
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
+import com.jordankurtz.piawaremobile.map.ui.CompassFab
+import com.jordankurtz.piawaremobile.map.ui.MapFab
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import piawaremobile.composeapp.generated.resources.Res
+import piawaremobile.composeapp.generated.resources.fit_to_aircraft
+import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_settings
 import piawaremobile.composeapp.generated.resources.settings_title
 
@@ -55,6 +63,9 @@ fun MapWithListLayout(
     val aircraftTrails by aircraftViewModel.aircraftTrails.collectAsState()
     val mapSelectedHex by mapViewModel.selectedAircraft.collectAsState()
     val activeProvider by mapViewModel.activeProvider.collectAsState()
+    val showUserLocationOnMap by mapViewModel.showUserLocationOnMap.collectAsState()
+    val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
+    var mapBearing by remember { mutableStateOf(0f) }
 
     // Sync aircraft updates to map
     LaunchedEffect(aircraft) {
@@ -108,39 +119,63 @@ fun MapWithListLayout(
             MapLibreMap(
                 controller = mapViewModel.mapStateController as MapLibreStateController,
                 styleUrl = activeProvider.styleUrl,
-            )
-            Column(modifier = Modifier.align(Alignment.TopStart)) {
-                if (isDebugBuild) {
-                    TileCacheDebugOverlay(
-                        stats = tileStats,
-                        currentZoom = currentZoom,
-                        zoomSettings = zoomSettings,
+                onBearingChanged = { mapBearing = it },
+                topStart = {
+                    Column {
+                        if (isDebugBuild) {
+                            TileCacheDebugOverlay(
+                                stats = tileStats,
+                                currentZoom = currentZoom,
+                                zoomSettings = zoomSettings,
+                                modifier = Modifier.padding(8.dp),
+                            )
+                        }
+                        Overlay(
+                            numberOfPlanes = numberOfPlanes,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        )
+                    }
+                },
+                topEnd = {
+                    Column(
                         modifier = Modifier.padding(8.dp),
-                    )
-                }
-                Overlay(
-                    numberOfPlanes = numberOfPlanes,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                )
-            }
-            // Settings button
-            IconButton(
-                onClick = onSettingsClick,
-                modifier =
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp),
-                colors =
-                    IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                    ),
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_settings),
-                    contentDescription = stringResource(Res.string.settings_title),
-                    modifier = Modifier.size(24.dp),
-                )
-            }
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        IconButton(
+                            onClick = onSettingsClick,
+                            colors =
+                                IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                                ),
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_settings),
+                                contentDescription = stringResource(Res.string.settings_title),
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                        if (aircraft.isNotEmpty()) {
+                            MapFab(onClick = { mapViewModel.fitToAircraft(aircraft) }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.ic_plane),
+                                    contentDescription = stringResource(Res.string.fit_to_aircraft),
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                        }
+                        if (showUserLocationOnMap) {
+                            FollowUserLocationFab(
+                                isFollowing = isFollowingUser,
+                                onClick = { mapViewModel.toggleFollowUserLocation() },
+                            )
+                        }
+                        CompassFab(
+                            bearing = mapBearing,
+                            onResetNorth = { mapViewModel.resetBearing() },
+                        )
+                    }
+                },
+            )
         }
 
         VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
