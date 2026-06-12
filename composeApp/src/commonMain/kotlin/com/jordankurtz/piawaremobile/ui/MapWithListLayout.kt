@@ -143,9 +143,11 @@ fun MapWithListLayout(
                     ) {
                         IconButton(
                             onClick = onSettingsClick,
+                            modifier = Modifier.size(40.dp),
                             colors =
                                 IconButtonDefaults.iconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                                    contentColor = MaterialTheme.colorScheme.onSurface,
                                 ),
                         ) {
                             Icon(

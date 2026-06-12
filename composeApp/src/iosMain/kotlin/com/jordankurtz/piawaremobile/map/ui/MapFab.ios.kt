@@ -5,8 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,21 +21,21 @@ actual fun MapFab(
     active: Boolean,
     content: @Composable () -> Unit,
 ) {
+    val containerColor =
+        if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer
+    val contentColor =
+        if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
     Box(
         modifier =
             modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(
-                    if (active) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.primaryContainer
-                    },
-                )
+                .background(containerColor)
                 .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        content()
+        CompositionLocalProvider(LocalContentColor provides contentColor) {
+            content()
+        }
     }
 }
