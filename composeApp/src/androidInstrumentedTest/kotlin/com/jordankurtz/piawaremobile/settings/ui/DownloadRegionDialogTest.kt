@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.jordankurtz.piawaremobile.map.TileProviders
 import org.junit.Rule
 import org.junit.Test
 
@@ -14,7 +15,15 @@ class DownloadRegionDialogTest {
     @Test
     fun downloadRegionDialogRendersElements() {
         composeTestRule.setContent {
-            DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _, _ -> })
+            DownloadRegionDialog(
+                name = "",
+                onNameChange = {},
+                onDismiss = {},
+                onConfirm = { _, _, _, _ -> },
+                availableProviders = listOf(TileProviders.DEFAULT),
+                selectedProvider = TileProviders.DEFAULT,
+                onProviderChange = {},
+            )
         }
         composeTestRule.onNodeWithText("Download Region").assertIsDisplayed()
         composeTestRule.onNodeWithText("Region name").assertIsDisplayed()
@@ -25,7 +34,15 @@ class DownloadRegionDialogTest {
     @Test
     fun downloadButtonDisabledWhenNameBlank() {
         composeTestRule.setContent {
-            DownloadRegionDialog(name = "", onNameChange = {}, onDismiss = {}, onConfirm = { _, _, _ -> })
+            DownloadRegionDialog(
+                name = "",
+                onNameChange = {},
+                onDismiss = {},
+                onConfirm = { _, _, _, _ -> },
+                availableProviders = listOf(TileProviders.DEFAULT),
+                selectedProvider = TileProviders.DEFAULT,
+                onProviderChange = {},
+            )
         }
         composeTestRule.onNodeWithText("Download").assertIsNotEnabled()
     }

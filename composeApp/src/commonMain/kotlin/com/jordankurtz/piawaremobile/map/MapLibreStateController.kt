@@ -89,8 +89,13 @@ class MapLibreStateController : MapStateController {
      */
     fun setCameraState(state: CameraState?) {
         cameraState = state
-        state?.position?.let { position ->
-            cameraFlowState.value = position.toMapPosition()
+        if (state != null) {
+            val saved = cameraFlowState.value
+            state.position =
+                state.position.copy(
+                    target = Position(longitude = saved.longitude, latitude = saved.latitude),
+                    zoom = saved.zoom,
+                )
         }
     }
 
