@@ -34,7 +34,7 @@ fun CompassFab(
                 .semantics { contentDescription = label },
     ) {
         val northColor = Color(0xFFEF4444)
-        val southColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+        val southColor = MaterialTheme.colorScheme.onSurfaceVariant
         Canvas(
             modifier =
                 Modifier
