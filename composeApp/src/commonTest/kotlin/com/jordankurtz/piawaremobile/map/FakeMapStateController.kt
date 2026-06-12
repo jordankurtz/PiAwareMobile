@@ -126,4 +126,6 @@ class FakeMapStateController : MapStateController {
         addedPaths.remove(id)
         removedPathIds.add(id)
     }
+
+    override suspend fun resetBearing() {}
 }

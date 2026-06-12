@@ -36,12 +36,14 @@ import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Position
 import org.maplibre.compose.map.MaplibreMap as MaplibreComposeMap
 
+@Suppress("LongParameterList")
 @Composable
 fun MapLibreMap(
     controller: MapLibreStateController,
     styleUrl: String,
     modifier: Modifier = Modifier,
     gesturesEnabled: Boolean = true,
+    onBearingChanged: (Float) -> Unit = {},
     topStart: @Composable () -> Unit = {},
     topEnd: @Composable () -> Unit = {},
     bottomStart: @Composable () -> Unit = {},
@@ -66,6 +68,7 @@ fun MapLibreMap(
                     longitude = position.target.longitude,
                     zoom = position.zoom,
                 )
+                onBearingChanged(position.bearing.toFloat())
             }
     }
 

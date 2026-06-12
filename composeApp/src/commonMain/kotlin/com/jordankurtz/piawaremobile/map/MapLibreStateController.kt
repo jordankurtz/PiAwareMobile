@@ -284,6 +284,14 @@ class MapLibreStateController : MapStateController {
         paths[id] = PathData(id, color, width, points)
     }
 
+    override suspend fun resetBearing() {
+        val state = cameraState ?: return
+        state.animateTo(
+            state.position.copy(bearing = 0.0),
+            duration = DEFAULT_ANIMATION_DURATION_MS.milliseconds,
+        )
+    }
+
     override fun removePath(id: String) {
         paths.remove(id)
     }

@@ -74,4 +74,6 @@ interface MapStateController {
     )
 
     fun removePath(id: String)
+
+    suspend fun resetBearing()
 }
