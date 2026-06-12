@@ -36,6 +36,7 @@ import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Position
 import org.maplibre.compose.map.MaplibreMap as MaplibreComposeMap
 
+@Suppress("LongParameterList")
 @Composable
 fun MapLibreMap(
     controller: MapLibreStateController,
