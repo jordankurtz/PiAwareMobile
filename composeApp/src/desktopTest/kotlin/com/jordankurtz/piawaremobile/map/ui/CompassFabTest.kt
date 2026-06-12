@@ -20,12 +20,12 @@ class CompassFabTest {
         }
 
     @Test
-    fun compassAlwaysDisplayedWhenBearingIsZero() =
+    fun compassHiddenWhenBearingIsZero() =
         runComposeUiTest {
             setContent {
                 CompassFab(bearing = 0f, onResetNorth = {})
             }
-            onNodeWithContentDescription("Reset north").assertIsDisplayed()
+            onNodeWithContentDescription("Reset north").assertDoesNotExist()
         }
 
     @Test
