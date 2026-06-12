@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -43,6 +46,8 @@ import piawaremobile.composeapp.generated.resources.fit_to_aircraft
 import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_settings
 import piawaremobile.composeapp.generated.resources.settings_title
+import piawaremobile.composeapp.generated.resources.show_airspace
+import piawaremobile.composeapp.generated.resources.show_faa_charts
 
 @Composable
 fun MapWithListLayout(
@@ -65,6 +70,9 @@ fun MapWithListLayout(
     val activeProvider by mapViewModel.activeProvider.collectAsState()
     val showUserLocationOnMap by mapViewModel.showUserLocationOnMap.collectAsState()
     val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
+    val showFaaCharts by mapViewModel.showFaaCharts.collectAsState()
+    val showAirspace by mapViewModel.showAirspace.collectAsState()
+    val openAipApiKey by mapViewModel.openAipApiKey.collectAsState()
     var mapBearing by remember { mutableStateOf(0f) }
 
     // Sync aircraft updates to map
@@ -120,6 +128,9 @@ fun MapWithListLayout(
                 controller = mapViewModel.mapStateController as MapLibreStateController,
                 styleUrl = activeProvider.styleUrl,
                 onBearingChanged = { mapBearing = it },
+                faaChartsEnabled = showFaaCharts,
+                airspaceEnabled = showAirspace,
+                openAipApiKey = openAipApiKey,
                 topStart = {
                     Column {
                         if (isDebugBuild) {
@@ -169,6 +180,26 @@ fun MapWithListLayout(
                             FollowUserLocationFab(
                                 isFollowing = isFollowingUser,
                                 onClick = { mapViewModel.toggleFollowUserLocation() },
+                            )
+                        }
+                        MapFab(
+                            onClick = { mapViewModel.toggleFaaCharts() },
+                            active = showFaaCharts,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Layers,
+                                contentDescription = stringResource(Res.string.show_faa_charts),
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                        MapFab(
+                            onClick = { mapViewModel.toggleAirspace() },
+                            active = showAirspace,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Air,
+                                contentDescription = stringResource(Res.string.show_airspace),
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                         CompassFab(

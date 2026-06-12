@@ -35,7 +35,6 @@ import org.maplibre.compose.layers.RasterLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.sources.GeoJsonData
-import org.maplibre.compose.sources.TileCoordinateSystem
 import org.maplibre.compose.sources.TileSetOptions
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.sources.rememberRasterSource
@@ -121,7 +120,7 @@ fun MapLibreMap(
                 val faaSource =
                     rememberRasterSource(
                         tiles = listOf(FAA_SECTIONAL_TILE_URL),
-                        options = TileSetOptions(tileCoordinateSystem = TileCoordinateSystem.TMS),
+                        options = TileSetOptions(),
                     )
                 RasterLayer(
                     id = "faa-sectional",

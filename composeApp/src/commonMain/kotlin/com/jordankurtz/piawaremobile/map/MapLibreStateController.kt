@@ -65,6 +65,7 @@ class MapLibreStateController : MapStateController {
 
     @Volatile
     private var cameraState: CameraState? = null
+    private var lastCameraPosition: MapPosition? = null
 
     private var pixelDensity: Float = 1f
 
@@ -90,12 +91,13 @@ class MapLibreStateController : MapStateController {
     fun setCameraState(state: CameraState?) {
         cameraState = state
         if (state != null) {
-            val saved = cameraFlowState.value
-            state.position =
-                state.position.copy(
-                    target = Position(longitude = saved.longitude, latitude = saved.latitude),
-                    zoom = saved.zoom,
-                )
+            lastCameraPosition?.let { saved ->
+                state.position =
+                    state.position.copy(
+                        target = Position(longitude = saved.longitude, latitude = saved.latitude),
+                        zoom = saved.zoom,
+                    )
+            }
         }
     }
 
@@ -108,7 +110,9 @@ class MapLibreStateController : MapStateController {
         longitude: Double,
         zoom: Double,
     ) {
-        cameraFlowState.value = MapPosition(latitude, longitude, zoom)
+        val position = MapPosition(latitude, longitude, zoom)
+        lastCameraPosition = position
+        cameraFlowState.value = position
     }
 
     override var zoom: Double
@@ -138,7 +142,9 @@ class MapLibreStateController : MapStateController {
     ) {
         val state =
             cameraState ?: run {
-                cameraFlowState.value = MapPosition(latitude, longitude, zoom)
+                val position = MapPosition(latitude, longitude, zoom)
+                lastCameraPosition = position
+                cameraFlowState.value = position
                 return
             }
         state.position =
@@ -157,7 +163,9 @@ class MapLibreStateController : MapStateController {
     ) {
         val state =
             cameraState ?: run {
-                cameraFlowState.value = MapPosition(latitude, longitude, zoom)
+                val position = MapPosition(latitude, longitude, zoom)
+                lastCameraPosition = position
+                cameraFlowState.value = position
                 return
             }
         val target =
