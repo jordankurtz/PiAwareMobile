@@ -22,9 +22,9 @@ actual fun MapFab(
     content: @Composable () -> Unit,
 ) {
     val containerColor =
-        if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer
+        if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
     val contentColor =
-        if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
+        if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
     Box(
         modifier =
             modifier
