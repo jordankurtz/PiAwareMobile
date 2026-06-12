@@ -13,6 +13,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
+@Suppress("CyclomaticComplexMethod")
 @Single(binds = [SettingsRepository::class])
 class SettingsRepositoryImpl(
     private val datastore: DataStore<Preferences>,
@@ -66,6 +67,9 @@ class SettingsRepositoryImpl(
                     } ?: emptyList(),
                 showFaaCharts = preferences[SettingsRepository.SHOW_FAA_CHARTS] ?: false,
                 showAirspace = preferences[SettingsRepository.SHOW_AIRSPACE] ?: false,
+                showFaaIfrLow = preferences[SettingsRepository.SHOW_FAA_IFR_LOW] ?: false,
+                showFaaIfrHigh = preferences[SettingsRepository.SHOW_FAA_IFR_HIGH] ?: false,
+                showTfrs = preferences[SettingsRepository.SHOW_TFRS] ?: false,
             )
         }
     }
@@ -91,6 +95,9 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.CUSTOM_PROVIDERS_JSON] = Json.encodeToString(settings.customProviders)
             preferences[SettingsRepository.SHOW_FAA_CHARTS] = settings.showFaaCharts
             preferences[SettingsRepository.SHOW_AIRSPACE] = settings.showAirspace
+            preferences[SettingsRepository.SHOW_FAA_IFR_LOW] = settings.showFaaIfrLow
+            preferences[SettingsRepository.SHOW_FAA_IFR_HIGH] = settings.showFaaIfrHigh
+            preferences[SettingsRepository.SHOW_TFRS] = settings.showTfrs
         }
     }
 

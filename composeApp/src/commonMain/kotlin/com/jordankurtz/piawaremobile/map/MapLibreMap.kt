@@ -48,6 +48,15 @@ import org.maplibre.compose.map.MaplibreMap as MaplibreComposeMap
 private const val FAA_SECTIONAL_TILE_URL =
     "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/VFR_Sectional/MapServer/tile/{z}/{y}/{x}"
 
+private const val FAA_IFR_LOW_TILE_URL =
+    "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_Low/MapServer/tile/{z}/{y}/{x}"
+
+private const val FAA_IFR_HIGH_TILE_URL =
+    "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_High/MapServer/tile/{z}/{y}/{x}"
+
+private const val FAA_TFRS_GEOJSON_URL =
+    "https://tfr.faa.gov/tfr2/tfr.geojson"
+
 private const val OPENAIP_TILE_URL_TEMPLATE =
     "https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.pbf?apiKey="
 
@@ -60,6 +69,9 @@ fun MapLibreMap(
     gesturesEnabled: Boolean = true,
     onBearingChanged: (Float) -> Unit = {},
     faaChartsEnabled: Boolean = false,
+    faaIfrLowEnabled: Boolean = false,
+    faaIfrHighEnabled: Boolean = false,
+    tfrsEnabled: Boolean = false,
     airspaceEnabled: Boolean = false,
     openAipApiKey: String = "",
     topStart: @Composable () -> Unit = {},
@@ -126,6 +138,52 @@ fun MapLibreMap(
                     id = "faa-sectional",
                     source = faaSource,
                     opacity = const(0.6f),
+                )
+            }
+
+            if (faaIfrLowEnabled) {
+                val ifrLowSource =
+                    rememberRasterSource(
+                        tiles = listOf(FAA_IFR_LOW_TILE_URL),
+                        options = TileSetOptions(),
+                    )
+                RasterLayer(
+                    id = "faa-ifr-low",
+                    source = ifrLowSource,
+                    opacity = const(0.6f),
+                )
+            }
+
+            if (faaIfrHighEnabled) {
+                val ifrHighSource =
+                    rememberRasterSource(
+                        tiles = listOf(FAA_IFR_HIGH_TILE_URL),
+                        options = TileSetOptions(),
+                    )
+                RasterLayer(
+                    id = "faa-ifr-high",
+                    source = ifrHighSource,
+                    opacity = const(0.6f),
+                )
+            }
+
+            if (tfrsEnabled) {
+                val tfrSource =
+                    rememberGeoJsonSource(
+                        data = GeoJsonData.Uri(FAA_TFRS_GEOJSON_URL),
+                    )
+                FillLayer(
+                    id = "tfrs-fill",
+                    source = tfrSource,
+                    color = const(Color(0xFFFF4444)),
+                    opacity = const(0.2f),
+                )
+                LineLayer(
+                    id = "tfrs-border",
+                    source = tfrSource,
+                    color = const(Color(0xFFFF4444)),
+                    width = const(2.dp),
+                    opacity = const(0.8f),
                 )
             }
 

@@ -23,4 +23,7 @@ data class Settings(
     val customProviders: List<CustomProviderConfig> = emptyList(),
     val showFaaCharts: Boolean = false,
     val showAirspace: Boolean = false,
+    val showFaaIfrLow: Boolean = false,
+    val showFaaIfrHigh: Boolean = false,
+    val showTfrs: Boolean = false,
 )

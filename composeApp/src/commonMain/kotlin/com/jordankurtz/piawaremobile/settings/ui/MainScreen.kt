@@ -72,10 +72,6 @@ import piawaremobile.composeapp.generated.resources.restore_map_position_title
 import piawaremobile.composeapp.generated.resources.servers_section_title
 import piawaremobile.composeapp.generated.resources.servers_title
 import piawaremobile.composeapp.generated.resources.settings_title
-import piawaremobile.composeapp.generated.resources.show_airspace
-import piawaremobile.composeapp.generated.resources.show_airspace_description
-import piawaremobile.composeapp.generated.resources.show_faa_charts
-import piawaremobile.composeapp.generated.resources.show_faa_charts_description
 import piawaremobile.composeapp.generated.resources.show_minimap_trails_description
 import piawaremobile.composeapp.generated.resources.show_minimap_trails_title
 import piawaremobile.composeapp.generated.resources.show_receiver_locations_description
@@ -190,20 +186,6 @@ fun MainScreen(
                         description = stringResource(Res.string.show_user_location_description),
                         checked = settings.getValue()?.showUserLocationOnMap ?: true,
                         onCheckedChange = viewModel::updateShowUserLocationOnMap,
-                    )
-                    HorizontalDivider()
-                    SettingsSwitch(
-                        title = stringResource(Res.string.show_faa_charts),
-                        description = stringResource(Res.string.show_faa_charts_description),
-                        checked = settings.getValue()?.showFaaCharts ?: false,
-                        onCheckedChange = viewModel::updateShowFaaCharts,
-                    )
-                    HorizontalDivider()
-                    SettingsSwitch(
-                        title = stringResource(Res.string.show_airspace),
-                        description = stringResource(Res.string.show_airspace_description),
-                        checked = settings.getValue()?.showAirspace ?: false,
-                        onCheckedChange = viewModel::updateShowAirspace,
                     )
                     HorizontalDivider()
                     SettingsTextInput(

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +37,7 @@ import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
 import com.jordankurtz.piawaremobile.map.ui.CompassFab
 import com.jordankurtz.piawaremobile.map.ui.MapFab
+import com.jordankurtz.piawaremobile.map.ui.OverlaySheet
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -46,8 +46,7 @@ import piawaremobile.composeapp.generated.resources.fit_to_aircraft
 import piawaremobile.composeapp.generated.resources.ic_plane
 import piawaremobile.composeapp.generated.resources.ic_settings
 import piawaremobile.composeapp.generated.resources.settings_title
-import piawaremobile.composeapp.generated.resources.show_airspace
-import piawaremobile.composeapp.generated.resources.show_faa_charts
+import piawaremobile.composeapp.generated.resources.show_overlays
 
 @Composable
 fun MapWithListLayout(
@@ -71,8 +70,13 @@ fun MapWithListLayout(
     val showUserLocationOnMap by mapViewModel.showUserLocationOnMap.collectAsState()
     val isFollowingUser by mapViewModel.followingUserLocation.collectAsState()
     val showFaaCharts by mapViewModel.showFaaCharts.collectAsState()
+    val showFaaIfrLow by mapViewModel.showFaaIfrLow.collectAsState()
+    val showFaaIfrHigh by mapViewModel.showFaaIfrHigh.collectAsState()
     val showAirspace by mapViewModel.showAirspace.collectAsState()
+    val showTfrs by mapViewModel.showTfrs.collectAsState()
     val openAipApiKey by mapViewModel.openAipApiKey.collectAsState()
+    val anyOverlayActive = showFaaCharts || showFaaIfrLow || showFaaIfrHigh || showAirspace || showTfrs
+    var showOverlaySheet by remember { mutableStateOf(false) }
     var mapBearing by remember { mutableStateOf(0f) }
 
     // Sync aircraft updates to map
@@ -129,6 +133,9 @@ fun MapWithListLayout(
                 styleUrl = activeProvider.styleUrl,
                 onBearingChanged = { mapBearing = it },
                 faaChartsEnabled = showFaaCharts,
+                faaIfrLowEnabled = showFaaIfrLow,
+                faaIfrHighEnabled = showFaaIfrHigh,
+                tfrsEnabled = showTfrs,
                 airspaceEnabled = showAirspace,
                 openAipApiKey = openAipApiKey,
                 topStart = {
@@ -183,22 +190,12 @@ fun MapWithListLayout(
                             )
                         }
                         MapFab(
-                            onClick = { mapViewModel.toggleFaaCharts() },
-                            active = showFaaCharts,
+                            onClick = { showOverlaySheet = true },
+                            active = anyOverlayActive,
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Layers,
-                                contentDescription = stringResource(Res.string.show_faa_charts),
-                                modifier = Modifier.size(24.dp),
-                            )
-                        }
-                        MapFab(
-                            onClick = { mapViewModel.toggleAirspace() },
-                            active = showAirspace,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Air,
-                                contentDescription = stringResource(Res.string.show_airspace),
+                                contentDescription = stringResource(Res.string.show_overlays),
                                 modifier = Modifier.size(24.dp),
                             )
                         }
@@ -233,5 +230,22 @@ fun MapWithListLayout(
                 },
             )
         }
+    }
+
+    if (showOverlaySheet) {
+        OverlaySheet(
+            showFaaCharts = showFaaCharts,
+            showFaaIfrLow = showFaaIfrLow,
+            showFaaIfrHigh = showFaaIfrHigh,
+            showAirspace = showAirspace,
+            showTfrs = showTfrs,
+            hasOpenAipKey = openAipApiKey.isNotEmpty(),
+            onToggleFaaCharts = { mapViewModel.toggleFaaCharts() },
+            onToggleFaaIfrLow = { mapViewModel.toggleFaaIfrLow() },
+            onToggleFaaIfrHigh = { mapViewModel.toggleFaaIfrHigh() },
+            onToggleAirspace = { mapViewModel.toggleAirspace() },
+            onToggleTfrs = { mapViewModel.toggleTfrs() },
+            onDismiss = { showOverlaySheet = false },
+        )
     }
 }

@@ -217,8 +217,16 @@
     <string name="clear_map_cache_confirm_clear">Clear</string>
     <string name="clear_map_cache_confirm_cancel">Cancel</string>
     <string name="show_faa_charts">FAA Sectional Charts</string>
-    <string name="show_faa_charts_description">Overlay US VFR sectional charts on the map</string>
+    <string name="show_faa_charts_description">US VFR sectional aeronautical charts</string>
     <string name="show_airspace">Airspace</string>
-    <string name="show_airspace_description">Show airspace classes and restrictions (OpenAIP key required)</string>
+    <string name="show_airspace_description">OpenAIP airspace boundaries (API key required)</string>
     <string name="openaip_api_key_title">OpenAIP API Key</string>
+    <string name="overlay_sheet_title">Map Overlays</string>
+    <string name="faa_ifr_low">FAA IFR Low Enroute</string>
+    <string name="faa_ifr_low_description">US IFR enroute charts for low altitudes</string>
+    <string name="faa_ifr_high">FAA IFR High Enroute</string>
+    <string name="faa_ifr_high_description">US IFR enroute charts for high altitudes</string>
+    <string name="tfrs">TFRs</string>
+    <string name="tfrs_description">FAA Temporary Flight Restrictions</string>
+    <string name="show_overlays">Map overlays</string>
 </resources>

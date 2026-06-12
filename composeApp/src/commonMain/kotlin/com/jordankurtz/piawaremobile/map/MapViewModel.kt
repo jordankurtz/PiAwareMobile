@@ -88,6 +88,15 @@ class MapViewModel(
     private val _showAirspace = MutableStateFlow(false)
     val showAirspace: StateFlow<Boolean> = _showAirspace
 
+    private val _showFaaIfrLow = MutableStateFlow(false)
+    val showFaaIfrLow: StateFlow<Boolean> = _showFaaIfrLow
+
+    private val _showFaaIfrHigh = MutableStateFlow(false)
+    val showFaaIfrHigh: StateFlow<Boolean> = _showFaaIfrHigh
+
+    private val _showTfrs = MutableStateFlow(false)
+    val showTfrs: StateFlow<Boolean> = _showTfrs
+
     private val _openAipApiKey = MutableStateFlow("")
     val openAipApiKey: StateFlow<String> = _openAipApiKey
 
@@ -175,6 +184,18 @@ class MapViewModel(
         viewModelScope.launch { settingsService.setShowAirspace(!_showAirspace.value) }
     }
 
+    fun toggleFaaIfrLow() {
+        viewModelScope.launch { settingsService.setShowFaaIfrLow(!_showFaaIfrLow.value) }
+    }
+
+    fun toggleFaaIfrHigh() {
+        viewModelScope.launch { settingsService.setShowFaaIfrHigh(!_showFaaIfrHigh.value) }
+    }
+
+    fun toggleTfrs() {
+        viewModelScope.launch { settingsService.setShowTfrs(!_showTfrs.value) }
+    }
+
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
         _zoomSettings.value = Triple(settings.minZoomLevel, settings.maxZoomLevel, settings.defaultZoomLevel)
@@ -182,6 +203,9 @@ class MapViewModel(
         if (!settings.showUserLocationOnMap) _followingUserLocation.value = false
         _showFaaCharts.value = settings.showFaaCharts
         _showAirspace.value = settings.showAirspace
+        _showFaaIfrLow.value = settings.showFaaIfrLow
+        _showFaaIfrHigh.value = settings.showFaaIfrHigh
+        _showTfrs.value = settings.showTfrs
         _openAipApiKey.value = settings.apiKeys["openaip"] ?: ""
         onAircraftTrailsUpdated(lastTrails)
         mapStateController.setZoomLimits(

@@ -19,7 +19,6 @@ import com.jordankurtz.piawaremobile.map.model.MapPosition
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.spatialk.geojson.Position
 import kotlin.concurrent.Volatile
@@ -313,13 +312,6 @@ class MapLibreStateController : MapStateController {
         const val DEFAULT_ANIMATION_DURATION_MS: Long = 500L
     }
 }
-
-private fun CameraPosition.toMapPosition(): MapPosition =
-    MapPosition(
-        latitude = target.latitude,
-        longitude = target.longitude,
-        zoom = zoom,
-    )
 
 private fun MapBounds.toBoundingBox(): org.maplibre.spatialk.geojson.BoundingBox =
     org.maplibre.spatialk.geojson.BoundingBox(

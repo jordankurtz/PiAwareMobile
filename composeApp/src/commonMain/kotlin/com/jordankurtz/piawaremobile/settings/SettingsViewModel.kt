@@ -154,6 +154,21 @@ class SettingsViewModel(
             settingsService.setShowAirspace(enabled)
         }
 
+    fun updateShowFaaIfrLow(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowFaaIfrLow(enabled)
+        }
+
+    fun updateShowFaaIfrHigh(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowFaaIfrHigh(enabled)
+        }
+
+    fun updateShowTfrs(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowTfrs(enabled)
+        }
+
     fun clearTileCache() =
         viewModelScope.launch {
             tileCache.clearAll()
