@@ -128,88 +128,68 @@ fun MapLibreMap(
         ) {
             controller.paths.values.forEach { path -> PathLayer(path) }
 
-            if (faaChartsEnabled) {
-                val faaSource =
-                    rememberRasterSource(
-                        tiles = listOf(FAA_SECTIONAL_TILE_URL),
-                        options = TileSetOptions(),
-                    )
-                RasterLayer(
-                    id = "faa-sectional",
-                    source = faaSource,
-                    opacity = const(0.6f),
-                )
-            }
+            // Sources are always registered so the map style stays stable when toggling.
+            // Visibility is controlled via opacity to avoid style reloads that reset the camera.
+            val faaSource = rememberRasterSource(tiles = listOf(FAA_SECTIONAL_TILE_URL), options = TileSetOptions())
+            RasterLayer(
+                id = "faa-sectional",
+                source = faaSource,
+                opacity = if (faaChartsEnabled) const(0.6f) else const(0f),
+            )
 
-            if (faaIfrLowEnabled) {
-                val ifrLowSource =
-                    rememberRasterSource(
-                        tiles = listOf(FAA_IFR_LOW_TILE_URL),
-                        options = TileSetOptions(),
-                    )
-                RasterLayer(
-                    id = "faa-ifr-low",
-                    source = ifrLowSource,
-                    opacity = const(0.6f),
-                )
-            }
+            val ifrLowSource = rememberRasterSource(tiles = listOf(FAA_IFR_LOW_TILE_URL), options = TileSetOptions())
+            RasterLayer(
+                id = "faa-ifr-low",
+                source = ifrLowSource,
+                opacity = if (faaIfrLowEnabled) const(0.6f) else const(0f),
+            )
 
-            if (faaIfrHighEnabled) {
-                val ifrHighSource =
-                    rememberRasterSource(
-                        tiles = listOf(FAA_IFR_HIGH_TILE_URL),
-                        options = TileSetOptions(),
-                    )
-                RasterLayer(
-                    id = "faa-ifr-high",
-                    source = ifrHighSource,
-                    opacity = const(0.6f),
-                )
-            }
+            val ifrHighSource = rememberRasterSource(tiles = listOf(FAA_IFR_HIGH_TILE_URL), options = TileSetOptions())
+            RasterLayer(
+                id = "faa-ifr-high",
+                source = ifrHighSource,
+                opacity = if (faaIfrHighEnabled) const(0.6f) else const(0f),
+            )
 
-            if (tfrsEnabled) {
-                val tfrSource =
-                    rememberGeoJsonSource(
-                        data = GeoJsonData.Uri(FAA_TFRS_GEOJSON_URL),
-                    )
-                FillLayer(
-                    id = "tfrs-fill",
-                    source = tfrSource,
-                    color = const(Color(0xFFFF4444)),
-                    opacity = const(0.2f),
-                )
-                LineLayer(
-                    id = "tfrs-border",
-                    source = tfrSource,
-                    color = const(Color(0xFFFF4444)),
-                    width = const(2.dp),
-                    opacity = const(0.8f),
-                )
-            }
+            val tfrSource = rememberGeoJsonSource(data = GeoJsonData.Uri(FAA_TFRS_GEOJSON_URL))
+            FillLayer(
+                id = "tfrs-fill",
+                source = tfrSource,
+                color = const(Color(0xFFFF4444)),
+                opacity = if (tfrsEnabled) const(0.2f) else const(0f),
+            )
+            LineLayer(
+                id = "tfrs-border",
+                source = tfrSource,
+                color = const(Color(0xFFFF4444)),
+                width = const(2.dp),
+                opacity = if (tfrsEnabled) const(0.8f) else const(0f),
+            )
 
-            if (airspaceEnabled && openAipApiKey.isNotEmpty()) {
+            val airspaceColor =
+                switch(
+                    feature.get("icaoClass").asNumber(),
+                    case(0, const(Color(0xFF4169E1))),
+                    case(1, const(Color(0xFF0047AB))),
+                    case(2, const(Color(0xFF800080))),
+                    case(3, const(Color(0xFF1E90FF))),
+                    case(4, const(Color(0xFFDA70D6))),
+                    case(5, const(Color(0xFF808080))),
+                    fallback = const(Color(0xFFFF4444)),
+                )
+            val airspaceOpacity = if (airspaceEnabled && openAipApiKey.isNotEmpty()) 1f else 0f
+            if (openAipApiKey.isNotEmpty()) {
                 val airspaceSource =
                     rememberVectorSource(
                         tiles = listOf(OPENAIP_TILE_URL_TEMPLATE + openAipApiKey),
                         options = TileSetOptions(minZoom = 7, maxZoom = 14),
-                    )
-                val airspaceColor =
-                    switch(
-                        feature.get("icaoClass").asNumber(),
-                        case(0, const(Color(0xFF4169E1))),
-                        case(1, const(Color(0xFF0047AB))),
-                        case(2, const(Color(0xFF800080))),
-                        case(3, const(Color(0xFF1E90FF))),
-                        case(4, const(Color(0xFFDA70D6))),
-                        case(5, const(Color(0xFF808080))),
-                        fallback = const(Color(0xFFFF4444)),
                     )
                 FillLayer(
                     id = "openaip-airspace-fill",
                     source = airspaceSource,
                     sourceLayer = "openaip",
                     color = airspaceColor,
-                    opacity = const(0.15f),
+                    opacity = const(0.15f * airspaceOpacity),
                 )
                 LineLayer(
                     id = "openaip-airspace-border",
@@ -217,7 +197,7 @@ fun MapLibreMap(
                     sourceLayer = "openaip",
                     color = airspaceColor,
                     width = const(1.5.dp),
-                    opacity = const(0.8f),
+                    opacity = const(0.8f * airspaceOpacity),
                 )
             }
         }

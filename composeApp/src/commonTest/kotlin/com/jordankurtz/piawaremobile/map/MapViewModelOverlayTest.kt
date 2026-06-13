@@ -50,6 +50,9 @@ class MapViewModelOverlayTest {
         everySuspend { saveMapStateUseCase.invoke(any(), any(), any()) } returns Unit
         everySuspend { settingsService.setShowFaaCharts(any()) } returns Unit
         everySuspend { settingsService.setShowAirspace(any()) } returns Unit
+        everySuspend { settingsService.setShowFaaIfrLow(any()) } returns Unit
+        everySuspend { settingsService.setShowFaaIfrHigh(any()) } returns Unit
+        everySuspend { settingsService.setShowTfrs(any()) } returns Unit
     }
 
     @AfterTest
@@ -128,5 +131,83 @@ class MapViewModelOverlayTest {
             val vm = createViewModel()
             advanceUntilIdle()
             assertFalse(vm.showAirspace.value)
+        }
+
+    @Test
+    fun `showFaaIfrLow reflects settings value true`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(Settings(showFaaIfrLow = true))
+            advanceUntilIdle()
+            assertTrue(vm.showFaaIfrLow.value)
+        }
+
+    @Test
+    fun `showFaaIfrLow defaults to false`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.showFaaIfrLow.value)
+        }
+
+    @Test
+    fun `toggleFaaIfrLow calls setShowFaaIfrLow with toggled value`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(Settings(showFaaIfrLow = false))
+            advanceUntilIdle()
+            vm.toggleFaaIfrLow()
+            advanceUntilIdle()
+            verifySuspend { settingsService.setShowFaaIfrLow(true) }
+        }
+
+    @Test
+    fun `showFaaIfrHigh reflects settings value true`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(Settings(showFaaIfrHigh = true))
+            advanceUntilIdle()
+            assertTrue(vm.showFaaIfrHigh.value)
+        }
+
+    @Test
+    fun `showFaaIfrHigh defaults to false`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.showFaaIfrHigh.value)
+        }
+
+    @Test
+    fun `toggleFaaIfrHigh calls setShowFaaIfrHigh with toggled value`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(Settings(showFaaIfrHigh = false))
+            advanceUntilIdle()
+            vm.toggleFaaIfrHigh()
+            advanceUntilIdle()
+            verifySuspend { settingsService.setShowFaaIfrHigh(true) }
+        }
+
+    @Test
+    fun `showTfrs reflects settings value true`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(Settings(showTfrs = true))
+            advanceUntilIdle()
+            assertTrue(vm.showTfrs.value)
+        }
+
+    @Test
+    fun `showTfrs defaults to false`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.showTfrs.value)
+        }
+
+    @Test
+    fun `toggleTfrs calls setShowTfrs with toggled value`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(Settings(showTfrs = false))
+            advanceUntilIdle()
+            vm.toggleTfrs()
+            advanceUntilIdle()
+            verifySuspend { settingsService.setShowTfrs(true) }
         }
 }

@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.map.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -54,51 +55,81 @@ fun OverlaySheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Text(
-                text = stringResource(Res.string.overlay_sheet_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
+        OverlaySheetContent(
+            showFaaCharts = showFaaCharts,
+            showFaaIfrLow = showFaaIfrLow,
+            showFaaIfrHigh = showFaaIfrHigh,
+            showAirspace = showAirspace,
+            showTfrs = showTfrs,
+            hasOpenAipKey = hasOpenAipKey,
+            onToggleFaaCharts = onToggleFaaCharts,
+            onToggleFaaIfrLow = onToggleFaaIfrLow,
+            onToggleFaaIfrHigh = onToggleFaaIfrHigh,
+            onToggleAirspace = onToggleAirspace,
+            onToggleTfrs = onToggleTfrs,
+        )
+    }
+}
 
-            OverlayRow(
-                title = stringResource(Res.string.show_faa_charts),
-                description = stringResource(Res.string.show_faa_charts_description),
-                checked = showFaaCharts,
-                onToggle = onToggleFaaCharts,
-            )
-            HorizontalDivider()
-            OverlayRow(
-                title = stringResource(Res.string.faa_ifr_low),
-                description = stringResource(Res.string.faa_ifr_low_description),
-                checked = showFaaIfrLow,
-                onToggle = onToggleFaaIfrLow,
-            )
-            HorizontalDivider()
-            OverlayRow(
-                title = stringResource(Res.string.faa_ifr_high),
-                description = stringResource(Res.string.faa_ifr_high_description),
-                checked = showFaaIfrHigh,
-                onToggle = onToggleFaaIfrHigh,
-            )
-            HorizontalDivider()
-            OverlayRow(
-                title = stringResource(Res.string.show_airspace),
-                description = stringResource(Res.string.show_airspace_description),
-                checked = showAirspace,
-                enabled = hasOpenAipKey,
-                onToggle = onToggleAirspace,
-            )
-            HorizontalDivider()
-            OverlayRow(
-                title = stringResource(Res.string.tfrs),
-                description = stringResource(Res.string.tfrs_description),
-                checked = showTfrs,
-                onToggle = onToggleTfrs,
-            )
+@Suppress("LongParameterList")
+@Composable
+fun OverlaySheetContent(
+    showFaaCharts: Boolean,
+    showFaaIfrLow: Boolean,
+    showFaaIfrHigh: Boolean,
+    showAirspace: Boolean,
+    showTfrs: Boolean,
+    hasOpenAipKey: Boolean,
+    onToggleFaaCharts: () -> Unit,
+    onToggleFaaIfrLow: () -> Unit,
+    onToggleFaaIfrHigh: () -> Unit,
+    onToggleAirspace: () -> Unit,
+    onToggleTfrs: () -> Unit,
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Text(
+            text = stringResource(Res.string.overlay_sheet_title),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
 
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+        OverlayRow(
+            title = stringResource(Res.string.show_faa_charts),
+            description = stringResource(Res.string.show_faa_charts_description),
+            checked = showFaaCharts,
+            onToggle = onToggleFaaCharts,
+        )
+        HorizontalDivider()
+        OverlayRow(
+            title = stringResource(Res.string.faa_ifr_low),
+            description = stringResource(Res.string.faa_ifr_low_description),
+            checked = showFaaIfrLow,
+            onToggle = onToggleFaaIfrLow,
+        )
+        HorizontalDivider()
+        OverlayRow(
+            title = stringResource(Res.string.faa_ifr_high),
+            description = stringResource(Res.string.faa_ifr_high_description),
+            checked = showFaaIfrHigh,
+            onToggle = onToggleFaaIfrHigh,
+        )
+        HorizontalDivider()
+        OverlayRow(
+            title = stringResource(Res.string.show_airspace),
+            description = stringResource(Res.string.show_airspace_description),
+            checked = showAirspace,
+            enabled = hasOpenAipKey,
+            onToggle = onToggleAirspace,
+        )
+        HorizontalDivider()
+        OverlayRow(
+            title = stringResource(Res.string.tfrs),
+            description = stringResource(Res.string.tfrs_description),
+            checked = showTfrs,
+            onToggle = onToggleTfrs,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -111,7 +142,7 @@ private fun OverlayRow(
     enabled: Boolean = true,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().clickable(enabled = enabled, onClick = onToggle).padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
