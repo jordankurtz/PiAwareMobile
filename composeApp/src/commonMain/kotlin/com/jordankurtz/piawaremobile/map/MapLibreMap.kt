@@ -45,22 +45,21 @@ import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Position
 import org.maplibre.compose.map.MaplibreMap as MaplibreComposeMap
 
+// Tiles are only available from zoom 8 (minScale ~1:2.3M) to zoom 12 (maxScale ~1:144K)
 private const val FAA_SECTIONAL_TILE_URL =
     "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/VFR_Sectional/MapServer/tile/{z}/{y}/{x}"
 
+// Correct ArcGIS service name is IFR_AreaLow, not IFR_Low
 private const val FAA_IFR_LOW_TILE_URL =
-    "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_Low/MapServer/tile/{z}/{y}/{x}"
+    "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_AreaLow/MapServer/tile/{z}/{y}/{x}"
 
 private const val FAA_IFR_HIGH_TILE_URL =
     "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_High/MapServer/tile/{z}/{y}/{x}"
 
-private const val FAA_TFRS_GEOJSON_URL =
-    "https://tfr.faa.gov/tfr2/tfr.geojson"
-
 private const val OPENAIP_TILE_URL_TEMPLATE =
     "https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.pbf?apiKey="
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "UnusedParameter")
 @Composable
 fun MapLibreMap(
     controller: MapLibreStateController,
@@ -130,7 +129,12 @@ fun MapLibreMap(
 
             // Sources are always registered so the map style stays stable when toggling.
             // Visibility is controlled via opacity to avoid style reloads that reset the camera.
-            val faaSource = rememberRasterSource(tiles = listOf(FAA_SECTIONAL_TILE_URL), options = TileSetOptions())
+            // VFR Sectional tiles only exist at zoom 8–12; MapLibre skips requests outside this range
+            val faaSource =
+                rememberRasterSource(
+                    tiles = listOf(FAA_SECTIONAL_TILE_URL),
+                    options = TileSetOptions(minZoom = 8, maxZoom = 12),
+                )
             RasterLayer(
                 id = "faa-sectional",
                 source = faaSource,
@@ -151,20 +155,7 @@ fun MapLibreMap(
                 opacity = if (faaIfrHighEnabled) const(0.6f) else const(0f),
             )
 
-            val tfrSource = rememberGeoJsonSource(data = GeoJsonData.Uri(FAA_TFRS_GEOJSON_URL))
-            FillLayer(
-                id = "tfrs-fill",
-                source = tfrSource,
-                color = const(Color(0xFFFF4444)),
-                opacity = if (tfrsEnabled) const(0.2f) else const(0f),
-            )
-            LineLayer(
-                id = "tfrs-border",
-                source = tfrSource,
-                color = const(Color(0xFFFF4444)),
-                width = const(2.dp),
-                opacity = if (tfrsEnabled) const(0.8f) else const(0f),
-            )
+            // TFR layer omitted: FAA does not expose a public GeoJSON endpoint
 
             val airspaceColor =
                 switch(
