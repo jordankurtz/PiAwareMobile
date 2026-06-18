@@ -168,4 +168,11 @@ class SettingsServiceImpl(
     override suspend fun setShowFaaIfrLow(enabled: Boolean) = updateSetting { it.copy(showFaaIfrLow = enabled) }
 
     override suspend fun setShowFaaIfrHigh(enabled: Boolean) = updateSetting { it.copy(showFaaIfrHigh = enabled) }
+
+    override suspend fun setLimitZoomToOverlay(enabled: Boolean) =
+        updateSetting {
+            it.copy(
+                limitZoomToOverlay = enabled,
+            )
+        }
 }

@@ -76,4 +76,6 @@ interface SettingsService {
     suspend fun setShowFaaIfrLow(enabled: Boolean)
 
     suspend fun setShowFaaIfrHigh(enabled: Boolean)
+
+    suspend fun setLimitZoomToOverlay(enabled: Boolean)
 }

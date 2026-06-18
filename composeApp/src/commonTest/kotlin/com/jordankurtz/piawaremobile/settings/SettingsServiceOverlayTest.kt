@@ -80,4 +80,30 @@ class SettingsServiceOverlayTest {
             val saved = (slot.value as SlotCapture.Value.Present).value
             assertFalse(saved.showAirspace)
         }
+
+    @Test
+    fun `setLimitZoomToOverlay persists true`() =
+        runTest(testDispatcher) {
+            val slot = slot<Settings>()
+            everySuspend { settingsRepository.saveSettings(capture(slot)) } returns Unit
+
+            settingsService.setLimitZoomToOverlay(true)
+
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertTrue(saved.limitZoomToOverlay)
+        }
+
+    @Test
+    fun `setLimitZoomToOverlay persists false`() =
+        runTest(testDispatcher) {
+            everySuspend { settingsRepository.getSettings() } returns
+                flowOf(Settings(limitZoomToOverlay = true))
+            val slot = slot<Settings>()
+            everySuspend { settingsRepository.saveSettings(capture(slot)) } returns Unit
+
+            settingsService.setLimitZoomToOverlay(false)
+
+            val saved = (slot.value as SlotCapture.Value.Present).value
+            assertFalse(saved.limitZoomToOverlay)
+        }
 }

@@ -164,6 +164,11 @@ class SettingsViewModel(
             settingsService.setShowFaaIfrHigh(enabled)
         }
 
+    fun updateLimitZoomToOverlay(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setLimitZoomToOverlay(enabled)
+        }
+
     fun clearTileCache() =
         viewModelScope.launch {
             tileCache.clearAll()
