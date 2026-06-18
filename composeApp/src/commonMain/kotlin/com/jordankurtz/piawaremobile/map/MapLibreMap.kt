@@ -133,7 +133,11 @@ fun MapLibreMap(
             val faaSource =
                 rememberRasterSource(
                     tiles = listOf(FAA_SECTIONAL_TILE_URL),
-                    options = TileSetOptions(minZoom = 8, maxZoom = 12),
+                    options =
+                        TileSetOptions(
+                            minZoom = OverlayZoomRanges.FAA_SECTIONAL.first,
+                            maxZoom = OverlayZoomRanges.FAA_SECTIONAL.last,
+                        ),
                 )
             RasterLayer(
                 id = "faa-sectional",
@@ -142,7 +146,16 @@ fun MapLibreMap(
                 opacity = const(0.6f),
             )
 
-            val ifrLowSource = rememberRasterSource(tiles = listOf(FAA_IFR_LOW_TILE_URL), options = TileSetOptions())
+            // IFR Area Low tiles exist at zoom 7–12; MapLibre overzooms above 12.
+            val ifrLowSource =
+                rememberRasterSource(
+                    tiles = listOf(FAA_IFR_LOW_TILE_URL),
+                    options =
+                        TileSetOptions(
+                            minZoom = OverlayZoomRanges.IFR_LOW.first,
+                            maxZoom = OverlayZoomRanges.IFR_LOW.last,
+                        ),
+                )
             RasterLayer(
                 id = "faa-ifr-low",
                 source = ifrLowSource,
@@ -150,7 +163,16 @@ fun MapLibreMap(
                 opacity = const(0.6f),
             )
 
-            val ifrHighSource = rememberRasterSource(tiles = listOf(FAA_IFR_HIGH_TILE_URL), options = TileSetOptions())
+            // IFR High tiles exist at zoom 5–9; MapLibre overzooms above 9.
+            val ifrHighSource =
+                rememberRasterSource(
+                    tiles = listOf(FAA_IFR_HIGH_TILE_URL),
+                    options =
+                        TileSetOptions(
+                            minZoom = OverlayZoomRanges.IFR_HIGH.first,
+                            maxZoom = OverlayZoomRanges.IFR_HIGH.last,
+                        ),
+                )
             RasterLayer(
                 id = "faa-ifr-high",
                 source = ifrHighSource,
@@ -176,7 +198,11 @@ fun MapLibreMap(
                 val airspaceSource =
                     rememberVectorSource(
                         tiles = listOf(OPENAIP_TILE_URL_TEMPLATE + openAipApiKey),
-                        options = TileSetOptions(minZoom = 7, maxZoom = 14),
+                        options =
+                            TileSetOptions(
+                                minZoom = OverlayZoomRanges.AIRSPACE.first,
+                                maxZoom = OverlayZoomRanges.AIRSPACE.last,
+                            ),
                     )
                 FillLayer(
                     id = "openaip-airspace-fill",
