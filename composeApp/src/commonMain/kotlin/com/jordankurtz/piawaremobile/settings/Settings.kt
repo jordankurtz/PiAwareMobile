@@ -25,4 +25,5 @@ data class Settings(
     val showAirspace: Boolean = false,
     val showFaaIfrLow: Boolean = false,
     val showFaaIfrHigh: Boolean = false,
+    val limitZoomToOverlay: Boolean = false,
 )
