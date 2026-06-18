@@ -267,16 +267,13 @@ class MapViewModelOverlayZoomTest {
         runTest(testDispatcher) {
             val (_, controller) =
                 createViewModel(
-                    settings =
-                        Settings(
-                            limitZoomToOverlay = true,
-                            minZoomLevel = 1,
-                            maxZoomLevel = 16,
-                            // range 5..9
-                            showFaaIfrHigh = true,
-                        ),
-                    // above IFR High max of 9
-                    initialZoom = 13.0,
+                    Settings(
+                        limitZoomToOverlay = true,
+                        defaultZoomLevel = 13, // above IFR High max of 9
+                        minZoomLevel = 1,
+                        maxZoomLevel = 16,
+                        showFaaIfrHigh = true,
+                    ),
                 )
             advanceUntilIdle()
             assertEquals(9.0, controller.zoom)
@@ -287,16 +284,13 @@ class MapViewModelOverlayZoomTest {
         runTest(testDispatcher) {
             val (_, controller) =
                 createViewModel(
-                    settings =
-                        Settings(
-                            limitZoomToOverlay = true,
-                            minZoomLevel = 1,
-                            maxZoomLevel = 16,
-                            // range 5..9
-                            showFaaIfrHigh = true,
-                        ),
-                    // below IFR High min of 5
-                    initialZoom = 3.0,
+                    Settings(
+                        limitZoomToOverlay = true,
+                        defaultZoomLevel = 3, // below IFR High min of 5
+                        minZoomLevel = 1,
+                        maxZoomLevel = 16,
+                        showFaaIfrHigh = true,
+                    ),
                 )
             advanceUntilIdle()
             assertEquals(5.0, controller.zoom)
@@ -307,15 +301,13 @@ class MapViewModelOverlayZoomTest {
         runTest(testDispatcher) {
             val (_, controller) =
                 createViewModel(
-                    settings =
-                        Settings(
-                            limitZoomToOverlay = true,
-                            minZoomLevel = 1,
-                            maxZoomLevel = 16,
-                            // range 5..9
-                            showFaaIfrHigh = true,
-                        ),
-                    initialZoom = 7.0,
+                    Settings(
+                        limitZoomToOverlay = true,
+                        defaultZoomLevel = 7, // within IFR High range 5..9
+                        minZoomLevel = 1,
+                        maxZoomLevel = 16,
+                        showFaaIfrHigh = true,
+                    ),
                 )
             advanceUntilIdle()
             assertEquals(7.0, controller.zoom)

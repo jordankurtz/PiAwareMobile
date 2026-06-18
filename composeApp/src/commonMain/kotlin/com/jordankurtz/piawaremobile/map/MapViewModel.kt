@@ -219,7 +219,7 @@ class MapViewModel(
             cameraInitialized = true
             if (settings.restoreMapStateOnStart) {
                 loadMapState(settings.minZoomLevel, settings.maxZoomLevel)
-            } else if (effectiveLimits == (settings.minZoomLevel..settings.maxZoomLevel)) {
+            } else {
                 mapStateController.zoom = settings.defaultZoomLevel.toDouble()
             }
         }
