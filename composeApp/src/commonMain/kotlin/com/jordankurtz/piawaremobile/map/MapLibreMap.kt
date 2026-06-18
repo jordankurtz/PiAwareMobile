@@ -127,8 +127,9 @@ fun MapLibreMap(
             controller.paths.values.forEach { path -> PathLayer(path) }
 
             // Sources are always registered so the map style stays stable when toggling.
-            // Visibility is controlled via opacity to avoid style reloads that reset the camera.
-            // VFR Sectional tiles only exist at zoom 8–12; MapLibre skips requests outside this range
+            // Visibility is controlled via the `visible` property (not opacity) so that MapLibre
+            // treats enabled layers as live and continuously loads tiles on pan/zoom.
+            // VFR Sectional tiles only exist at zoom 8–12; MapLibre overzooms above 12.
             val faaSource =
                 rememberRasterSource(
                     tiles = listOf(FAA_SECTIONAL_TILE_URL),
@@ -137,21 +138,24 @@ fun MapLibreMap(
             RasterLayer(
                 id = "faa-sectional",
                 source = faaSource,
-                opacity = if (faaChartsEnabled) const(0.6f) else const(0f),
+                visible = faaChartsEnabled,
+                opacity = const(0.6f),
             )
 
             val ifrLowSource = rememberRasterSource(tiles = listOf(FAA_IFR_LOW_TILE_URL), options = TileSetOptions())
             RasterLayer(
                 id = "faa-ifr-low",
                 source = ifrLowSource,
-                opacity = if (faaIfrLowEnabled) const(0.6f) else const(0f),
+                visible = faaIfrLowEnabled,
+                opacity = const(0.6f),
             )
 
             val ifrHighSource = rememberRasterSource(tiles = listOf(FAA_IFR_HIGH_TILE_URL), options = TileSetOptions())
             RasterLayer(
                 id = "faa-ifr-high",
                 source = ifrHighSource,
-                opacity = if (faaIfrHighEnabled) const(0.6f) else const(0f),
+                visible = faaIfrHighEnabled,
+                opacity = const(0.6f),
             )
 
             // TFR layer omitted: FAA does not expose a public GeoJSON endpoint
@@ -167,8 +171,8 @@ fun MapLibreMap(
                     case(5, const(Color(0xFF808080))),
                     fallback = const(Color(0xFFFF4444)),
                 )
-            val airspaceOpacity = if (airspaceEnabled && openAipApiKey.isNotEmpty()) 1f else 0f
             if (openAipApiKey.isNotEmpty()) {
+                val airspaceVisible = airspaceEnabled
                 val airspaceSource =
                     rememberVectorSource(
                         tiles = listOf(OPENAIP_TILE_URL_TEMPLATE + openAipApiKey),
@@ -179,15 +183,17 @@ fun MapLibreMap(
                     source = airspaceSource,
                     sourceLayer = "openaip",
                     color = airspaceColor,
-                    opacity = const(0.15f * airspaceOpacity),
+                    visible = airspaceVisible,
+                    opacity = const(0.15f),
                 )
                 LineLayer(
                     id = "openaip-airspace-border",
                     source = airspaceSource,
                     sourceLayer = "openaip",
                     color = airspaceColor,
+                    visible = airspaceVisible,
                     width = const(1.5.dp),
-                    opacity = const(0.8f * airspaceOpacity),
+                    opacity = const(0.8f),
                 )
             }
         }
