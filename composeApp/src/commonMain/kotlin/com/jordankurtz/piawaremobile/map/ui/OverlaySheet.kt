@@ -30,8 +30,6 @@ import piawaremobile.composeapp.generated.resources.show_airspace
 import piawaremobile.composeapp.generated.resources.show_airspace_description
 import piawaremobile.composeapp.generated.resources.show_faa_charts
 import piawaremobile.composeapp.generated.resources.show_faa_charts_description
-import piawaremobile.composeapp.generated.resources.tfrs
-import piawaremobile.composeapp.generated.resources.tfrs_description
 
 @Suppress("LongParameterList")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,13 +39,11 @@ fun OverlaySheet(
     showFaaIfrLow: Boolean,
     showFaaIfrHigh: Boolean,
     showAirspace: Boolean,
-    showTfrs: Boolean,
     hasOpenAipKey: Boolean,
     onToggleFaaCharts: () -> Unit,
     onToggleFaaIfrLow: () -> Unit,
     onToggleFaaIfrHigh: () -> Unit,
     onToggleAirspace: () -> Unit,
-    onToggleTfrs: () -> Unit,
     onDismiss: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
 ) {
@@ -60,13 +56,11 @@ fun OverlaySheet(
             showFaaIfrLow = showFaaIfrLow,
             showFaaIfrHigh = showFaaIfrHigh,
             showAirspace = showAirspace,
-            showTfrs = showTfrs,
             hasOpenAipKey = hasOpenAipKey,
             onToggleFaaCharts = onToggleFaaCharts,
             onToggleFaaIfrLow = onToggleFaaIfrLow,
             onToggleFaaIfrHigh = onToggleFaaIfrHigh,
             onToggleAirspace = onToggleAirspace,
-            onToggleTfrs = onToggleTfrs,
         )
     }
 }
@@ -78,13 +72,11 @@ fun OverlaySheetContent(
     showFaaIfrLow: Boolean,
     showFaaIfrHigh: Boolean,
     showAirspace: Boolean,
-    showTfrs: Boolean,
     hasOpenAipKey: Boolean,
     onToggleFaaCharts: () -> Unit,
     onToggleFaaIfrLow: () -> Unit,
     onToggleFaaIfrHigh: () -> Unit,
     onToggleAirspace: () -> Unit,
-    onToggleTfrs: () -> Unit,
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Text(
@@ -120,13 +112,6 @@ fun OverlaySheetContent(
             checked = showAirspace,
             enabled = hasOpenAipKey,
             onToggle = onToggleAirspace,
-        )
-        HorizontalDivider()
-        OverlayRow(
-            title = stringResource(Res.string.tfrs),
-            description = stringResource(Res.string.tfrs_description),
-            checked = showTfrs,
-            onToggle = onToggleTfrs,
         )
 
         Spacer(modifier = Modifier.height(16.dp))

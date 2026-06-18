@@ -226,7 +226,5 @@
     <string name="faa_ifr_low_description">US IFR enroute charts for low altitudes</string>
     <string name="faa_ifr_high">FAA IFR High Enroute</string>
     <string name="faa_ifr_high_description">US IFR enroute charts for high altitudes</string>
-    <string name="tfrs">TFRs</string>
-    <string name="tfrs_description">FAA Temporary Flight Restrictions</string>
     <string name="show_overlays">Map overlays</string>
 </resources>

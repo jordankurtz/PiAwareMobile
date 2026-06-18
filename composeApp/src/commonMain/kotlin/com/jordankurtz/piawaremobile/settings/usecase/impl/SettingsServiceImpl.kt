@@ -168,6 +168,4 @@ class SettingsServiceImpl(
     override suspend fun setShowFaaIfrLow(enabled: Boolean) = updateSetting { it.copy(showFaaIfrLow = enabled) }
 
     override suspend fun setShowFaaIfrHigh(enabled: Boolean) = updateSetting { it.copy(showFaaIfrHigh = enabled) }
-
-    override suspend fun setShowTfrs(enabled: Boolean) = updateSetting { it.copy(showTfrs = enabled) }
 }

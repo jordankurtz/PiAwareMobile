@@ -59,7 +59,7 @@ private const val FAA_IFR_HIGH_TILE_URL =
 private const val OPENAIP_TILE_URL_TEMPLATE =
     "https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.pbf?apiKey="
 
-@Suppress("LongParameterList", "UnusedParameter")
+@Suppress("LongParameterList")
 @Composable
 fun MapLibreMap(
     controller: MapLibreStateController,
@@ -70,7 +70,6 @@ fun MapLibreMap(
     faaChartsEnabled: Boolean = false,
     faaIfrLowEnabled: Boolean = false,
     faaIfrHighEnabled: Boolean = false,
-    tfrsEnabled: Boolean = false,
     airspaceEnabled: Boolean = false,
     openAipApiKey: String = "",
     topStart: @Composable () -> Unit = {},

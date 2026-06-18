@@ -52,7 +52,6 @@ class MapViewModelOverlayTest {
         everySuspend { settingsService.setShowAirspace(any()) } returns Unit
         everySuspend { settingsService.setShowFaaIfrLow(any()) } returns Unit
         everySuspend { settingsService.setShowFaaIfrHigh(any()) } returns Unit
-        everySuspend { settingsService.setShowTfrs(any()) } returns Unit
     }
 
     @AfterTest
@@ -183,31 +182,5 @@ class MapViewModelOverlayTest {
             vm.toggleFaaIfrHigh()
             advanceUntilIdle()
             verifySuspend { settingsService.setShowFaaIfrHigh(true) }
-        }
-
-    @Test
-    fun `showTfrs reflects settings value true`() =
-        runTest(testDispatcher) {
-            val vm = createViewModel(Settings(showTfrs = true))
-            advanceUntilIdle()
-            assertTrue(vm.showTfrs.value)
-        }
-
-    @Test
-    fun `showTfrs defaults to false`() =
-        runTest(testDispatcher) {
-            val vm = createViewModel()
-            advanceUntilIdle()
-            assertFalse(vm.showTfrs.value)
-        }
-
-    @Test
-    fun `toggleTfrs calls setShowTfrs with toggled value`() =
-        runTest(testDispatcher) {
-            val vm = createViewModel(Settings(showTfrs = false))
-            advanceUntilIdle()
-            vm.toggleTfrs()
-            advanceUntilIdle()
-            verifySuspend { settingsService.setShowTfrs(true) }
         }
 }

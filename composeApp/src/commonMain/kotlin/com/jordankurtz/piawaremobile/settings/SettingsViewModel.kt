@@ -164,11 +164,6 @@ class SettingsViewModel(
             settingsService.setShowFaaIfrHigh(enabled)
         }
 
-    fun updateShowTfrs(enabled: Boolean) =
-        viewModelScope.launch {
-            settingsService.setShowTfrs(enabled)
-        }
-
     fun clearTileCache() =
         viewModelScope.launch {
             tileCache.clearAll()

@@ -69,7 +69,6 @@ class SettingsRepositoryImpl(
                 showAirspace = preferences[SettingsRepository.SHOW_AIRSPACE] ?: false,
                 showFaaIfrLow = preferences[SettingsRepository.SHOW_FAA_IFR_LOW] ?: false,
                 showFaaIfrHigh = preferences[SettingsRepository.SHOW_FAA_IFR_HIGH] ?: false,
-                showTfrs = preferences[SettingsRepository.SHOW_TFRS] ?: false,
             )
         }
     }
@@ -97,7 +96,6 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.SHOW_AIRSPACE] = settings.showAirspace
             preferences[SettingsRepository.SHOW_FAA_IFR_LOW] = settings.showFaaIfrLow
             preferences[SettingsRepository.SHOW_FAA_IFR_HIGH] = settings.showFaaIfrHigh
-            preferences[SettingsRepository.SHOW_TFRS] = settings.showTfrs
         }
     }
 

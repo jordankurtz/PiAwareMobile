@@ -15,13 +15,11 @@ class OverlaySheetTest {
         showFaaIfrLow: Boolean = false,
         showFaaIfrHigh: Boolean = false,
         showAirspace: Boolean = false,
-        showTfrs: Boolean = false,
         hasOpenAipKey: Boolean = true,
         onToggleFaaCharts: () -> Unit = {},
         onToggleFaaIfrLow: () -> Unit = {},
         onToggleFaaIfrHigh: () -> Unit = {},
         onToggleAirspace: () -> Unit = {},
-        onToggleTfrs: () -> Unit = {},
     ): @androidx.compose.runtime.Composable () -> Unit =
         {
             OverlaySheetContent(
@@ -29,13 +27,11 @@ class OverlaySheetTest {
                 showFaaIfrLow = showFaaIfrLow,
                 showFaaIfrHigh = showFaaIfrHigh,
                 showAirspace = showAirspace,
-                showTfrs = showTfrs,
                 hasOpenAipKey = hasOpenAipKey,
                 onToggleFaaCharts = onToggleFaaCharts,
                 onToggleFaaIfrLow = onToggleFaaIfrLow,
                 onToggleFaaIfrHigh = onToggleFaaIfrHigh,
                 onToggleAirspace = onToggleAirspace,
-                onToggleTfrs = onToggleTfrs,
             )
         }
 
@@ -47,7 +43,6 @@ class OverlaySheetTest {
             onNodeWithText("FAA IFR Low Enroute").assertIsDisplayed()
             onNodeWithText("FAA IFR High Enroute").assertIsDisplayed()
             onNodeWithText("Airspace").assertIsDisplayed()
-            onNodeWithText("TFRs").assertIsDisplayed()
         }
 
     @Test
@@ -74,15 +69,6 @@ class OverlaySheetTest {
             var toggled = false
             setContent(defaultContent(onToggleFaaIfrHigh = { toggled = true }))
             onNodeWithText("FAA IFR High Enroute").performClick()
-            assertTrue(toggled)
-        }
-
-    @Test
-    fun toggleTfrsFiresCallback() =
-        runComposeUiTest {
-            var toggled = false
-            setContent(defaultContent(onToggleTfrs = { toggled = true }))
-            onNodeWithText("TFRs").performClick()
             assertTrue(toggled)
         }
 

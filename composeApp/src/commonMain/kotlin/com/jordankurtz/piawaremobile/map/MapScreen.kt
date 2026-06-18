@@ -61,9 +61,8 @@ fun MapScreen(
     val showFaaIfrLow by mapViewModel.showFaaIfrLow.collectAsState()
     val showFaaIfrHigh by mapViewModel.showFaaIfrHigh.collectAsState()
     val showAirspace by mapViewModel.showAirspace.collectAsState()
-    val showTfrs by mapViewModel.showTfrs.collectAsState()
     val openAipApiKey by mapViewModel.openAipApiKey.collectAsState()
-    val anyOverlayActive = showFaaCharts || showFaaIfrLow || showFaaIfrHigh || showAirspace || showTfrs
+    val anyOverlayActive = showFaaCharts || showFaaIfrLow || showFaaIfrHigh || showAirspace
     var showOverlaySheet by remember { mutableStateOf(false) }
     val tileStats by mapViewModel.tileStats.collectAsState()
     val currentZoom by mapViewModel.currentZoomLevel.collectAsState()
@@ -114,7 +113,6 @@ fun MapScreen(
         faaChartsEnabled = showFaaCharts,
         faaIfrLowEnabled = showFaaIfrLow,
         faaIfrHighEnabled = showFaaIfrHigh,
-        tfrsEnabled = showTfrs,
         airspaceEnabled = showAirspace,
         openAipApiKey = openAipApiKey,
         topStart = {
@@ -206,13 +204,11 @@ fun MapScreen(
             showFaaIfrLow = showFaaIfrLow,
             showFaaIfrHigh = showFaaIfrHigh,
             showAirspace = showAirspace,
-            showTfrs = showTfrs,
             hasOpenAipKey = openAipApiKey.isNotEmpty(),
             onToggleFaaCharts = { mapViewModel.toggleFaaCharts() },
             onToggleFaaIfrLow = { mapViewModel.toggleFaaIfrLow() },
             onToggleFaaIfrHigh = { mapViewModel.toggleFaaIfrHigh() },
             onToggleAirspace = { mapViewModel.toggleAirspace() },
-            onToggleTfrs = { mapViewModel.toggleTfrs() },
             onDismiss = { showOverlaySheet = false },
         )
     }
