@@ -52,6 +52,7 @@ class MapViewModelOverlayTest {
         everySuspend { settingsService.setShowAirspace(any()) } returns Unit
         everySuspend { settingsService.setShowFaaIfrLow(any()) } returns Unit
         everySuspend { settingsService.setShowFaaIfrHigh(any()) } returns Unit
+        everySuspend { settingsService.setLimitZoomToOverlay(any()) } returns Unit
     }
 
     @AfterTest

@@ -66,6 +66,7 @@ class MapViewModel(
 
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
+    private var cameraInitialized = false
     private val previousAircraftMarkerIds = mutableSetOf<String>()
     private val previousPathIds = mutableSetOf<String>()
     private var lastTrails: Map<String, AircraftTrail> = emptyMap()
@@ -93,6 +94,9 @@ class MapViewModel(
 
     private val _showFaaIfrHigh = MutableStateFlow(false)
     val showFaaIfrHigh: StateFlow<Boolean> = _showFaaIfrHigh
+
+    private val _limitZoomToOverlay = MutableStateFlow(false)
+    val limitZoomToOverlay: StateFlow<Boolean> = _limitZoomToOverlay
 
     private val _openAipApiKey = MutableStateFlow("")
     val openAipApiKey: StateFlow<String> = _openAipApiKey
@@ -189,6 +193,10 @@ class MapViewModel(
         viewModelScope.launch { settingsService.setShowFaaIfrHigh(!_showFaaIfrHigh.value) }
     }
 
+    fun toggleLimitZoomToOverlay() {
+        viewModelScope.launch { settingsService.setLimitZoomToOverlay(!_limitZoomToOverlay.value) }
+    }
+
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
         _zoomSettings.value = Triple(settings.minZoomLevel, settings.maxZoomLevel, settings.defaultZoomLevel)
@@ -198,19 +206,28 @@ class MapViewModel(
         _showAirspace.value = settings.showAirspace
         _showFaaIfrLow.value = settings.showFaaIfrLow
         _showFaaIfrHigh.value = settings.showFaaIfrHigh
+        _limitZoomToOverlay.value = settings.limitZoomToOverlay
         _openAipApiKey.value = settings.apiKeys["openaip"] ?: ""
         onAircraftTrailsUpdated(lastTrails)
-        mapStateController.setZoomLimits(
-            settings.minZoomLevel.toDouble(),
-            settings.maxZoomLevel.toDouble(),
-        )
+        val effectiveLimits = computeEffectiveZoomLimits(settings)
+        mapStateController.setZoomLimits(effectiveLimits.first.toDouble(), effectiveLimits.last.toDouble())
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
-            loadMapState(settings.minZoomLevel, settings.maxZoomLevel)
             startSaveMapStateJob()
-        } else {
-            mapStateController.zoom = settings.defaultZoomLevel.toDouble()
         }
+        if (!cameraInitialized) {
+            cameraInitialized = true
+            if (settings.restoreMapStateOnStart) {
+                loadMapState(settings.minZoomLevel, settings.maxZoomLevel)
+            } else if (effectiveLimits == (settings.minZoomLevel..settings.maxZoomLevel)) {
+                mapStateController.zoom = settings.defaultZoomLevel.toDouble()
+            }
+        }
+        mapStateController.zoom =
+            mapStateController.zoom.coerceIn(
+                effectiveLimits.first.toDouble(),
+                effectiveLimits.last.toDouble(),
+            )
     }
 
     private suspend fun loadMapState(
@@ -426,5 +443,26 @@ class MapViewModel(
     private fun clearPaths() {
         previousPathIds.forEach { mapStateController.removePath(it) }
         previousPathIds.clear()
+    }
+
+    private fun computeEffectiveZoomLimits(settings: Settings): IntRange {
+        if (!settings.limitZoomToOverlay) return settings.minZoomLevel..settings.maxZoomLevel
+
+        val activeRanges =
+            buildList {
+                if (settings.showFaaCharts) add(OverlayZoomRanges.FAA_SECTIONAL)
+                if (settings.showFaaIfrLow) add(OverlayZoomRanges.IFR_LOW)
+                if (settings.showFaaIfrHigh) add(OverlayZoomRanges.IFR_HIGH)
+                if (settings.showAirspace) add(OverlayZoomRanges.AIRSPACE)
+            }
+
+        if (activeRanges.isEmpty()) return settings.minZoomLevel..settings.maxZoomLevel
+
+        val intersectionMin = activeRanges.maxOf { it.first }
+        val intersectionMax = activeRanges.minOf { it.last }
+
+        if (intersectionMin > intersectionMax) return settings.minZoomLevel..settings.maxZoomLevel
+
+        return intersectionMin.coerceAtLeast(settings.minZoomLevel)..intersectionMax.coerceAtMost(settings.maxZoomLevel)
     }
 }
