@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.di.modules
 
+import com.jordankurtz.piawaremobile.aircraft.cache.FlightCacheRepo
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.cache.TileCacheDatabase
 import com.jordankurtz.piawaremobile.map.offline.OfflineTileStore
@@ -17,4 +18,10 @@ expect class DatabaseModule() {
         database: TileCacheDatabase,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): OfflineTileStore
+
+    @Single
+    fun provideFlightCacheRepo(
+        database: TileCacheDatabase,
+        @IODispatcher ioDispatcher: CoroutineDispatcher,
+    ): FlightCacheRepo
 }

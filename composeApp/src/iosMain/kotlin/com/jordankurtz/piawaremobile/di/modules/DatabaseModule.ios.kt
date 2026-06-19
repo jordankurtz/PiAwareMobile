@@ -1,5 +1,7 @@
 package com.jordankurtz.piawaremobile.di.modules
 
+import com.jordankurtz.piawaremobile.aircraft.cache.FlightCacheRepo
+import com.jordankurtz.piawaremobile.aircraft.cache.FlightCacheRepoImpl
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
 import com.jordankurtz.piawaremobile.map.cache.DatabaseDriverFactory
 import com.jordankurtz.piawaremobile.map.cache.TileCacheDatabase
@@ -22,4 +24,10 @@ actual class DatabaseModule {
         database: TileCacheDatabase,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): OfflineTileStore = SqlDelightOfflineTileStore(database.tileCacheQueries, ioDispatcher)
+
+    @Single
+    actual fun provideFlightCacheRepo(
+        database: TileCacheDatabase,
+        @IODispatcher ioDispatcher: CoroutineDispatcher,
+    ): FlightCacheRepo = FlightCacheRepoImpl(database.flightCacheQueries, ioDispatcher)
 }
