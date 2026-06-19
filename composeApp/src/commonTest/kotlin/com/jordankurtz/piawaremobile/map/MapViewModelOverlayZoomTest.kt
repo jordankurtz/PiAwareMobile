@@ -350,7 +350,7 @@ class MapViewModelOverlayZoomTest {
                     Settings(
                         limitZoomToOverlay = true,
                         minZoomLevel = 1,
-                        maxZoomLevel = 4, // below IFR High min of 5
+                        maxZoomLevel = 4,
                         showFaaIfrHigh = true,
                     ),
                 )
@@ -373,7 +373,7 @@ class MapViewModelOverlayZoomTest {
                         restoreMapStateOnStart = true,
                         minZoomLevel = 1,
                         maxZoomLevel = 16,
-                        showFaaIfrHigh = true, // range 5..9; saved zoom 13 should snap to 9
+                        showFaaIfrHigh = true,
                     ),
                 )
             advanceUntilIdle()
