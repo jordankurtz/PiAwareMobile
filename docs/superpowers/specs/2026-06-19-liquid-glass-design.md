@@ -35,7 +35,7 @@ No changes to screen composables. `MapScreen`, `AircraftListScreen`, `SettingsSc
 
 `MainViewController.kt` is deleted and replaced with two new files.
 
-**`KoinInitializer.kt`** (new):
+**`KoinInitializer.kt`** (new, in `appleMain` — shared with macOS):
 ```kotlin
 fun startKoin() {
     Logger.addWriter(ConsoleLogger())
@@ -135,7 +135,7 @@ struct MapTabView: View {
 }
 ```
 
-The callback bridge between Swift and the Kotlin `MapViewModel` uses a closure captured at `MapViewController` creation time and dispatched to the ViewModel via a public `centerOnUserLocation()` method.
+The callback bridge works as follows: `MapViewController` retrieves `MapViewModel` from Koin at creation time and captures it. The `onCenterOnUserLocation` closure passed from Swift calls `mapViewModel.centerOnUserLocation()` directly. Swift holds the `UIViewController` instance for the tab's lifetime so the ViewModel reference stays alive.
 
 ---
 
@@ -174,7 +174,7 @@ fun SettingsNSViewController(): NSViewController =
 
 ### Swift macOS App — Xcode Target
 
-A new macOS target is added to the existing `iosApp.xcodeproj` (or a sibling `macosApp.xcodeproj` if the workspace structure warrants it). It links the macOS `ComposeApp.framework`.
+A new macOS target is added to the existing `iosApp.xcodeproj` (same Xcode workspace). It links the macOS `ComposeApp.framework`.
 
 **`MacApp.swift`**:
 ```swift
