@@ -24,4 +24,25 @@ interface AeroApi {
         maxPages: Int? = 1,
         cursor: String? = null,
     ): FlightResponse
+
+    /**
+     * Search for flights by query parameters
+     *
+     * Returns flights matching the search query. The query parameter can include geographic
+     * constraints using the -latlong parameter. Results are pageable using the cursor parameter.
+     *
+     * @param query Search query string, e.g. "-latlong \"minLat minLon maxLat maxLon\""
+     * @param start The starting date range for flight results. The format is ISO8601 date or datetime.
+     * @param end The ending date range for flight results. The format is ISO8601 date or datetime.
+     * @param maxPages Maximum number of pages to fetch. This is an upper limit and not a guarantee of how many pages will be returned.
+     * @param cursor Opaque value used to get the next batch of data from a paged collection.
+     * @return OK
+     */
+    suspend fun searchFlights(
+        query: String,
+        start: String? = null,
+        end: String? = null,
+        maxPages: Int? = 1,
+        cursor: String? = null,
+    ): FlightResponse
 }

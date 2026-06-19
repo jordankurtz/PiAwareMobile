@@ -32,4 +32,21 @@ class AeroApiImpl(
             parameter("cursor", cursor)
         }.body()
     }
+
+    override suspend fun searchFlights(
+        query: String,
+        start: String?,
+        end: String?,
+        maxPages: Int?,
+        cursor: String?,
+    ): FlightResponse {
+        return client.get("https://aeroapi.flightaware.com/aeroapi/flights/search") {
+            header("x-apikey", getFlightAwareApiKeyUseCase())
+            parameter("query", query)
+            parameter("start", start)
+            parameter("end", end)
+            parameter("max_pages", maxPages)
+            parameter("cursor", cursor)
+        }.body()
+    }
 }

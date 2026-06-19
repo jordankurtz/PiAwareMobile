@@ -18,6 +18,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class AeroApiImplTest {
     private lateinit var getFlightAwareApiKeyUseCase: GetFlightAwareApiKeyUseCase
@@ -83,6 +84,34 @@ class AeroApiImplTest {
                     "&end=2023-01-01T12%3A00%3A00Z" +
                     "&max_pages=$maxPages"
             assertEquals(expectedUrl, request.url.toString())
+            assertEquals(apiKey, request.headers["x-apikey"])
+        }
+
+    @Test
+    fun `searchFlights calls api with correct endpoint and parameters`() =
+        runTest {
+            val query = "-latlong \"40.0 -75.0 41.0 -74.0\""
+            val start = "2023-01-01T00:00:00Z"
+            val end = "2023-01-01T12:00:00Z"
+            val maxPages = 2
+            val apiKey = "test_api_key"
+
+            everySuspend { getFlightAwareApiKeyUseCase() } returns apiKey
+
+            val result =
+                aeroApi.searchFlights(
+                    query = query,
+                    start = start,
+                    end = end,
+                    maxPages = maxPages,
+                )
+
+            assertEquals(mockFlightResponse, result)
+
+            val request = mockEngine.requestHistory.first()
+            assertTrue(
+                request.url.toString().startsWith("https://aeroapi.flightaware.com/aeroapi/flights/search"),
+            )
             assertEquals(apiKey, request.headers["x-apikey"])
         }
 }
