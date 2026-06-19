@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
-import com.jordankurtz.piawaremobile.model.Flight
+import com.jordankurtz.piawaremobile.model.FlightResult
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.ui.AircraftDetailsGrid
 import com.jordankurtz.piawaremobile.ui.AircraftInfoRow
@@ -38,7 +38,7 @@ import piawaremobile.composeapp.generated.resources.ic_arrow_back
 @Composable
 fun TabletAircraftDetails(
     aircraftWithServers: AircraftWithServers,
-    flightDetails: Async<Flight>,
+    flightDetails: Async<FlightResult>,
     userLocation: Location?,
     onClose: () -> Unit,
     onOpenFlightPage: () -> Unit,

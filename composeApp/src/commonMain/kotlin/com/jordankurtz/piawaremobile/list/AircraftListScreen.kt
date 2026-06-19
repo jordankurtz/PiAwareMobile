@@ -58,6 +58,7 @@ import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
+import com.jordankurtz.piawaremobile.model.FlightResult
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.distanceTo
 import com.jordankurtz.piawaremobile.ui.AircraftDetailsGrid
@@ -250,7 +251,7 @@ private fun EmptyAircraftList() {
 private fun AircraftListItem(
     aircraftWithServers: AircraftWithServers,
     userLocation: Location?,
-    flightDetails: Async<Flight>,
+    flightDetails: Async<FlightResult>,
     onLoadFlightDetails: () -> Unit,
     onOpenFlightPage: () -> Unit,
 ) {
@@ -441,7 +442,7 @@ private fun SecondaryCompactStat(
 @Composable
 internal fun FlightDetailsSection(
     aircraft: Aircraft,
-    flightDetails: Async<Flight>,
+    flightDetails: Async<FlightResult>,
     onLoadFlightDetails: () -> Unit,
     onOpenFlightPage: () -> Unit,
 ) {
@@ -471,7 +472,7 @@ internal fun FlightDetailsSection(
                 }
             }
             is Async.Success -> {
-                FlightInfo(flight = flightDetails.data)
+                FlightInfo(flight = flightDetails.data.flight)
             }
         }
 

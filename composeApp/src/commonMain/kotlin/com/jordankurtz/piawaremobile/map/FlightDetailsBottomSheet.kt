@@ -53,6 +53,7 @@ import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.FlightAirportRef
+import com.jordankurtz.piawaremobile.model.FlightResult
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.ui.AircraftLocationDetails
 import com.jordankurtz.piawaremobile.ui.AircraftPrimaryDetails
@@ -91,7 +92,7 @@ import kotlin.time.Instant
 @Composable
 fun FlightDetailsBottomSheet(
     aircraft: Aircraft?,
-    flightDetails: Async<Flight>,
+    flightDetails: Async<FlightResult>,
     isFollowing: Boolean = false,
     onDismissRequest: () -> Unit,
     onOpenFlightPage: () -> Unit,
@@ -126,7 +127,7 @@ fun FlightDetailsBottomSheet(
 @Composable
 fun FlightDetailsSheetContent(
     aircraft: Aircraft?,
-    flightDetails: Async<Flight>,
+    flightDetails: Async<FlightResult>,
     isFollowing: Boolean = false,
     userLocation: Location? = null,
     onFollowToggle: () -> Unit = {},
@@ -196,7 +197,7 @@ fun FlightDetailsSheetContent(
             }
 
             is Async.Success -> {
-                val flight = flightDetails.data
+                val flight = flightDetails.data.flight
 
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp),

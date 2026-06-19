@@ -15,7 +15,7 @@ import com.jordankurtz.piawaremobile.di.annotations.MainDispatcher
 import com.jordankurtz.piawaremobile.model.AircraftTrail
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
-import com.jordankurtz.piawaremobile.model.Flight
+import com.jordankurtz.piawaremobile.model.FlightResult
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
@@ -76,8 +76,8 @@ class AircraftViewModel(
     private val _aircraft = MutableStateFlow<List<AircraftWithServers>>(emptyList())
     val aircraft: StateFlow<List<AircraftWithServers>> = _aircraft.asStateFlow()
 
-    private val _flightDetails = MutableStateFlow<Async<Flight>>(Async.NotStarted)
-    val flightDetails: StateFlow<Async<Flight>> = _flightDetails.asStateFlow()
+    private val _flightDetails = MutableStateFlow<Async<FlightResult>>(Async.NotStarted)
+    val flightDetails: StateFlow<Async<FlightResult>> = _flightDetails.asStateFlow()
 
     private val _receiverLocations = MutableStateFlow<Map<Server, Location>>(emptyMap())
     val receiverLocations: StateFlow<Map<Server, Location>> = _receiverLocations.asStateFlow()

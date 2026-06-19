@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.model.AircraftWithServers
 import com.jordankurtz.piawaremobile.model.Async
-import com.jordankurtz.piawaremobile.model.Flight
+import com.jordankurtz.piawaremobile.model.FlightResult
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.distanceTo
 import kotlin.math.roundToInt
@@ -33,7 +33,7 @@ import kotlin.math.roundToInt
 fun TabletAircraftListPanel(
     aircraft: List<AircraftWithServers>,
     selectedHex: String?,
-    flightDetails: Async<Flight>,
+    flightDetails: Async<FlightResult>,
     userLocation: Location?,
     onAircraftSelected: (String?) -> Unit,
     onOpenFlightPage: () -> Unit,
