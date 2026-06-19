@@ -55,6 +55,7 @@ import piawaremobile.composeapp.generated.resources.clear_map_cache_description
 import piawaremobile.composeapp.generated.resources.clear_map_cache_title
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_description
 import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
+import piawaremobile.composeapp.generated.resources.flight_cache_settings_title
 import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 import piawaremobile.composeapp.generated.resources.flightaware_section_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
@@ -88,6 +89,7 @@ fun MainScreen(
     onServersClicked: () -> Unit,
     onOfflineMapsClicked: () -> Unit = {},
     onMapProviderClicked: () -> Unit = {},
+    onFlightCacheClicked: () -> Unit = {},
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val settingsState by viewModel.settings.collectAsState()
@@ -256,6 +258,20 @@ fun MainScreen(
                 SettingsItem(
                     title = stringResource(Res.string.offline_maps_settings_title),
                     onClick = onOfflineMapsClicked,
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_chevron_right),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                        )
+                    },
+                )
+            }
+
+            item {
+                SettingsItem(
+                    title = stringResource(Res.string.flight_cache_settings_title),
+                    onClick = onFlightCacheClicked,
                     trailingIcon = {
                         Icon(
                             painter = painterResource(Res.drawable.ic_chevron_right),

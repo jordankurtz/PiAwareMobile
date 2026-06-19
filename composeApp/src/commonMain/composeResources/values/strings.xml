@@ -233,4 +233,24 @@
     <string name="clear_map_cache_confirm_message">Cached tiles will be deleted. Offline maps will not be affected.</string>
     <string name="clear_map_cache_confirm_clear">Clear</string>
     <string name="clear_map_cache_confirm_cancel">Cancel</string>
+    <string name="flight_cache_settings_title">Flight Cache</string>
+    <string name="flight_cache_title">Flight Cache</string>
+    <string name="flight_cache_empty_title">No cached regions</string>
+    <string name="flight_cache_empty_message">Tap + to cache flights for a region</string>
+    <string name="flight_cache_add_region">Add region</string>
+    <string name="flight_cache_region_delete">Delete region</string>
+    <string name="flight_cache_region_flights">%1$d flights</string>
+    <string name="flight_cache_region_days">%1$d days ahead</string>
+    <string name="flight_cache_region_cached">Cached %1$s</string>
+    <string name="flight_cache_sheet_title">Cache Flights</string>
+    <string name="flight_cache_sheet_name_label">Region name</string>
+    <string name="flight_cache_sheet_days_label">Days ahead: %1$d</string>
+    <string name="flight_cache_sheet_select_region">Select region on map</string>
+    <string name="flight_cache_sheet_region_selected">%1$.1f°–%2$.1f° lat, %3$.1f°–%4$.1f° lon</string>
+    <string name="flight_cache_sheet_cache">Cache</string>
+    <string name="flight_cache_sheet_cancel">Cancel</string>
+    <string name="flight_cache_delete_confirm_title">Delete region?</string>
+    <string name="flight_cache_delete_confirm_message">This will remove all flights cached for "%1$s".</string>
+    <string name="flight_cache_delete_confirm_delete">Delete</string>
+    <string name="flight_cache_delete_confirm_cancel">Cancel</string>
 </resources>

@@ -8,4 +8,6 @@ sealed class SettingsScreens {
     object OfflineMaps : SettingsScreens()
 
     object MapProviders : SettingsScreens()
+
+    object FlightCache : SettingsScreens()
 }

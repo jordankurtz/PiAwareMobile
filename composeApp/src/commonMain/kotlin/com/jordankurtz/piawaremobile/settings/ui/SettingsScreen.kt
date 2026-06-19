@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.jordankurtz.piawaremobile.aircraft.cache.ui.FlightCacheScreenContainer
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
 import com.jordankurtz.piawaremobile.map.offline.OfflineRegion
@@ -42,6 +43,7 @@ fun SettingsScreen() {
                         onServersClicked = { currentScreen = SettingsScreens.Servers },
                         onOfflineMapsClicked = { currentScreen = SettingsScreens.OfflineMaps },
                         onMapProviderClicked = { currentScreen = SettingsScreens.MapProviders },
+                        onFlightCacheClicked = { currentScreen = SettingsScreens.FlightCache },
                     )
                 SettingsScreens.Servers -> ServersScreen(onBack = {})
                 SettingsScreens.MapProviders ->
@@ -98,6 +100,10 @@ fun SettingsScreen() {
                         onCancelDownload = onCancelDownload,
                     )
                 }
+                SettingsScreens.FlightCache ->
+                    FlightCacheScreenContainer(
+                        onBack = { currentScreen = SettingsScreens.Main },
+                    )
             }
         }
     }
