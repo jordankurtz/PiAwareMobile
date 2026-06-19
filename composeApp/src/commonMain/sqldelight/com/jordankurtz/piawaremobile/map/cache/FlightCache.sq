@@ -125,6 +125,47 @@ INSERT OR REPLACE INTO cached_flight (
     ?, ?, ?
 );
 
+upsertPrefetchFlight:
+INSERT OR IGNORE INTO cached_flight (
+    ident, ident_icao, ident_iata, fa_flight_id,
+    operator, operator_icao, operator_iata,
+    flight_number, registration, atc_ident, inbound_fa_flight_id,
+    codeshares, codeshares_iata,
+    blocked, diverted, cancelled, position_only,
+    origin_code, origin_code_icao, origin_code_iata, origin_timezone, origin_name, origin_city,
+    destination_code, destination_code_icao, destination_code_iata, destination_timezone, destination_name, destination_city,
+    scheduled_out, estimated_out, actual_out,
+    scheduled_off, estimated_off, actual_off,
+    scheduled_on, estimated_on, actual_on,
+    scheduled_in, estimated_in, actual_in,
+    departure_delay, arrival_delay, progress_percent,
+    status, aircraft_type, route_distance,
+    filed_airspeed, filed_altitude, filed_ete,
+    route, baggage_claim,
+    gate_origin, gate_destination, terminal_origin, terminal_destination,
+    type, actual_runway_off, actual_runway_on,
+    foresight_predictions_available, cached_at, individually_cached
+) VALUES (
+    ?, ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?, ?,
+    ?, ?,
+    ?, ?, ?, ?,
+    ?, ?, ?, ?, ?, ?,
+    ?, ?, ?, ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?,
+    ?, ?,
+    ?, ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?
+);
+
 insertFlightRegion:
 INSERT INTO flight_cache_region (name, min_lat, max_lat, min_lon, max_lon, days_ahead, cached_at)
 VALUES (?, ?, ?, ?, ?, ?, ?);
