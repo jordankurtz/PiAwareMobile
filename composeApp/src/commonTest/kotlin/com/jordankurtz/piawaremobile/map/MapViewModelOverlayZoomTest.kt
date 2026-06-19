@@ -269,7 +269,8 @@ class MapViewModelOverlayZoomTest {
                 createViewModel(
                     Settings(
                         limitZoomToOverlay = true,
-                        defaultZoomLevel = 13, // above IFR High max of 9
+                        // above IFR High max of 9
+                        defaultZoomLevel = 13,
                         minZoomLevel = 1,
                         maxZoomLevel = 16,
                         showFaaIfrHigh = true,
@@ -286,7 +287,8 @@ class MapViewModelOverlayZoomTest {
                 createViewModel(
                     Settings(
                         limitZoomToOverlay = true,
-                        defaultZoomLevel = 3, // below IFR High min of 5
+                        // below IFR High min of 5
+                        defaultZoomLevel = 3,
                         minZoomLevel = 1,
                         maxZoomLevel = 16,
                         showFaaIfrHigh = true,
@@ -303,7 +305,8 @@ class MapViewModelOverlayZoomTest {
                 createViewModel(
                     Settings(
                         limitZoomToOverlay = true,
-                        defaultZoomLevel = 7, // within IFR High range 5..9
+                        // within IFR High range 5..9
+                        defaultZoomLevel = 7,
                         minZoomLevel = 1,
                         maxZoomLevel = 16,
                         showFaaIfrHigh = true,
@@ -311,5 +314,69 @@ class MapViewModelOverlayZoomTest {
                 )
             advanceUntilIdle()
             assertEquals(7.0, controller.zoom)
+        }
+
+    // --- all four overlays simultaneously ---
+
+    @Test
+    fun `zoom limits intersect all four overlays`() =
+        runTest(testDispatcher) {
+            val (_, controller) =
+                createViewModel(
+                    Settings(
+                        limitZoomToOverlay = true,
+                        minZoomLevel = 1,
+                        maxZoomLevel = 16,
+                        showFaaCharts = true,
+                        showFaaIfrLow = true,
+                        showFaaIfrHigh = true,
+                        showAirspace = true,
+                    ),
+                )
+            advanceUntilIdle()
+            // FAA_SECTIONAL=8..12, IFR_LOW=7..12, IFR_HIGH=5..9, AIRSPACE=7..14
+            // intersection: max(8,7,5,7)=8 to min(12,12,9,14)=9
+            assertEquals(8.0, controller.lastMinZoom)
+            assertEquals(9.0, controller.lastMaxZoom)
+        }
+
+    // --- empty intersection fallback ---
+
+    @Test
+    fun `zoom limits fall back to global when global max is below overlay min`() =
+        runTest(testDispatcher) {
+            val (_, controller) =
+                createViewModel(
+                    Settings(
+                        limitZoomToOverlay = true,
+                        minZoomLevel = 1,
+                        maxZoomLevel = 4, // below IFR High min of 5
+                        showFaaIfrHigh = true,
+                    ),
+                )
+            advanceUntilIdle()
+            // Overlay range 5..9 clamped to global max 4 → 5..4 → empty → fall back to global 1..4
+            assertEquals(1.0, controller.lastMinZoom)
+            assertEquals(4.0, controller.lastMaxZoom)
+        }
+
+    // --- restoreMapStateOnStart + overlay zoom limit ---
+
+    @Test
+    fun `restored zoom is snapped to overlay range on startup`() =
+        runTest(testDispatcher) {
+            everySuspend { getSavedMapStateUseCase.invoke() } returns MapState(0.0, 0.0, 13.0)
+            val (_, controller) =
+                createViewModel(
+                    Settings(
+                        limitZoomToOverlay = true,
+                        restoreMapStateOnStart = true,
+                        minZoomLevel = 1,
+                        maxZoomLevel = 16,
+                        showFaaIfrHigh = true, // range 5..9; saved zoom 13 should snap to 9
+                    ),
+                )
+            advanceUntilIdle()
+            assertEquals(9.0, controller.zoom)
         }
 }

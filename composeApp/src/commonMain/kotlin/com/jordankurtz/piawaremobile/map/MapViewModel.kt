@@ -463,6 +463,11 @@ class MapViewModel(
 
         if (intersectionMin > intersectionMax) return settings.minZoomLevel..settings.maxZoomLevel
 
-        return intersectionMin.coerceAtLeast(settings.minZoomLevel)..intersectionMax.coerceAtMost(settings.maxZoomLevel)
+        val clampedMin = intersectionMin.coerceAtLeast(settings.minZoomLevel)
+        val clampedMax = intersectionMax.coerceAtMost(settings.maxZoomLevel)
+
+        if (clampedMin > clampedMax) return settings.minZoomLevel..settings.maxZoomLevel
+
+        return clampedMin..clampedMax
     }
 }
