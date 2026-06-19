@@ -59,6 +59,8 @@ import piawaremobile.composeapp.generated.resources.enable_flightaware_api_title
 import piawaremobile.composeapp.generated.resources.flightaware_api_key_title
 import piawaremobile.composeapp.generated.resources.flightaware_section_title
 import piawaremobile.composeapp.generated.resources.ic_chevron_right
+import piawaremobile.composeapp.generated.resources.limit_zoom_to_overlay_description
+import piawaremobile.composeapp.generated.resources.limit_zoom_to_overlay_title
 import piawaremobile.composeapp.generated.resources.map_provider_title
 import piawaremobile.composeapp.generated.resources.map_section_title
 import piawaremobile.composeapp.generated.resources.offline_maps_settings_title
@@ -213,6 +215,13 @@ fun MainScreen(
                         value = settings.getValue()?.maxZoomLevel ?: SettingsRepository.MAX_ZOOM_LEVEL,
                         onValueChange = viewModel::updateMaxZoomLevel,
                         range = SettingsRepository.MIN_ZOOM_LEVEL..SettingsRepository.MAX_ZOOM_LEVEL,
+                    )
+                    HorizontalDivider()
+                    SettingsSwitch(
+                        title = stringResource(Res.string.limit_zoom_to_overlay_title),
+                        description = stringResource(Res.string.limit_zoom_to_overlay_description),
+                        checked = settings.getValue()?.limitZoomToOverlay ?: false,
+                        onCheckedChange = viewModel::updateLimitZoomToOverlay,
                     )
                     HorizontalDivider()
                     SettingsItem(

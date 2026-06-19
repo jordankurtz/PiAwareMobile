@@ -227,4 +227,6 @@
     <string name="faa_ifr_high">FAA IFR High Enroute</string>
     <string name="faa_ifr_high_description">US IFR enroute charts for high altitudes</string>
     <string name="show_overlays">Map overlays</string>
+    <string name="limit_zoom_to_overlay_title">Limit Zoom to Overlay</string>
+    <string name="limit_zoom_to_overlay_description">Restrict zoom to the range supported by the active overlay</string>
 </resources>
