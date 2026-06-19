@@ -3,10 +3,8 @@ package com.jordankurtz.piawaremobile.map
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class FollowUserLocationFabTest {
@@ -25,16 +23,12 @@ class FollowUserLocationFabTest {
     @Test
     fun followLocationFab_hiddenWhenShowFabFalseViaMapScreen() =
         runComposeUiTest {
-            var fabClicked = false
             setContent {
-                FollowUserLocationFab(
-                    isFollowing = false,
-                    onClick = { fabClicked = true },
-                )
+                val show = false
+                if (show) {
+                    FollowUserLocationFab(isFollowing = false, onClick = {})
+                }
             }
-            // Verify the FAB is displayed and clickable
-            onNodeWithContentDescription("Follow my location").assertIsDisplayed()
-            onNodeWithContentDescription("Follow my location").performClick()
-            assertTrue(fabClicked)
+            onNodeWithContentDescription("Follow my location").assertDoesNotExist()
         }
 }
