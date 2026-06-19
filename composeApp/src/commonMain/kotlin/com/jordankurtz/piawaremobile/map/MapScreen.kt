@@ -39,6 +39,7 @@ import piawaremobile.composeapp.generated.resources.ic_user_location
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
+    showFollowLocationFab: Boolean = true,
     mapViewModel: MapViewModel = koinViewModel(),
     locationViewModel: LocationViewModel = koinViewModel(),
     aircraftViewModel: AircraftViewModel = koinViewModel(),
@@ -113,7 +114,7 @@ fun MapScreen(
                     )
                 }
             }
-            if (showUserLocationOnMap) {
+            if (showFollowLocationFab && showUserLocationOnMap) {
                 FollowUserLocationFab(
                     isFollowing = isFollowingUser,
                     onClick = { mapViewModel.toggleFollowUserLocation() },
