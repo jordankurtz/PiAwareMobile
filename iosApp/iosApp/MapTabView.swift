@@ -3,7 +3,7 @@ import ComposeApp
 
 struct MapTabView: View {
     var body: some View {
-        ComposeScreen { MapViewControllerKt.MapViewController() }
+        ComposeScreen { ScreenViewControllersKt.MapViewController() }
             .ignoresSafeArea()
             .overlay(alignment: .bottomTrailing) {
                 Button("", systemImage: "location.fill") {

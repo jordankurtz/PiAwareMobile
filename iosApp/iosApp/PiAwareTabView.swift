@@ -8,10 +8,10 @@ struct PiAwareTabView: View {
                 MapTabView()
             }
             Tab("Aircraft", systemImage: "airplane") {
-                ComposeScreen { AircraftListViewControllerKt.AircraftListViewController() }
+                ComposeScreen { ScreenViewControllersKt.AircraftListViewController() }
             }
             Tab("Settings", systemImage: "gearshape") {
-                ComposeScreen { SettingsViewControllerKt.SettingsViewController() }
+                ComposeScreen { ScreenViewControllersKt.SettingsViewController() }
             }
         }
     }
