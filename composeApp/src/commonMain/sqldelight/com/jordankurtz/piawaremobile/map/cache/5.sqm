@@ -1,5 +1,5 @@
 -- Migration 4 → 5: add flight cache tables
-CREATE TABLE cached_flight (
+CREATE TABLE IF NOT EXISTS cached_flight (
     ident                          TEXT NOT NULL PRIMARY KEY,
     ident_icao                     TEXT,
     ident_iata                     TEXT,
@@ -64,7 +64,7 @@ CREATE TABLE cached_flight (
     individually_cached            INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE flight_cache_region (
+CREATE TABLE IF NOT EXISTS flight_cache_region (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     name         TEXT NOT NULL,
     min_lat      REAL NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE flight_cache_region (
     cached_at    INTEGER NOT NULL
 );
 
-CREATE TABLE region_flight (
+CREATE TABLE IF NOT EXISTS region_flight (
     region_id   INTEGER NOT NULL REFERENCES flight_cache_region(id) ON DELETE CASCADE,
     ident       TEXT NOT NULL REFERENCES cached_flight(ident) ON DELETE CASCADE,
     PRIMARY KEY (region_id, ident)
