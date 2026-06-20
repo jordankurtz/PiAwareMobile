@@ -35,14 +35,6 @@ kotlin {
                 withAndroidTarget()
                 withJvm()
             }
-            // mobile = jvm + iOS (excludes macOS native, which mapcompose-mp 0.10.0 doesn't support)
-            group("mobile") {
-                withAndroidTarget()
-                withJvm()
-                withIosX64()
-                withIosArm64()
-                withIosSimulatorArm64()
-            }
         }
     }
 
@@ -65,19 +57,6 @@ kotlin {
             isStatic = true
         }
         iosTarget.binaries.all {
-            linkerOpts("-lsqlite3")
-        }
-    }
-
-    listOf(
-        macosX64(),
-        macosArm64(),
-    ).forEach { macosTarget ->
-        macosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-        macosTarget.binaries.all {
             linkerOpts("-lsqlite3")
         }
     }
@@ -122,18 +101,13 @@ kotlin {
             implementation(libs.multiplatform.settings.coroutines)
             implementation(libs.coil.compose)
             implementation(compose.materialIconsExtended)
+            implementation(libs.compose.map)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.cio)
             implementation(libs.sqldelight.sqlite.driver)
-        }
-        val mobileMain by getting {
-            dependencies {
-                // mapcompose-mp 0.10.0 has no macOS native variant; restrict to mobile targets
-                implementation(libs.compose.map)
-            }
         }
         val appleMain by getting {
             dependencies {
@@ -216,24 +190,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>().all {
     dependsOn("kspCommonMainKotlinMetadata")
 }
 
-// Expose mobileMain metadata libraries (including mapcompose-mp) to the commonMain KSP pass
-// so that types used in commonMain sources (via mobileMain) resolve during Koin KSP validation.
-// mapcompose-mp 0.10.0 has no macOS variant, so it lives in mobileMain; this hook makes its
-// commonMain klib visible to the Koin KSP metadata pass to avoid deferred-symbol failure.
-afterEvaluate {
-    tasks.matching { it.name == "kspCommonMainKotlinMetadata" }
-        .configureEach {
-            if (this is com.google.devtools.ksp.gradle.KspAATask) {
-                dependsOn(tasks.matching { it.name.startsWith("transform") && it.name.contains("MobileMain") })
-                kspConfig.libraries.from(
-                    fileTree("${layout.buildDirectory.get()}/kotlinTransformedMetadataLibraries/mobileMain") {
-                        include("**/*.klib")
-                    },
-                )
-            }
-        }
-}
-
 kotlin.sourceSets.commonMain {
     kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
 }
@@ -273,12 +229,6 @@ buildkonfig {
         }
         create("desktop") {
             buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.desktop").getOrElse(""))
-        }
-        create("macosX64") {
-            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.macos").getOrElse(""))
-        }
-        create("macosArm64") {
-            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.macos").getOrElse(""))
         }
     }
 }
