@@ -4,15 +4,12 @@ import ComposeApp
 struct PiAwareTabView: View {
     var body: some View {
         TabView {
-            Tab("Map", systemImage: "map") {
-                MapTabView()
-            }
-            Tab("Aircraft", systemImage: "airplane") {
-                ComposeScreen { ScreenViewControllersKt.AircraftListViewController() }
-            }
-            Tab("Settings", systemImage: "gearshape") {
-                ComposeScreen { ScreenViewControllersKt.SettingsViewController() }
-            }
+            MapTabView()
+                .tabItem { Label("Map", systemImage: "map") }
+            ComposeScreen { ScreenViewControllersKt.AircraftListViewController() }
+                .tabItem { Label("Aircraft", systemImage: "airplane") }
+            ComposeScreen { ScreenViewControllersKt.SettingsViewController() }
+                .tabItem { Label("Settings", systemImage: "gearshape") }
         }
     }
 }
