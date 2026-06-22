@@ -4,10 +4,12 @@ import ComposeApp
 struct MapTabView: View {
     var body: some View {
         ComposeScreen { ScreenViewControllersKt.MapViewController() }
-            .ignoresSafeArea(.all, edges: .top)
+            .ignoresSafeArea()
             .overlay(alignment: .bottomTrailing) {
-                Button("", systemImage: "location.fill") {
+                Button {
                     ScreenViewControllersKt.toggleMapFollowUserLocation()
+                } label: {
+                    Image(systemName: "location.fill")
                 }
                 .modifier(GlassButtonModifier())
                 .padding(.bottom, 100)

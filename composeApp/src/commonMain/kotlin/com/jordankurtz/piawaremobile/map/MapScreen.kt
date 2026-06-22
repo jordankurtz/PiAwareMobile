@@ -6,8 +6,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -99,6 +104,7 @@ fun MapScreen(
             modifier =
                 Modifier
                     .align(Alignment.TopEnd)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -125,21 +131,30 @@ fun MapScreen(
             visible = false,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+                .padding(16.dp),
         ) {
             OfflineIndicator()
         }
         Overlay(
             numberOfPlanes = numberOfPlanes,
             provider = activeProvider,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                .padding(horizontal = 8.dp),
         )
         if (isDebugBuild) {
             TileCacheDebugOverlay(
                 stats = tileStats,
                 currentZoom = currentZoom,
                 zoomSettings = zoomSettings,
-                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+                modifier = Modifier
+                .align(Alignment.TopStart)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+                .padding(8.dp),
             )
         }
     }
