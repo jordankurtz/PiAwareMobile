@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.sentry)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.skie)
 }
 
 kotlin {

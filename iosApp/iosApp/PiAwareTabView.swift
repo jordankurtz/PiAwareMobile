@@ -3,40 +3,17 @@ import ComposeApp
 
 struct PiAwareTabView: View {
     var body: some View {
-        if #available(iOS 26, *) {
-            TabView {
-                Tab("Map", systemImage: "map") {
-                    MapTabView()
-                }
-                Tab("Aircraft", systemImage: "airplane") {
-                    ComposeScreen { ScreenViewControllersKt.AircraftListViewController() }
-                }
-                Tab("Settings", systemImage: "gearshape") {
-                    ComposeScreen { ScreenViewControllersKt.SettingsViewController() }
-                }
-            }
-            .tabBarMinimizeBehavior(.onScrollDown)
-        } else if #available(iOS 18, *) {
-            TabView {
-                Tab("Map", systemImage: "map") {
-                    MapTabView()
-                }
-                Tab("Aircraft", systemImage: "airplane") {
-                    ComposeScreen { ScreenViewControllersKt.AircraftListViewController() }
-                }
-                Tab("Settings", systemImage: "gearshape") {
-                    ComposeScreen { ScreenViewControllersKt.SettingsViewController() }
-                }
-            }
-        } else {
-            TabView {
+        TabView {
+            Tab("Map", systemImage: "map") {
                 MapTabView()
-                    .tabItem { Label("Map", systemImage: "map") }
+            }
+            Tab("Aircraft", systemImage: "airplane") {
                 ComposeScreen { ScreenViewControllersKt.AircraftListViewController() }
-                    .tabItem { Label("Aircraft", systemImage: "airplane") }
+            }
+            Tab("Settings", systemImage: "gearshape") {
                 ComposeScreen { ScreenViewControllersKt.SettingsViewController() }
-                    .tabItem { Label("Settings", systemImage: "gearshape") }
             }
         }
+        .tabBarMinimizeBehavior(.onScrollDown)
     }
 }
