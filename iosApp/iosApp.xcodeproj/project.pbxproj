@@ -15,6 +15,10 @@
 		DAA69F3963F54F8DACD47A9C /* PiAwareTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D225E8B5B8A45A8A5CF1F5B /* PiAwareTabView.swift */; };
 		D8D89C2517814400BC8EFEFC /* MapTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14BF9628EDB42A19CC4F7D2 /* MapTabView.swift */; };
 		A4E7B2C3D0F12345678901AC /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A4E7B2C3D0F12345678901AB /* libsqlite3.tbd */; };
+		AA0000001234567890ABCD01 /* KoinHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD00 /* KoinHelper.swift */; };
+		AA0000001234567890ABCD03 /* AircraftBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD02 /* AircraftBridge.swift */; };
+		AA0000001234567890ABCD05 /* LocationBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD04 /* LocationBridge.swift */; };
+		AA0000001234567890ABCD07 /* SettingsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD06 /* SettingsBridge.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +29,10 @@
 		EADE1166A09D45108F05A165 /* ComposeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeScreen.swift; sourceTree = "<group>"; };
 		3D225E8B5B8A45A8A5CF1F5B /* PiAwareTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiAwareTabView.swift; sourceTree = "<group>"; };
 		C14BF9628EDB42A19CC4F7D2 /* MapTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapTabView.swift; sourceTree = "<group>"; };
+		AA0000001234567890ABCD00 /* KoinHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KoinHelper.swift; sourceTree = "<group>"; };
+		AA0000001234567890ABCD02 /* AircraftBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircraftBridge.swift; sourceTree = "<group>"; };
+		AA0000001234567890ABCD04 /* LocationBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBridge.swift; sourceTree = "<group>"; };
+		AA0000001234567890ABCD06 /* SettingsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBridge.swift; sourceTree = "<group>"; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A4E7B2C3D0F12345678901AB /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		AB3632DC29227652001CCB65 /* Config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
@@ -84,6 +92,10 @@
 				EADE1166A09D45108F05A165 /* ComposeScreen.swift */,
 				3D225E8B5B8A45A8A5CF1F5B /* PiAwareTabView.swift */,
 				C14BF9628EDB42A19CC4F7D2 /* MapTabView.swift */,
+				AA0000001234567890ABCD00 /* KoinHelper.swift */,
+				AA0000001234567890ABCD02 /* AircraftBridge.swift */,
+				AA0000001234567890ABCD04 /* LocationBridge.swift */,
+				AA0000001234567890ABCD06 /* SettingsBridge.swift */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
 				058557D7273AAEEB004C7B11 /* Preview Content */,
@@ -202,6 +214,10 @@
 				2FC9DEDDD19945DBA1D87BDB /* ComposeScreen.swift in Sources */,
 				DAA69F3963F54F8DACD47A9C /* PiAwareTabView.swift in Sources */,
 				D8D89C2517814400BC8EFEFC /* MapTabView.swift in Sources */,
+				AA0000001234567890ABCD01 /* KoinHelper.swift in Sources */,
+				AA0000001234567890ABCD03 /* AircraftBridge.swift in Sources */,
+				AA0000001234567890ABCD05 /* LocationBridge.swift in Sources */,
+				AA0000001234567890ABCD07 /* SettingsBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

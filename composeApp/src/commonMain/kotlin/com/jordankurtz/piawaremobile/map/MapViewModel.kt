@@ -40,7 +40,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Single
 import ovh.plrapps.mapcompose.api.BoundingBox
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.state.MapState
@@ -55,7 +55,7 @@ private const val USER_LOCATION_MARKER_ID = "user_location"
 
 @Suppress("TooManyFunctions")
 @OptIn(FlowPreview::class)
-@Factory
+@Single
 class MapViewModel(
     private val mapProvider: TileStreamProvider,
     private val providerConfigFlow: StateFlow<TileProviderConfig>,
