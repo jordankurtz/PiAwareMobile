@@ -20,6 +20,7 @@ fun MapViewController() =
             MapScreen(
                 mapViewModel = mapViewModel,
                 showFollowLocationFab = false,
+                showNativeOverlays = true,
             )
         }
     }

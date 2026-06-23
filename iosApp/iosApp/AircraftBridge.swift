@@ -38,7 +38,6 @@ final class AircraftBridge {
 
     func selectAircraft(_ hex: String?) {
         vm.selectAircraft(hex: hex)
-        KoinHelpersKt.getMapViewModel().syncSelection(hex: hex)
     }
 
     func dismissFlight() {

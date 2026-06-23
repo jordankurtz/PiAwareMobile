@@ -25,11 +25,14 @@ struct AircraftListView: View {
                         aircraft.selectAircraft(item.aircraft.hex)
                         showFlightSheet = true
                     }
+                    .listRowBackground(Color.clear)
             }
             .listStyle(.plain)
+            .scrollContentBackground(.hidden)
             .navigationTitle("Aircraft")
             .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
             .searchable(text: $query, prompt: "Callsign or hex")
+            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         }
         .sheet(isPresented: $showFlightSheet, onDismiss: {
             aircraft.dismissFlight()

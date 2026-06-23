@@ -37,8 +37,9 @@ struct PiAwareTabView: View {
     private var iPadLayout: some View {
         HStack(spacing: 0) {
             // Map takes remaining width (~60%)
-            ZStack(alignment: .topTrailing) {
+            ZStack {
                 MapTabView()
+                // Settings at top-left (fit/follow are at top-right inside MapTabView)
                 Button {
                     showSettings = true
                 } label: {
@@ -46,15 +47,17 @@ struct PiAwareTabView: View {
                         .padding(12)
                 }
                 .buttonStyle(.glass)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(.top, 60)
-                .padding(.trailing, 16)
+                .padding(.leading, 16)
             }
 
             Divider()
 
-            // Aircraft list panel (~40%)
+            // Aircraft list panel (~40%) with glass background
             AircraftListView()
                 .frame(width: 380)
+                .background(.regularMaterial)
         }
         .ignoresSafeArea()
         .sheet(isPresented: $showSettings) {

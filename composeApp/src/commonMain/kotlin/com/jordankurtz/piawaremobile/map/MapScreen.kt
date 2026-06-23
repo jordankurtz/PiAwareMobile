@@ -45,6 +45,7 @@ import piawaremobile.composeapp.generated.resources.ic_user_location
 @Composable
 fun MapScreen(
     showFollowLocationFab: Boolean = true,
+    showNativeOverlays: Boolean = false,
     mapViewModel: MapViewModel = koinViewModel(),
     locationViewModel: LocationViewModel = koinViewModel(),
     aircraftViewModel: AircraftViewModel = koinViewModel(),
@@ -100,31 +101,33 @@ fun MapScreen(
 
     Box {
         OpenStreetMap(state = mapViewModel.state)
-        Column(
-            modifier =
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
-                    .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (aircraft.isNotEmpty()) {
-                SmallFloatingActionButton(
-                    onClick = { mapViewModel.fitToAircraft(aircraft) },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_plane),
-                        contentDescription = stringResource(Res.string.fit_to_aircraft),
-                        modifier = Modifier.size(24.dp),
+        if (!showNativeOverlays) {
+            Column(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+                        .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (aircraft.isNotEmpty()) {
+                    SmallFloatingActionButton(
+                        onClick = { mapViewModel.fitToAircraft(aircraft) },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_plane),
+                            contentDescription = stringResource(Res.string.fit_to_aircraft),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+                if (showFollowLocationFab && showUserLocationOnMap) {
+                    FollowUserLocationFab(
+                        isFollowing = isFollowingUser,
+                        onClick = { mapViewModel.toggleFollowUserLocation() },
                     )
                 }
-            }
-            if (showFollowLocationFab && showUserLocationOnMap) {
-                FollowUserLocationFab(
-                    isFollowing = isFollowingUser,
-                    onClick = { mapViewModel.toggleFollowUserLocation() },
-                )
             }
         }
         AnimatedVisibility(
@@ -138,24 +141,26 @@ fun MapScreen(
         ) {
             OfflineIndicator()
         }
-        Overlay(
-            numberOfPlanes = numberOfPlanes,
-            provider = activeProvider,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
-                .padding(horizontal = 8.dp),
-        )
-        if (isDebugBuild) {
-            TileCacheDebugOverlay(
-                stats = tileStats,
-                currentZoom = currentZoom,
-                zoomSettings = zoomSettings,
+        if (!showNativeOverlays) {
+            Overlay(
+                numberOfPlanes = numberOfPlanes,
+                provider = activeProvider,
                 modifier = Modifier
-                .align(Alignment.TopStart)
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
-                .padding(8.dp),
+                    .align(Alignment.BottomEnd)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                    .padding(horizontal = 8.dp),
             )
+            if (isDebugBuild) {
+                TileCacheDebugOverlay(
+                    stats = tileStats,
+                    currentZoom = currentZoom,
+                    zoomSettings = zoomSettings,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+                        .padding(8.dp),
+                )
+            }
         }
     }
 
