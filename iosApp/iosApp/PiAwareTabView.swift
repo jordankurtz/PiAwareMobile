@@ -1,5 +1,4 @@
 import SwiftUI
-import ComposeApp
 
 struct PiAwareTabView: View {
     @State private var aircraftBridge = KoinHelper.makeAircraftBridge()
