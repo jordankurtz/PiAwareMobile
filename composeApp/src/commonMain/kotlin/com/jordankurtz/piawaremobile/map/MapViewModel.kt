@@ -446,7 +446,8 @@ class MapViewModel(
     }
 
     private fun computeEffectiveZoomLimits(settings: Settings): IntRange {
-        if (!settings.limitZoomToOverlay) return settings.minZoomLevel..settings.maxZoomLevel
+        val globalRange = settings.minZoomLevel..settings.maxZoomLevel
+        if (!settings.limitZoomToOverlay) return globalRange
 
         val activeRanges =
             buildList {
@@ -456,17 +457,12 @@ class MapViewModel(
                 if (settings.showAirspace) add(OverlayZoomRanges.AIRSPACE)
             }
 
-        if (activeRanges.isEmpty()) return settings.minZoomLevel..settings.maxZoomLevel
+        if (activeRanges.isEmpty()) return globalRange
 
-        val intersectionMin = activeRanges.maxOf { it.first }
-        val intersectionMax = activeRanges.minOf { it.last }
+        val clampedMin = activeRanges.maxOf { it.first }.coerceAtLeast(settings.minZoomLevel)
+        val clampedMax = activeRanges.minOf { it.last }.coerceAtMost(settings.maxZoomLevel)
 
-        if (intersectionMin > intersectionMax) return settings.minZoomLevel..settings.maxZoomLevel
-
-        val clampedMin = intersectionMin.coerceAtLeast(settings.minZoomLevel)
-        val clampedMax = intersectionMax.coerceAtMost(settings.maxZoomLevel)
-
-        if (clampedMin > clampedMax) return settings.minZoomLevel..settings.maxZoomLevel
+        if (clampedMin > clampedMax) return globalRange
 
         return clampedMin..clampedMax
     }

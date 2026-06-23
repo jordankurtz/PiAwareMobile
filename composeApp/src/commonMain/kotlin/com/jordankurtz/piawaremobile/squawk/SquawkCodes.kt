@@ -76,8 +76,8 @@ object SquawkCodes {
             "1200"
                 to
                 SquawkInfo(
-                    name = "VFR No Radar",
-                    description = "VFR flight; no assigned radar code.",
+                    name = "VFR Flight (US)",
+                    description = "Standard VFR squawk in the United States and Canada.",
                     severity = SquawkSeverity.INFO,
                 ),
             "1202"
