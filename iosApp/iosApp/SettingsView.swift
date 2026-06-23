@@ -46,6 +46,10 @@ struct SettingsView: View {
                     } label: {
                         Text("Clear Tile Cache")
                     }
+
+                    NavigationLink("Map Providers") {
+                        MapProvidersView()
+                    }
                 }
 
                 // MARK: - Offline
