@@ -18,6 +18,11 @@ final class LocationBridge {
         startObserving()
     }
 
+    @MainActor
+    deinit {
+        observationTasks.forEach { $0.cancel() }
+    }
+
     // MARK: - Private observation
 
     private func startObserving() {

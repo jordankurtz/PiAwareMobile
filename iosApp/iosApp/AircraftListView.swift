@@ -35,6 +35,7 @@ struct AircraftListView: View {
             aircraft.dismissFlight()
         }) {
             FlightDetailsSheet()
+                .environment(aircraft)
         }
     }
 }

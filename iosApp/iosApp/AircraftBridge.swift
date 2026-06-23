@@ -29,6 +29,11 @@ final class AircraftBridge {
         startObserving()
     }
 
+    @MainActor
+    deinit {
+        observationTasks.forEach { $0.cancel() }
+    }
+
     // MARK: - Mutations
 
     func selectAircraft(_ hex: String?) {

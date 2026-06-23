@@ -17,6 +17,11 @@ final class SettingsBridge {
         startObserving()
     }
 
+    @MainActor
+    deinit {
+        observationTasks.forEach { $0.cancel() }
+    }
+
     // MARK: - Mutations
 
     func addServer(name: String, address: String, type: ServerType) {
