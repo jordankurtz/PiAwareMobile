@@ -3,50 +3,16 @@ package com.jordankurtz.piawaremobile
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.ComposeUIViewController
-import com.jordankurtz.piawaremobile.list.AircraftListScreen
-import com.jordankurtz.piawaremobile.map.MapScreen
-import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
 import com.jordankurtz.piawaremobile.settings.ui.FlightCacheScreen
 import com.jordankurtz.piawaremobile.settings.ui.MapProvidersScreen
 import com.jordankurtz.piawaremobile.settings.ui.OfflineMapsScreen
-import com.jordankurtz.piawaremobile.settings.ui.SettingsScreen
 import com.jordankurtz.piawaremobile.ui.Theme
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.mp.KoinPlatform
-
-fun MapViewController() =
-    ComposeUIViewController {
-        val mapViewModel: MapViewModel = koinViewModel()
-        Theme {
-            MapScreen(
-                mapViewModel = mapViewModel,
-                showFollowLocationFab = false,
-            )
-        }
-    }
-
-fun toggleMapFollowUserLocation() {
-    KoinPlatform.getKoin().get<MapViewModel>().toggleFollowUserLocation()
-}
-
-fun AircraftListViewController() =
-    ComposeUIViewController {
-        Theme {
-            AircraftListScreen()
-        }
-    }
-
-fun SettingsViewController() =
-    ComposeUIViewController {
-        Theme {
-            SettingsScreen()
-        }
-    }
 
 fun OfflineMapsViewController() =
     ComposeUIViewController {
-        val viewModel: OfflineMapsViewModel = org.koin.compose.viewmodel.koinViewModel()
+        val viewModel: OfflineMapsViewModel = koinViewModel()
         val regions by viewModel.regions.collectAsState()
         Theme {
             OfflineMapsScreen(
