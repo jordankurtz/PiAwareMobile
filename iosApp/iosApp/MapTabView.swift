@@ -76,6 +76,10 @@ struct MapTabView: View {
         .onChange(of: aircraft.selectedHex) { _, newValue in
             showFlightDetails = newValue != nil
         }
+        .onChange(of: location.coordinate?.latitude) { _, _ in
+            guard followingUser, let coord = location.coordinate else { return }
+            position = .camera(MapCamera(centerCoordinate: coord, distance: 50_000))
+        }
     }
 }
 
