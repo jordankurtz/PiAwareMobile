@@ -51,19 +51,32 @@ private struct AircraftRow: View {
         return flight.isEmpty ? item.aircraft.hex.uppercased() : flight
     }
 
+    private var subtitle: String {
+        var parts: [String] = []
+        if let reg = item.info?.registration { parts.append(reg) }
+        if let type = item.info?.icaoType { parts.append(type) }
+        if parts.isEmpty { parts.append(item.aircraft.hex.uppercased()) }
+        return parts.joined(separator: " · ")
+    }
+
     private var altitudeText: String {
-        if let baro = item.aircraft.altBaro, baro != "ground", !baro.isEmpty {
-            return "\(baro) ft"
+        if let baro = item.aircraft.altBaro {
+            if baro.lowercased() == "ground" { return "Ground" }
+            if !baro.isEmpty { return "\(baro) ft" }
         }
-        if let geom = item.aircraft.altGeom {
-            return "\(geom) ft"
-        }
+        if let geom = item.aircraft.altGeom { return "\(geom) ft" }
         return "—"
     }
 
     private var speedText: String {
         guard let gs = item.aircraft.gs else { return "—" }
         return String(format: "%.0f kt", gs)
+    }
+
+    private var verticalRate: Int? {
+        guard let rate = item.aircraft.baroRate else { return nil }
+        let intRate = rate.intValue
+        return abs(intRate) >= 100 ? intRate : nil
     }
 
     private var trackDegrees: Double {
@@ -76,13 +89,14 @@ private struct AircraftRow: View {
                 .font(.title2)
                 .foregroundStyle(.secondary)
                 .rotationEffect(.degrees(trackDegrees))
+                .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(callsign)
                     .font(.headline)
-                Text(item.aircraft.hex.uppercased())
+                Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -91,10 +105,17 @@ private struct AircraftRow: View {
                 Text(altitudeText)
                     .font(.subheadline)
                     .monospacedDigit()
-                Text(speedText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                if let rate = verticalRate {
+                    Text("\(rate > 0 ? "↑" : "↓") \(Swift.abs(rate)) fpm")
+                        .font(.caption)
+                        .foregroundStyle(rate > 0 ? Color.green : Color.orange)
+                        .monospacedDigit()
+                } else {
+                    Text(speedText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
             }
         }
         .padding(.vertical, 4)

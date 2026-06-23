@@ -8,6 +8,7 @@ struct PiAwareTabView: View {
     @State private var settingsBridge = KoinHelper.makeSettingsBridge()
     @State private var showSettings = false
     @State private var showFlightSheet = false
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
         Group {
@@ -45,7 +46,7 @@ struct PiAwareTabView: View {
     // MARK: - iPad
 
     private var iPadLayout: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             AircraftListView()
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
@@ -57,9 +58,13 @@ struct PiAwareTabView: View {
                     }
                 }
         } detail: {
-            MapTabView()
-                .toolbar(.hidden, for: .navigationBar)
-                .ignoresSafeArea()
+            MapTabView(
+                onShowSidebar: columnVisibility != .all
+                    ? { withAnimation { columnVisibility = .all } }
+                    : nil
+            )
+            .toolbar(.hidden, for: .navigationBar)
+            .ignoresSafeArea()
         }
         .sheet(isPresented: $showSettings) {
             NavigationStack {
