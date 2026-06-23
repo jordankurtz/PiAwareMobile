@@ -14,7 +14,7 @@ struct PiAwareTabView: View {
                     .environment(locationBridge)
             }
             Tab("Aircraft", systemImage: "airplane") {
-                ComposeScreen { ScreenViewControllersKt.AircraftListViewController() }
+                AircraftListView()
                     .environment(aircraftBridge)
             }
             Tab("Settings", systemImage: "gearshape") {
