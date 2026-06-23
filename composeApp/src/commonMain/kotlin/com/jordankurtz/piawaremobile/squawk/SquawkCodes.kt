@@ -71,7 +71,7 @@ object SquawkCodes {
                 SquawkInfo(
                     name = "Search and Rescue",
                     description = "Search and rescue operation.",
-                    severity = SquawkSeverity.CAUTION,
+                    severity = SquawkSeverity.INFO,
                 ),
             "1200"
                 to
@@ -106,41 +106,90 @@ object SquawkCodes {
                 SquawkInfo(
                     name = "Firefighting",
                     description = "Firefighting or aerial application operations.",
-                    severity = SquawkSeverity.CAUTION,
+                    severity = SquawkSeverity.INFO,
                 ),
             "3100"
                 to
                 SquawkInfo(
                     name = "Parachute Operations",
                     description = "Skydiving or parachute jump operations.",
-                    severity = SquawkSeverity.CAUTION,
+                    severity = SquawkSeverity.INFO,
                 ),
             "0033"
                 to
                 SquawkInfo(
                     name = "Military Formation",
                     description = "Military aircraft formation flight.",
-                    severity = SquawkSeverity.CAUTION,
+                    severity = SquawkSeverity.INFO,
                 ),
             "7001"
                 to
                 SquawkInfo(
                     name = "Military Low Level",
                     description = "Military low-level training flight.",
-                    severity = SquawkSeverity.CAUTION,
+                    severity = SquawkSeverity.INFO,
                 ),
             "7002"
                 to
                 SquawkInfo(
                     name = "Military Low Level",
                     description = "Military low-level training flight.",
-                    severity = SquawkSeverity.CAUTION,
+                    severity = SquawkSeverity.INFO,
                 ),
             "7004"
                 to
                 SquawkInfo(
+                    name = "Aerobatics",
+                    description = "Aerobatic display or practice.",
+                    severity = SquawkSeverity.INFO,
+                ),
+            "7000"
+                to
+                SquawkInfo(
+                    name = "VFR Flight (ICAO)",
+                    description = "Standard VFR squawk in Europe and most ICAO regions.",
+                    severity = SquawkSeverity.INFO,
+                ),
+            "2000"
+                to
+                SquawkInfo(
+                    name = "Arriving IFR, No Code",
+                    description = "IFR aircraft entering controlled airspace without an assigned code.",
+                    severity = SquawkSeverity.INFO,
+                ),
+            "1000"
+                to
+                SquawkInfo(
+                    name = "Mode C Only",
+                    description = "Transponder replying to Mode C altitude queries only; no Mode A code.",
+                    severity = SquawkSeverity.INFO,
+                ),
+            "7006"
+                to
+                SquawkInfo(
+                    name = "Military (Special)",
+                    description = "Reserved for military special operations.",
+                    severity = SquawkSeverity.INFO,
+                ),
+            "7007"
+                to
+                SquawkInfo(
+                    name = "Military (Special)",
+                    description = "Reserved for military special operations.",
+                    severity = SquawkSeverity.INFO,
+                ),
+            "2100"
+                to
+                SquawkInfo(
+                    name = "VFR (Regional)",
+                    description = "VFR squawk used in certain ICAO regions outside US/Europe.",
+                    severity = SquawkSeverity.INFO,
+                ),
+            "0100"
+                to
+                SquawkInfo(
                     name = "Departing Uncontrolled",
-                    description = "Departing from an uncontrolled airport.",
+                    description = "Departing from an uncontrolled airport (some regions).",
                     severity = SquawkSeverity.INFO,
                 ),
         )
