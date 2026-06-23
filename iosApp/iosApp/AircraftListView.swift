@@ -26,18 +26,37 @@ struct AircraftListView: View {
         }
     }
 
-    private var listContent: some View {
+    // Base list without a style applied — style differs by context.
+    private var listBase: some View {
         List(filtered, id: \.aircraft.hex) { item in
-            AircraftRow(item: item)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    aircraft.selectAircraft(item.aircraft.hex)
-                }
+            // Button is more reliable than .onTapGesture inside a List;
+            // .onTapGesture is intercepted by .sidebar and selection modes.
+            Button {
+                aircraft.selectAircraft(item.aircraft.hex)
+            } label: {
+                AircraftRow(item: item)
+            }
+            .buttonStyle(.plain)
+            .listRowBackground(Color.clear)
         }
-        .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
         .navigationTitle("Aircraft")
         .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
         .searchable(text: $query, prompt: "Callsign or hex")
+    }
+
+    @ViewBuilder
+    private var listContent: some View {
+        if horizontalSizeClass == .regular {
+            // .sidebar gives proper NavigationSplitView insets;
+            // the sidebar column provides the glass background.
+            listBase.listStyle(.sidebar)
+        } else {
+            // .plain on iPhone; glass tab bar provides the background.
+            listBase
+                .listStyle(.plain)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        }
     }
 }
 
