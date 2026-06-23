@@ -45,31 +45,22 @@ struct PiAwareTabView: View {
     // MARK: - iPad
 
     private var iPadLayout: some View {
-        HStack(spacing: 0) {
-            // Map takes remaining width (~60%)
-            ZStack {
-                MapTabView()
-                // Settings at top-left (fit/follow are at top-right inside MapTabView)
-                Button {
-                    showSettings = true
-                } label: {
-                    Image(systemName: "gearshape")
-                        .padding(12)
-                }
-                .buttonStyle(.glass)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .padding(.top, 60)
-                .padding(.leading, 16)
-            }
-
-            Divider()
-
-            // Aircraft list panel (~40%) with glass background
+        NavigationSplitView {
             AircraftListView()
-                .frame(width: 380)
-                .background(.regularMaterial)
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                    }
+                }
+        } detail: {
+            MapTabView()
+                .toolbar(.hidden, for: .navigationBar)
+                .ignoresSafeArea()
         }
-        .ignoresSafeArea()
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()

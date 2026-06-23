@@ -3,6 +3,7 @@ import ComposeApp
 
 struct AircraftListView: View {
     @Environment(AircraftBridge.self) private var aircraft
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var query = ""
 
     private var filtered: [AircraftWithServers] {
@@ -16,22 +17,27 @@ struct AircraftListView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List(filtered, id: \.aircraft.hex) { item in
-                AircraftRow(item: item)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        aircraft.selectAircraft(item.aircraft.hex)
-                    }
-                    .listRowBackground(Color.clear)
-            }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .navigationTitle("Aircraft")
-            .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
-            .searchable(text: $query, prompt: "Callsign or hex")
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        // On iPad, NavigationSplitView provides the navigation context.
+        // On iPhone, we need our own NavigationStack.
+        if horizontalSizeClass == .regular {
+            listContent
+        } else {
+            NavigationStack { listContent }
         }
+    }
+
+    private var listContent: some View {
+        List(filtered, id: \.aircraft.hex) { item in
+            AircraftRow(item: item)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    aircraft.selectAircraft(item.aircraft.hex)
+                }
+        }
+        .listStyle(.sidebar)
+        .navigationTitle("Aircraft")
+        .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
+        .searchable(text: $query, prompt: "Callsign or hex")
     }
 }
 
@@ -66,7 +72,6 @@ private struct AircraftRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Tail icon rotated to track heading
             Image(systemName: "airplane")
                 .font(.title2)
                 .foregroundStyle(.secondary)
