@@ -4,7 +4,6 @@ import ComposeApp
 struct AircraftListView: View {
     @Environment(AircraftBridge.self) private var aircraft
     @State private var query = ""
-    @State private var showFlightSheet = false
 
     private var filtered: [AircraftWithServers] {
         let trimmed = query.trimmingCharacters(in: .whitespaces).lowercased()
@@ -23,7 +22,6 @@ struct AircraftListView: View {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         aircraft.selectAircraft(item.aircraft.hex)
-                        showFlightSheet = true
                     }
                     .listRowBackground(Color.clear)
             }
@@ -33,12 +31,6 @@ struct AircraftListView: View {
             .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
             .searchable(text: $query, prompt: "Callsign or hex")
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        }
-        .sheet(isPresented: $showFlightSheet, onDismiss: {
-            aircraft.dismissFlight()
-        }) {
-            FlightDetailsSheet()
-                .environment(aircraft)
         }
     }
 }

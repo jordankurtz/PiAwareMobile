@@ -164,26 +164,28 @@ fun MapScreen(
         }
     }
 
-    val selectedAircraft =
-        selectedAircraftHex?.let { hex ->
-            aircraft.firstOrNull { it.aircraft.hex == hex }?.aircraft
-        }
-
-    FlightDetailsBottomSheet(
-        aircraft = selectedAircraft,
-        flightDetails = flightDetails,
-        isFollowing = followingAircraftHex != null,
-        onDismissRequest = { mapViewModel.onAircraftDeselected() },
-        onOpenFlightPage = { aircraftViewModel.openFlightPage(selectedAircraftHex) },
-        onFollowToggle = {
-            if (followingAircraftHex != null) {
-                mapViewModel.unfollowAircraft()
-            } else {
-                mapViewModel.followSelectedAircraft()
+    if (!showNativeOverlays) {
+        val selectedAircraft =
+            selectedAircraftHex?.let { hex ->
+                aircraft.firstOrNull { it.aircraft.hex == hex }?.aircraft
             }
-        },
-        sheetState = sheetState,
-    )
+
+        FlightDetailsBottomSheet(
+            aircraft = selectedAircraft,
+            flightDetails = flightDetails,
+            isFollowing = followingAircraftHex != null,
+            onDismissRequest = { mapViewModel.onAircraftDeselected() },
+            onOpenFlightPage = { aircraftViewModel.openFlightPage(selectedAircraftHex) },
+            onFollowToggle = {
+                if (followingAircraftHex != null) {
+                    mapViewModel.unfollowAircraft()
+                } else {
+                    mapViewModel.followSelectedAircraft()
+                }
+            },
+            sheetState = sheetState,
+        )
+    }
 }
 
 @Composable

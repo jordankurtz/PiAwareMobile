@@ -7,6 +7,7 @@ struct PiAwareTabView: View {
     @State private var locationBridge = KoinHelper.makeLocationBridge()
     @State private var settingsBridge = KoinHelper.makeSettingsBridge()
     @State private var showSettings = false
+    @State private var showFlightSheet = false
 
     var body: some View {
         Group {
@@ -19,6 +20,15 @@ struct PiAwareTabView: View {
         .environment(aircraftBridge)
         .environment(locationBridge)
         .environment(settingsBridge)
+        .onChange(of: aircraftBridge.selectedHex) { _, newValue in
+            showFlightSheet = newValue != nil
+        }
+        .sheet(isPresented: $showFlightSheet, onDismiss: {
+            aircraftBridge.dismissFlight()
+        }) {
+            FlightDetailsSheet()
+                .environment(aircraftBridge)
+        }
     }
 
     // MARK: - iPhone
