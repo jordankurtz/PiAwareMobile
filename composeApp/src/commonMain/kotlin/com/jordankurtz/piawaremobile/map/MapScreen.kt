@@ -173,8 +173,8 @@ fun MapScreen(
                     currentZoom = currentZoom,
                     zoomSettings = zoomSettings,
                     modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+                        .align(Alignment.BottomStart)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                         .padding(8.dp),
                 )
             }
