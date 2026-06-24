@@ -24,6 +24,8 @@
 		BB0000001234567890ABCD01 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000001234567890ABCD00 /* SettingsView.swift */; };
 		BB0000001234567890ABCD03 /* ServersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000001234567890ABCD02 /* ServersView.swift */; };
 		BB0000001234567890ABCD05 /* MapProvidersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000001234567890ABCD04 /* MapProvidersView.swift */; };
+		CC0100001234567890ABCD10 /* AircraftBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0100001234567890ABCD01 /* AircraftBridgeTests.swift */; };
+		CC0100001234567890ABCD11 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC0100001234567890ABCD02 /* XCTest.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +48,9 @@
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A4E7B2C3D0F12345678901AB /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		AB3632DC29227652001CCB65 /* Config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		CC0100001234567890ABCD00 /* iosAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC0100001234567890ABCD01 /* AircraftBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircraftBridgeTests.swift; sourceTree = "<group>"; };
+		CC0100001234567890ABCD02 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +60,14 @@
 			files = (
 				175BC0742EF39C4F00F3C89D /* Sentry in Frameworks */,
 				A4E7B2C3D0F12345678901AC /* libsqlite3.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC0100001234567890ABCD31 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC0100001234567890ABCD11 /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -82,6 +95,7 @@
 			children = (
 				AB1DB47929225F7C00F7AF9C /* Configuration */,
 				7555FF7D242A565900829871 /* iosApp */,
+				CC0100001234567890ABCD20 /* iosAppTests */,
 				7555FF7C242A565900829871 /* Products */,
 				42799AB246E5F90AF97AA0EF /* Frameworks */,
 			);
@@ -91,8 +105,17 @@
 			isa = PBXGroup;
 			children = (
 				7555FF7B242A565900829871 /* PiAware Mobile.app */,
+				CC0100001234567890ABCD00 /* iosAppTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CC0100001234567890ABCD20 /* iosAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				CC0100001234567890ABCD01 /* AircraftBridgeTests.swift */,
+			);
+			path = iosAppTests;
 			sourceTree = "<group>";
 		};
 		7555FF7D242A565900829871 /* iosApp */ = {
@@ -150,6 +173,23 @@
 			productReference = 7555FF7B242A565900829871 /* PiAware Mobile.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CC0100001234567890ABCD50 /* iosAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC0100001234567890ABCD70 /* Build configuration list for PBXNativeTarget "iosAppTests" */;
+			buildPhases = (
+				CC0100001234567890ABCD30 /* Sources */,
+				CC0100001234567890ABCD31 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC0100001234567890ABCD41 /* PBXTargetDependency */,
+			);
+			name = iosAppTests;
+			productName = iosAppTests;
+			productReference = CC0100001234567890ABCD00 /* iosAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -163,6 +203,10 @@
 				TargetAttributes = {
 					7555FF7A242A565900829871 = {
 						CreatedOnToolsVersion = 11.3.1;
+					};
+					CC0100001234567890ABCD50 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 7555FF7A242A565900829871;
 					};
 				};
 			};
@@ -183,6 +227,7 @@
 			projectRoot = "";
 			targets = (
 				7555FF7A242A565900829871 /* iosApp */,
+				CC0100001234567890ABCD50 /* iosAppTests */,
 			);
 		};
 /* End PBXProject section */
@@ -241,7 +286,33 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC0100001234567890ABCD30 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC0100001234567890ABCD10 /* AircraftBridgeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		CC0100001234567890ABCD40 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7555FF73242A565900829871 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7555FF7A242A565900829871;
+			remoteInfo = iosApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		CC0100001234567890ABCD41 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7555FF7A242A565900829871 /* iosApp */;
+			targetProxy = CC0100001234567890ABCD40 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		7555FFA3242A565B00829871 /* Debug */ = {
@@ -420,6 +491,44 @@
 			};
 			name = Release;
 		};
+		CC0100001234567890ABCD60 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = J939Q6LGWX;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jordankurtz.piawaremobile.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PiAware Mobile.app/PiAware Mobile";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CC0100001234567890ABCD61 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = J939Q6LGWX;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jordankurtz.piawaremobile.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PiAware Mobile.app/PiAware Mobile";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -437,6 +546,15 @@
 			buildConfigurations = (
 				7555FFA6242A565B00829871 /* Debug */,
 				7555FFA7242A565B00829871 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC0100001234567890ABCD70 /* Build configuration list for PBXNativeTarget "iosAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC0100001234567890ABCD60 /* Debug */,
+				CC0100001234567890ABCD61 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -14,9 +14,18 @@ import ovh.plrapps.mapcompose.ui.paths.PathDataBuilder
 class FakeMapStateController : MapStateController {
     override val scrollAndScaleFlow: Flow<MapScrollPosition> = emptyFlow()
 
+    private var markerClickHandler: ((id: String) -> Unit)? = null
+
+    /** Simulates a user tapping the marker with [id] on the map. */
+    fun simulateMarkerClick(id: String) {
+        markerClickHandler?.invoke(id)
+    }
+
     override fun addLayer(provider: TileStreamProvider): String = "fake-layer-id"
 
-    override fun onMarkerClick(handler: (id: String) -> Unit) = Unit
+    override fun onMarkerClick(handler: (id: String) -> Unit) {
+        markerClickHandler = handler
+    }
 
     override fun onTap(handler: () -> Unit) = Unit
 

@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Single
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -57,7 +57,7 @@ private val dateFormatter =
         day()
     }
 
-@Factory
+@Single
 class AircraftViewModel(
     private val loadAircraftTypesUseCase: LoadAircraftTypesUseCase,
     private val getAircraftWithDetailsUseCase: GetAircraftWithDetailsUseCase,
