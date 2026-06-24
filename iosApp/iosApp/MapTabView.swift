@@ -6,6 +6,8 @@ struct MapTabView: View {
 
     /// Non-nil on iPad when the NavigationSplitView sidebar is collapsed.
     var onShowSidebar: (() -> Void)? = nil
+    /// Non-nil on iPad — opens the Settings sheet from the map.
+    var onShowSettings: (() -> Void)? = nil
 
     @Namespace private var topRightNamespace
     @Namespace private var topLeftNamespace
@@ -35,8 +37,8 @@ struct MapTabView: View {
 
                     Spacer()
 
-                    // Fit + follow — top-right, shared container so the
-                    // morph animation works when fit button appears/disappears.
+                    // Fit + follow + settings — top-right, shared container
+                    // so morph animation works when fit button appears/disappears.
                     GlassEffectContainer(spacing: 8) {
                         VStack(spacing: 8) {
                             if !aircraft.aircraft.isEmpty {
@@ -57,6 +59,14 @@ struct MapTabView: View {
                             }
                             .buttonStyle(.glass)
                             .glassEffectID("follow", in: topRightNamespace)
+                            if let onShowSettings {
+                                Button(action: onShowSettings) {
+                                    Image(systemName: "gearshape")
+                                        .padding(12)
+                                }
+                                .buttonStyle(.glass)
+                                .glassEffectID("settings", in: topRightNamespace)
+                            }
                         }
                     }
                 }

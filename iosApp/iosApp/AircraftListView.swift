@@ -17,8 +17,6 @@ struct AircraftListView: View {
     }
 
     var body: some View {
-        // On iPad, NavigationSplitView provides the navigation context.
-        // On iPhone, we need our own NavigationStack.
         if horizontalSizeClass == .regular {
             listContent
         } else {
@@ -26,11 +24,8 @@ struct AircraftListView: View {
         }
     }
 
-    // Base list without a style applied — style differs by context.
-    private var listBase: some View {
+    private var listContent: some View {
         List(filtered, id: \.aircraft.hex) { item in
-            // Button is more reliable than .onTapGesture inside a List;
-            // .onTapGesture is intercepted by .sidebar and selection modes.
             Button {
                 aircraft.selectAircraft(item.aircraft.hex)
             } label: {
@@ -39,25 +34,12 @@ struct AircraftListView: View {
             .buttonStyle(.plain)
             .listRowBackground(Color.clear)
         }
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .navigationTitle("Aircraft")
         .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
         .searchable(text: $query, prompt: "Callsign or hex")
-    }
-
-    @ViewBuilder
-    private var listContent: some View {
-        if horizontalSizeClass == .regular {
-            listBase
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .toolbarBackground(.hidden, for: .navigationBar)
-                .toolbarBackground(.hidden, for: .bottomBar)
-        } else {
-            listBase
-                .listStyle(.plain)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        }
+        .toolbarBackground(horizontalSizeClass == .regular ? .hidden : .ultraThinMaterial, for: .navigationBar)
     }
 }
 

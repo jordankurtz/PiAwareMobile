@@ -48,20 +48,12 @@ struct PiAwareTabView: View {
     private var iPadLayout: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             AircraftListView()
-                .toolbar {
-                    ToolbarItem(placement: .bottomBar) {
-                        Button {
-                            showSettings = true
-                        } label: {
-                            Label("Settings", systemImage: "gearshape")
-                        }
-                    }
-                }
         } detail: {
             MapTabView(
                 onShowSidebar: columnVisibility != .all
                     ? { withAnimation { columnVisibility = .all } }
-                    : nil
+                    : nil,
+                onShowSettings: { showSettings = true }
             )
             .toolbar(.hidden, for: .navigationBar)
             .ignoresSafeArea()
