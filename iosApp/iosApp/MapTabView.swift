@@ -14,9 +14,12 @@ struct MapTabView: View {
     /// Bumped when the map finishes loading tiles so the glass containers
     /// reinstall their CABackdropLayer against the rendered map backdrop.
     @State private var glassID = UUID()
-    #if DEBUG
     @State private var debugTileStats: TileCacheStats? = nil
-    #endif
+
+    private var showDebugOverlay: Bool {
+        _isDebugAssertConfiguration() ||
+        Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
+    }
 
     var body: some View {
         ZStack {
@@ -89,8 +92,7 @@ struct MapTabView: View {
 
                 Spacer()
 
-                #if DEBUG
-                if let stats = debugTileStats {
+                if showDebugOverlay, let stats = debugTileStats {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("disk \(stats.diskHits)  net \(stats.networkFetches)  offline \(stats.offlineHits)  err \(stats.errors)")
@@ -105,7 +107,6 @@ struct MapTabView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 4)
                 }
-                #endif
 
                 HStack {
                     Label("\(aircraft.numberOfPlanes)", systemImage: "airplane")
@@ -128,12 +129,11 @@ struct MapTabView: View {
                 glassID = UUID()
             }
         }
-        #if DEBUG
         .task {
+            guard showDebugOverlay else { return }
             for await stats in KoinHelpersKt.getMapViewModel().tileStats {
                 debugTileStats = stats
             }
         }
-        #endif
     }
 }
