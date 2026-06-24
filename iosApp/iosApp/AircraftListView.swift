@@ -18,13 +18,15 @@ struct AircraftListView: View {
 
     var body: some View {
         if horizontalSizeClass == .regular {
-            listContent
+            baseList.toolbarBackground(.hidden, for: .navigationBar)
         } else {
-            NavigationStack { listContent }
+            NavigationStack {
+                baseList.toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            }
         }
     }
 
-    private var listContent: some View {
+    private var baseList: some View {
         List(filtered, id: \.aircraft.hex) { item in
             Button {
                 aircraft.selectAircraft(item.aircraft.hex)
@@ -39,7 +41,6 @@ struct AircraftListView: View {
         .navigationTitle("Aircraft")
         .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
         .searchable(text: $query, prompt: "Callsign or hex")
-        .toolbarBackground(horizontalSizeClass == .regular ? .hidden : .ultraThinMaterial, for: .navigationBar)
     }
 }
 
