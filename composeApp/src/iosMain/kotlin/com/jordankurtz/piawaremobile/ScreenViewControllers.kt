@@ -13,7 +13,7 @@ import com.jordankurtz.piawaremobile.ui.Theme
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.mp.KoinPlatform
 
-fun MapViewController() =
+fun MapViewController(onMounted: (() -> Unit)? = null) =
     ComposeUIViewController {
         val mapViewModel: MapViewModel = koinViewModel()
         Theme {
@@ -21,6 +21,7 @@ fun MapViewController() =
                 mapViewModel = mapViewModel,
                 showFollowLocationFab = false,
                 showNativeOverlays = true,
+                onMounted = onMounted,
             )
         }
     }

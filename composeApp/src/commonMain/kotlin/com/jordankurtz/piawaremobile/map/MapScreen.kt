@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -46,6 +49,7 @@ import piawaremobile.composeapp.generated.resources.ic_user_location
 fun MapScreen(
     showFollowLocationFab: Boolean = true,
     showNativeOverlays: Boolean = false,
+    onMounted: (() -> Unit)? = null,
     mapViewModel: MapViewModel = koinViewModel(),
     locationViewModel: LocationViewModel = koinViewModel(),
     aircraftViewModel: AircraftViewModel = koinViewModel(),
@@ -88,6 +92,19 @@ fun MapScreen(
     LaunchedEffect(Unit) {
         locationViewModel.recenterMap.collect {
             mapViewModel.recenterOnLocation(it)
+        }
+    }
+
+    // Signal iOS once the map has settled: debounce on tileStats so we fire
+    // 800 ms after the last tile completes loading, not on first composition.
+    if (onMounted != null) {
+        val hasMounted = remember { mutableStateOf(false) }
+        LaunchedEffect(tileStats) {
+            if (!hasMounted.value) {
+                delay(800)
+                hasMounted.value = true
+                onMounted()
+            }
         }
     }
 

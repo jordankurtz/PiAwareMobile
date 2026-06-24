@@ -11,16 +11,27 @@ struct MapTabView: View {
 
     @Namespace private var topRightNamespace
     @Namespace private var topLeftNamespace
+    /// Bumped when the map finishes loading tiles so the glass containers
+    /// reinstall their CABackdropLayer against the rendered map backdrop.
+    @State private var glassID = UUID()
 
     var body: some View {
         ZStack {
-            ComposeScreen { ScreenViewControllersKt.MapViewController() }
-                .ignoresSafeArea()
+            ComposeScreen {
+                ScreenViewControllersKt.MapViewController(onMounted: {
+                    glassID = UUID()
+                })
+            }
+            .ignoresSafeArea()
 
             // Use VStack+HStack+Spacer so each GlassEffectContainer is
             // sized to its content, not to the full screen. A full-screen
             // container frame creates an internal backdrop layer that blocks
             // all map touches.
+            // .id(glassID) forces SwiftUI to destroy and recreate all glass
+            // containers, reinstalling each CABackdropLayer against the now-
+            // rendered map backdrop. Bumped by onMounted (post tile-load) and
+            // on app-active transitions.
             VStack(spacing: 0) {
                 HStack(alignment: .top, spacing: 0) {
                     // Sidebar toggle — top-left, own container.
@@ -86,6 +97,14 @@ struct MapTabView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
+            }
+            .id(glassID)
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: UIApplication.didBecomeActiveNotification
+                )
+            ) { _ in
+                glassID = UUID()
             }
         }
     }
