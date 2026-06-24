@@ -49,11 +49,11 @@ struct PiAwareTabView: View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             AircraftListView()
                 .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
+                    ToolbarItem(placement: .bottomBar) {
                         Button {
                             showSettings = true
                         } label: {
-                            Image(systemName: "gearshape")
+                            Label("Settings", systemImage: "gearshape")
                         }
                     }
                 }

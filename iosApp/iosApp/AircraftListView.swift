@@ -48,11 +48,12 @@ struct AircraftListView: View {
     @ViewBuilder
     private var listContent: some View {
         if horizontalSizeClass == .regular {
-            // .sidebar gives proper NavigationSplitView insets;
-            // the sidebar column provides the glass background.
-            listBase.listStyle(.sidebar)
+            listBase
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .toolbarBackground(.hidden, for: .bottomBar)
         } else {
-            // .plain on iPhone; glass tab bar provides the background.
             listBase
                 .listStyle(.plain)
                 .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
