@@ -25,17 +25,20 @@ fun SquawkInfoDialog(
     val info = SquawkCodes[squawk]
     val name = info?.name ?: "Unknown Code"
     val description = info?.description ?: "No specific meaning is assigned to this squawk code."
-    val chipColor = info?.severity?.let { severityColor(it) }
+    val severityChip: Pair<Color, String>? =
+        info?.severity?.let { s ->
+            severityColor(s)?.let { c -> c to s.label }
+        }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(squawk, style = MaterialTheme.typography.titleLarge) },
         text = {
             Column {
-                chipColor?.let { color ->
+                severityChip?.let { (color, label) ->
                     SuggestionChip(
                         onClick = {},
-                        label = { Text(info!!.severity.label) },
+                        label = { Text(label) },
                         colors =
                             SuggestionChipDefaults.suggestionChipColors(
                                 containerColor = color.copy(alpha = 0.15f),
