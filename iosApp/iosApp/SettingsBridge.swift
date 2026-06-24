@@ -33,6 +33,11 @@ final class SettingsBridge {
         vm.deleteServer(id: uuid)
     }
 
+    func editServer(id: String, name: String, address: String, type: ServerType) {
+        guard let existing = settings?.servers.first(where: { $0.id.toHexDashString() == id }) else { return }
+        vm.editServer(server: Server(id: existing.id, name: name, address: address, type: type))
+    }
+
     func updateRefreshInterval(_ interval: Int) {
         vm.updateRefreshInterval(refreshInterval: Int32(interval))
     }
