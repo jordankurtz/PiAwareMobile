@@ -34,9 +34,9 @@ struct MapTabView: View {
             // sized to its content, not to the full screen. A full-screen
             // container frame creates an internal backdrop layer that blocks
             // all map touches.
-            // .id(glassID) forces SwiftUI to destroy and recreate all glass
-            // containers, reinstalling each CABackdropLayer against the now-
-            // rendered map backdrop. Bumped by onMounted (post tile-load) and
+            // glassID is set on each GlassEffectContainer / glassEffect leaf
+            // so they reinstall their CABackdropLayer against the now-rendered
+            // map backdrop, without recreating the positioning VStack. Bumped by onMounted (post tile-load) and
             // on app-active transitions.
             VStack(spacing: 0) {
                 HStack(alignment: .top, spacing: 0) {
@@ -50,6 +50,7 @@ struct MapTabView: View {
                             .buttonStyle(.glass)
                             .glassEffectID("sidebar", in: topLeftNamespace)
                         }
+                        .id(glassID)
                     }
 
                     Spacer()
@@ -86,6 +87,7 @@ struct MapTabView: View {
                             }
                         }
                     }
+                    .id(glassID)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 60)
@@ -114,13 +116,13 @@ struct MapTabView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .glassEffect(in: .capsule)
+                        .id(glassID)
 
                     Spacer()
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
             }
-            .id(glassID)
             .onReceive(
                 NotificationCenter.default.publisher(
                     for: UIApplication.didBecomeActiveNotification
