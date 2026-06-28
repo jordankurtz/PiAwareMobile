@@ -15,6 +15,7 @@ struct MapTabView: View {
     /// reinstall their CABackdropLayer against the rendered map backdrop.
     @State private var glassID = UUID()
     @State private var debugTileStats: TileCacheStats? = nil
+    @State private var debugZoomLevel: Int? = nil
 
     private var showDebugOverlay: Bool {
         _isDebugAssertConfiguration() ||
@@ -98,7 +99,8 @@ struct MapTabView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("disk \(stats.diskHits)  net \(stats.networkFetches)  offline \(stats.offlineHits)  err \(stats.errors)")
-                            Text("hit \(Int(stats.hitRate * 100))%  total \(stats.total)")
+                            let zoomStr = debugZoomLevel.map { "z\($0)  " } ?? ""
+                            Text("\(zoomStr)hit \(Int(stats.hitRate * 100))%  total \(stats.total)")
                         }
                         .font(.system(size: 10, design: .monospaced))
                         .padding(.horizontal, 8)
@@ -136,6 +138,12 @@ struct MapTabView: View {
             guard showDebugOverlay else { return }
             for await stats in KoinHelpersKt.getMapViewModel().tileStats {
                 debugTileStats = stats
+            }
+        }
+        .task {
+            guard showDebugOverlay else { return }
+            for await zoom in KoinHelpersKt.getMapViewModel().currentZoomLevel {
+                debugZoomLevel = zoom.intValue
             }
         }
     }
