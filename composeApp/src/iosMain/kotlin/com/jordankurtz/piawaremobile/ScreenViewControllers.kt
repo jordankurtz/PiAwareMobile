@@ -6,8 +6,7 @@ import androidx.compose.ui.window.ComposeUIViewController
 import com.jordankurtz.piawaremobile.map.MapScreen
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
-import com.jordankurtz.piawaremobile.map.offline.BoundingBox
-import com.jordankurtz.piawaremobile.map.offline.MapRegionPickerScreen
+
 
 import com.jordankurtz.piawaremobile.settings.ui.MapProvidersScreen
 import com.jordankurtz.piawaremobile.settings.ui.OfflineMapsScreen
@@ -58,14 +57,4 @@ fun MapProvidersViewController() =
         }
     }
 
-fun MapRegionPickerViewController(
-    onRegionSelected: (BoundingBox, Int) -> Unit,
-    onDismiss: () -> Unit,
-) = ComposeUIViewController {
-    Theme {
-        MapRegionPickerScreen(
-            onRegionSelected = onRegionSelected,
-            onDismiss = onDismiss,
-        )
-    }
-}
+

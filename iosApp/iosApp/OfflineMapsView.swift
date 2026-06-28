@@ -72,7 +72,7 @@ struct OfflineMapsView: View {
             )
         }
         .fullScreenCover(isPresented: $showRegionPicker) {
-            RegionPickerScreen(
+            RegionPickerView(
                 onSelected: { bounds, viewportZoom in
                     pendingBounds = bounds
                     pendingViewportZoom = viewportZoom
@@ -251,24 +251,5 @@ private struct DownloadSetupSheet: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Region Picker (Compose map)
-
-private struct RegionPickerScreen: View {
-    let onSelected: (BoundingBox, Int32) -> Void
-    let onDismiss: () -> Void
-
-    var body: some View {
-        ComposeScreen {
-            ScreenViewControllersKt.MapRegionPickerViewController(
-                onRegionSelected: { bounds, viewportZoom in
-                    onSelected(bounds, Int32(truncating: viewportZoom))
-                },
-                onDismiss: onDismiss
-            )
-        }
-        .ignoresSafeArea()
     }
 }
