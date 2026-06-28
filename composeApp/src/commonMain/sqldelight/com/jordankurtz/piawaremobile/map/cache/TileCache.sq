@@ -31,6 +31,7 @@ CREATE TABLE offline_region (
     min_lon               REAL NOT NULL,
     max_lon               REAL NOT NULL,
     provider_id           TEXT NOT NULL,
+    url_template          TEXT NOT NULL DEFAULT '',
     created_at            INTEGER NOT NULL,
     tile_count            INTEGER NOT NULL DEFAULT 0,
     size_bytes            INTEGER NOT NULL DEFAULT 0,
@@ -111,8 +112,8 @@ DELETE FROM tile WHERE zoom_level = ? AND col = ? AND row = ? AND provider_id = 
 
 -- Offline region queries
 insertOfflineRegion:
-INSERT INTO offline_region (name, min_zoom, max_zoom, min_lat, max_lat, min_lon, max_lon, provider_id, created_at, status, thumbnail_zoom)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO offline_region (name, min_zoom, max_zoom, min_lat, max_lat, min_lon, max_lon, provider_id, url_template, created_at, status, thumbnail_zoom)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 lastInsertedRegionId:
 SELECT last_insert_rowid();

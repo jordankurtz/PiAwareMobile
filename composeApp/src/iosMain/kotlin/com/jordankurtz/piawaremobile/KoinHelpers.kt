@@ -57,17 +57,13 @@ fun startOfflineDownload(
     providerId: String,
     urlTemplate: String,
 ) {
-    val provider = if (urlTemplate == OfflineTileProviders.OPENSTREETMAP.urlTemplate) {
-        OfflineTileProviders.OPENSTREETMAP
-    } else {
-        OfflineTileProviderConfig(
-            id = providerId,
-            urlTemplate = urlTemplate,
-            requestDelayMs = OfflineTileProviders.OPENSTREETMAP.requestDelayMs,
-            avgTileSizeBytes = OfflineTileProviders.OPENSTREETMAP.avgTileSizeBytes,
-            userAgent = OfflineTileProviders.OPENSTREETMAP.userAgent,
-        )
-    }
+    val provider = OfflineTileProviderConfig(
+        id = providerId,
+        urlTemplate = urlTemplate,
+        requestDelayMs = OfflineTileProviders.OPENSTREETMAP.requestDelayMs,
+        avgTileSizeBytes = OfflineTileProviders.OPENSTREETMAP.avgTileSizeBytes,
+        userAgent = OfflineTileProviders.OPENSTREETMAP.userAgent,
+    )
     vm.startDownload(
         name = name,
         bounds = bounds,

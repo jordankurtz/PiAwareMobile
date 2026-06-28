@@ -1,0 +1,1 @@
+ALTER TABLE offline_region ADD COLUMN url_template TEXT NOT NULL DEFAULT '';

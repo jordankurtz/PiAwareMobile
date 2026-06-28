@@ -10,6 +10,7 @@ data class OfflineRegion(
     val minLon: Double,
     val maxLon: Double,
     val providerId: String,
+    val urlTemplate: String = "",
     val createdAt: Long,
     val tileCount: Long = 0L,
     val sizeBytes: Long = 0L,
