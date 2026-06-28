@@ -7,8 +7,6 @@ struct FlightDetailsSheet: View {
     @Environment(LocationBridge.self) private var location
     @Environment(SettingsBridge.self) private var settings
     @Environment(\.openURL) private var openURL
-    @State private var selectedTab = 0
-
     private var resolvedTileURL: String {
         guard let s = settings.settings else {
             return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -46,14 +44,13 @@ struct FlightDetailsSheet: View {
                         case .success(let flight):
                             flightHeader(flight)
                             actionButtons(aircraft: item.aircraft, flightIdent: flight.ident)
-                            tabPicker
-                            tabContent(aircraft: item.aircraft, flight: flight)
+                            allContent(aircraft: item.aircraft, flight: flight)
 
                         case .loading:
                             HStack { Spacer(); ProgressView("Loading flight info…"); Spacer() }
                                 .padding()
                             actionButtons(aircraft: item.aircraft, flightIdent: nil)
-                            bareContent(aircraft: item.aircraft)
+                            allContent(aircraft: item.aircraft, flight: nil)
 
                         case .error(let msg):
                             Label(msg, systemImage: "exclamationmark.triangle")
@@ -61,11 +58,11 @@ struct FlightDetailsSheet: View {
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal)
                             actionButtons(aircraft: item.aircraft, flightIdent: nil)
-                            bareContent(aircraft: item.aircraft)
+                            allContent(aircraft: item.aircraft, flight: nil)
 
                         case .notStarted:
                             actionButtons(aircraft: item.aircraft, flightIdent: nil)
-                            bareContent(aircraft: item.aircraft)
+                            allContent(aircraft: item.aircraft, flight: nil)
                         }
                     }
                     .padding(.bottom, 20)
@@ -111,79 +108,44 @@ struct FlightDetailsSheet: View {
         .padding(.horizontal)
     }
 
-    // MARK: - Tab selector
+    // MARK: - All content (single scroll)
 
-    private var tabPicker: some View {
-        Picker("", selection: $selectedTab) {
-            Text("Details").tag(0)
-            Text("Aircraft").tag(1)
-            Text("Route").tag(2)
+    @ViewBuilder private func allContent(aircraft: Aircraft, flight: Flight?) -> some View {
+        if aircraft.hasPosition {
+            MiniMapView(
+                aircraft: aircraft,
+                tileURL: resolvedTileURL,
+                subdomains: resolvedSubdomains,
+                showTrails: settings.settings?.showMinimapTrails == true
+            )
+            .padding(.horizontal)
         }
-        .pickerStyle(.segmented)
-        .padding(.horizontal)
-    }
 
-    @ViewBuilder private func tabContent(aircraft: Aircraft, flight: Flight) -> some View {
-        switch selectedTab {
-        case 0: detailsTab(aircraft: aircraft)
-        case 1: aircraftTab(aircraft: aircraft, flight: flight)
-        default: routeTab(flight: flight)
-        }
-    }
-
-    // MARK: - Details tab
-
-    @ViewBuilder private func bareContent(aircraft: Aircraft) -> some View {
-        detailsTab(aircraft: aircraft)
-    }
-
-    @ViewBuilder private func detailsTab(aircraft: Aircraft) -> some View {
-        VStack(spacing: 12) {
-            if aircraft.hasPosition {
-                MiniMapView(
-                    aircraft: aircraft,
-                    tileURL: resolvedTileURL,
-                    subdomains: resolvedSubdomains,
-                    showTrails: settings.settings?.showMinimapTrails == true
-                )
-                .padding(.horizontal)
-            }
-            primaryStats(aircraft: aircraft)
-            locationStats(aircraft: aircraft)
-        }
-    }
-
-    @ViewBuilder private func primaryStats(aircraft: Aircraft) -> some View {
-        let a = aircraft
+        // Primary stats: altitude, heading, speed
         HStack(spacing: 0) {
-            if let alt = a.altBaro {
+            if let alt = aircraft.altBaro {
                 StatColumn(label: "Altitude", value: "\(alt) ft")
-            } else if let alt = a.altGeom {
+            } else if let alt = aircraft.altGeom {
                 StatColumn(label: "Altitude", value: "\(alt) ft")
             }
-            if let track = a.track {
+            if let track = aircraft.track {
                 StatColumn(label: "Heading", value: String(format: "%.0f°", Double(truncating: track)))
             }
-            if let gs = a.gs {
+            if let gs = aircraft.gs {
                 StatColumn(label: "Speed", value: String(format: "%.0f kt", Double(truncating: gs)))
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
-    }
 
-    @ViewBuilder private func locationStats(aircraft: Aircraft) -> some View {
+        // Location stats: position, distance, direction
         if aircraft.hasPosition {
             let coord = CLLocationCoordinate2D(latitude: aircraft.lat, longitude: aircraft.lon)
             HStack(spacing: 0) {
-                StatColumn(
-                    label: "Position",
-                    value: String(format: "%.4f, %.4f", aircraft.lat, aircraft.lon)
-                )
+                StatColumn(label: "Position", value: String(format: "%.4f, %.4f", aircraft.lat, aircraft.lon))
                 if let userCoord = location.coordinate {
-                    let userLoc = CLLocation(latitude: userCoord.latitude, longitude: userCoord.longitude)
-                    let acLoc = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
-                    let km = Int(acLoc.distance(from: userLoc) / 1000)
+                    let km = Int(CLLocation(latitude: coord.latitude, longitude: coord.longitude)
+                        .distance(from: CLLocation(latitude: userCoord.latitude, longitude: userCoord.longitude)) / 1000)
                     let brg = bearing(from: userCoord, to: coord)
                     StatColumn(label: "Distance", value: "\(km) km")
                     StatColumn(label: "Direction", value: String(format: "%.0f° %@", brg, cardinal(brg)))
@@ -192,25 +154,16 @@ struct FlightDetailsSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal)
         }
-    }
 
-    // MARK: - Aircraft tab
-
-    @ViewBuilder private func aircraftTab(aircraft: Aircraft, flight: Flight) -> some View {
+        // ADS-B: vertical speed, squawk, signal, last seen
         VStack(spacing: 12) {
             HStack(spacing: 0) {
-                if let type = flight.aircraftType { StatColumn(label: "Type", value: type) }
-                if let reg = flight.registration { StatColumn(label: "Registration", value: reg) }
-            }
-            .frame(maxWidth: .infinity)
-            HStack(spacing: 0) {
                 if let baro = aircraft.baroRate {
-                    let rate = Int(truncating: baro)
-                    StatColumn(label: "Vertical Speed", value: "\(rate) fpm")
+                    StatColumn(label: "Vertical Speed", value: "\(Int(truncating: baro)) fpm")
                 }
                 if let squawk = aircraft.squawk {
-                    let emergency = ["7500", "7600", "7700"].contains(squawk)
-                    StatColumn(label: "Squawk", value: squawk, valueColor: emergency ? .red : nil)
+                    StatColumn(label: "Squawk", value: squawk,
+                               valueColor: ["7500", "7600", "7700"].contains(squawk) ? .red : nil)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -225,11 +178,23 @@ struct FlightDetailsSheet: View {
             .frame(maxWidth: .infinity)
         }
         .padding(.horizontal)
+
+        // Flight API: type, registration
+        if let flight {
+            if flight.aircraftType != nil || flight.registration != nil {
+                HStack(spacing: 0) {
+                    if let type = flight.aircraftType { StatColumn(label: "Type", value: type) }
+                    if let reg = flight.registration { StatColumn(label: "Registration", value: reg) }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal)
+            }
+
+            routeContent(flight: flight)
+        }
     }
 
-    // MARK: - Route tab
-
-    @ViewBuilder private func routeTab(flight: Flight) -> some View {
+    @ViewBuilder private func routeContent(flight: Flight) -> some View {
         VStack(spacing: 12) {
             if let origin = flight.origin {
                 AirportCard(
