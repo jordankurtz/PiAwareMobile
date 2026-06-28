@@ -83,7 +83,9 @@ struct OfflineMapsView: View {
                         bounds: bounds,
                         minZoom: minZoom,
                         maxZoom: maxZoom,
-                        viewportZoom: pendingViewportZoom
+                        viewportZoom: pendingViewportZoom,
+                        providerId: settingsBridge.settings?.mapProviderId ?? "openstreetmap",
+                        urlTemplate: resolvedTileURL
                     )
                     pendingName = ""
                     pendingBounds = nil

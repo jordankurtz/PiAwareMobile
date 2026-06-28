@@ -7,6 +7,8 @@ import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
+import com.jordankurtz.piawaremobile.map.offline.TileProviderConfig as OfflineTileProviderConfig
+import com.jordankurtz.piawaremobile.map.offline.TileProviders as OfflineTileProviders
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import org.koin.mp.KoinPlatform
 
@@ -52,10 +54,26 @@ fun startOfflineDownload(
     minZoom: Int,
     maxZoom: Int,
     viewportZoom: Int,
-) = vm.startDownload(
-    name = name,
-    bounds = bounds,
-    minZoom = minZoom,
-    maxZoom = maxZoom,
-    viewportZoom = viewportZoom,
-)
+    providerId: String,
+    urlTemplate: String,
+) {
+    val provider = if (urlTemplate == OfflineTileProviders.OPENSTREETMAP.urlTemplate) {
+        OfflineTileProviders.OPENSTREETMAP
+    } else {
+        OfflineTileProviderConfig(
+            id = providerId,
+            urlTemplate = urlTemplate,
+            requestDelayMs = OfflineTileProviders.OPENSTREETMAP.requestDelayMs,
+            avgTileSizeBytes = OfflineTileProviders.OPENSTREETMAP.avgTileSizeBytes,
+            userAgent = OfflineTileProviders.OPENSTREETMAP.userAgent,
+        )
+    }
+    vm.startDownload(
+        name = name,
+        bounds = bounds,
+        minZoom = minZoom,
+        maxZoom = maxZoom,
+        viewportZoom = viewportZoom,
+        provider = provider,
+    )
+}

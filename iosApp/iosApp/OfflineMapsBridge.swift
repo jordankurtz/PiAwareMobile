@@ -28,7 +28,9 @@ final class OfflineMapsBridge {
         bounds: BoundingBox,
         minZoom: Int32,
         maxZoom: Int32,
-        viewportZoom: Int32
+        viewportZoom: Int32,
+        providerId: String,
+        urlTemplate: String
     ) {
         KoinHelpersKt.startOfflineDownload(
             vm: vm,
@@ -36,7 +38,9 @@ final class OfflineMapsBridge {
             bounds: bounds,
             minZoom: minZoom,
             maxZoom: maxZoom,
-            viewportZoom: viewportZoom
+            viewportZoom: viewportZoom,
+            providerId: providerId,
+            urlTemplate: urlTemplate
         )
     }
 
