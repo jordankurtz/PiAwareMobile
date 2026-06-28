@@ -339,6 +339,7 @@ private struct MiniMapView: View {
         .frame(height: 180)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .task(id: aircraft.hex) {
+            trailPositions = []
             for await trail in KoinHelpersKt.getAircraftTrail(hex: aircraft.hex) {
                 trailPositions = trail?.positions ?? []
             }

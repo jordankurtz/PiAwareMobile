@@ -65,6 +65,9 @@ struct PiAwareTabView: View {
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()
+                    .environment(settingsBridge)
+                    .environment(offlineMapsBridge)
+                    .environment(locationBridge)
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
                             Button("Done") { showSettings = false }
