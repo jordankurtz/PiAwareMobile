@@ -8,20 +8,46 @@ struct RegionPickerView: View {
     let onSelected: (BoundingBox, Int32) -> Void
     let onDismiss: () -> Void
 
-    @State private var camera: MapCameraPosition = .automatic
+    @Environment(SettingsBridge.self) private var settingsBridge
+
     @State private var visibleRegion: MKCoordinateRegion?
     @State private var isBoxMode = true
     @State private var boxRect = CGRect.zero
     @State private var screenSize = CGSize.zero
 
+    private var resolvedTileURL: String {
+        guard let s = settingsBridge.settings else {
+            return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        }
+        let activeId = s.mapProviderId ?? "openstreetmap"
+        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        if let provider = allBuiltIn.first(where: { $0.id == activeId }) {
+            let keyGroup = provider.apiKeyGroup ?? provider.id
+            let apiKey = s.apiKeys[keyGroup] ?? ""
+            return provider.urlTemplate.replacingOccurrences(of: "{api_key}", with: apiKey)
+        }
+        if let custom = s.customProviders.first(where: { $0.id == activeId }) {
+            return custom.urlTemplate
+        }
+        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    }
+
+    private var resolvedSubdomains: [String] {
+        guard let s = settingsBridge.settings else { return [] }
+        let activeId = s.mapProviderId ?? "openstreetmap"
+        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        return allBuiltIn.first(where: { $0.id == activeId })?.subdomains ?? []
+    }
+
     var body: some View {
         ZStack {
-            Map(position: $camera)
-                .ignoresSafeArea()
-                .disabled(isBoxMode)
-                .onMapCameraChange(frequency: .continuous) { ctx in
-                    visibleRegion = ctx.region
-                }
+            TileMapView(
+                urlTemplate: resolvedTileURL,
+                subdomains: resolvedSubdomains,
+                isInteractionEnabled: !isBoxMode,
+                onRegionChange: { visibleRegion = $0 }
+            )
+            .ignoresSafeArea()
 
             if !boxRect.isEmpty {
                 selectionOverlay
@@ -114,8 +140,6 @@ struct RegionPickerView: View {
     private func confirmSelection() {
         guard let region = visibleRegion, !boxRect.isEmpty, screenSize != .zero else { return }
 
-        // Linearly interpolate screen-space box to geographic coordinates.
-        // The map fills the full screen, so the visible region spans the entire screenSize.
         let latTop = region.center.latitude + region.span.latitudeDelta / 2.0
         let lonLeft = region.center.longitude - region.span.longitudeDelta / 2.0
         let latPerPx = region.span.latitudeDelta / screenSize.height
@@ -134,10 +158,93 @@ struct RegionPickerView: View {
         )
 
         let latSpan = abs(maxLat - minLat)
-        // Approximate OSM zoom: 180° visible at zoom 1, halves each level.
         let zoom = Int(log2(180.0 / max(latSpan, 1e-4))).clamped(to: 1...16)
 
         onSelected(box, Int32(zoom))
+    }
+}
+
+// MARK: - TileMapView
+
+private struct TileMapView: UIViewRepresentable {
+    let urlTemplate: String
+    let subdomains: [String]
+    let isInteractionEnabled: Bool
+    let onRegionChange: (MKCoordinateRegion) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onRegionChange: onRegionChange)
+    }
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView()
+        mapView.delegate = context.coordinator
+        mapView.showsUserLocation = false
+        mapView.isRotateEnabled = false
+        mapView.isPitchEnabled = false
+        let overlay = CustomTileOverlay(urlTemplate: urlTemplate, subdomains: subdomains)
+        overlay.canReplaceMapContent = true
+        mapView.addOverlay(overlay, level: .aboveLabels)
+        return mapView
+    }
+
+    func updateUIView(_ mapView: MKMapView, context: Context) {
+        mapView.isUserInteractionEnabled = isInteractionEnabled
+        context.coordinator.onRegionChange = onRegionChange
+
+        if let existing = mapView.overlays.compactMap({ $0 as? CustomTileOverlay }).first {
+            if existing.urlTemplate != urlTemplate || existing.subdomains != subdomains {
+                mapView.removeOverlay(existing)
+                let overlay = CustomTileOverlay(urlTemplate: urlTemplate, subdomains: subdomains)
+                overlay.canReplaceMapContent = true
+                mapView.addOverlay(overlay, level: .aboveLabels)
+            }
+        }
+    }
+
+    final class Coordinator: NSObject, MKMapViewDelegate {
+        var onRegionChange: (MKCoordinateRegion) -> Void
+
+        init(onRegionChange: @escaping (MKCoordinateRegion) -> Void) {
+            self.onRegionChange = onRegionChange
+        }
+
+        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+            onRegionChange(mapView.region)
+        }
+
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let tile = overlay as? MKTileOverlay {
+                return MKTileOverlayRenderer(tileOverlay: tile)
+            }
+            return MKOverlayRenderer(overlay: overlay)
+        }
+    }
+}
+
+// MARK: - CustomTileOverlay
+
+private final class CustomTileOverlay: MKTileOverlay {
+    let subdomains: [String]
+
+    init(urlTemplate: String, subdomains: [String]) {
+        self.subdomains = subdomains
+        super.init(urlTemplate: urlTemplate)
+    }
+
+    override func url(forTilePath path: MKTileOverlayPath) -> URL {
+        var s = urlTemplate ?? ""
+        if !subdomains.isEmpty {
+            let sub = subdomains[Int(path.x + path.y) % subdomains.count]
+            s = s.replacingOccurrences(of: "{s}", with: sub)
+        } else {
+            s = s.replacingOccurrences(of: "{s}", with: "")
+        }
+        s = s
+            .replacingOccurrences(of: "{z}", with: "\(path.z)")
+            .replacingOccurrences(of: "{x}", with: "\(path.x)")
+            .replacingOccurrences(of: "{y}", with: "\(path.y)")
+        return URL(string: s) ?? super.url(forTilePath: path)
     }
 }
 
@@ -155,7 +262,6 @@ private struct HandleOverlayView: View {
 
     var body: some View {
         ZStack {
-            // Transparent interior — drag to translate the whole box.
             Color.clear
                 .contentShape(Rectangle())
                 .frame(
