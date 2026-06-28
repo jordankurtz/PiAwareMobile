@@ -4,6 +4,7 @@ import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.TileProviders
+import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import org.koin.mp.KoinPlatform
@@ -40,3 +41,18 @@ fun addCustomTileProvider(id: String, name: String, urlTemplate: String) {
 fun deleteCustomTileProvider(id: String) {
     KoinPlatform.getKoin().get<SettingsViewModel>().deleteCustomProvider(id)
 }
+
+fun startOfflineDownload(
+    vm: OfflineMapsViewModel,
+    name: String,
+    bounds: BoundingBox,
+    minZoom: Int,
+    maxZoom: Int,
+    viewportZoom: Int,
+) = vm.startDownload(
+    name = name,
+    bounds = bounds,
+    minZoom = minZoom,
+    maxZoom = maxZoom,
+    viewportZoom = viewportZoom,
+)

@@ -19,66 +19,68 @@ struct MapProvidersView: View {
         settings.settings?.customProviders ?? []
     }
 
+    @ViewBuilder private var builtInSection: some View {
+        Section("Free") {
+            ForEach(KoinHelpersKt.getBuiltInTileProviders(), id: \.id) { provider in
+                Button { KoinHelpersKt.updateMapProviderById(id: provider.id) } label: {
+                    ProviderRow(name: provider.resolvedDisplayName, isSelected: provider.id == activeId)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var apiKeySection: some View {
+        Section("API Key Required") {
+            ForEach(KoinHelpersKt.getApiKeyTileProviders(), id: \.id) { provider in
+                let keyGroup = provider.apiKeyGroup ?? provider.id
+                let hasKey = apiKeys[keyGroup] != nil
+                Button {
+                    if hasKey { KoinHelpersKt.updateMapProviderById(id: provider.id) }
+                    else { pendingApiKeyProvider = provider }
+                } label: {
+                    HStack {
+                        ProviderRow(name: provider.resolvedDisplayName, isSelected: provider.id == activeId)
+                        Spacer()
+                        Text(hasKey ? "Key set" : "Key required")
+                            .font(.caption)
+                            .foregroundStyle(hasKey ? Color.secondary : Color.orange)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var customSection: some View {
+        if !customProviders.isEmpty {
+            Section("Custom") {
+                ForEach(customProviders, id: \.id) { custom in
+                    HStack {
+                        Button { KoinHelpersKt.updateMapProviderById(id: custom.id) } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                ProviderRow(name: custom.displayName, isSelected: custom.id == activeId)
+                                Text(custom.urlTemplate)
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.secondary)
+                                    .lineLimit(1)
+                            }
+                        }
+                        Spacer()
+                        Button(role: .destructive) { customToDelete = custom } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Color.red)
+                    }
+                }
+            }
+        }
+    }
+
     var body: some View {
         List {
-            Section("Free") {
-                ForEach(KoinHelpersKt.getBuiltInTileProviders(), id: \.id) { provider in
-                    Button {
-                        KoinHelpersKt.updateMapProviderById(id: provider.id)
-                    } label: {
-                        ProviderRow(name: provider.resolvedDisplayName, isSelected: provider.id == activeId)
-                    }
-                }
-            }
-
-            Section("API Key Required") {
-                ForEach(KoinHelpersKt.getApiKeyTileProviders(), id: \.id) { provider in
-                    let keyGroup = provider.apiKeyGroup ?? provider.id
-                    let hasKey = apiKeys[keyGroup] != nil
-                    Button {
-                        if hasKey {
-                            KoinHelpersKt.updateMapProviderById(id: provider.id)
-                        } else {
-                            pendingApiKeyProvider = provider
-                        }
-                    } label: {
-                        HStack {
-                            ProviderRow(name: provider.resolvedDisplayName, isSelected: provider.id == activeId)
-                            Text(hasKey ? "Key set" : "Key required")
-                                .font(.caption)
-                                .foregroundStyle(hasKey ? .secondary : .orange)
-                        }
-                    }
-                }
-            }
-
-            if !customProviders.isEmpty {
-                Section("Custom") {
-                    ForEach(customProviders, id: \.id) { custom in
-                        HStack {
-                            Button {
-                                KoinHelpersKt.updateMapProviderById(id: custom.id)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    ProviderRow(name: custom.displayName, isSelected: custom.id == activeId)
-                                    Text(custom.urlTemplate)
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                }
-                            }
-                            Spacer()
-                            Button(role: .destructive) {
-                                customToDelete = custom
-                            } label: {
-                                Image(systemName: "trash")
-                            }
-                            .buttonStyle(.plain)
-                            .foregroundStyle(.red)
-                        }
-                    }
-                }
-            }
+            builtInSection
+            apiKeySection
+            customSection
         }
         .navigationTitle("Map Provider")
         .navigationBarTitleDisplayMode(.inline)
@@ -129,7 +131,7 @@ private struct ProviderRow: View {
             Spacer()
             if isSelected {
                 Image(systemName: "checkmark")
-                    .foregroundStyle(.accentColor)
+                    .foregroundStyle(Color.accentColor)
                     .fontWeight(.semibold)
             }
         }

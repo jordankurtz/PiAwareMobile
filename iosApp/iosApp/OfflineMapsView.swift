@@ -264,7 +264,7 @@ private struct RegionPickerScreen: View {
         ComposeScreen {
             ScreenViewControllersKt.MapRegionPickerViewController(
                 onRegionSelected: { bounds, viewportZoom in
-                    onSelected(bounds, viewportZoom)
+                    onSelected(bounds, Int32(truncating: viewportZoom))
                 },
                 onDismiss: onDismiss
             )

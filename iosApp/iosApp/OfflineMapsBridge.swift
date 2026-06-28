@@ -30,7 +30,8 @@ final class OfflineMapsBridge {
         maxZoom: Int32,
         viewportZoom: Int32
     ) {
-        vm.startDownload(
+        KoinHelpersKt.startOfflineDownload(
+            vm: vm,
             name: name,
             bounds: bounds,
             minZoom: minZoom,
@@ -48,6 +49,6 @@ final class OfflineMapsBridge {
     }
 
     private func observePendingDeleteBytes() async {
-        for await value in vm.pendingDeleteFreedBytes { pendingDeleteFreedBytes = value }
+        for await value in vm.pendingDeleteFreedBytes { pendingDeleteFreedBytes = value.int64Value }
     }
 }
