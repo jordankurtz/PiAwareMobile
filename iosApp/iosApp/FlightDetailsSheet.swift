@@ -280,6 +280,40 @@ struct FlightDetailsSheet: View {
     }
 }
 
+// MARK: - Altitude color (mirrors getColorForAltitude in MapHelpers.kt)
+
+private func altitudeColor(for altBaro: String?) -> UIColor {
+    if altBaro == "ground" { return UIColor(red: 139/255, green: 69/255, blue: 19/255, alpha: 1) }
+    let alt = altBaro.flatMap { Int($0) } ?? 0
+    let rgb: (Int, Int, Int)
+    switch alt {
+    case 0...250:       rgb = (255, 64, 0)
+    case 251...500:     rgb = (255, 128, 0)
+    case 501...750:     rgb = (255, 160, 0)
+    case 751...1000:    rgb = (255, 192, 0)
+    case 1001...1500:   rgb = (255, 224, 0)
+    case 1501...2000:   rgb = (255, 255, 0)
+    case 2001...3000:   rgb = (192, 255, 0)
+    case 3001...4000:   rgb = (128, 255, 0)
+    case 4001...5000:   rgb = (64, 255, 0)
+    case 5001...6000:   rgb = (0, 255, 64)
+    case 6001...7000:   rgb = (0, 255, 128)
+    case 7001...8000:   rgb = (0, 255, 192)
+    case 8001...9000:   rgb = (0, 255, 224)
+    case 9001...10000:  rgb = (0, 255, 255)
+    case 10001...15000: rgb = (0, 224, 255)
+    case 15001...20000: rgb = (0, 192, 255)
+    case 20001...25000: rgb = (0, 160, 255)
+    case 25001...30000: rgb = (0, 128, 255)
+    case 30001...35000: rgb = (0, 64, 255)
+    case 35001...40000: rgb = (0, 0, 255)
+    case 40001...45000: rgb = (64, 0, 255)
+    case 45001...50000: rgb = (128, 0, 255)
+    default:            rgb = (192, 0, 255)
+    }
+    return UIColor(red: CGFloat(rgb.0)/255, green: CGFloat(rgb.1)/255, blue: CGFloat(rgb.2)/255, alpha: 1)
+}
+
 // MARK: - MiniMapView
 
 private struct MiniMapView: View {
@@ -291,6 +325,7 @@ private struct MiniMapView: View {
         MiniMKMapView(
             coordinate: CLLocationCoordinate2D(latitude: aircraft.lat, longitude: aircraft.lon),
             heading: aircraft.track.map { Double(truncating: $0) } ?? 0,
+            aircraftColor: altitudeColor(for: aircraft.altBaro),
             tileURL: tileURL,
             subdomains: subdomains
         )
@@ -302,6 +337,7 @@ private struct MiniMapView: View {
 private struct MiniMKMapView: UIViewRepresentable {
     let coordinate: CLLocationCoordinate2D
     let heading: Double
+    let aircraftColor: UIColor
     let tileURL: String
     let subdomains: [String]
 
@@ -333,9 +369,13 @@ private struct MiniMKMapView: UIViewRepresentable {
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.heading = heading
+        context.coordinator.aircraftColor = aircraftColor
         if let ann = context.coordinator.annotation {
             ann.coordinate = coordinate
             if let view = mapView.view(for: ann) {
+                let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+                view.image = UIImage(systemName: "airplane", withConfiguration: config)?
+                    .withTintColor(aircraftColor, renderingMode: .alwaysOriginal)
                 view.transform = CGAffineTransform(
                     rotationAngle: CGFloat((heading - 90) * .pi / 180)
                 )
@@ -354,6 +394,7 @@ private struct MiniMKMapView: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         var annotation: MKPointAnnotation?
         var heading: Double = 0
+        var aircraftColor: UIColor = .systemBlue
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let tile = overlay as? MKTileOverlay {
@@ -367,7 +408,7 @@ private struct MiniMKMapView: UIViewRepresentable {
             let view = MKAnnotationView(annotation: annotation, reuseIdentifier: "aircraft")
             let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
             view.image = UIImage(systemName: "airplane", withConfiguration: config)?
-                .withTintColor(.systemBlue, renderingMode: .alwaysOriginal)
+                .withTintColor(aircraftColor, renderingMode: .alwaysOriginal)
             view.transform = CGAffineTransform(rotationAngle: CGFloat((heading - 90) * .pi / 180))
             return view
         }
