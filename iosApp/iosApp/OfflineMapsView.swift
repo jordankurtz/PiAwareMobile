@@ -4,6 +4,7 @@ import ComposeApp
 struct OfflineMapsView: View {
     @Environment(OfflineMapsBridge.self) private var offlineMaps
     @Environment(SettingsBridge.self) private var settingsBridge
+    @Environment(LocationBridge.self) private var locationBridge
 
     private var resolvedTileURL: String {
         guard let s = settingsBridge.settings else {
@@ -102,6 +103,8 @@ struct OfflineMapsView: View {
             RegionPickerView(
                 tileURL: resolvedTileURL,
                 subdomains: resolvedSubdomains,
+                initialCenter: locationBridge.coordinate,
+                initialZoom: Int(KoinHelpersKt.getMapZoomLevel()),
                 onSelected: { bounds, viewportZoom in
                     pendingBounds = bounds
                     pendingViewportZoom = viewportZoom

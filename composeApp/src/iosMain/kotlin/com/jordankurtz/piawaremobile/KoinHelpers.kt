@@ -16,6 +16,8 @@ fun getAircraftViewModel(): AircraftViewModel = KoinPlatform.getKoin().get()
 fun getLocationViewModel(): LocationViewModel = KoinPlatform.getKoin().get()
 fun getSettingsViewModel(): SettingsViewModel = KoinPlatform.getKoin().get()
 fun getMapViewModel(): MapViewModel = KoinPlatform.getKoin().get()
+
+fun getMapZoomLevel(): Int = getMapViewModel().currentZoomLevel.value
 fun getOfflineMapsViewModel(): OfflineMapsViewModel = KoinPlatform.getKoin().get()
 
 fun fitMapToAircraft() {

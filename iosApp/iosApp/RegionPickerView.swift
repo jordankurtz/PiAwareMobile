@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import CoreLocation
 import ComposeApp  // BoundingBox
 
 // MARK: - RegionPickerView
@@ -7,11 +8,13 @@ import ComposeApp  // BoundingBox
 struct RegionPickerView: View {
     let tileURL: String
     let subdomains: [String]
+    let initialCenter: CLLocationCoordinate2D?
+    let initialZoom: Int
     let onSelected: (BoundingBox, Int32) -> Void
     let onDismiss: () -> Void
 
     @State private var visibleRegion: MKCoordinateRegion?
-    @State private var isBoxMode = true
+    @State private var isBoxMode = false
     @State private var boxRect = CGRect.zero
     @State private var screenSize = CGSize.zero
 
@@ -20,6 +23,8 @@ struct RegionPickerView: View {
             TileMapView(
                 urlTemplate: tileURL,
                 subdomains: subdomains,
+                initialCenter: initialCenter,
+                initialZoom: initialZoom,
                 isInteractionEnabled: !isBoxMode,
                 onRegionChange: { visibleRegion = $0 }
             )
@@ -145,6 +150,8 @@ struct RegionPickerView: View {
 private struct TileMapView: UIViewRepresentable {
     let urlTemplate: String
     let subdomains: [String]
+    let initialCenter: CLLocationCoordinate2D?
+    let initialZoom: Int
     let isInteractionEnabled: Bool
     let onRegionChange: (MKCoordinateRegion) -> Void
 
@@ -161,6 +168,11 @@ private struct TileMapView: UIViewRepresentable {
         let overlay = CustomTileOverlay(urlTemplate: urlTemplate, subdomains: subdomains)
         overlay.canReplaceMapContent = true
         mapView.addOverlay(overlay, level: .aboveLabels)
+        if let center = initialCenter {
+            let degreesPerTile = 360.0 / pow(2.0, Double(initialZoom))
+            let span = MKCoordinateSpan(latitudeDelta: degreesPerTile * 3, longitudeDelta: degreesPerTile * 3)
+            mapView.setRegion(MKCoordinateRegion(center: center, span: span), animated: false)
+        }
         return mapView
     }
 
