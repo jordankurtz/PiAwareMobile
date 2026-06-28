@@ -358,6 +358,10 @@ private struct MiniMKMapView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> MKMapView {
+        // Prime coordinator before addAnnotation so viewFor annotation: reads the correct values
+        context.coordinator.aircraftColor = aircraftColor
+        context.coordinator.heading = heading
+
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
         mapView.isUserInteractionEnabled = false
