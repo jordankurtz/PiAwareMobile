@@ -54,6 +54,8 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.FlightAirportRef
 import com.jordankurtz.piawaremobile.model.Location
+import com.jordankurtz.piawaremobile.squawk.SquawkCodes
+import com.jordankurtz.piawaremobile.squawk.SquawkSeverity
 import com.jordankurtz.piawaremobile.squawk.ui.SquawkInfoDialog
 import com.jordankurtz.piawaremobile.ui.AircraftLocationDetails
 import com.jordankurtz.piawaremobile.ui.AircraftPrimaryDetails
@@ -384,7 +386,6 @@ private fun AircraftTab(
     flight: Flight,
     onSquawkClick: ((String) -> Unit)? = null,
 ) {
-    val emergencySquawkCodes = setOf("7500", "7600", "7700")
     val emergencyColor = AppTheme.colors.aircraftEmergency
     val defaultSquawkColor = MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -396,7 +397,10 @@ private fun AircraftTab(
         FlightAircraftDetails(flight = flight)
         Spacer(modifier = Modifier.height(8.dp))
         aircraft?.let {
-            val squawkColor = if (it.squawk in emergencySquawkCodes) emergencyColor else defaultSquawkColor
+            val squawkColor =
+                it.squawk?.let { code ->
+                    if (SquawkCodes[code]?.severity == SquawkSeverity.EMERGENCY) emergencyColor else defaultSquawkColor
+                } ?: defaultSquawkColor
             AircraftSecondaryDetails(
                 aircraft = it,
                 squawkValueColor = squawkColor,

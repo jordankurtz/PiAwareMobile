@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
@@ -164,7 +165,10 @@ fun AircraftSecondaryDetails(
         aircraft.squawk?.let { squawk ->
             val squawkModifier =
                 if (onSquawkClick != null) {
-                    Modifier.clickable { onSquawkClick(squawk) }
+                    Modifier.clickable(
+                        onClickLabel = "View squawk code info",
+                        role = Role.Button,
+                    ) { onSquawkClick(squawk) }
                 } else {
                     Modifier
                 }
