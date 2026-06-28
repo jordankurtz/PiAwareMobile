@@ -54,6 +54,42 @@ final class SettingsBridge {
         vm.updateOpenUrlsExternally(enabled: enabled)
     }
 
+    func updateCenterMapOnUserOnStart(_ enabled: Bool) {
+        vm.updateCenterMapOnUserOnStart(enabled: enabled)
+    }
+
+    func updateRestoreMapStateOnStart(_ enabled: Bool) {
+        vm.updateRestoreMapStateOnStart(enabled: enabled)
+    }
+
+    func updateShowReceiverLocations(_ enabled: Bool) {
+        vm.updateShowReceiverLocations(enabled: enabled)
+    }
+
+    func updateShowUserLocationOnMap(_ enabled: Bool) {
+        vm.updateShowUserLocationOnMap(enabled: enabled)
+    }
+
+    func updateTrailDisplayMode(_ mode: TrailDisplayMode) {
+        vm.updateTrailDisplayMode(trailDisplayMode: mode)
+    }
+
+    func updateShowMinimapTrails(_ enabled: Bool) {
+        vm.updateShowMinimapTrails(enabled: enabled)
+    }
+
+    func updateDefaultZoomLevel(_ zoom: Int) {
+        vm.updateDefaultZoomLevel(zoom: Int32(zoom))
+    }
+
+    func updateMinZoomLevel(_ zoom: Int) {
+        vm.updateMinZoomLevel(zoom: Int32(zoom))
+    }
+
+    func updateMaxZoomLevel(_ zoom: Int) {
+        vm.updateMaxZoomLevel(zoom: Int32(zoom))
+    }
+
     func clearTileCache() {
         vm.clearTileCache()
     }

@@ -10,16 +10,131 @@ struct SettingsView: View {
         @Bindable var bridge = settingsBridge
         NavigationStack {
             Form {
+                // MARK: - Map
+
+                Section("Map") {
+                    NavigationLink("Map Providers") {
+                        MapProvidersView()
+                    }
+
+                    if let settings = settingsBridge.settings {
+                        Toggle(
+                            "Center Map on User at Start",
+                            isOn: Binding(
+                                get: { settings.centerMapOnUserOnStart },
+                                set: { settingsBridge.updateCenterMapOnUserOnStart($0) }
+                            )
+                        )
+
+                        Toggle(
+                            "Restore Map Position at Start",
+                            isOn: Binding(
+                                get: { settings.restoreMapStateOnStart },
+                                set: { settingsBridge.updateRestoreMapStateOnStart($0) }
+                            )
+                        )
+
+                        Picker(
+                            "Trail Display",
+                            selection: Binding(
+                                get: { settings.trailDisplayMode },
+                                set: { settingsBridge.updateTrailDisplayMode($0) }
+                            )
+                        ) {
+                            Text("None").tag(TrailDisplayMode.none)
+                            Text("Selected").tag(TrailDisplayMode.selected)
+                            Text("All").tag(TrailDisplayMode.all)
+                        }
+
+                        Toggle(
+                            "Show Trails in Minimap",
+                            isOn: Binding(
+                                get: { settings.showMinimapTrails },
+                                set: { settingsBridge.updateShowMinimapTrails($0) }
+                            )
+                        )
+
+                        Toggle(
+                            "Show Receiver Locations",
+                            isOn: Binding(
+                                get: { settings.showReceiverLocations },
+                                set: { settingsBridge.updateShowReceiverLocations($0) }
+                            )
+                        )
+
+                        Toggle(
+                            "Show My Location on Map",
+                            isOn: Binding(
+                                get: { settings.showUserLocationOnMap },
+                                set: { settingsBridge.updateShowUserLocationOnMap($0) }
+                            )
+                        )
+
+                        HStack {
+                            Text("Default Zoom")
+                            Spacer()
+                            Stepper(
+                                "\(Int(settings.defaultZoomLevel))",
+                                value: Binding(
+                                    get: { Int(settings.defaultZoomLevel) },
+                                    set: { settingsBridge.updateDefaultZoomLevel($0) }
+                                ),
+                                in: 1...16
+                            )
+                        }
+
+                        HStack {
+                            Text("Min Zoom")
+                            Spacer()
+                            Stepper(
+                                "\(Int(settings.minZoomLevel))",
+                                value: Binding(
+                                    get: { Int(settings.minZoomLevel) },
+                                    set: { settingsBridge.updateMinZoomLevel($0) }
+                                ),
+                                in: 1...16
+                            )
+                        }
+
+                        HStack {
+                            Text("Max Zoom")
+                            Spacer()
+                            Stepper(
+                                "\(Int(settings.maxZoomLevel))",
+                                value: Binding(
+                                    get: { Int(settings.maxZoomLevel) },
+                                    set: { settingsBridge.updateMaxZoomLevel($0) }
+                                ),
+                                in: 1...16
+                            )
+                        }
+                    } else {
+                        ProgressView()
+                    }
+
+                    Button(role: .destructive) {
+                        showClearCacheConfirm = true
+                    } label: {
+                        Text("Clear Tile Cache")
+                    }
+                }
+
+                // MARK: - Offline
+
+                Section("Offline") {
+                    NavigationLink("Offline Maps") {
+                        OfflineMapsView()
+                    }
+                }
+
                 // MARK: - Servers
+
                 Section("Servers") {
                     NavigationLink("Servers") {
                         ServersView()
                             .environment(settingsBridge)
                     }
-                }
 
-                // MARK: - Map
-                Section("Map") {
                     if let settings = settingsBridge.settings {
                         HStack {
                             Text("Refresh Interval")
@@ -33,35 +148,11 @@ struct SettingsView: View {
                                 in: 1...60
                             )
                         }
-                    } else {
-                        HStack {
-                            Text("Refresh Interval")
-                            Spacer()
-                            ProgressView()
-                        }
                     }
-
-                    Button(role: .destructive) {
-                        showClearCacheConfirm = true
-                    } label: {
-                        Text("Clear Tile Cache")
-                    }
-
-                    NavigationLink("Map Providers") {
-                        MapProvidersView()
-                    }
-                }
-
-                // MARK: - Offline
-                Section("Offline") {
-                    NavigationLink("Offline Maps") {
-                        OfflineMapsView()
-                    }
-
-
                 }
 
                 // MARK: - FlightAware
+
                 Section("FlightAware") {
                     if let settings = settingsBridge.settings {
                         Toggle(
@@ -90,6 +181,20 @@ struct SettingsView: View {
                         }
                     } else {
                         ProgressView()
+                    }
+                }
+
+                // MARK: - App
+
+                Section("App") {
+                    if let settings = settingsBridge.settings {
+                        Toggle(
+                            "Open URLs Externally",
+                            isOn: Binding(
+                                get: { settings.openUrlsExternally },
+                                set: { settingsBridge.updateOpenUrlsExternally($0) }
+                            )
+                        )
                     }
                 }
             }
