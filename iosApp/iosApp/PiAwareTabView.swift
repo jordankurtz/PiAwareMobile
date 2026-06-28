@@ -31,6 +31,7 @@ struct PiAwareTabView: View {
         }) {
             FlightDetailsSheet()
                 .environment(aircraftBridge)
+                .environment(locationBridge)
         }
     }
 
