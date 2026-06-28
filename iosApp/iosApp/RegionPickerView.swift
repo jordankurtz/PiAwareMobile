@@ -200,7 +200,7 @@ private struct TileMapView: UIViewRepresentable {
 
 // MARK: - CustomTileOverlay
 
-private final class CustomTileOverlay: MKTileOverlay {
+final class CustomTileOverlay: MKTileOverlay {
     let subdomains: [String]
 
     init(urlTemplate: String, subdomains: [String]) {

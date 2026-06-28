@@ -5,8 +5,33 @@ import ComposeApp
 struct FlightDetailsSheet: View {
     @Environment(AircraftBridge.self) private var aircraft
     @Environment(LocationBridge.self) private var location
+    @Environment(SettingsBridge.self) private var settings
     @Environment(\.openURL) private var openURL
     @State private var selectedTab = 0
+
+    private var resolvedTileURL: String {
+        guard let s = settings.settings else {
+            return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        }
+        let activeId = s.mapProviderId ?? "openstreetmap"
+        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        if let provider = allBuiltIn.first(where: { $0.id == activeId }) {
+            let keyGroup = provider.apiKeyGroup ?? provider.id
+            let apiKey = s.apiKeys[keyGroup] ?? ""
+            return provider.urlTemplate.replacingOccurrences(of: "{api_key}", with: apiKey)
+        }
+        if let custom = s.customProviders.first(where: { $0.id == activeId }) {
+            return custom.urlTemplate
+        }
+        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    }
+
+    private var resolvedSubdomains: [String] {
+        guard let s = settings.settings else { return [] }
+        let activeId = s.mapProviderId ?? "openstreetmap"
+        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        return allBuiltIn.first(where: { $0.id == activeId })?.subdomains ?? []
+    }
 
     private var item: AircraftWithServers? {
         aircraft.aircraft.first { $0.aircraft.hex == aircraft.selectedHex }
@@ -20,13 +45,14 @@ struct FlightDetailsSheet: View {
                         switch aircraft.flightState {
                         case .success(let flight):
                             flightHeader(flight)
-                            actionButtons(aircraft: item.aircraft, flight: flight)
+                            actionButtons(aircraft: item.aircraft, flightIdent: flight.ident)
                             tabPicker
                             tabContent(aircraft: item.aircraft, flight: flight)
 
                         case .loading:
                             HStack { Spacer(); ProgressView("Loading flight info…"); Spacer() }
                                 .padding()
+                            actionButtons(aircraft: item.aircraft, flightIdent: nil)
                             bareContent(aircraft: item.aircraft)
 
                         case .error(let msg):
@@ -34,9 +60,11 @@ struct FlightDetailsSheet: View {
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal)
+                            actionButtons(aircraft: item.aircraft, flightIdent: nil)
                             bareContent(aircraft: item.aircraft)
 
                         case .notStarted:
+                            actionButtons(aircraft: item.aircraft, flightIdent: nil)
                             bareContent(aircraft: item.aircraft)
                         }
                     }
@@ -67,11 +95,12 @@ struct FlightDetailsSheet: View {
         .padding(.top, 8)
     }
 
-    @ViewBuilder private func actionButtons(aircraft: Aircraft, flight: Flight) -> some View {
+    @ViewBuilder private func actionButtons(aircraft: Aircraft, flightIdent: String?) -> some View {
+        let ident = (flightIdent?.nilIfBlank) ?? aircraft.flight?.nilIfBlank
         HStack(spacing: 8) {
-            if !flight.ident.isEmpty {
+            if let ident {
                 Button("Open in FlightAware") {
-                    if let url = URL(string: "https://www.flightaware.com/live/flight/\(flight.ident)") {
+                    if let url = URL(string: "https://www.flightaware.com/live/flight/\(ident)") {
                         openURL(url)
                     }
                 }
@@ -111,7 +140,7 @@ struct FlightDetailsSheet: View {
     @ViewBuilder private func detailsTab(aircraft: Aircraft) -> some View {
         VStack(spacing: 12) {
             if aircraft.hasPosition {
-                MiniMapView(aircraft: aircraft)
+                MiniMapView(aircraft: aircraft, tileURL: resolvedTileURL, subdomains: resolvedSubdomains)
                     .padding(.horizontal)
             }
             primaryStats(aircraft: aircraft)
@@ -255,28 +284,93 @@ struct FlightDetailsSheet: View {
 
 private struct MiniMapView: View {
     let aircraft: Aircraft
-
-    private var coordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: aircraft.lat, longitude: aircraft.lon)
-    }
-
-    private var cameraPosition: MapCameraPosition {
-        .camera(MapCamera(centerCoordinate: coordinate, distance: 100_000))
-    }
+    let tileURL: String
+    let subdomains: [String]
 
     var body: some View {
-        Map(initialPosition: cameraPosition) {
-            Annotation("", coordinate: coordinate) {
-                let angle = Double(truncating: aircraft.track ?? 0) - 90
-                Image(systemName: "airplane")
-                    .font(.body)
-                    .rotationEffect(.degrees(angle))
-                    .foregroundStyle(.blue)
-            }
-        }
+        MiniMKMapView(
+            coordinate: CLLocationCoordinate2D(latitude: aircraft.lat, longitude: aircraft.lon),
+            heading: aircraft.track.map { Double(truncating: $0) } ?? 0,
+            tileURL: tileURL,
+            subdomains: subdomains
+        )
         .frame(height: 180)
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .disabled(true)
+    }
+}
+
+private struct MiniMKMapView: UIViewRepresentable {
+    let coordinate: CLLocationCoordinate2D
+    let heading: Double
+    let tileURL: String
+    let subdomains: [String]
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView()
+        mapView.delegate = context.coordinator
+        mapView.isUserInteractionEnabled = false
+        mapView.isRotateEnabled = false
+        mapView.isPitchEnabled = false
+        mapView.showsUserLocation = true
+
+        let overlay = CustomTileOverlay(urlTemplate: tileURL, subdomains: subdomains)
+        overlay.canReplaceMapContent = true
+        mapView.addOverlay(overlay, level: .aboveLabels)
+
+        let ann = MKPointAnnotation()
+        ann.coordinate = coordinate
+        mapView.addAnnotation(ann)
+        context.coordinator.annotation = ann
+
+        mapView.setRegion(
+            MKCoordinateRegion(center: coordinate, latitudinalMeters: 100_000, longitudinalMeters: 100_000),
+            animated: false
+        )
+        return mapView
+    }
+
+    func updateUIView(_ mapView: MKMapView, context: Context) {
+        context.coordinator.heading = heading
+        if let ann = context.coordinator.annotation {
+            ann.coordinate = coordinate
+            if let view = mapView.view(for: ann) {
+                view.transform = CGAffineTransform(
+                    rotationAngle: CGFloat((heading - 90) * .pi / 180)
+                )
+            }
+        }
+        if let existing = mapView.overlays.compactMap({ $0 as? CustomTileOverlay }).first {
+            if existing.urlTemplate != tileURL || existing.subdomains != subdomains {
+                mapView.removeOverlay(existing)
+                let overlay = CustomTileOverlay(urlTemplate: tileURL, subdomains: subdomains)
+                overlay.canReplaceMapContent = true
+                mapView.addOverlay(overlay, level: .aboveLabels)
+            }
+        }
+    }
+
+    final class Coordinator: NSObject, MKMapViewDelegate {
+        var annotation: MKPointAnnotation?
+        var heading: Double = 0
+
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let tile = overlay as? MKTileOverlay {
+                return MKTileOverlayRenderer(tileOverlay: tile)
+            }
+            return MKOverlayRenderer(overlay: overlay)
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard !(annotation is MKUserLocation) else { return nil }
+            let view = MKAnnotationView(annotation: annotation, reuseIdentifier: "aircraft")
+            let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+            view.image = UIImage(systemName: "airplane", withConfiguration: config)?
+                .withTintColor(.systemBlue, renderingMode: .alwaysOriginal)
+            view.transform = CGAffineTransform(rotationAngle: CGFloat((heading - 90) * .pi / 180))
+            return view
+        }
     }
 }
 
