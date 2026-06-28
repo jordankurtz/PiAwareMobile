@@ -18,10 +18,13 @@ struct AircraftListView: View {
 
     var body: some View {
         if horizontalSizeClass == .regular {
-            baseList.toolbarBackground(.hidden, for: .navigationBar)
+            baseList
+                .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
+                .toolbarBackground(.hidden, for: .navigationBar)
         } else {
             NavigationStack {
-                baseList.toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                baseList
+                    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             }
         }
     }
@@ -39,7 +42,6 @@ struct AircraftListView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .navigationTitle("Aircraft")
-        .navigationSubtitle("\(aircraft.numberOfPlanes) tracked")
         .searchable(text: $query, prompt: "Callsign or hex")
     }
 }
