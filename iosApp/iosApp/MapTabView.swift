@@ -90,7 +90,7 @@ struct MapTabView: View {
                     .id(glassID)
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 60)
+                .padding(.top, 8)
 
                 Spacer()
 
