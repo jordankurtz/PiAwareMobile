@@ -1,49 +1,25 @@
 import SwiftUI
 import MapKit
-import ComposeApp
+import ComposeApp  // BoundingBox
 
 // MARK: - RegionPickerView
 
 struct RegionPickerView: View {
+    let tileURL: String
+    let subdomains: [String]
     let onSelected: (BoundingBox, Int32) -> Void
     let onDismiss: () -> Void
-
-    @Environment(SettingsBridge.self) private var settingsBridge
 
     @State private var visibleRegion: MKCoordinateRegion?
     @State private var isBoxMode = true
     @State private var boxRect = CGRect.zero
     @State private var screenSize = CGSize.zero
 
-    private var resolvedTileURL: String {
-        guard let s = settingsBridge.settings else {
-            return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        }
-        let activeId = s.mapProviderId ?? "openstreetmap"
-        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
-        if let provider = allBuiltIn.first(where: { $0.id == activeId }) {
-            let keyGroup = provider.apiKeyGroup ?? provider.id
-            let apiKey = s.apiKeys[keyGroup] ?? ""
-            return provider.urlTemplate.replacingOccurrences(of: "{api_key}", with: apiKey)
-        }
-        if let custom = s.customProviders.first(where: { $0.id == activeId }) {
-            return custom.urlTemplate
-        }
-        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-    }
-
-    private var resolvedSubdomains: [String] {
-        guard let s = settingsBridge.settings else { return [] }
-        let activeId = s.mapProviderId ?? "openstreetmap"
-        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
-        return allBuiltIn.first(where: { $0.id == activeId })?.subdomains ?? []
-    }
-
     var body: some View {
         ZStack {
             TileMapView(
-                urlTemplate: resolvedTileURL,
-                subdomains: resolvedSubdomains,
+                urlTemplate: tileURL,
+                subdomains: subdomains,
                 isInteractionEnabled: !isBoxMode,
                 onRegionChange: { visibleRegion = $0 }
             )

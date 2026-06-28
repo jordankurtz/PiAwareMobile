@@ -3,6 +3,31 @@ import ComposeApp
 
 struct OfflineMapsView: View {
     @Environment(OfflineMapsBridge.self) private var offlineMaps
+    @Environment(SettingsBridge.self) private var settingsBridge
+
+    private var resolvedTileURL: String {
+        guard let s = settingsBridge.settings else {
+            return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        }
+        let activeId = s.mapProviderId ?? "openstreetmap"
+        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        if let provider = allBuiltIn.first(where: { $0.id == activeId }) {
+            let keyGroup = provider.apiKeyGroup ?? provider.id
+            let apiKey = s.apiKeys[keyGroup] ?? ""
+            return provider.urlTemplate.replacingOccurrences(of: "{api_key}", with: apiKey)
+        }
+        if let custom = s.customProviders.first(where: { $0.id == activeId }) {
+            return custom.urlTemplate
+        }
+        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    }
+
+    private var resolvedSubdomains: [String] {
+        guard let s = settingsBridge.settings else { return [] }
+        let activeId = s.mapProviderId ?? "openstreetmap"
+        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        return allBuiltIn.first(where: { $0.id == activeId })?.subdomains ?? []
+    }
     @State private var showDownloadSetup = false
     @State private var showRegionPicker = false
     @State private var pendingBounds: BoundingBox? = nil
@@ -73,6 +98,8 @@ struct OfflineMapsView: View {
         }
         .fullScreenCover(isPresented: $showRegionPicker) {
             RegionPickerView(
+                tileURL: resolvedTileURL,
+                subdomains: resolvedSubdomains,
                 onSelected: { bounds, viewportZoom in
                     pendingBounds = bounds
                     pendingViewportZoom = viewportZoom
