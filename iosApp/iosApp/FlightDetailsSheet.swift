@@ -389,9 +389,13 @@ private struct MiniMKMapView: UIViewRepresentable {
         context.coordinator.heading = heading
         context.coordinator.aircraftColor = aircraftColor
 
-        // Update aircraft annotation
+        // Update aircraft annotation and keep map centered on the aircraft
         if let ann = context.coordinator.annotation {
             ann.coordinate = coordinate
+            mapView.setRegion(
+                MKCoordinateRegion(center: coordinate, latitudinalMeters: 100_000, longitudinalMeters: 100_000),
+                animated: true
+            )
             if let view = mapView.view(for: ann) {
                 let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
                 view.image = UIImage(systemName: "airplane", withConfiguration: config)?

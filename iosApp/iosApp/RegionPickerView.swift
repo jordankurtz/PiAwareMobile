@@ -139,7 +139,7 @@ struct RegionPickerView: View {
         )
 
         let latSpan = abs(maxLat - minLat)
-        let zoom = Int(log2(360.0 / max(latSpan, 1e-4))).clamped(to: 1...16)
+        let zoom = Int(log2(360.0 / max(latSpan, 1e-4))).clamped(to: 1...18)
 
         onSelected(box, Int32(zoom))
     }
