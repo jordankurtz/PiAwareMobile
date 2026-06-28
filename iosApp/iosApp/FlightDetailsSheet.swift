@@ -59,7 +59,7 @@ struct FlightDetailsSheet: View {
         VStack(spacing: 2) {
             Text(flight.ident)
                 .font(.title2).fontWeight(.semibold)
-            if let op = flight.operator_, !op.isEmpty {
+            if let op = flight.`operator`, !op.isEmpty {
                 Text(op).font(.subheadline).foregroundStyle(.secondary)
             }
         }
