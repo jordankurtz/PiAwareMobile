@@ -213,7 +213,7 @@ private struct HandleOverlayView: View {
 
 // MARK: - BoxHandle
 
-private enum BoxHandle: CaseIterable {
+private enum BoxHandle: CaseIterable, Hashable {
     case topLeft, topCenter, topRight
     case midLeft, midRight
     case bottomLeft, bottomCenter, bottomRight
@@ -267,12 +267,6 @@ private enum BoxHandle: CaseIterable {
 
 private extension Comparable {
     func clamped(to range: ClosedRange<Self>) -> Self {
-        min(max(self, range.lowerBound), range.upperBound)
-    }
-}
-
-private extension Int {
-    func clamped(to range: ClosedRange<Int>) -> Int {
-        min(max(self, range.lowerBound), range.upperBound)
+        Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
     }
 }
