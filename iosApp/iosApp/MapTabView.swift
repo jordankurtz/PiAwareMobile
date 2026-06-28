@@ -123,6 +123,7 @@ struct MapTabView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
             }
+            .safeAreaPadding(.top)
             .onReceive(
                 NotificationCenter.default.publisher(
                     for: UIApplication.didBecomeActiveNotification
