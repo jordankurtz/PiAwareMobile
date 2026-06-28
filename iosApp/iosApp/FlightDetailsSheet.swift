@@ -140,8 +140,13 @@ struct FlightDetailsSheet: View {
     @ViewBuilder private func detailsTab(aircraft: Aircraft) -> some View {
         VStack(spacing: 12) {
             if aircraft.hasPosition {
-                MiniMapView(aircraft: aircraft, tileURL: resolvedTileURL, subdomains: resolvedSubdomains)
-                    .padding(.horizontal)
+                MiniMapView(
+                    aircraft: aircraft,
+                    tileURL: resolvedTileURL,
+                    subdomains: resolvedSubdomains,
+                    showTrails: settings.settings?.showMinimapTrails == true
+                )
+                .padding(.horizontal)
             }
             primaryStats(aircraft: aircraft)
             locationStats(aircraft: aircraft)
@@ -280,6 +285,39 @@ struct FlightDetailsSheet: View {
     }
 }
 
+// MARK: - Trail helpers
+
+private class ColoredPolyline: MKPolyline {
+    var segmentColor: UIColor = .systemBlue
+}
+
+private struct TrailSegment {
+    let color: UIColor
+    let coords: [CLLocationCoordinate2D]
+}
+
+private func trailSegments(_ positions: [AircraftPosition]) -> [TrailSegment] {
+    guard positions.count >= 2 else { return [] }
+    var result: [TrailSegment] = []
+    var color = altitudeColor(for: positions[0].altitude)
+    var coords = [CLLocationCoordinate2D(latitude: positions[0].latitude, longitude: positions[0].longitude)]
+
+    for i in 1..<positions.count {
+        let p = positions[i]
+        let c = altitudeColor(for: p.altitude)
+        let coord = CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude)
+        if c == color {
+            coords.append(coord)
+        } else {
+            if coords.count >= 2 { result.append(TrailSegment(color: color, coords: coords)) }
+            color = c
+            coords = [CLLocationCoordinate2D(latitude: positions[i - 1].latitude, longitude: positions[i - 1].longitude), coord]
+        }
+    }
+    if coords.count >= 2 { result.append(TrailSegment(color: color, coords: coords)) }
+    return result
+}
+
 // MARK: - Altitude color (mirrors getColorForAltitude in MapHelpers.kt)
 
 private func altitudeColor(for altBaro: String?) -> UIColor {
@@ -320,17 +358,26 @@ private struct MiniMapView: View {
     let aircraft: Aircraft
     let tileURL: String
     let subdomains: [String]
+    let showTrails: Bool
+
+    @State private var trailPositions: [AircraftPosition] = []
 
     var body: some View {
         MiniMKMapView(
             coordinate: CLLocationCoordinate2D(latitude: aircraft.lat, longitude: aircraft.lon),
             heading: aircraft.track.map { Double(truncating: $0) } ?? 0,
             aircraftColor: altitudeColor(for: aircraft.altBaro),
+            trail: showTrails ? trailPositions : [],
             tileURL: tileURL,
             subdomains: subdomains
         )
         .frame(height: 180)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .task(id: aircraft.hex) {
+            for await trail in KoinHelpersKt.getAircraftTrail(hex: aircraft.hex) {
+                trailPositions = trail?.positions ?? []
+            }
+        }
     }
 }
 
@@ -338,6 +385,7 @@ private struct MiniMKMapView: UIViewRepresentable {
     let coordinate: CLLocationCoordinate2D
     let heading: Double
     let aircraftColor: UIColor
+    let trail: [AircraftPosition]
     let tileURL: String
     let subdomains: [String]
 
@@ -370,17 +418,19 @@ private struct MiniMKMapView: UIViewRepresentable {
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.heading = heading
         context.coordinator.aircraftColor = aircraftColor
+
+        // Update aircraft annotation
         if let ann = context.coordinator.annotation {
             ann.coordinate = coordinate
             if let view = mapView.view(for: ann) {
                 let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
                 view.image = UIImage(systemName: "airplane", withConfiguration: config)?
                     .withTintColor(aircraftColor, renderingMode: .alwaysOriginal)
-                view.transform = CGAffineTransform(
-                    rotationAngle: CGFloat((heading - 90) * .pi / 180)
-                )
+                view.transform = CGAffineTransform(rotationAngle: CGFloat((heading - 90) * .pi / 180))
             }
         }
+
+        // Update tile overlay
         if let existing = mapView.overlays.compactMap({ $0 as? CustomTileOverlay }).first {
             if existing.urlTemplate != tileURL || existing.subdomains != subdomains {
                 mapView.removeOverlay(existing)
@@ -388,6 +438,14 @@ private struct MiniMKMapView: UIViewRepresentable {
                 overlay.canReplaceMapContent = true
                 mapView.addOverlay(overlay, level: .aboveLabels)
             }
+        }
+
+        // Rebuild trail polylines
+        mapView.overlays.compactMap { $0 as? ColoredPolyline }.forEach { mapView.removeOverlay($0) }
+        for segment in trailSegments(trail) {
+            let poly = ColoredPolyline(coordinates: segment.coords, count: segment.coords.count)
+            poly.segmentColor = segment.color
+            mapView.addOverlay(poly, level: .aboveLabels)
         }
     }
 
@@ -397,6 +455,12 @@ private struct MiniMKMapView: UIViewRepresentable {
         var aircraftColor: UIColor = .systemBlue
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let poly = overlay as? ColoredPolyline {
+                let r = MKPolylineRenderer(polyline: poly)
+                r.strokeColor = poly.segmentColor.withAlphaComponent(0.85)
+                r.lineWidth = 2.5
+                return r
+            }
             if let tile = overlay as? MKTileOverlay {
                 return MKTileOverlayRenderer(tileOverlay: tile)
             }

@@ -1,6 +1,7 @@
 package com.jordankurtz.piawaremobile
 
 import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
+import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftTrailUseCase
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.TileProviders
@@ -20,6 +21,8 @@ fun fitMapToAircraft() {
     val aircraft = koin.get<AircraftViewModel>().aircraft.value
     koin.get<MapViewModel>().fitToAircraft(aircraft)
 }
+
+fun getAircraftTrail(hex: String) = KoinPlatform.getKoin().get<GetAircraftTrailUseCase>().invoke(hex)
 
 fun getBuiltInTileProviders() = TileProviders.BUILT_IN
 fun getApiKeyTileProviders() = TileProviders.API_KEY_REQUIRED
