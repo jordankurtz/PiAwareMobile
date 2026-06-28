@@ -14,4 +14,8 @@ enum KoinHelper {
     static func makeSettingsBridge() -> SettingsBridge {
         SettingsBridge(vm: KoinHelpersKt.getSettingsViewModel())
     }
+
+    static func makeOfflineMapsBridge() -> OfflineMapsBridge {
+        OfflineMapsBridge(vm: KoinHelpersKt.getOfflineMapsViewModel())
+    }
 }

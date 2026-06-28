@@ -55,9 +55,7 @@ struct SettingsView: View {
                 // MARK: - Offline
                 Section("Offline") {
                     NavigationLink("Offline Maps") {
-                        ComposeScreen { ScreenViewControllersKt.OfflineMapsViewController() }
-                            .navigationTitle("Offline Maps")
-                            .navigationBarTitleDisplayMode(.inline)
+                        OfflineMapsView()
                     }
 
                     NavigationLink("Flight Cache") {

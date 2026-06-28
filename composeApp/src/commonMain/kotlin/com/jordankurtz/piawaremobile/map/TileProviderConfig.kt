@@ -45,6 +45,41 @@ data class TileProviderConfig(
     val requiresApiKey: Boolean = false,
     val apiKeyGroup: String? = null,
 ) {
+    /** Plain-string display name for use outside of a Compose context (e.g. Swift). */
+    val resolvedDisplayName: String
+        get() = displayName.ifEmpty {
+            when (id) {
+                "openstreetmap" -> "OpenStreetMap"
+                "carto_dark_all" -> "CARTO Dark"
+                "carto_dark_nolabels" -> "CARTO Dark (No Labels)"
+                "carto_light_all" -> "CARTO Light"
+                "carto_light_nolabels" -> "CARTO Light (No Labels)"
+                "carto_voyager" -> "CARTO Voyager"
+                "opentopomap" -> "OpenTopoMap"
+                "cyclosm" -> "CyclOSM"
+                "esri_satellite" -> "ESRI Satellite"
+                "esri_topo" -> "ESRI Topographic"
+                "esri_street" -> "ESRI Street"
+                "stadia_toner" -> "Stadia Toner"
+                "stadia_watercolor" -> "Stadia Watercolor"
+                "stadia_alidade_smooth" -> "Stadia Alidade Smooth"
+                "stadia_alidade_dark" -> "Stadia Alidade Dark"
+                "thunderforest_transport" -> "Thunderforest Transport"
+                "thunderforest_cycle" -> "Thunderforest Cycle"
+                "thunderforest_outdoors" -> "Thunderforest Outdoors"
+                "thunderforest_landscape" -> "Thunderforest Landscape"
+                "thunderforest_transport_dark" -> "Thunderforest Transport Dark"
+                "thunderforest_spinal_map" -> "Thunderforest Spinal Map"
+                "thunderforest_pioneer" -> "Thunderforest Pioneer"
+                "thunderforest_mobile_atlas" -> "Thunderforest Mobile Atlas"
+                "thunderforest_neighbourhood" -> "Thunderforest Neighbourhood"
+                "thunderforest_atlas" -> "Thunderforest Atlas"
+                "jawg_streets" -> "Jawg Streets"
+                "jawg_dark" -> "Jawg Dark"
+                else -> id
+            }
+        }
+
     fun buildUrl(
         zoom: Int,
         col: Int,

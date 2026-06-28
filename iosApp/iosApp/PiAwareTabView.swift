@@ -6,6 +6,7 @@ struct PiAwareTabView: View {
     @State private var aircraftBridge = KoinHelper.makeAircraftBridge()
     @State private var locationBridge = KoinHelper.makeLocationBridge()
     @State private var settingsBridge = KoinHelper.makeSettingsBridge()
+    @State private var offlineMapsBridge = KoinHelper.makeOfflineMapsBridge()
     @State private var showSettings = false
     @State private var showFlightSheet = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -21,6 +22,7 @@ struct PiAwareTabView: View {
         .environment(aircraftBridge)
         .environment(locationBridge)
         .environment(settingsBridge)
+        .environment(offlineMapsBridge)
         .onChange(of: aircraftBridge.selectedHex) { _, newValue in
             showFlightSheet = newValue != nil
         }
