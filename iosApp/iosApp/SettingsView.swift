@@ -58,11 +58,7 @@ struct SettingsView: View {
                         OfflineMapsView()
                     }
 
-                    NavigationLink("Flight Cache") {
-                        ComposeScreen { ScreenViewControllersKt.FlightCacheViewController() }
-                            .navigationTitle("Flight Cache")
-                            .navigationBarTitleDisplayMode(.inline)
-                    }
+
                 }
 
                 // MARK: - FlightAware

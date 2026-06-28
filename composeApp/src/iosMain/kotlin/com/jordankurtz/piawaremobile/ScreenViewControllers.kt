@@ -8,7 +8,7 @@ import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
 import com.jordankurtz.piawaremobile.map.offline.MapRegionPickerScreen
-import com.jordankurtz.piawaremobile.settings.ui.FlightCacheScreen
+
 import com.jordankurtz.piawaremobile.settings.ui.MapProvidersScreen
 import com.jordankurtz.piawaremobile.settings.ui.OfflineMapsScreen
 import com.jordankurtz.piawaremobile.ui.Theme
@@ -50,12 +50,6 @@ fun OfflineMapsViewController() =
         }
     }
 
-fun FlightCacheViewController() =
-    ComposeUIViewController {
-        Theme {
-            FlightCacheScreen(onBack = {})
-        }
-    }
 
 fun MapProvidersViewController() =
     ComposeUIViewController {
