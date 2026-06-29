@@ -22,8 +22,8 @@ struct MapProvidersView: View {
 
     @ViewBuilder private var builtInSection: some View {
         Section("Free") {
-            ForEach(KoinHelpersKt.getBuiltInTileProviders(), id: \.id) { provider in
-                Button { KoinHelpersKt.updateMapProviderById(id: provider.id) } label: {
+            ForEach(SwiftBridgeKt.getBuiltInTileProviders(), id: \.id) { provider in
+                Button { SwiftBridgeKt.updateMapProviderById(id: provider.id) } label: {
                     ProviderRow(name: resolvedNames[provider.id] ?? provider.id, isSelected: provider.id == activeId)
                 }
             }
@@ -32,11 +32,11 @@ struct MapProvidersView: View {
 
     @ViewBuilder private var apiKeySection: some View {
         Section("API Key Required") {
-            ForEach(KoinHelpersKt.getApiKeyTileProviders(), id: \.id) { provider in
+            ForEach(SwiftBridgeKt.getApiKeyTileProviders(), id: \.id) { provider in
                 let keyGroup = provider.apiKeyGroup ?? provider.id
                 let hasKey = apiKeys[keyGroup] != nil
                 Button {
-                    if hasKey { KoinHelpersKt.updateMapProviderById(id: provider.id) }
+                    if hasKey { SwiftBridgeKt.updateMapProviderById(id: provider.id) }
                     else { pendingApiKeyProvider = provider }
                 } label: {
                     HStack {
@@ -56,7 +56,7 @@ struct MapProvidersView: View {
             Section("Custom") {
                 ForEach(customProviders, id: \.id) { custom in
                     HStack {
-                        Button { KoinHelpersKt.updateMapProviderById(id: custom.id) } label: {
+                        Button { SwiftBridgeKt.updateMapProviderById(id: custom.id) } label: {
                             VStack(alignment: .leading, spacing: 2) {
                                 ProviderRow(name: custom.displayName, isSelected: custom.id == activeId)
                                 Text(custom.urlTemplate)
@@ -91,9 +91,9 @@ struct MapProvidersView: View {
             }
         }
         .task {
-            let allProviders = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+            let allProviders = SwiftBridgeKt.getBuiltInTileProviders() + SwiftBridgeKt.getApiKeyTileProviders()
             for provider in allProviders {
-                if let name = try? await KoinHelpersKt.resolveProviderDisplayName(provider: provider) {
+                if let name = try? await SwiftBridgeKt.resolveProviderDisplayName(provider: provider) {
                     resolvedNames[provider.id] = name
                 }
             }
@@ -119,7 +119,7 @@ struct MapProvidersView: View {
         )) {
             Button("Delete", role: .destructive) {
                 if let custom = customToDelete {
-                    KoinHelpersKt.deleteCustomTileProvider(id: custom.id)
+                    SwiftBridgeKt.deleteCustomTileProvider(id: custom.id)
                 }
                 customToDelete = nil
             }
@@ -195,7 +195,7 @@ private struct ApiKeySheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        KoinHelpersKt.setApiKeyAndActivate(
+                        SwiftBridgeKt.setApiKeyAndActivate(
                             keyGroup: keyGroup,
                             key: key,
                             providerId: provider.id
@@ -251,7 +251,7 @@ private struct AddCustomProviderSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        KoinHelpersKt.addCustomTileProvider(
+                        SwiftBridgeKt.addCustomTileProvider(
                             id: UUID().uuidString.lowercased(),
                             name: name.trimmingCharacters(in: .whitespaces),
                             urlTemplate: urlTemplate.trimmingCharacters(in: .whitespaces)

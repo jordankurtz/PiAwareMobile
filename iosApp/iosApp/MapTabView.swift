@@ -62,7 +62,7 @@ struct MapTabView: View {
                         VStack(spacing: 8) {
                             if !aircraft.aircraft.isEmpty {
                                 Button {
-                                    KoinHelpersKt.fitMapToAircraft()
+                                    SwiftBridgeKt.fitMapToAircraft()
                                 } label: {
                                     Image(systemName: "airplane")
                                         .padding(12)
@@ -136,13 +136,13 @@ struct MapTabView: View {
         }
         .task {
             guard showDebugOverlay else { return }
-            for await stats in KoinHelpersKt.getMapViewModel().tileStats {
+            for await stats in SwiftBridgeKt.getMapViewModel().tileStats {
                 debugTileStats = stats
             }
         }
         .task {
             guard showDebugOverlay else { return }
-            for await zoom in KoinHelpersKt.getMapViewModel().currentZoomLevel {
+            for await zoom in SwiftBridgeKt.getMapViewModel().currentZoomLevel {
                 debugZoomLevel = zoom.intValue
             }
         }

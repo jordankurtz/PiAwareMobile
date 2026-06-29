@@ -15,7 +15,7 @@ final class AircraftBridgeTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        vm = KoinHelpersKt.getAircraftViewModel()
+        vm = SwiftBridgeKt.getAircraftViewModel()
         bridge = AircraftBridge(vm: vm)
         // Reset any selection from a prior test
         vm.selectAircraft(hex: nil)
@@ -33,8 +33,8 @@ final class AircraftBridgeTests: XCTestCase {
     /// If AircraftViewModel were @Factory, getAircraftViewModel() would return
     /// a new instance each call, breaking the map-tap → flight sheet chain.
     func testAircraftViewModelIsKoinSingleton() {
-        let vm1 = KoinHelpersKt.getAircraftViewModel()
-        let vm2 = KoinHelpersKt.getAircraftViewModel()
+        let vm1 = SwiftBridgeKt.getAircraftViewModel()
+        let vm2 = SwiftBridgeKt.getAircraftViewModel()
         XCTAssertIdentical(vm1, vm2, "AircraftViewModel must be @Single — the iOS bridge and MapScreen must share one instance")
     }
 

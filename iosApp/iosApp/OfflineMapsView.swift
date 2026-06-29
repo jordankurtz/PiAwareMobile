@@ -11,7 +11,7 @@ struct OfflineMapsView: View {
             return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         }
         let activeId = s.mapProviderId ?? "openstreetmap"
-        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        let allBuiltIn = SwiftBridgeKt.getBuiltInTileProviders() + SwiftBridgeKt.getApiKeyTileProviders()
         if let provider = allBuiltIn.first(where: { $0.id == activeId }) {
             let keyGroup = provider.apiKeyGroup ?? provider.id
             let apiKey = s.apiKeys[keyGroup] ?? ""
@@ -26,7 +26,7 @@ struct OfflineMapsView: View {
     private var resolvedSubdomains: [String] {
         guard let s = settingsBridge.settings else { return [] }
         let activeId = s.mapProviderId ?? "openstreetmap"
-        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        let allBuiltIn = SwiftBridgeKt.getBuiltInTileProviders() + SwiftBridgeKt.getApiKeyTileProviders()
         return allBuiltIn.first(where: { $0.id == activeId })?.subdomains ?? []
     }
     @State private var showDownloadSetup = false
@@ -104,7 +104,7 @@ struct OfflineMapsView: View {
                 tileURL: resolvedTileURL,
                 subdomains: resolvedSubdomains,
                 initialCenter: locationBridge.coordinate,
-                initialZoom: Int(KoinHelpersKt.getMapZoomLevel()),
+                initialZoom: Int(SwiftBridgeKt.getMapZoomLevel()),
                 onSelected: { bounds, viewportZoom in
                     pendingBounds = bounds
                     pendingViewportZoom = viewportZoom

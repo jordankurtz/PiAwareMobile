@@ -12,7 +12,7 @@ struct FlightDetailsSheet: View {
             return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         }
         let activeId = s.mapProviderId ?? "openstreetmap"
-        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        let allBuiltIn = SwiftBridgeKt.getBuiltInTileProviders() + SwiftBridgeKt.getApiKeyTileProviders()
         if let provider = allBuiltIn.first(where: { $0.id == activeId }) {
             let keyGroup = provider.apiKeyGroup ?? provider.id
             let apiKey = s.apiKeys[keyGroup] ?? ""
@@ -27,7 +27,7 @@ struct FlightDetailsSheet: View {
     private var resolvedSubdomains: [String] {
         guard let s = settings.settings else { return [] }
         let activeId = s.mapProviderId ?? "openstreetmap"
-        let allBuiltIn = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+        let allBuiltIn = SwiftBridgeKt.getBuiltInTileProviders() + SwiftBridgeKt.getApiKeyTileProviders()
         return allBuiltIn.first(where: { $0.id == activeId })?.subdomains ?? []
     }
 
@@ -340,7 +340,7 @@ private struct MiniMapView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .task(id: aircraft.hex) {
             trailPositions = []
-            for await trail in KoinHelpersKt.getAircraftTrail(hex: aircraft.hex) {
+            for await trail in SwiftBridgeKt.getAircraftTrail(hex: aircraft.hex) {
                 trailPositions = trail?.positions ?? []
             }
         }

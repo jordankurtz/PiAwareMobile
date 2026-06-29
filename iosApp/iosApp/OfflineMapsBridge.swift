@@ -32,7 +32,7 @@ final class OfflineMapsBridge {
         providerId: String,
         urlTemplate: String
     ) {
-        KoinHelpersKt.startOfflineDownload(
+        SwiftBridgeKt.startOfflineDownload(
             vm: vm,
             name: name,
             bounds: bounds,

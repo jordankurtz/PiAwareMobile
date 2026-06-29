@@ -4,18 +4,18 @@ import ComposeApp
 @MainActor
 enum KoinHelper {
     static func makeAircraftBridge() -> AircraftBridge {
-        AircraftBridge(vm: KoinHelpersKt.getAircraftViewModel())
+        AircraftBridge(vm: SwiftBridgeKt.getAircraftViewModel())
     }
 
     static func makeLocationBridge() -> LocationBridge {
-        LocationBridge(vm: KoinHelpersKt.getLocationViewModel())
+        LocationBridge(vm: SwiftBridgeKt.getLocationViewModel())
     }
 
     static func makeSettingsBridge() -> SettingsBridge {
-        SettingsBridge(vm: KoinHelpersKt.getSettingsViewModel())
+        SettingsBridge(vm: SwiftBridgeKt.getSettingsViewModel())
     }
 
     static func makeOfflineMapsBridge() -> OfflineMapsBridge {
-        OfflineMapsBridge(vm: KoinHelpersKt.getOfflineMapsViewModel())
+        OfflineMapsBridge(vm: SwiftBridgeKt.getOfflineMapsViewModel())
     }
 }
