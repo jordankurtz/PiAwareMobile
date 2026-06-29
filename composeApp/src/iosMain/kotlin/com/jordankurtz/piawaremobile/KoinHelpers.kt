@@ -4,8 +4,10 @@ import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.aircraft.usecase.GetAircraftTrailUseCase
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.MapViewModel
+import com.jordankurtz.piawaremobile.map.TileProviderConfig
 import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
+import org.jetbrains.compose.resources.getString
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
 import com.jordankurtz.piawaremobile.map.offline.TileProviderConfig as OfflineTileProviderConfig
 import com.jordankurtz.piawaremobile.map.offline.TileProviders as OfflineTileProviders
@@ -30,6 +32,9 @@ fun getAircraftTrail(hex: String) = KoinPlatform.getKoin().get<GetAircraftTrailU
 
 fun getBuiltInTileProviders() = TileProviders.BUILT_IN
 fun getApiKeyTileProviders() = TileProviders.API_KEY_REQUIRED
+
+suspend fun resolveProviderDisplayName(provider: TileProviderConfig): String =
+    provider.displayNameRes?.let { getString(it) } ?: provider.displayName.ifEmpty { provider.id }
 
 fun updateMapProviderById(id: String) {
     val config = TileProviders.ALL.firstOrNull { it.id == id } ?: return

@@ -6,6 +6,7 @@ struct MapProvidersView: View {
     @State private var pendingApiKeyProvider: TileProviderConfig? = nil
     @State private var showAddCustom = false
     @State private var customToDelete: CustomProviderConfig? = nil
+    @State private var resolvedNames: [String: String] = [:]
 
     private var activeId: String {
         settings.settings?.mapProviderId ?? "openstreetmap"
@@ -23,7 +24,7 @@ struct MapProvidersView: View {
         Section("Free") {
             ForEach(KoinHelpersKt.getBuiltInTileProviders(), id: \.id) { provider in
                 Button { KoinHelpersKt.updateMapProviderById(id: provider.id) } label: {
-                    ProviderRow(name: provider.resolvedDisplayName, isSelected: provider.id == activeId)
+                    ProviderRow(name: resolvedNames[provider.id] ?? provider.id, isSelected: provider.id == activeId)
                 }
             }
         }
@@ -39,7 +40,7 @@ struct MapProvidersView: View {
                     else { pendingApiKeyProvider = provider }
                 } label: {
                     HStack {
-                        ProviderRow(name: provider.resolvedDisplayName, isSelected: provider.id == activeId)
+                        ProviderRow(name: resolvedNames[provider.id] ?? provider.id, isSelected: provider.id == activeId)
                         Spacer()
                         Text(hasKey ? "Key set" : "Key required")
                             .font(.caption)
@@ -89,12 +90,24 @@ struct MapProvidersView: View {
                 Button("Add Custom") { showAddCustom = true }
             }
         }
+        .task {
+            let allProviders = KoinHelpersKt.getBuiltInTileProviders() + KoinHelpersKt.getApiKeyTileProviders()
+            for provider in allProviders {
+                if let name = try? await KoinHelpersKt.resolveProviderDisplayName(provider: provider) {
+                    resolvedNames[provider.id] = name
+                }
+            }
+        }
         .sheet(isPresented: Binding(
             get: { pendingApiKeyProvider != nil },
             set: { if !$0 { pendingApiKeyProvider = nil } }
         )) {
             if let provider = pendingApiKeyProvider {
-                ApiKeySheet(provider: provider, onDismiss: { pendingApiKeyProvider = nil })
+                ApiKeySheet(
+                    provider: provider,
+                    resolvedName: resolvedNames[provider.id] ?? provider.id,
+                    onDismiss: { pendingApiKeyProvider = nil }
+                )
             }
         }
         .sheet(isPresented: $showAddCustom) {
@@ -140,6 +153,7 @@ private struct ProviderRow: View {
 
 private struct ApiKeySheet: View {
     let provider: TileProviderConfig
+    let resolvedName: String
     let onDismiss: () -> Void
     @State private var key = ""
 
@@ -149,7 +163,7 @@ private struct ApiKeySheet: View {
         case "stadia": return "Stadia Maps"
         case "thunderforest": return "Thunderforest"
         case "jawg": return "Jawg"
-        default: return provider.resolvedDisplayName
+        default: return resolvedName
         }
     }
     private var keyInfo: String {
