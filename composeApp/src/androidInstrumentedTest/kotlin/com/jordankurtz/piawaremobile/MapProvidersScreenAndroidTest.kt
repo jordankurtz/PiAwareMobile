@@ -5,11 +5,15 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.jordankurtz.piawaremobile.map.cache.TileCache
+import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.SettingsViewModel
 import com.jordankurtz.piawaremobile.settings.ui.MapProvidersScreen
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
+import dev.mokkery.answering.returns
+import dev.mokkery.every
+import dev.mokkery.mock
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,9 +24,9 @@ class MapProvidersScreenAndroidTest {
     val composeTestRule = createComposeRule()
 
     private fun createViewModel(): SettingsViewModel {
-        val settingsViewModel = mockk<SettingsViewModel>(relaxed = true)
-        every { settingsViewModel.settings } returns MutableStateFlow(null)
-        return settingsViewModel
+        val settingsService = mock<SettingsService>()
+        every { settingsService.loadSettings() } returns flowOf(Async.Loading)
+        return SettingsViewModel(settingsService, mock<TileCache>())
     }
 
     @Test

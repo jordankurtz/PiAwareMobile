@@ -24,17 +24,40 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.expressions.dsl.asNumber
+import org.maplibre.compose.expressions.dsl.case
 import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.feature
+import org.maplibre.compose.expressions.dsl.switch
+import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.layers.LineLayer
+import org.maplibre.compose.layers.RasterLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.sources.GeoJsonData
+import org.maplibre.compose.sources.TileSetOptions
 import org.maplibre.compose.sources.rememberGeoJsonSource
+import org.maplibre.compose.sources.rememberRasterSource
+import org.maplibre.compose.sources.rememberVectorSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Position
 import org.maplibre.compose.map.MaplibreMap as MaplibreComposeMap
+
+// Tiles are only available from zoom 8 (minScale ~1:2.3M) to zoom 12 (maxScale ~1:144K)
+private const val FAA_SECTIONAL_TILE_URL =
+    "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/VFR_Sectional/MapServer/tile/{z}/{y}/{x}"
+
+// Correct ArcGIS service name is IFR_AreaLow, not IFR_Low
+private const val FAA_IFR_LOW_TILE_URL =
+    "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_AreaLow/MapServer/tile/{z}/{y}/{x}"
+
+private const val FAA_IFR_HIGH_TILE_URL =
+    "https://tiles.arcgis.com/tiles/ssFJjBXIUyZDrSYZ/arcgis/rest/services/IFR_High/MapServer/tile/{z}/{y}/{x}"
+
+private const val OPENAIP_TILE_URL_TEMPLATE =
+    "https://api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.pbf?apiKey="
 
 @Suppress("LongParameterList")
 @Composable
@@ -44,6 +67,11 @@ fun MapLibreMap(
     modifier: Modifier = Modifier,
     gesturesEnabled: Boolean = true,
     onBearingChanged: (Float) -> Unit = {},
+    faaChartsEnabled: Boolean = false,
+    faaIfrLowEnabled: Boolean = false,
+    faaIfrHighEnabled: Boolean = false,
+    airspaceEnabled: Boolean = false,
+    openAipApiKey: String = "",
     topStart: @Composable () -> Unit = {},
     topEnd: @Composable () -> Unit = {},
     bottomStart: @Composable () -> Unit = {},
@@ -97,6 +125,103 @@ fun MapLibreMap(
             },
         ) {
             controller.paths.values.forEach { path -> PathLayer(path) }
+
+            // Sources are always registered so the map style stays stable when toggling.
+            // Visibility is controlled via the `visible` property (not opacity) so that MapLibre
+            // treats enabled layers as live and continuously loads tiles on pan/zoom.
+            // VFR Sectional tiles only exist at zoom 8–12; MapLibre overzooms above 12.
+            val faaSource =
+                rememberRasterSource(
+                    tiles = listOf(FAA_SECTIONAL_TILE_URL),
+                    options =
+                        TileSetOptions(
+                            minZoom = OverlayZoomRanges.FAA_SECTIONAL.first,
+                            maxZoom = OverlayZoomRanges.FAA_SECTIONAL.last,
+                        ),
+                )
+            RasterLayer(
+                id = "faa-sectional",
+                source = faaSource,
+                visible = faaChartsEnabled,
+                opacity = const(0.6f),
+            )
+
+            // IFR Area Low tiles exist at zoom 7–12; MapLibre overzooms above 12.
+            val ifrLowSource =
+                rememberRasterSource(
+                    tiles = listOf(FAA_IFR_LOW_TILE_URL),
+                    options =
+                        TileSetOptions(
+                            minZoom = OverlayZoomRanges.IFR_LOW.first,
+                            maxZoom = OverlayZoomRanges.IFR_LOW.last,
+                        ),
+                )
+            RasterLayer(
+                id = "faa-ifr-low",
+                source = ifrLowSource,
+                visible = faaIfrLowEnabled,
+                opacity = const(0.6f),
+            )
+
+            // IFR High tiles exist at zoom 5–9; MapLibre overzooms above 9.
+            val ifrHighSource =
+                rememberRasterSource(
+                    tiles = listOf(FAA_IFR_HIGH_TILE_URL),
+                    options =
+                        TileSetOptions(
+                            minZoom = OverlayZoomRanges.IFR_HIGH.first,
+                            maxZoom = OverlayZoomRanges.IFR_HIGH.last,
+                        ),
+                )
+            RasterLayer(
+                id = "faa-ifr-high",
+                source = ifrHighSource,
+                visible = faaIfrHighEnabled,
+                opacity = const(0.6f),
+            )
+
+            // TFR layer omitted: FAA does not expose a public GeoJSON endpoint
+
+            val airspaceColor =
+                switch(
+                    feature.get("icaoClass").asNumber(),
+                    case(0, const(Color(0xFF4169E1))),
+                    case(1, const(Color(0xFF0047AB))),
+                    case(2, const(Color(0xFF800080))),
+                    case(3, const(Color(0xFF1E90FF))),
+                    case(4, const(Color(0xFFDA70D6))),
+                    case(5, const(Color(0xFF808080))),
+                    fallback = const(Color(0xFFFF4444)),
+                )
+            if (openAipApiKey.isNotEmpty()) {
+                val airspaceVisible = airspaceEnabled
+                val airspaceSource =
+                    rememberVectorSource(
+                        tiles = listOf(OPENAIP_TILE_URL_TEMPLATE + openAipApiKey),
+                        options =
+                            TileSetOptions(
+                                minZoom = OverlayZoomRanges.AIRSPACE.first,
+                                maxZoom = OverlayZoomRanges.AIRSPACE.last,
+                            ),
+                    )
+                FillLayer(
+                    id = "openaip-airspace-fill",
+                    source = airspaceSource,
+                    sourceLayer = "openaip",
+                    color = airspaceColor,
+                    visible = airspaceVisible,
+                    opacity = const(0.15f),
+                )
+                LineLayer(
+                    id = "openaip-airspace-border",
+                    source = airspaceSource,
+                    sourceLayer = "openaip",
+                    color = airspaceColor,
+                    visible = airspaceVisible,
+                    width = const(1.5.dp),
+                    opacity = const(0.8f),
+                )
+            }
         }
 
         val projection = cameraState.projection

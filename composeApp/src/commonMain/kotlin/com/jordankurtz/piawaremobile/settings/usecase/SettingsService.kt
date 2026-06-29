@@ -68,4 +68,14 @@ interface SettingsService {
     )
 
     suspend fun deleteCustomProvider(id: String)
+
+    suspend fun setShowFaaCharts(enabled: Boolean)
+
+    suspend fun setShowAirspace(enabled: Boolean)
+
+    suspend fun setShowFaaIfrLow(enabled: Boolean)
+
+    suspend fun setShowFaaIfrHigh(enabled: Boolean)
+
+    suspend fun setLimitZoomToOverlay(enabled: Boolean)
 }

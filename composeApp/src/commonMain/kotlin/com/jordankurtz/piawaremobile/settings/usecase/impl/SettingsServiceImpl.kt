@@ -160,4 +160,19 @@ class SettingsServiceImpl(
 
     override suspend fun deleteCustomProvider(id: String) =
         updateSetting { it.copy(customProviders = it.customProviders.filter { c -> c.id != id }) }
+
+    override suspend fun setShowFaaCharts(enabled: Boolean) = updateSetting { it.copy(showFaaCharts = enabled) }
+
+    override suspend fun setShowAirspace(enabled: Boolean) = updateSetting { it.copy(showAirspace = enabled) }
+
+    override suspend fun setShowFaaIfrLow(enabled: Boolean) = updateSetting { it.copy(showFaaIfrLow = enabled) }
+
+    override suspend fun setShowFaaIfrHigh(enabled: Boolean) = updateSetting { it.copy(showFaaIfrHigh = enabled) }
+
+    override suspend fun setLimitZoomToOverlay(enabled: Boolean) =
+        updateSetting {
+            it.copy(
+                limitZoomToOverlay = enabled,
+            )
+        }
 }

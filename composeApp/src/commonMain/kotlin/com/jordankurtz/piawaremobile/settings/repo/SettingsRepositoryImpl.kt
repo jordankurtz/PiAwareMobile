@@ -13,6 +13,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
+@Suppress("CyclomaticComplexMethod")
 @Single(binds = [SettingsRepository::class])
 class SettingsRepositoryImpl(
     private val datastore: DataStore<Preferences>,
@@ -64,6 +65,11 @@ class SettingsRepositoryImpl(
                             emptyList()
                         }
                     } ?: emptyList(),
+                showFaaCharts = preferences[SettingsRepository.SHOW_FAA_CHARTS] ?: false,
+                showAirspace = preferences[SettingsRepository.SHOW_AIRSPACE] ?: false,
+                showFaaIfrLow = preferences[SettingsRepository.SHOW_FAA_IFR_LOW] ?: false,
+                showFaaIfrHigh = preferences[SettingsRepository.SHOW_FAA_IFR_HIGH] ?: false,
+                limitZoomToOverlay = preferences[SettingsRepository.LIMIT_ZOOM_TO_OVERLAY] ?: false,
             )
         }
     }
@@ -87,6 +93,11 @@ class SettingsRepositoryImpl(
             preferences[SettingsRepository.MAX_ZOOM_LEVEL_KEY] = settings.maxZoomLevel
             preferences[SettingsRepository.API_KEYS_JSON] = Json.encodeToString(settings.apiKeys)
             preferences[SettingsRepository.CUSTOM_PROVIDERS_JSON] = Json.encodeToString(settings.customProviders)
+            preferences[SettingsRepository.SHOW_FAA_CHARTS] = settings.showFaaCharts
+            preferences[SettingsRepository.SHOW_AIRSPACE] = settings.showAirspace
+            preferences[SettingsRepository.SHOW_FAA_IFR_LOW] = settings.showFaaIfrLow
+            preferences[SettingsRepository.SHOW_FAA_IFR_HIGH] = settings.showFaaIfrHigh
+            preferences[SettingsRepository.LIMIT_ZOOM_TO_OVERLAY] = settings.limitZoomToOverlay
         }
     }
 

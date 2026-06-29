@@ -1,5 +1,6 @@
 package com.jordankurtz.piawaremobile.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.jordankurtz.piawaremobile.model.Aircraft
 import com.jordankurtz.piawaremobile.model.AircraftInfo
@@ -147,6 +149,7 @@ fun AircraftSecondaryDetails(
     aircraft: Aircraft,
     modifier: Modifier = Modifier,
     squawkValueColor: Color = Color.Unspecified,
+    onSquawkClick: ((String) -> Unit)? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -159,11 +162,21 @@ fun AircraftSecondaryDetails(
                 value = stringResource(Res.string.value_vertical_speed_fpm, it),
             )
         }
-        aircraft.squawk?.let {
+        aircraft.squawk?.let { squawk ->
+            val squawkModifier =
+                if (onSquawkClick != null) {
+                    Modifier.clickable(
+                        onClickLabel = "View squawk code info",
+                        role = Role.Button,
+                    ) { onSquawkClick(squawk) }
+                } else {
+                    Modifier
+                }
             LabeledValue(
                 label = stringResource(Res.string.label_squawk),
-                value = it,
+                value = squawk,
                 valueColor = squawkValueColor,
+                modifier = squawkModifier,
             )
         }
     }

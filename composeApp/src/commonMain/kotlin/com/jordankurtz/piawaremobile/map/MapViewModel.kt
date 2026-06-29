@@ -26,6 +26,7 @@ import com.jordankurtz.piawaremobile.settings.Server
 import com.jordankurtz.piawaremobile.settings.Settings
 import com.jordankurtz.piawaremobile.settings.TrailDisplayMode
 import com.jordankurtz.piawaremobile.settings.usecase.LoadSettingsUseCase
+import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,7 @@ class MapViewModel(
     private val getSavedMapStateUseCase: GetSavedMapStateUseCase,
     private val saveMapStateUseCase: SaveMapStateUseCase,
     private val loadSettingsUseCase: LoadSettingsUseCase,
+    private val settingsService: SettingsService,
     private val tileCacheStatsTracker: TileCacheStatsTracker,
     internal val mapStateController: MapStateController,
 ) : ViewModel() {
@@ -64,6 +66,7 @@ class MapViewModel(
 
     private var saveStateJob: Job? = null
     private var settings: Settings? = null
+    private var cameraInitialized = false
     private val previousAircraftMarkerIds = mutableSetOf<String>()
     private val previousPathIds = mutableSetOf<String>()
     private var lastTrails: Map<String, AircraftTrail> = emptyMap()
@@ -79,6 +82,24 @@ class MapViewModel(
 
     private val _showUserLocationOnMap = MutableStateFlow(false)
     val showUserLocationOnMap: StateFlow<Boolean> = _showUserLocationOnMap
+
+    private val _showFaaCharts = MutableStateFlow(false)
+    val showFaaCharts: StateFlow<Boolean> = _showFaaCharts
+
+    private val _showAirspace = MutableStateFlow(false)
+    val showAirspace: StateFlow<Boolean> = _showAirspace
+
+    private val _showFaaIfrLow = MutableStateFlow(false)
+    val showFaaIfrLow: StateFlow<Boolean> = _showFaaIfrLow
+
+    private val _showFaaIfrHigh = MutableStateFlow(false)
+    val showFaaIfrHigh: StateFlow<Boolean> = _showFaaIfrHigh
+
+    private val _limitZoomToOverlay = MutableStateFlow(false)
+    val limitZoomToOverlay: StateFlow<Boolean> = _limitZoomToOverlay
+
+    private val _openAipApiKey = MutableStateFlow("")
+    val openAipApiKey: StateFlow<String> = _openAipApiKey
 
     val tileStats: StateFlow<TileCacheStats> = tileCacheStatsTracker.stats
 
@@ -156,23 +177,57 @@ class MapViewModel(
         }
     }
 
+    fun toggleFaaCharts() {
+        viewModelScope.launch { settingsService.setShowFaaCharts(!_showFaaCharts.value) }
+    }
+
+    fun toggleAirspace() {
+        viewModelScope.launch { settingsService.setShowAirspace(!_showAirspace.value) }
+    }
+
+    fun toggleFaaIfrLow() {
+        viewModelScope.launch { settingsService.setShowFaaIfrLow(!_showFaaIfrLow.value) }
+    }
+
+    fun toggleFaaIfrHigh() {
+        viewModelScope.launch { settingsService.setShowFaaIfrHigh(!_showFaaIfrHigh.value) }
+    }
+
+    fun toggleLimitZoomToOverlay() {
+        viewModelScope.launch { settingsService.setLimitZoomToOverlay(!_limitZoomToOverlay.value) }
+    }
+
     private suspend fun onSettingsLoaded(settings: Settings) {
         this.settings = settings
         _zoomSettings.value = Triple(settings.minZoomLevel, settings.maxZoomLevel, settings.defaultZoomLevel)
         _showUserLocationOnMap.value = settings.showUserLocationOnMap
         if (!settings.showUserLocationOnMap) _followingUserLocation.value = false
+        _showFaaCharts.value = settings.showFaaCharts
+        _showAirspace.value = settings.showAirspace
+        _showFaaIfrLow.value = settings.showFaaIfrLow
+        _showFaaIfrHigh.value = settings.showFaaIfrHigh
+        _limitZoomToOverlay.value = settings.limitZoomToOverlay
+        _openAipApiKey.value = settings.apiKeys["openaip"] ?: ""
         onAircraftTrailsUpdated(lastTrails)
-        mapStateController.setZoomLimits(
-            settings.minZoomLevel.toDouble(),
-            settings.maxZoomLevel.toDouble(),
-        )
+        val effectiveLimits = computeEffectiveZoomLimits(settings)
+        mapStateController.setZoomLimits(effectiveLimits.first.toDouble(), effectiveLimits.last.toDouble())
         saveStateJob?.cancel()
         if (settings.restoreMapStateOnStart) {
-            loadMapState(settings.minZoomLevel, settings.maxZoomLevel)
             startSaveMapStateJob()
-        } else {
-            mapStateController.zoom = settings.defaultZoomLevel.toDouble()
         }
+        if (!cameraInitialized) {
+            cameraInitialized = true
+            if (settings.restoreMapStateOnStart) {
+                loadMapState(settings.minZoomLevel, settings.maxZoomLevel)
+            } else {
+                mapStateController.zoom = settings.defaultZoomLevel.toDouble()
+            }
+        }
+        mapStateController.zoom =
+            mapStateController.zoom.coerceIn(
+                effectiveLimits.first.toDouble(),
+                effectiveLimits.last.toDouble(),
+            )
     }
 
     private suspend fun loadMapState(
@@ -388,5 +443,27 @@ class MapViewModel(
     private fun clearPaths() {
         previousPathIds.forEach { mapStateController.removePath(it) }
         previousPathIds.clear()
+    }
+
+    private fun computeEffectiveZoomLimits(settings: Settings): IntRange {
+        val globalRange = settings.minZoomLevel..settings.maxZoomLevel
+        if (!settings.limitZoomToOverlay) return globalRange
+
+        val activeRanges =
+            buildList {
+                if (settings.showFaaCharts) add(OverlayZoomRanges.FAA_SECTIONAL)
+                if (settings.showFaaIfrLow) add(OverlayZoomRanges.IFR_LOW)
+                if (settings.showFaaIfrHigh) add(OverlayZoomRanges.IFR_HIGH)
+                if (settings.showAirspace) add(OverlayZoomRanges.AIRSPACE)
+            }
+
+        if (activeRanges.isEmpty()) return globalRange
+
+        val clampedMin = activeRanges.maxOf { it.first }.coerceAtLeast(settings.minZoomLevel)
+        val clampedMax = activeRanges.minOf { it.last }.coerceAtMost(settings.maxZoomLevel)
+
+        if (clampedMin > clampedMax) return globalRange
+
+        return clampedMin..clampedMax
     }
 }

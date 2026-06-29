@@ -34,6 +34,11 @@ interface SettingsRepository {
         val MAX_ZOOM_LEVEL_KEY = intPreferencesKey("maxZoomLevel")
         val API_KEYS_JSON = stringPreferencesKey("apiKeysJson")
         val CUSTOM_PROVIDERS_JSON = stringPreferencesKey("customProvidersJson")
+        val SHOW_FAA_CHARTS = booleanPreferencesKey("showFaaCharts")
+        val SHOW_AIRSPACE = booleanPreferencesKey("showAirspace")
+        val SHOW_FAA_IFR_LOW = booleanPreferencesKey("showFaaIfrLow")
+        val SHOW_FAA_IFR_HIGH = booleanPreferencesKey("showFaaIfrHigh")
+        val LIMIT_ZOOM_TO_OVERLAY = booleanPreferencesKey("limitZoomToOverlay")
         const val DEFAULT_REFRESH_INTERVAL = 5
         const val DEFAULT_ZOOM_LEVEL = 8
         const val MIN_ZOOM_LEVEL = 1

@@ -19,7 +19,6 @@ import com.jordankurtz.piawaremobile.map.model.MapPosition
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.spatialk.geojson.Position
 import kotlin.concurrent.Volatile
@@ -65,6 +64,7 @@ class MapLibreStateController : MapStateController {
 
     @Volatile
     private var cameraState: CameraState? = null
+    private var lastCameraPosition: MapPosition? = null
 
     private var pixelDensity: Float = 1f
 
@@ -89,8 +89,14 @@ class MapLibreStateController : MapStateController {
      */
     fun setCameraState(state: CameraState?) {
         cameraState = state
-        state?.position?.let { position ->
-            cameraFlowState.value = position.toMapPosition()
+        if (state != null) {
+            lastCameraPosition?.let { saved ->
+                state.position =
+                    state.position.copy(
+                        target = Position(longitude = saved.longitude, latitude = saved.latitude),
+                        zoom = saved.zoom,
+                    )
+            }
         }
     }
 
@@ -103,7 +109,9 @@ class MapLibreStateController : MapStateController {
         longitude: Double,
         zoom: Double,
     ) {
-        cameraFlowState.value = MapPosition(latitude, longitude, zoom)
+        val position = MapPosition(latitude, longitude, zoom)
+        lastCameraPosition = position
+        cameraFlowState.value = position
     }
 
     override var zoom: Double
@@ -133,7 +141,9 @@ class MapLibreStateController : MapStateController {
     ) {
         val state =
             cameraState ?: run {
-                cameraFlowState.value = MapPosition(latitude, longitude, zoom)
+                val position = MapPosition(latitude, longitude, zoom)
+                lastCameraPosition = position
+                cameraFlowState.value = position
                 return
             }
         state.position =
@@ -152,7 +162,9 @@ class MapLibreStateController : MapStateController {
     ) {
         val state =
             cameraState ?: run {
-                cameraFlowState.value = MapPosition(latitude, longitude, zoom)
+                val position = MapPosition(latitude, longitude, zoom)
+                lastCameraPosition = position
+                cameraFlowState.value = position
                 return
             }
         val target =
@@ -300,13 +312,6 @@ class MapLibreStateController : MapStateController {
         const val DEFAULT_ANIMATION_DURATION_MS: Long = 500L
     }
 }
-
-private fun CameraPosition.toMapPosition(): MapPosition =
-    MapPosition(
-        latitude = target.latitude,
-        longitude = target.longitude,
-        zoom = zoom,
-    )
 
 private fun MapBounds.toBoundingBox(): org.maplibre.spatialk.geojson.BoundingBox =
     org.maplibre.spatialk.geojson.BoundingBox(

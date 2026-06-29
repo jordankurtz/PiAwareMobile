@@ -144,6 +144,31 @@ class SettingsViewModel(
             settingsService.deleteCustomProvider(id)
         }
 
+    fun updateShowFaaCharts(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowFaaCharts(enabled)
+        }
+
+    fun updateShowAirspace(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowAirspace(enabled)
+        }
+
+    fun updateShowFaaIfrLow(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowFaaIfrLow(enabled)
+        }
+
+    fun updateShowFaaIfrHigh(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setShowFaaIfrHigh(enabled)
+        }
+
+    fun updateLimitZoomToOverlay(enabled: Boolean) =
+        viewModelScope.launch {
+            settingsService.setLimitZoomToOverlay(enabled)
+        }
+
     fun clearTileCache() =
         viewModelScope.launch {
             tileCache.clearAll()
