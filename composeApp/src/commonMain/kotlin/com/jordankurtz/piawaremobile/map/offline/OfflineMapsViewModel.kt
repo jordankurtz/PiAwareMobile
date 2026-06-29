@@ -156,7 +156,7 @@ class OfflineMapsViewModel(
             lastDownloadedCount = region.downloadedTileCount
             val baseConfig =
                 MapTileProviders.ALL.find { it.id == region.providerId }
-                    ?: TileProviders.OPENSTREETMAP
+                    ?: MapTileProviders.OPENSTREETMAP
             val config = TileProviderConfig(
                 id = region.providerId,
                 urlTemplate = region.urlTemplate.ifEmpty { baseConfig.urlTemplate },
