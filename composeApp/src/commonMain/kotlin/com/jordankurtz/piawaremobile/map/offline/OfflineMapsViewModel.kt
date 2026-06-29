@@ -153,12 +153,16 @@ class OfflineMapsViewModel(
                 }
             // Preserve previously downloaded count so cancel-after-retry doesn't regress progress
             lastDownloadedCount = region.downloadedTileCount
+            val baseConfig =
+                (TileProviders.BUILT_IN + TileProviders.API_KEY_REQUIRED)
+                    .find { it.id == region.providerId }
+                    ?: TileProviders.OPENSTREETMAP
             val config = TileProviderConfig(
                 id = region.providerId,
-                urlTemplate = region.urlTemplate.ifEmpty { TileProviders.OPENSTREETMAP.urlTemplate },
-                requestDelayMs = TileProviders.OPENSTREETMAP.requestDelayMs,
-                avgTileSizeBytes = TileProviders.OPENSTREETMAP.avgTileSizeBytes,
-                userAgent = TileProviders.OPENSTREETMAP.userAgent,
+                urlTemplate = region.urlTemplate.ifEmpty { baseConfig.urlTemplate },
+                requestDelayMs = baseConfig.requestDelayMs,
+                avgTileSizeBytes = baseConfig.avgTileSizeBytes,
+                userAgent = baseConfig.userAgent,
             )
             engine.download(region, config).collect { progress ->
                 lastDownloadedCount = progress.downloaded

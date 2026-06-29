@@ -1,9 +1,14 @@
 package com.jordankurtz.piawaremobile.map
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.waitForIdle
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
@@ -21,14 +26,17 @@ class FollowUserLocationFabTest {
         }
 
     @Test
-    fun followLocationFab_hiddenWhenShowFabFalseViaMapScreen() =
+    fun followLocationFab_hiddenWhenConditionFalse() =
         runComposeUiTest {
+            var showFab by mutableStateOf(true)
             setContent {
-                val show = false
-                if (show) {
+                if (showFab) {
                     FollowUserLocationFab(isFollowing = false, onClick = {})
                 }
             }
+            onNodeWithContentDescription("Follow my location").assertIsDisplayed()
+            showFab = false
+            waitForIdle()
             onNodeWithContentDescription("Follow my location").assertDoesNotExist()
         }
 }

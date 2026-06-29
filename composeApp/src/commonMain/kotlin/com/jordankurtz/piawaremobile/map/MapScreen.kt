@@ -24,7 +24,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,6 +34,7 @@ import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
