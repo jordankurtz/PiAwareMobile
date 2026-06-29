@@ -81,15 +81,12 @@ struct FlightDetailsSheet: View {
     // MARK: - Headers & buttons
 
     @ViewBuilder private func flightHeader(_ flight: Flight) -> some View {
-        VStack(spacing: 2) {
-            Text(flight.ident)
-                .font(.title2).fontWeight(.semibold)
-            if let op = flight.`operator`, !op.isEmpty {
-                Text(op).font(.subheadline).foregroundStyle(.secondary)
-            }
+        if let op = flight.`operator`, !op.isEmpty {
+            Text(op)
+                .font(.subheadline).foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 8)
     }
 
     @ViewBuilder private func actionButtons(aircraft: Aircraft, flightIdent: String?) -> some View {
@@ -114,6 +111,7 @@ struct FlightDetailsSheet: View {
         if aircraft.hasPosition {
             MiniMapView(
                 aircraft: aircraft,
+                userCoordinate: location.coordinate,
                 tileURL: resolvedTileURL,
                 subdomains: resolvedSubdomains,
                 showTrails: settings.settings?.showMinimapTrails == true
@@ -321,6 +319,7 @@ private func altitudeColor(for altBaro: String?) -> UIColor {
 
 private struct MiniMapView: View {
     let aircraft: Aircraft
+    let userCoordinate: CLLocationCoordinate2D?
     let tileURL: String
     let subdomains: [String]
     let showTrails: Bool
@@ -330,6 +329,7 @@ private struct MiniMapView: View {
     var body: some View {
         MiniMKMapView(
             coordinate: CLLocationCoordinate2D(latitude: aircraft.lat, longitude: aircraft.lon),
+            userCoordinate: userCoordinate,
             heading: aircraft.track.map { Double(truncating: $0) } ?? 0,
             aircraftColor: altitudeColor(for: aircraft.altBaro),
             trail: showTrails ? trailPositions : [],
@@ -349,6 +349,7 @@ private struct MiniMapView: View {
 
 private struct MiniMKMapView: UIViewRepresentable {
     let coordinate: CLLocationCoordinate2D
+    let userCoordinate: CLLocationCoordinate2D?
     let heading: Double
     let aircraftColor: UIColor
     let trail: [AircraftPosition]
@@ -378,10 +379,7 @@ private struct MiniMKMapView: UIViewRepresentable {
         mapView.addAnnotation(ann)
         context.coordinator.annotation = ann
 
-        mapView.setRegion(
-            MKCoordinateRegion(center: coordinate, latitudinalMeters: 100_000, longitudinalMeters: 100_000),
-            animated: false
-        )
+        mapView.setRegion(fitRegion(aircraft: coordinate, user: userCoordinate), animated: false)
         return mapView
     }
 
@@ -389,22 +387,15 @@ private struct MiniMKMapView: UIViewRepresentable {
         context.coordinator.heading = heading
         context.coordinator.aircraftColor = aircraftColor
 
-        // Update aircraft annotation and keep map centered on the aircraft
         if let ann = context.coordinator.annotation {
             ann.coordinate = coordinate
-            mapView.setRegion(
-                MKCoordinateRegion(center: coordinate, latitudinalMeters: 100_000, longitudinalMeters: 100_000),
-                animated: true
-            )
+            mapView.setRegion(fitRegion(aircraft: coordinate, user: userCoordinate), animated: true)
             if let view = mapView.view(for: ann) {
-                let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-                view.image = UIImage(systemName: "airplane", withConfiguration: config)?
-                    .withTintColor(aircraftColor, renderingMode: .alwaysOriginal)
+                view.tintColor = aircraftColor
                 view.transform = CGAffineTransform(rotationAngle: CGFloat((heading - 90) * .pi / 180))
             }
         }
 
-        // Update tile overlay
         if let existing = mapView.overlays.compactMap({ $0 as? CustomTileOverlay }).first {
             if existing.urlTemplate != tileURL || existing.subdomains != subdomains {
                 mapView.removeOverlay(existing)
@@ -414,13 +405,30 @@ private struct MiniMKMapView: UIViewRepresentable {
             }
         }
 
-        // Rebuild trail polylines
         mapView.overlays.compactMap { $0 as? ColoredPolyline }.forEach { mapView.removeOverlay($0) }
         for segment in trailSegments(trail) {
             let poly = ColoredPolyline(coordinates: segment.coords, count: segment.coords.count)
             poly.segmentColor = segment.color
             mapView.addOverlay(poly, level: .aboveLabels)
         }
+    }
+
+    private func fitRegion(aircraft: CLLocationCoordinate2D, user: CLLocationCoordinate2D?) -> MKCoordinateRegion {
+        guard let user else {
+            return MKCoordinateRegion(center: aircraft, latitudinalMeters: 100_000, longitudinalMeters: 100_000)
+        }
+        let p1 = MKMapPoint(aircraft)
+        let p2 = MKMapPoint(user)
+        let width = abs(p1.x - p2.x)
+        let height = abs(p1.y - p2.y)
+        let padding = max(max(width, height) * 0.3, 100_000)
+        let rect = MKMapRect(
+            x: min(p1.x, p2.x) - padding,
+            y: min(p1.y, p2.y) - padding,
+            width: width + padding * 2,
+            height: height + padding * 2
+        )
+        return MKCoordinateRegion(rect)
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
@@ -446,7 +454,8 @@ private struct MiniMKMapView: UIViewRepresentable {
             let view = MKAnnotationView(annotation: annotation, reuseIdentifier: "aircraft")
             let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
             view.image = UIImage(systemName: "airplane", withConfiguration: config)?
-                .withTintColor(aircraftColor, renderingMode: .alwaysOriginal)
+                .withRenderingMode(.alwaysTemplate)
+            view.tintColor = aircraftColor
             view.transform = CGAffineTransform(rotationAngle: CGFloat((heading - 90) * .pi / 180))
             return view
         }
