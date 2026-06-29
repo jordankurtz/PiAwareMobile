@@ -8,8 +8,7 @@ struct SettingsView: View {
 
     var body: some View {
         @Bindable var bridge = settingsBridge
-        NavigationStack {
-            Form {
+        Form {
                 // MARK: - Map
 
                 Section("Map") {
@@ -211,6 +210,5 @@ struct SettingsView: View {
             } message: {
                 Text("This will delete all cached map tiles. Downloaded offline regions will not be affected.")
             }
-        }
     }
 }

@@ -42,7 +42,7 @@ struct PiAwareTabView: View {
         TabView {
             Tab("Map", systemImage: "map") { MapTabView() }
             Tab("Aircraft", systemImage: "airplane") { AircraftListView() }
-            Tab("Settings", systemImage: "gearshape") { SettingsView() }
+            Tab("Settings", systemImage: "gearshape") { NavigationStack { SettingsView() } }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
     }
