@@ -391,7 +391,7 @@ private struct MiniMKMapView: UIViewRepresentable {
             ann.coordinate = coordinate
             mapView.setRegion(fitRegion(aircraft: coordinate, user: userCoordinate), animated: true)
             if let view = mapView.view(for: ann) {
-                view.tintColor = aircraftColor
+                view.image = MiniMKMapView.makeAircraftImage(color: aircraftColor)
                 view.transform = CGAffineTransform(rotationAngle: CGFloat((heading - 90) * .pi / 180))
             }
         }
@@ -431,6 +431,18 @@ private struct MiniMKMapView: UIViewRepresentable {
         return MKCoordinateRegion(rect)
     }
 
+    // MKAnnotationView renders via CoreAnimation and reads raw CGImage pixels,
+    // bypassing UIKit tinting. Pre-render the symbol into a bitmap so the color
+    // is baked into actual RGBA pixels that CoreAnimation can display correctly.
+    static func makeAircraftImage(color: UIColor) -> UIImage {
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
+        let symbol = UIImage(systemName: "airplane", withConfiguration: config) ?? UIImage()
+        let renderer = UIGraphicsImageRenderer(size: symbol.size)
+        return renderer.image { _ in
+            symbol.withTintColor(color, renderingMode: .alwaysOriginal).draw(at: .zero)
+        }
+    }
+
     final class Coordinator: NSObject, MKMapViewDelegate {
         var annotation: MKPointAnnotation?
         var heading: Double = 0
@@ -452,10 +464,7 @@ private struct MiniMKMapView: UIViewRepresentable {
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             guard !(annotation is MKUserLocation) else { return nil }
             let view = MKAnnotationView(annotation: annotation, reuseIdentifier: "aircraft")
-            let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-            view.image = UIImage(systemName: "airplane", withConfiguration: config)?
-                .withRenderingMode(.alwaysTemplate)
-            view.tintColor = aircraftColor
+            view.image = MiniMKMapView.makeAircraftImage(color: aircraftColor)
             view.transform = CGAffineTransform(rotationAngle: CGFloat((heading - 90) * .pi / 180))
             return view
         }
