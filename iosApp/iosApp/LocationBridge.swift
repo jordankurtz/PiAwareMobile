@@ -18,8 +18,7 @@ final class LocationBridge {
         startObserving()
     }
 
-    @MainActor
-    deinit {
+    nonisolated deinit {
         observationTasks.forEach { $0.cancel() }
     }
 
