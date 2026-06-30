@@ -17,6 +17,7 @@ final class SettingsBridge {
         startObserving()
     }
 
+    @MainActor
     deinit {
         observationTasks.forEach { $0.cancel() }
     }
