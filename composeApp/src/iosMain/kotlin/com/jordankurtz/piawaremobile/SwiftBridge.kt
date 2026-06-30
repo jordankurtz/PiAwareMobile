@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.jordankurtz.piawaremobile
 
 import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
