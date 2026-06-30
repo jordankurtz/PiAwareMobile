@@ -7,19 +7,23 @@ import com.jordankurtz.piawaremobile.map.MapViewModel
 import com.jordankurtz.piawaremobile.map.TileProviderConfig
 import com.jordankurtz.piawaremobile.map.TileProviders
 import com.jordankurtz.piawaremobile.map.offline.BoundingBox
-import org.jetbrains.compose.resources.getString
 import com.jordankurtz.piawaremobile.map.offline.OfflineMapsViewModel
+import com.jordankurtz.piawaremobile.settings.SettingsViewModel
+import org.jetbrains.compose.resources.getString
+import org.koin.mp.KoinPlatform
 import com.jordankurtz.piawaremobile.map.offline.TileProviderConfig as OfflineTileProviderConfig
 import com.jordankurtz.piawaremobile.map.offline.TileProviders as OfflineTileProviders
-import com.jordankurtz.piawaremobile.settings.SettingsViewModel
-import org.koin.mp.KoinPlatform
 
 fun getAircraftViewModel(): AircraftViewModel = KoinPlatform.getKoin().get()
+
 fun getLocationViewModel(): LocationViewModel = KoinPlatform.getKoin().get()
+
 fun getSettingsViewModel(): SettingsViewModel = KoinPlatform.getKoin().get()
+
 fun getMapViewModel(): MapViewModel = KoinPlatform.getKoin().get()
 
 fun getMapZoomLevel(): Int = getMapViewModel().currentZoomLevel.value
+
 fun getOfflineMapsViewModel(): OfflineMapsViewModel = KoinPlatform.getKoin().get()
 
 fun fitMapToAircraft() {
@@ -31,6 +35,7 @@ fun fitMapToAircraft() {
 fun getAircraftTrail(hex: String) = KoinPlatform.getKoin().get<GetAircraftTrailUseCase>().invoke(hex)
 
 fun getBuiltInTileProviders() = TileProviders.BUILT_IN
+
 fun getApiKeyTileProviders() = TileProviders.API_KEY_REQUIRED
 
 suspend fun resolveProviderDisplayName(provider: TileProviderConfig): String =
@@ -41,12 +46,20 @@ fun updateMapProviderById(id: String) {
     KoinPlatform.getKoin().get<SettingsViewModel>().updateMapProvider(config)
 }
 
-fun setApiKeyAndActivate(keyGroup: String, key: String, providerId: String) {
+fun setApiKeyAndActivate(
+    keyGroup: String,
+    key: String,
+    providerId: String,
+) {
     val config = TileProviders.ALL.firstOrNull { it.id == providerId } ?: return
     KoinPlatform.getKoin().get<SettingsViewModel>().setApiKeyAndActivateProvider(keyGroup, key, config)
 }
 
-fun addCustomTileProvider(id: String, name: String, urlTemplate: String) {
+fun addCustomTileProvider(
+    id: String,
+    name: String,
+    urlTemplate: String,
+) {
     KoinPlatform.getKoin().get<SettingsViewModel>().addCustomProvider(id, name, urlTemplate)
 }
 
@@ -64,13 +77,14 @@ fun startOfflineDownload(
     providerId: String,
     urlTemplate: String,
 ) {
-    val provider = OfflineTileProviderConfig(
-        id = providerId,
-        urlTemplate = urlTemplate,
-        requestDelayMs = OfflineTileProviders.OPENSTREETMAP.requestDelayMs,
-        avgTileSizeBytes = OfflineTileProviders.OPENSTREETMAP.avgTileSizeBytes,
-        userAgent = OfflineTileProviders.OPENSTREETMAP.userAgent,
-    )
+    val provider =
+        OfflineTileProviderConfig(
+            id = providerId,
+            urlTemplate = urlTemplate,
+            requestDelayMs = OfflineTileProviders.OPENSTREETMAP.requestDelayMs,
+            avgTileSizeBytes = OfflineTileProviders.OPENSTREETMAP.avgTileSizeBytes,
+            userAgent = OfflineTileProviders.OPENSTREETMAP.userAgent,
+        )
     vm.startDownload(
         name = name,
         bounds = bounds,

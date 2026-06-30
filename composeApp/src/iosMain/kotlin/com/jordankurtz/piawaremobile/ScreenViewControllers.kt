@@ -24,5 +24,3 @@ fun toggleMapFollowUserLocation() {
     KoinPlatform.getKoin().get<MapViewModel>().toggleFollowUserLocation()
 }
 
-
-
