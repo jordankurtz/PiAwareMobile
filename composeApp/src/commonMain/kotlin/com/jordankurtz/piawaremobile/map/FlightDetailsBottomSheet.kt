@@ -54,6 +54,9 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.FlightAirportRef
 import com.jordankurtz.piawaremobile.model.Location
+import com.jordankurtz.piawaremobile.squawk.SquawkCodes
+import com.jordankurtz.piawaremobile.squawk.SquawkSeverity
+import com.jordankurtz.piawaremobile.squawk.ui.SquawkInfoDialog
 import com.jordankurtz.piawaremobile.ui.AircraftLocationDetails
 import com.jordankurtz.piawaremobile.ui.AircraftPrimaryDetails
 import com.jordankurtz.piawaremobile.ui.AircraftSecondaryDetails
@@ -134,6 +137,12 @@ fun FlightDetailsSheetContent(
 ) {
     var tabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Details", "Aircraft", "Route")
+    val aircraftTabIndex = tabs.indexOf("Aircraft")
+    var squawkForDialog by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(flightDetails) {
+        squawkForDialog = null
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -241,7 +250,7 @@ fun FlightDetailsSheetContent(
                 ) { index ->
                     when (index) {
                         0 -> DetailsTab(aircraft, userLocation)
-                        1 -> AircraftTab(aircraft, flight)
+                        aircraftTabIndex -> AircraftTab(aircraft, flight, onSquawkClick = { squawkForDialog = it })
                         else -> RouteTab(flight)
                     }
                 }
@@ -260,6 +269,13 @@ fun FlightDetailsSheetContent(
                 DetailsTab(aircraft, userLocation)
             }
         }
+    }
+
+    squawkForDialog?.let { squawk ->
+        SquawkInfoDialog(
+            squawk = squawk,
+            onDismiss = { squawkForDialog = null },
+        )
     }
 }
 
@@ -373,9 +389,10 @@ private fun DetailsTab(
 private fun AircraftTab(
     aircraft: Aircraft?,
     flight: Flight,
+    onSquawkClick: ((String) -> Unit)? = null,
 ) {
-    val emergencySquawkCodes = setOf("7500", "7600", "7700")
     val emergencyColor = AppTheme.colors.aircraftEmergency
+    val cautionColor = AppTheme.colors.caution
     val defaultSquawkColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     Column(
@@ -386,8 +403,19 @@ private fun AircraftTab(
         FlightAircraftDetails(flight = flight)
         Spacer(modifier = Modifier.height(8.dp))
         aircraft?.let {
-            val squawkColor = if (it.squawk in emergencySquawkCodes) emergencyColor else defaultSquawkColor
-            AircraftSecondaryDetails(aircraft = it, squawkValueColor = squawkColor)
+            val squawkColor =
+                it.squawk?.let { code ->
+                    when (SquawkCodes[code]?.severity) {
+                        SquawkSeverity.EMERGENCY -> emergencyColor
+                        SquawkSeverity.CAUTION -> cautionColor
+                        else -> defaultSquawkColor
+                    }
+                } ?: defaultSquawkColor
+            AircraftSecondaryDetails(
+                aircraft = it,
+                squawkValueColor = squawkColor,
+                onSquawkClick = onSquawkClick,
+            )
             Spacer(modifier = Modifier.height(8.dp))
             AircraftSignalDetails(aircraft = it)
         }

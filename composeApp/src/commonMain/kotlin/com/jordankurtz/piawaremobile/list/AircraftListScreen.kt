@@ -60,6 +60,8 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.model.Flight
 import com.jordankurtz.piawaremobile.model.Location
 import com.jordankurtz.piawaremobile.model.distanceTo
+import com.jordankurtz.piawaremobile.squawk.SquawkCodes
+import com.jordankurtz.piawaremobile.squawk.SquawkSeverity
 import com.jordankurtz.piawaremobile.ui.AircraftDetailsGrid
 import com.jordankurtz.piawaremobile.ui.AircraftInfoRow
 import com.jordankurtz.piawaremobile.ui.AppTheme
@@ -93,8 +95,6 @@ import piawaremobile.composeapp.generated.resources.unit_kilometers
 import piawaremobile.composeapp.generated.resources.unit_knots
 import piawaremobile.composeapp.generated.resources.unit_squawk
 import kotlin.math.roundToInt
-
-private val EMERGENCY_SQUAWKS = setOf("7500", "7600", "7700")
 
 @Composable
 fun AircraftListScreen(
@@ -350,7 +350,12 @@ private fun AircraftListItem(
                     SecondaryCompactStat(
                         value = it,
                         unit = unitSquawk,
-                        valueColor = if (it in EMERGENCY_SQUAWKS) AppTheme.colors.aircraftEmergency else null,
+                        valueColor =
+                            when (SquawkCodes[it]?.severity) {
+                                SquawkSeverity.EMERGENCY -> AppTheme.colors.aircraftEmergency
+                                SquawkSeverity.CAUTION -> AppTheme.colors.caution
+                                else -> null
+                            },
                     )
                 }
             }
