@@ -22,9 +22,9 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalForeignApi::class)
-class IosCacheFileSystemTest {
+class AppleCacheFileSystemTest {
     private lateinit var cacheDir: String
-    private lateinit var fs: IosCacheFileSystem
+    private lateinit var fs: AppleCacheFileSystem
     private val fileManager = NSFileManager.defaultManager
 
     @BeforeTest
@@ -41,7 +41,7 @@ class IosCacheFileSystemTest {
             (baseCacheDir as NSString).stringByAppendingPathComponent(
                 "ios-cache-fs-test-${NSUUID().UUIDString}",
             )
-        fs = IosCacheFileSystem(cacheDir)
+        fs = AppleCacheFileSystem(cacheDir)
     }
 
     @AfterTest

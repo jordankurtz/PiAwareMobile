@@ -9,11 +9,11 @@ import com.jordankurtz.piawaremobile.model.Async
 import com.jordankurtz.piawaremobile.settings.usecase.SettingsService
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
 @Suppress("TooManyFunctions")
-@Factory
+@Single
 class SettingsViewModel(
     private val settingsService: SettingsService,
     private val tileCache: TileCache,

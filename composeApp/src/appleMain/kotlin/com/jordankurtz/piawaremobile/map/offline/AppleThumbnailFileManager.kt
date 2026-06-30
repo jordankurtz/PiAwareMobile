@@ -4,7 +4,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSFileManager
 
 @OptIn(ExperimentalForeignApi::class)
-class IosThumbnailFileManager(
+class AppleThumbnailFileManager(
     private val thumbnailCacheDir: String,
 ) : ThumbnailFileManager {
     override fun thumbnailPath(regionId: Long): String = "$thumbnailCacheDir/$regionId.png"

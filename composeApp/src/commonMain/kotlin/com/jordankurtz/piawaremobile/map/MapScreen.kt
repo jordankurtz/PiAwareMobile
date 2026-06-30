@@ -6,8 +6,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,6 +34,7 @@ import com.jordankurtz.piawaremobile.aircraft.AircraftViewModel
 import com.jordankurtz.piawaremobile.isDebugBuild
 import com.jordankurtz.piawaremobile.location.LocationViewModel
 import com.jordankurtz.piawaremobile.map.debug.TileCacheDebugOverlay
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -39,6 +47,9 @@ import piawaremobile.composeapp.generated.resources.ic_user_location
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
+    showFollowLocationFab: Boolean = true,
+    showNativeOverlays: Boolean = false,
+    onMounted: (() -> Unit)? = null,
     mapViewModel: MapViewModel = koinViewModel(),
     locationViewModel: LocationViewModel = koinViewModel(),
     aircraftViewModel: AircraftViewModel = koinViewModel(),
@@ -84,6 +95,19 @@ fun MapScreen(
         }
     }
 
+    // Signal iOS once the map has settled: debounce on tileStats so we fire
+    // 800 ms after the last tile completes loading, not on first composition.
+    if (onMounted != null) {
+        val hasMounted = remember { mutableStateOf(false) }
+        LaunchedEffect(tileStats) {
+            if (!hasMounted.value) {
+                delay(800)
+                hasMounted.value = true
+                onMounted()
+            }
+        }
+    }
+
     LaunchedEffect(selectedAircraftHex) {
         aircraftViewModel.selectAircraft(selectedAircraftHex)
     }
@@ -94,75 +118,94 @@ fun MapScreen(
 
     Box {
         OpenStreetMap(state = mapViewModel.state)
-        Column(
-            modifier =
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (aircraft.isNotEmpty()) {
-                SmallFloatingActionButton(
-                    onClick = { mapViewModel.fitToAircraft(aircraft) },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_plane),
-                        contentDescription = stringResource(Res.string.fit_to_aircraft),
-                        modifier = Modifier.size(24.dp),
+        if (!showNativeOverlays) {
+            Column(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+                        .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (aircraft.isNotEmpty()) {
+                    SmallFloatingActionButton(
+                        onClick = { mapViewModel.fitToAircraft(aircraft) },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_plane),
+                            contentDescription = stringResource(Res.string.fit_to_aircraft),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+                if (showFollowLocationFab && showUserLocationOnMap) {
+                    FollowUserLocationFab(
+                        isFollowing = isFollowingUser,
+                        onClick = { mapViewModel.toggleFollowUserLocation() },
                     )
                 }
-            }
-            if (showUserLocationOnMap) {
-                FollowUserLocationFab(
-                    isFollowing = isFollowingUser,
-                    onClick = { mapViewModel.toggleFollowUserLocation() },
-                )
             }
         }
         AnimatedVisibility(
             visible = false,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.TopStart)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+                    .padding(16.dp),
         ) {
             OfflineIndicator()
         }
-        Overlay(
-            numberOfPlanes = numberOfPlanes,
-            provider = activeProvider,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 8.dp),
-        )
-        if (isDebugBuild) {
-            TileCacheDebugOverlay(
-                stats = tileStats,
-                currentZoom = currentZoom,
-                zoomSettings = zoomSettings,
-                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+        if (!showNativeOverlays) {
+            Overlay(
+                numberOfPlanes = numberOfPlanes,
+                provider = activeProvider,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                        .padding(horizontal = 8.dp),
             )
+            if (isDebugBuild) {
+                TileCacheDebugOverlay(
+                    stats = tileStats,
+                    currentZoom = currentZoom,
+                    zoomSettings = zoomSettings,
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                            .padding(8.dp),
+                )
+            }
         }
     }
 
-    val selectedAircraft =
-        selectedAircraftHex?.let { hex ->
-            aircraft.firstOrNull { it.aircraft.hex == hex }?.aircraft
-        }
-
-    FlightDetailsBottomSheet(
-        aircraft = selectedAircraft,
-        flightDetails = flightDetails,
-        isFollowing = followingAircraftHex != null,
-        onDismissRequest = { mapViewModel.onAircraftDeselected() },
-        onOpenFlightPage = { aircraftViewModel.openFlightPage(selectedAircraftHex) },
-        onFollowToggle = {
-            if (followingAircraftHex != null) {
-                mapViewModel.unfollowAircraft()
-            } else {
-                mapViewModel.followSelectedAircraft()
+    if (!showNativeOverlays) {
+        val selectedAircraft =
+            selectedAircraftHex?.let { hex ->
+                aircraft.firstOrNull { it.aircraft.hex == hex }?.aircraft
             }
-        },
-        sheetState = sheetState,
-    )
+
+        FlightDetailsBottomSheet(
+            aircraft = selectedAircraft,
+            flightDetails = flightDetails,
+            isFollowing = followingAircraftHex != null,
+            onDismissRequest = { mapViewModel.onAircraftDeselected() },
+            onOpenFlightPage = { aircraftViewModel.openFlightPage(selectedAircraftHex) },
+            onFollowToggle = {
+                if (followingAircraftHex != null) {
+                    mapViewModel.unfollowAircraft()
+                } else {
+                    mapViewModel.followSelectedAircraft()
+                }
+            },
+            sheetState = sheetState,
+        )
+    }
 }
 
 @Composable

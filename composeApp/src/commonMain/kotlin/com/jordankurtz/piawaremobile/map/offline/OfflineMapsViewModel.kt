@@ -17,6 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.koin.core.annotation.Factory
 import kotlin.time.Clock
+import com.jordankurtz.piawaremobile.map.TileProviders as MapTileProviders
 
 @Factory
 class OfflineMapsViewModel(
@@ -103,6 +104,7 @@ class OfflineMapsViewModel(
                 minLon = bounds.minLon,
                 maxLon = bounds.maxLon,
                 providerId = provider.id,
+                urlTemplate = provider.urlTemplate,
                 createdAt = Clock.System.now().toEpochMilliseconds(),
                 thumbnailZoom = viewportZoom,
             )
@@ -152,7 +154,18 @@ class OfflineMapsViewModel(
                 }
             // Preserve previously downloaded count so cancel-after-retry doesn't regress progress
             lastDownloadedCount = region.downloadedTileCount
-            engine.download(region, TileProviders.findById(region.providerId)).collect { progress ->
+            val baseConfig =
+                MapTileProviders.ALL.find { it.id == region.providerId }
+                    ?: MapTileProviders.OPENSTREETMAP
+            val config =
+                TileProviderConfig(
+                    id = region.providerId,
+                    urlTemplate = region.urlTemplate.ifEmpty { baseConfig.urlTemplate },
+                    requestDelayMs = baseConfig.requestDelayMs,
+                    avgTileSizeBytes = baseConfig.avgTileSizeBytes,
+                    userAgent = baseConfig.userAgent,
+                )
+            engine.download(region, config).collect { progress ->
                 lastDownloadedCount = progress.downloaded
                 lastTileCount = progress.total
                 store.updateDownloadStatus(regionId, DownloadStatus.DOWNLOADING, progress.downloaded)

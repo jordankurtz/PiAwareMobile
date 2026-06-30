@@ -559,4 +559,55 @@ class MapViewModelTest {
             advanceUntilIdle()
             assertEquals(osmZoomToScale(10), controller.scale, 0.0001)
         }
+
+    // Regression tests for the iOS map-tap → flight sheet chain.
+    // MapScreen's LaunchedEffect(selectedAircraft) calls AircraftViewModel.selectAircraft
+    // which the AircraftBridge observes. All three VMs must be @Single in Koin so the
+    // iOS bridge and MapScreen share the same instance.
+
+    @Test
+    fun `tapping an aircraft marker sets selectedAircraft`() =
+        runTest {
+            val controller = FakeMapStateController()
+            val vm = createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            vm.onAircraftUpdated(listOf(AircraftWithServers(aircraft = mockAircraft(hex = "ABC123"))))
+
+            controller.simulateMarkerClick("ABC123")
+
+            assertEquals("ABC123", vm.selectedAircraft.value)
+        }
+
+    @Test
+    fun `tapping the same marker twice deselects it`() =
+        runTest {
+            val controller = FakeMapStateController()
+            val vm = createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            vm.onAircraftUpdated(listOf(AircraftWithServers(aircraft = mockAircraft(hex = "ABC123"))))
+
+            controller.simulateMarkerClick("ABC123")
+            controller.simulateMarkerClick("ABC123")
+
+            assertNull(vm.selectedAircraft.value)
+        }
+
+    @Test
+    fun `tapping a different marker switches selection`() =
+        runTest {
+            val controller = FakeMapStateController()
+            val vm = createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            vm.onAircraftUpdated(
+                listOf(
+                    AircraftWithServers(aircraft = mockAircraft(hex = "ABC123")),
+                    AircraftWithServers(aircraft = mockAircraft(hex = "DEF456")),
+                ),
+            )
+
+            controller.simulateMarkerClick("ABC123")
+            controller.simulateMarkerClick("DEF456")
+
+            assertEquals("DEF456", vm.selectedAircraft.value)
+        }
 }

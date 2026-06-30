@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.sentry)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.skie)
 }
 
 kotlin {
@@ -83,7 +84,6 @@ kotlin {
             implementation(compose.ui)
             implementation(libs.compose.foundation)
             implementation(libs.compose.runtime)
-            implementation(libs.compose.map)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
@@ -102,6 +102,7 @@ kotlin {
             implementation(libs.multiplatform.settings.coroutines)
             implementation(libs.coil.compose)
             implementation(compose.materialIconsExtended)
+            implementation(libs.compose.map)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -109,9 +110,11 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(libs.sqldelight.sqlite.driver)
         }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-            implementation(libs.sqldelight.native.driver)
+        val appleMain by getting {
+            dependencies {
+                implementation(libs.ktor.client.darwin)
+                implementation(libs.sqldelight.native.driver)
+            }
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

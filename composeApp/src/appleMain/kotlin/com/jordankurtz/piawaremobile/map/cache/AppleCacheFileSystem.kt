@@ -15,13 +15,13 @@ import platform.Foundation.writeToFile
 import platform.posix.memcpy
 
 /**
- * iOS implementation of [CacheFileSystem] backed by `NSFileManager` and `NSData`.
+ * Apple implementation of [CacheFileSystem] backed by `NSFileManager` and `NSData`.
  *
  * @param cacheDir Absolute path to the cache root directory
  *   (typically `NSCachesDirectory/map_tiles/`).
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-class IosCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
+class AppleCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
     private val fileManager: NSFileManager = NSFileManager()
 
     private fun fullPath(key: String): String {

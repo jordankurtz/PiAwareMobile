@@ -1,11 +1,11 @@
 package com.jordankurtz.piawaremobile.di.modules
 
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
+import com.jordankurtz.piawaremobile.map.cache.AppleCacheFileSystem
 import com.jordankurtz.piawaremobile.map.cache.FileTileCache
-import com.jordankurtz.piawaremobile.map.cache.IosCacheFileSystem
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import com.jordankurtz.piawaremobile.map.cache.TileCacheDatabase
-import com.jordankurtz.piawaremobile.map.offline.IosThumbnailFileManager
+import com.jordankurtz.piawaremobile.map.offline.AppleThumbnailFileManager
 import com.jordankurtz.piawaremobile.map.offline.IosThumbnailGenerator
 import com.jordankurtz.piawaremobile.map.offline.ThumbnailFileManager
 import com.jordankurtz.piawaremobile.map.offline.ThumbnailGenerator
@@ -26,8 +26,8 @@ actual class TileCacheModule {
         database: TileCacheDatabase,
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): TileCache {
-        val cacheDir = iosCacheDir()
-        val cacheFileSystem = IosCacheFileSystem(cacheDir)
+        val cacheDir = appleCacheDir()
+        val cacheFileSystem = AppleCacheFileSystem(cacheDir)
         return FileTileCache(
             cacheFileSystem = cacheFileSystem,
             queries = database.tileCacheQueries,
@@ -41,16 +41,16 @@ actual class TileCacheModule {
         @IODispatcher ioDispatcher: CoroutineDispatcher,
     ): ThumbnailGenerator =
         IosThumbnailGenerator(
-            tileCacheDir = iosCacheDir(),
+            tileCacheDir = appleCacheDir(),
             ioDispatcher = ioDispatcher,
         )
 
     @Single
     actual fun provideThumbnailFileManager(contextWrapper: ContextWrapper): ThumbnailFileManager =
-        IosThumbnailFileManager(iosThumbnailDir())
+        AppleThumbnailFileManager(appleThumbnailDir())
 }
 
-private fun iosCacheDir(): String {
+private fun appleCacheDir(): String {
     val cachePaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)
     val base = cachePaths.first() as String
 
@@ -58,7 +58,7 @@ private fun iosCacheDir(): String {
     return (base as NSString).stringByAppendingPathComponent("map_tiles")
 }
 
-private fun iosThumbnailDir(): String {
+private fun appleThumbnailDir(): String {
     val cachePaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)
     val base = cachePaths.first() as String
 
