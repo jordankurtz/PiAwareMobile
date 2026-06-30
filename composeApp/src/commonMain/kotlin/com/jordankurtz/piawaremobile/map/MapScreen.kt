@@ -151,10 +151,11 @@ fun MapScreen(
             visible = false,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.TopStart)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+                    .padding(16.dp),
         ) {
             OfflineIndicator()
         }
@@ -162,20 +163,22 @@ fun MapScreen(
             Overlay(
                 numberOfPlanes = numberOfPlanes,
                 provider = activeProvider,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
-                    .padding(horizontal = 8.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                        .padding(horizontal = 8.dp),
             )
             if (isDebugBuild) {
                 TileCacheDebugOverlay(
                     stats = tileStats,
                     currentZoom = currentZoom,
                     zoomSettings = zoomSettings,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
-                        .padding(8.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                            .padding(8.dp),
                 )
             }
         }

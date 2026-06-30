@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jordankurtz.logger.Logger
 import com.jordankurtz.piawaremobile.di.annotations.IODispatcher
-import com.jordankurtz.piawaremobile.map.TileProviders as MapTileProviders
 import com.jordankurtz.piawaremobile.map.cache.TileCache
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -18,6 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.koin.core.annotation.Factory
 import kotlin.time.Clock
+import com.jordankurtz.piawaremobile.map.TileProviders as MapTileProviders
 
 @Factory
 class OfflineMapsViewModel(
@@ -157,13 +157,14 @@ class OfflineMapsViewModel(
             val baseConfig =
                 MapTileProviders.ALL.find { it.id == region.providerId }
                     ?: MapTileProviders.OPENSTREETMAP
-            val config = TileProviderConfig(
-                id = region.providerId,
-                urlTemplate = region.urlTemplate.ifEmpty { baseConfig.urlTemplate },
-                requestDelayMs = baseConfig.requestDelayMs,
-                avgTileSizeBytes = baseConfig.avgTileSizeBytes,
-                userAgent = baseConfig.userAgent,
-            )
+            val config =
+                TileProviderConfig(
+                    id = region.providerId,
+                    urlTemplate = region.urlTemplate.ifEmpty { baseConfig.urlTemplate },
+                    requestDelayMs = baseConfig.requestDelayMs,
+                    avgTileSizeBytes = baseConfig.avgTileSizeBytes,
+                    userAgent = baseConfig.userAgent,
+                )
             engine.download(region, config).collect { progress ->
                 lastDownloadedCount = progress.downloaded
                 lastTileCount = progress.total

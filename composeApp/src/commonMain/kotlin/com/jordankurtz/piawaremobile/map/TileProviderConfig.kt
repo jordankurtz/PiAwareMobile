@@ -45,8 +45,6 @@ data class TileProviderConfig(
     val requiresApiKey: Boolean = false,
     val apiKeyGroup: String? = null,
 ) {
-
-
     fun buildUrl(
         zoom: Int,
         col: Int,
