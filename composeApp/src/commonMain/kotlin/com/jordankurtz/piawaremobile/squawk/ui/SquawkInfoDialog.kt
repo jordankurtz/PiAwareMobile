@@ -22,6 +22,9 @@ import com.jordankurtz.piawaremobile.ui.AppTheme
 import org.jetbrains.compose.resources.stringResource
 import piawaremobile.composeapp.generated.resources.Res
 import piawaremobile.composeapp.generated.resources.aircraft_list_dismiss
+import piawaremobile.composeapp.generated.resources.squawk_severity_caution
+import piawaremobile.composeapp.generated.resources.squawk_severity_emergency
+import piawaremobile.composeapp.generated.resources.squawk_severity_info
 import piawaremobile.composeapp.generated.resources.squawk_unknown_code
 import piawaremobile.composeapp.generated.resources.squawk_unknown_description
 
@@ -35,7 +38,7 @@ fun SquawkInfoDialog(
     val description = info?.description ?: stringResource(Res.string.squawk_unknown_description)
     val severityChip: Pair<Color, String>? =
         info?.severity?.let { s ->
-            severityColor(s)?.let { c -> c to s.label }
+            severityColor(s)?.let { c -> c to severityLabel(s) }
         }
 
     AlertDialog(
@@ -81,4 +84,13 @@ private fun severityColor(severity: SquawkSeverity): Color? =
         SquawkSeverity.CAUTION -> AppTheme.colors.caution
         SquawkSeverity.INFO -> MaterialTheme.colorScheme.secondary
         SquawkSeverity.NORMAL -> null
+    }
+
+@Composable
+private fun severityLabel(severity: SquawkSeverity): String =
+    when (severity) {
+        SquawkSeverity.EMERGENCY -> stringResource(Res.string.squawk_severity_emergency)
+        SquawkSeverity.CAUTION -> stringResource(Res.string.squawk_severity_caution)
+        SquawkSeverity.INFO -> stringResource(Res.string.squawk_severity_info)
+        SquawkSeverity.NORMAL -> ""
     }

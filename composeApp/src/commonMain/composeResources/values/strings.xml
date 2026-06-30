@@ -140,6 +140,9 @@
     <!-- Squawk dialog -->
     <string name="squawk_unknown_code">Unknown Code</string>
     <string name="squawk_unknown_description">No specific meaning is assigned to this squawk code.</string>
+    <string name="squawk_severity_emergency">Emergency</string>
+    <string name="squawk_severity_caution">Caution</string>
+    <string name="squawk_severity_info">Info</string>
 
     <!-- Formatted values -->
     <string name="value_altitude_feet">%1$s ft</string>

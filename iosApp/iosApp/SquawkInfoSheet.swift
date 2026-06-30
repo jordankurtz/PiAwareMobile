@@ -13,7 +13,7 @@ struct SquawkInfoSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
                 if let severity = info?.severity, severity != .normal {
-                    Text(severity.label)
+                    Text(severityLabel(severity))
                         .font(.caption)
                         .fontWeight(.semibold)
                         .padding(.horizontal, 10)
@@ -48,6 +48,15 @@ struct SquawkInfoSheet: View {
         case .emergency: return .red
         case .caution: return .orange
         default: return .blue
+        }
+    }
+
+    private func severityLabel(_ severity: SquawkSeverity) -> String {
+        switch severity {
+        case .emergency: return "Emergency"
+        case .caution: return "Caution"
+        case .info: return "Info"
+        default: return ""
         }
     }
 }
