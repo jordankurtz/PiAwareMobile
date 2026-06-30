@@ -178,17 +178,11 @@ struct FlightDetailsSheet: View {
                     StatColumn(label: "Vertical Speed", value: "\(Int(truncating: baro)) fpm")
                 }
                 if let squawk = aircraft.squawk {
-                    let hasInfo = SquawkCodes.shared.get(code: squawk) != nil
-                    if hasInfo {
-                        Button { squawkForSheet = squawk } label: {
-                            StatColumn(label: "Squawk", value: squawk,
-                                       valueColor: squawkColor(for: squawk))
-                        }
-                        .buttonStyle(.plain)
-                    } else {
+                    Button { squawkForSheet = squawk } label: {
                         StatColumn(label: "Squawk", value: squawk,
                                    valueColor: squawkColor(for: squawk))
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .frame(maxWidth: .infinity)
