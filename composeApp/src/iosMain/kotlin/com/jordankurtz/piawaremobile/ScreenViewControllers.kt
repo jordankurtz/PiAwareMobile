@@ -23,4 +23,3 @@ fun MapViewController(onMounted: (() -> Unit)? = null) =
 fun toggleMapFollowUserLocation() {
     KoinPlatform.getKoin().get<MapViewModel>().toggleFollowUserLocation()
 }
-
