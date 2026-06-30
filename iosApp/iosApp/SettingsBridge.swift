@@ -17,7 +17,7 @@ final class SettingsBridge {
         startObserving()
     }
 
-    nonisolated deinit {
+    deinit {
         observationTasks.forEach { $0.cancel() }
     }
 

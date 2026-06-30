@@ -29,7 +29,7 @@ final class AircraftBridge {
         startObserving()
     }
 
-    nonisolated deinit {
+    deinit {
         observationTasks.forEach { $0.cancel() }
     }
 
