@@ -137,6 +137,13 @@
     <string name="label_operator">Operator</string>
     <string name="label_flight">Flight %1$s</string>
 
+    <!-- Squawk dialog -->
+    <string name="squawk_unknown_code">Unknown Code</string>
+    <string name="squawk_unknown_description">No specific meaning is assigned to this squawk code.</string>
+    <string name="squawk_severity_emergency">Emergency</string>
+    <string name="squawk_severity_caution">Caution</string>
+    <string name="squawk_severity_info">Info</string>
+
     <!-- Formatted values -->
     <string name="value_altitude_feet">%1$s ft</string>
     <string name="value_heading_degrees">%1$s°</string>

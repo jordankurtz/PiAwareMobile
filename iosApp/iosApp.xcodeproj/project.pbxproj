@@ -20,6 +20,7 @@
 		AA0000001234567890ABCD05 /* LocationBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD04 /* LocationBridge.swift */; };
 		AA0000001234567890ABCD07 /* SettingsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD06 /* SettingsBridge.swift */; };
 		AA0000001234567890ABCD09 /* FlightDetailsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD08 /* FlightDetailsSheet.swift */; };
+		AA0000001234567890ABCD0D /* SquawkInfoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD0C /* SquawkInfoSheet.swift */; };
 		AA0000001234567890ABCD0B /* AircraftListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000001234567890ABCD0A /* AircraftListView.swift */; };
 		BB0000001234567890ABCD01 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000001234567890ABCD00 /* SettingsView.swift */; };
 		BB0000001234567890ABCD03 /* ServersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000001234567890ABCD02 /* ServersView.swift */; };
@@ -44,6 +45,7 @@
 		AA0000001234567890ABCD04 /* LocationBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBridge.swift; sourceTree = "<group>"; };
 		AA0000001234567890ABCD06 /* SettingsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBridge.swift; sourceTree = "<group>"; };
 		AA0000001234567890ABCD08 /* FlightDetailsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightDetailsSheet.swift; sourceTree = "<group>"; };
+		AA0000001234567890ABCD0C /* SquawkInfoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquawkInfoSheet.swift; sourceTree = "<group>"; };
 		AA0000001234567890ABCD0A /* AircraftListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircraftListView.swift; sourceTree = "<group>"; };
 		BB0000001234567890ABCD00 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		BB0000001234567890ABCD02 /* ServersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServersView.swift; sourceTree = "<group>"; };
@@ -136,6 +138,7 @@
 				AA0000001234567890ABCD04 /* LocationBridge.swift */,
 				AA0000001234567890ABCD06 /* SettingsBridge.swift */,
 				AA0000001234567890ABCD08 /* FlightDetailsSheet.swift */,
+				AA0000001234567890ABCD0C /* SquawkInfoSheet.swift */,
 				AA0000001234567890ABCD0A /* AircraftListView.swift */,
 				BB0000001234567890ABCD00 /* SettingsView.swift */,
 				BB0000001234567890ABCD02 /* ServersView.swift */,
@@ -288,6 +291,7 @@
 				AA0000001234567890ABCD05 /* LocationBridge.swift in Sources */,
 				AA0000001234567890ABCD07 /* SettingsBridge.swift in Sources */,
 				AA0000001234567890ABCD09 /* FlightDetailsSheet.swift in Sources */,
+				AA0000001234567890ABCD0D /* SquawkInfoSheet.swift in Sources */,
 				AA0000001234567890ABCD0B /* AircraftListView.swift in Sources */,
 				BB0000001234567890ABCD01 /* SettingsView.swift in Sources */,
 				BB0000001234567890ABCD03 /* ServersView.swift in Sources */,

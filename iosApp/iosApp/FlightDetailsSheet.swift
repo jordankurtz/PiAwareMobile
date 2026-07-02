@@ -7,6 +7,8 @@ struct FlightDetailsSheet: View {
     @Environment(LocationBridge.self) private var location
     @Environment(SettingsBridge.self) private var settings
     @Environment(\.openURL) private var openURL
+    @State private var squawkForSheet: String? = nil
+
     private var resolvedTileURL: String {
         guard let s = settings.settings else {
             return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -76,6 +78,14 @@ struct FlightDetailsSheet: View {
             )
             .navigationBarTitleDisplayMode(.inline)
         }
+        .sheet(isPresented: Binding(
+            get: { squawkForSheet != nil },
+            set: { if !$0 { squawkForSheet = nil } }
+        )) {
+            if let squawk = squawkForSheet {
+                SquawkInfoSheet(squawk: squawk)
+            }
+        }
     }
 
     // MARK: - Headers & buttons
@@ -106,6 +116,14 @@ struct FlightDetailsSheet: View {
     }
 
     // MARK: - All content (single scroll)
+
+    private func squawkColor(for code: String) -> Color? {
+        switch SquawkCodes.shared.get(code: code)?.severity {
+        case .emergency: return .red
+        case .caution: return .orange
+        default: return nil
+        }
+    }
 
     @ViewBuilder private func allContent(aircraft: Aircraft, flight: Flight?) -> some View {
         if aircraft.hasPosition {
@@ -160,8 +178,11 @@ struct FlightDetailsSheet: View {
                     StatColumn(label: "Vertical Speed", value: "\(Int(truncating: baro)) fpm")
                 }
                 if let squawk = aircraft.squawk {
-                    StatColumn(label: "Squawk", value: squawk,
-                               valueColor: ["7500", "7600", "7700"].contains(squawk) ? .red : nil)
+                    Button { squawkForSheet = squawk } label: {
+                        StatColumn(label: "Squawk", value: squawk,
+                                   valueColor: squawkColor(for: squawk))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .frame(maxWidth: .infinity)
