@@ -1,0 +1,12 @@
+package com.jordankurtz.squawkscope.settings
+
+import kotlinx.serialization.Serializable
+import kotlin.uuid.Uuid
+
+@Serializable
+data class Server(
+    val id: Uuid = Uuid.random(),
+    val name: String,
+    val address: String,
+    val type: ServerType = ServerType.PIAWARE,
+)

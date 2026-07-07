@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PiAware Mobile</string>
+    <string name="app_name">SquawkScope</string>
     <string name="screen_map">Map</string>
     <string name="screen_list">List</string>
     <string name="screen_settings">Settings</string>

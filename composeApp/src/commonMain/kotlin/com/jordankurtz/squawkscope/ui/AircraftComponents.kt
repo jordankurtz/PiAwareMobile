@@ -1,0 +1,290 @@
+package com.jordankurtz.squawkscope.ui
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import com.jordankurtz.squawkscope.model.Aircraft
+import com.jordankurtz.squawkscope.model.AircraftInfo
+import com.jordankurtz.squawkscope.model.Flight
+import com.jordankurtz.squawkscope.model.Location
+import com.jordankurtz.squawkscope.model.bearingTo
+import com.jordankurtz.squawkscope.model.distanceTo
+import com.jordankurtz.squawkscope.squawk.SquawkCodes
+import org.jetbrains.compose.resources.stringResource
+import squawkscope.composeapp.generated.resources.Res
+import squawkscope.composeapp.generated.resources.label_aircraft_type
+import squawkscope.composeapp.generated.resources.label_altitude
+import squawkscope.composeapp.generated.resources.label_description
+import squawkscope.composeapp.generated.resources.label_direction
+import squawkscope.composeapp.generated.resources.label_distance
+import squawkscope.composeapp.generated.resources.label_heading
+import squawkscope.composeapp.generated.resources.label_last_seen
+import squawkscope.composeapp.generated.resources.label_location
+import squawkscope.composeapp.generated.resources.label_registration
+import squawkscope.composeapp.generated.resources.label_signal
+import squawkscope.composeapp.generated.resources.label_speed
+import squawkscope.composeapp.generated.resources.label_squawk
+import squawkscope.composeapp.generated.resources.label_type
+import squawkscope.composeapp.generated.resources.label_vertical_speed
+import squawkscope.composeapp.generated.resources.label_wtc
+import squawkscope.composeapp.generated.resources.value_altitude_feet
+import squawkscope.composeapp.generated.resources.value_direction_with_cardinal
+import squawkscope.composeapp.generated.resources.value_distance_km
+import squawkscope.composeapp.generated.resources.value_heading_degrees
+import squawkscope.composeapp.generated.resources.value_last_seen_seconds
+import squawkscope.composeapp.generated.resources.value_location_coords
+import squawkscope.composeapp.generated.resources.value_signal_dbm
+import squawkscope.composeapp.generated.resources.value_speed_knots
+import squawkscope.composeapp.generated.resources.value_vertical_speed_fpm
+import kotlin.math.roundToInt
+
+@Composable
+fun LabeledValue(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    valueColor: Color = Color.Unspecified,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(value, style = MaterialTheme.typography.bodyLarge, color = valueColor)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+fun AircraftPrimaryDetails(
+    aircraft: Aircraft,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        aircraft.altBaro?.let {
+            LabeledValue(
+                label = stringResource(Res.string.label_altitude),
+                value = stringResource(Res.string.value_altitude_feet, it),
+            )
+        }
+        aircraft.track?.let {
+            LabeledValue(
+                label = stringResource(Res.string.label_heading),
+                value = stringResource(Res.string.value_heading_degrees, it.toString()),
+            )
+        }
+        aircraft.gs?.let {
+            LabeledValue(
+                label = stringResource(Res.string.label_speed),
+                value = stringResource(Res.string.value_speed_knots, it.toInt()),
+            )
+        }
+    }
+}
+
+@Composable
+fun AircraftLocationDetails(
+    aircraft: Aircraft,
+    userLocation: Location?,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (aircraft.hasPosition) {
+            LabeledValue(
+                label = stringResource(Res.string.label_location),
+                value =
+                    stringResource(
+                        Res.string.value_location_coords,
+                        aircraft.lat.round(4).toString(),
+                        aircraft.lon.round(4).toString(),
+                    ),
+            )
+            userLocation?.let { location ->
+                val aircraftLocation = Location(aircraft.lat, aircraft.lon)
+                val distance = location.distanceTo(aircraftLocation)
+                val bearing = location.bearingTo(aircraftLocation)
+
+                LabeledValue(
+                    label = stringResource(Res.string.label_distance),
+                    value = stringResource(Res.string.value_distance_km, distance.roundToInt()),
+                )
+                LabeledValue(
+                    label = stringResource(Res.string.label_direction),
+                    value =
+                        stringResource(
+                            Res.string.value_direction_with_cardinal,
+                            bearing.roundToInt(),
+                            bearing.toCardinalDirection(),
+                        ),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AircraftSecondaryDetails(
+    aircraft: Aircraft,
+    modifier: Modifier = Modifier,
+    squawkValueColor: Color = Color.Unspecified,
+    onSquawkClick: ((String) -> Unit)? = null,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        aircraft.baroRate?.let {
+            LabeledValue(
+                label = stringResource(Res.string.label_vertical_speed),
+                value = stringResource(Res.string.value_vertical_speed_fpm, it),
+            )
+        }
+        aircraft.squawk?.let { squawk ->
+            val squawkModifier =
+                if (onSquawkClick != null && SquawkCodes[squawk] != null) {
+                    Modifier.clickable(
+                        onClickLabel = "View squawk code info",
+                        role = Role.Button,
+                    ) { onSquawkClick(squawk) }
+                } else {
+                    Modifier
+                }
+            LabeledValue(
+                label = stringResource(Res.string.label_squawk),
+                value = squawk,
+                valueColor = squawkValueColor,
+                modifier = squawkModifier,
+            )
+        }
+    }
+}
+
+@Composable
+fun AircraftSignalDetails(
+    aircraft: Aircraft,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        aircraft.rssi?.let {
+            LabeledValue(
+                label = stringResource(Res.string.label_signal),
+                value = stringResource(Res.string.value_signal_dbm, it.toString()),
+            )
+        }
+        aircraft.seen?.let {
+            LabeledValue(
+                label = stringResource(Res.string.label_last_seen),
+                value = stringResource(Res.string.value_last_seen_seconds, it.toString()),
+            )
+        }
+    }
+}
+
+@Composable
+fun FlightAircraftDetails(
+    flight: Flight,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        flight.aircraftType?.let {
+            LabeledValue(
+                label = stringResource(Res.string.label_aircraft_type),
+                value = it,
+            )
+        }
+        flight.registration?.let {
+            LabeledValue(
+                label = stringResource(Res.string.label_registration),
+                value = it,
+            )
+        }
+    }
+}
+
+@Composable
+fun AircraftDetailsGrid(
+    aircraft: Aircraft,
+    userLocation: Location?,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        AircraftPrimaryDetails(aircraft = aircraft)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AircraftSecondaryDetails(aircraft = aircraft)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AircraftLocationDetails(aircraft = aircraft, userLocation = userLocation)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AircraftSignalDetails(aircraft = aircraft)
+    }
+}
+
+@Composable
+fun AircraftInfoRow(
+    info: AircraftInfo,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+    ) {
+        info.icaoType?.let {
+            LabeledValue(label = stringResource(Res.string.label_type), value = it)
+        }
+        info.typeDescription?.let {
+            LabeledValue(label = stringResource(Res.string.label_description), value = it)
+        }
+        info.wtc?.let {
+            LabeledValue(label = stringResource(Res.string.label_wtc), value = it)
+        }
+    }
+}
+
+fun Double.round(decimals: Int): Double {
+    var multiplier = 1.0
+    repeat(decimals) { multiplier *= 10 }
+    return kotlin.math.round(this * multiplier) / multiplier
+}
+
+fun Double.toCardinalDirection(): String {
+    val directions = listOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+    val index = ((this / 45) + 0.5).toInt() % 8
+    return directions[index]
+}

@@ -1,0 +1,42 @@
+package com.jordankurtz.squawkscope.settings.repo
+
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.jordankurtz.squawkscope.settings.Settings
+import com.jordankurtz.squawkscope.settings.TrailDisplayMode
+import kotlinx.coroutines.flow.Flow
+
+interface SettingsRepository {
+    fun getSettings(): Flow<Settings>
+
+    suspend fun saveSettings(settings: Settings)
+
+    suspend fun setTrailDisplayMode(trailDisplayMode: TrailDisplayMode)
+
+    suspend fun setShowMinimapTrails(showMinimapTrails: Boolean)
+
+    companion object {
+        val SERVERS = stringPreferencesKey("servers")
+        val REFRESH_INTERVAL = intPreferencesKey("refreshInterval")
+        val CENTER_MAP_ON_USER_ON_START = booleanPreferencesKey("centerMapOnUserOnStart")
+        val RESTORE_MAP_STATE_ON_START = booleanPreferencesKey("restoreMapStateOnStart")
+        val SHOW_RECEIVER_LOCATIONS = booleanPreferencesKey("showReceiverLocations")
+        val SHOW_USER_LOCATION_ON_MAP = booleanPreferencesKey("showUserLocation")
+        val TRAIL_DISPLAY_MODE = stringPreferencesKey("trailDisplayMode")
+        val SHOW_MINIMAP_TRAILS = booleanPreferencesKey("showMinimapTrails")
+        val OPEN_URLS_EXTERNALLY = booleanPreferencesKey("openUrlsExternally")
+        val ENABLE_FLIGHT_AWARE_API = booleanPreferencesKey("enableFlightAwareApi")
+        val FLIGHT_AWARE_API_KEY = stringPreferencesKey("flightAwareApiKey")
+        val MAP_PROVIDER_ID = stringPreferencesKey("mapProviderId")
+        val DEFAULT_ZOOM_LEVEL_KEY = intPreferencesKey("defaultZoomLevel")
+        val MIN_ZOOM_LEVEL_KEY = intPreferencesKey("minZoomLevel")
+        val MAX_ZOOM_LEVEL_KEY = intPreferencesKey("maxZoomLevel")
+        val API_KEYS_JSON = stringPreferencesKey("apiKeysJson")
+        val CUSTOM_PROVIDERS_JSON = stringPreferencesKey("customProvidersJson")
+        const val DEFAULT_REFRESH_INTERVAL = 5
+        const val DEFAULT_ZOOM_LEVEL = 8
+        const val MIN_ZOOM_LEVEL = 1
+        const val MAX_ZOOM_LEVEL = 16
+    }
+}

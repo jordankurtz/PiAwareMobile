@@ -1,0 +1,36 @@
+package com.jordankurtz.squawkscope
+
+import com.jordankurtz.squawkscope.di.modules.ContextWrapper
+import org.koin.core.annotation.Factory
+import platform.Foundation.NSURL
+import platform.SafariServices.SFSafariViewController
+import platform.UIKit.UIApplication
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
+
+@Factory(binds = [UrlHandler::class])
+@Suppress("UnusedPrivateProperty") // contextWrapper required by actual constructor signature
+actual class UrlHandlerImpl actual constructor(
+    private val contextWrapper: ContextWrapper,
+) : UrlHandler {
+    actual override fun openUrlInternally(url: String) {
+        dispatch_async(dispatch_get_main_queue()) {
+            val nsURL = NSURL.URLWithString(url) ?: return@dispatch_async
+            val safariViewController = SFSafariViewController(nsURL)
+            UIApplication.sharedApplication.keyWindow?.rootViewController?.presentViewController(
+                safariViewController,
+                animated = true,
+                completion = null,
+            )
+        }
+    }
+
+    actual override fun openUrlExternally(url: String) {
+        dispatch_async(dispatch_get_main_queue()) {
+            val nsURL = NSURL.URLWithString(url)
+            nsURL?.let {
+                UIApplication.sharedApplication.openURL(it, emptyMap<Any?, Any>(), {})
+            }
+        }
+    }
+}

@@ -9,11 +9,11 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
--keep,includedescriptorclasses class com.jordankurtz.piawaremobile.**$$serializer { *; }
--keepclassmembers class com.jordankurtz.piawaremobile.** {
+-keep,includedescriptorclasses class com.jordankurtz.squawkscope.**$$serializer { *; }
+-keepclassmembers class com.jordankurtz.squawkscope.** {
     *** Companion;
 }
--keepclasseswithmembers class com.jordankurtz.piawaremobile.** {
+-keepclasseswithmembers class com.jordankurtz.squawkscope.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
 
