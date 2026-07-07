@@ -1,4 +1,4 @@
-# PiAware Flight Tracker
+# SquawkScope
 
 A cross-platform flight tracking app built with [Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/) that displays live ADS-B data from [PiAware](https://flightaware.com/adsb/piaware/) receivers.
 

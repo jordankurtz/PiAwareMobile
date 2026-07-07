@@ -36,7 +36,7 @@
 		058557BA273AAA24004C7B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
-		7555FF7B242A565900829871 /* PiAware Mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "PiAware Mobile.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7555FF7B242A565900829871 /* SquawkScope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SquawkScope.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EADE1166A09D45108F05A165 /* ComposeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeScreen.swift; sourceTree = "<group>"; };
 		3D225E8B5B8A45A8A5CF1F5B /* PiAwareTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiAwareTabView.swift; sourceTree = "<group>"; };
 		C14BF9628EDB42A19CC4F7D2 /* MapTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapTabView.swift; sourceTree = "<group>"; };
@@ -112,7 +112,7 @@
 		7555FF7C242A565900829871 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7555FF7B242A565900829871 /* PiAware Mobile.app */,
+				7555FF7B242A565900829871 /* SquawkScope.app */,
 				CC0100001234567890ABCD00 /* iosAppTests.xctest */,
 			);
 			name = Products;
@@ -182,7 +182,7 @@
 				175BC0732EF39C4F00F3C89D /* Sentry */,
 			);
 			productName = iosApp;
-			productReference = 7555FF7B242A565900829871 /* PiAware Mobile.app */;
+			productReference = 7555FF7B242A565900829871 /* SquawkScope.app */;
 			productType = "com.apple.product-type.application";
 		};
 		CC0100001234567890ABCD50 /* iosAppTests */ = {
@@ -518,10 +518,10 @@
 					"$(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.jordankurtz.piawaremobile.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jordankurtz.squawkscope.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PiAware Mobile.app/PiAware Mobile";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SquawkScope.app/SquawkScope";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -537,10 +537,10 @@
 					"$(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.jordankurtz.piawaremobile.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.jordankurtz.squawkscope.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PiAware Mobile.app/PiAware Mobile";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SquawkScope.app/SquawkScope";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

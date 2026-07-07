@@ -1,0 +1,13 @@
+package com.jordankurtz.squawkscope.model
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Receiver(
+    @SerialName("lat")
+    val latitude: Float,
+    @SerialName("lon")
+    val longitude: Float,
+    val history: Int? = null,
+)

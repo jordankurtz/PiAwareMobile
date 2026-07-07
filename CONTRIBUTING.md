@@ -1,4 +1,4 @@
-# Contributing to PiAware Flight Tracker
+# Contributing to SquawkScope
 
 Thanks for your interest in contributing! This document covers the process for submitting changes.
 

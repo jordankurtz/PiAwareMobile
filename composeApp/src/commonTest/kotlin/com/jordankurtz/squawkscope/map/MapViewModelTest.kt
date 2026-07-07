@@ -1,0 +1,613 @@
+package com.jordankurtz.squawkscope.map
+
+import androidx.lifecycle.viewModelScope
+import app.cash.turbine.test
+import com.jordankurtz.squawkscope.map.debug.TileCacheStatsTracker
+import com.jordankurtz.squawkscope.map.usecase.GetSavedMapStateUseCase
+import com.jordankurtz.squawkscope.map.usecase.SaveMapStateUseCase
+import com.jordankurtz.squawkscope.model.Aircraft
+import com.jordankurtz.squawkscope.model.AircraftPosition
+import com.jordankurtz.squawkscope.model.AircraftTrail
+import com.jordankurtz.squawkscope.model.AircraftWithServers
+import com.jordankurtz.squawkscope.model.Async
+import com.jordankurtz.squawkscope.model.Location
+import com.jordankurtz.squawkscope.model.MapState
+import com.jordankurtz.squawkscope.settings.Settings
+import com.jordankurtz.squawkscope.settings.TrailDisplayMode
+import com.jordankurtz.squawkscope.settings.usecase.LoadSettingsUseCase
+import com.jordankurtz.squawkscope.testutil.mockAircraft
+import com.jordankurtz.squawkscope.testutil.mockServer
+import dev.mokkery.answering.returns
+import dev.mokkery.every
+import dev.mokkery.everySuspend
+import dev.mokkery.mock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import ovh.plrapps.mapcompose.core.TileStreamProvider
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+@ExperimentalCoroutinesApi
+class MapViewModelTest {
+    private val testDispatcher = StandardTestDispatcher()
+
+    private lateinit var mapProvider: TileStreamProvider
+    private lateinit var getSavedMapStateUseCase: GetSavedMapStateUseCase
+    private lateinit var saveMapStateUseCase: SaveMapStateUseCase
+    private lateinit var loadSettingsUseCase: LoadSettingsUseCase
+    private lateinit var settingsFlow: MutableStateFlow<Async<Settings>>
+    private var viewModel: MapViewModel? = null
+
+    private val settings =
+        Settings(
+            servers = emptyList(),
+            refreshInterval = 5,
+            centerMapOnUserOnStart = false,
+            restoreMapStateOnStart = false,
+            showReceiverLocations = false,
+            showUserLocationOnMap = true,
+            openUrlsExternally = false,
+            enableFlightAwareApi = false,
+            flightAwareApiKey = "",
+        )
+
+    @BeforeTest
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+
+        mapProvider = TileStreamProvider { _, _, _ -> null }
+        getSavedMapStateUseCase = mock()
+        saveMapStateUseCase = mock()
+        loadSettingsUseCase = mock()
+        settingsFlow = MutableStateFlow(Async.Success(settings))
+
+        every { loadSettingsUseCase.invoke() } returns settingsFlow
+        everySuspend { getSavedMapStateUseCase.invoke() } returns MapState(0.5, 0.5, 1.0)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        viewModel?.viewModelScope?.cancel()
+        viewModel = null
+        Dispatchers.resetMain()
+    }
+
+    private fun createViewModel(
+        providerConfigFlow: MutableStateFlow<TileProviderConfig> = MutableStateFlow(TileProviders.OPENSTREETMAP),
+        mapStateController: FakeMapStateController = FakeMapStateController(),
+    ): MapViewModel {
+        val vm =
+            MapViewModel(
+                mapProvider = mapProvider,
+                providerConfigFlow = providerConfigFlow,
+                getSavedMapStateUseCase = getSavedMapStateUseCase,
+                saveMapStateUseCase = saveMapStateUseCase,
+                loadSettingsUseCase = loadSettingsUseCase,
+                tileCacheStatsTracker = TileCacheStatsTracker(),
+                mapStateController = mapStateController,
+            )
+        viewModel = vm
+        return vm
+    }
+
+    @Test
+    fun `fitToAircraft with empty list is a no-op`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.fitToAircraft(emptyList())
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `fitToAircraft with single aircraft scrolls to projected point`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            val aircraft =
+                listOf(
+                    AircraftWithServers(
+                        aircraft = Aircraft(hex = "abc123", lat = 40.0, lon = -74.0),
+                    ),
+                )
+            vm.fitToAircraft(aircraft)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `fitToAircraft with multiple aircraft computes bounding box`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            val aircraft =
+                listOf(
+                    AircraftWithServers(
+                        aircraft = Aircraft(hex = "abc123", lat = 40.0, lon = -74.0),
+                    ),
+                    AircraftWithServers(
+                        aircraft = Aircraft(hex = "def456", lat = 34.0, lon = -118.0),
+                    ),
+                    AircraftWithServers(
+                        aircraft = Aircraft(hex = "ghi789", lat = 41.0, lon = -87.0),
+                    ),
+                )
+            vm.fitToAircraft(aircraft)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `fitToAircraft with two aircraft at same location handles degenerate bounding box`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            val aircraft =
+                listOf(
+                    AircraftWithServers(
+                        aircraft = Aircraft(hex = "abc123", lat = 40.0, lon = -74.0),
+                    ),
+                    AircraftWithServers(
+                        aircraft = Aircraft(hex = "def456", lat = 40.0, lon = -74.0),
+                    ),
+                )
+            vm.fitToAircraft(aircraft)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `followingUserLocation starts as false`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `toggleFollowUserLocation flips state from false to true`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.followingUserLocation.value)
+
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `toggleFollowUserLocation flips state from true to false`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+
+            vm.toggleFollowUserLocation()
+            assertFalse(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `showUserLocationOnMap reflects settings value when true`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            assertTrue(vm.showUserLocationOnMap.value)
+        }
+
+    @Test
+    fun `showUserLocationOnMap reflects settings value when false`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(showUserLocationOnMap = false))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            assertFalse(vm.showUserLocationOnMap.value)
+        }
+
+    @Test
+    fun `disabling showUserLocationOnMap also disables following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+
+            settingsFlow.value = Async.Success(settings.copy(showUserLocationOnMap = false))
+            advanceUntilIdle()
+
+            assertFalse(vm.followingUserLocation.value)
+            assertFalse(vm.showUserLocationOnMap.value)
+        }
+
+    @Test
+    fun `onUserLocationChanged does not recenter when not following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            assertFalse(vm.followingUserLocation.value)
+            vm.onUserLocationChanged(Location(40.0, -100.0))
+            advanceUntilIdle()
+
+            assertNull(vm.lastRecenteredLocation.value)
+        }
+
+    @Test
+    fun `onUserLocationChanged recenters map when following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+
+            val location = Location(40.0, -100.0)
+            vm.onUserLocationChanged(location)
+            advanceUntilIdle()
+
+            assertEquals(location, vm.lastRecenteredLocation.value)
+        }
+
+    @Test
+    fun followSelectedAircraftSetsFollowedHexFromSelection() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
+
+            vm.followingAircraft.test {
+                assertEquals("ABC123", awaitItem())
+            }
+        }
+
+    @Test
+    fun unfollowAircraftClearsFollowedHex() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
+            vm.unfollowAircraft()
+
+            vm.followingAircraft.test {
+                assertNull(awaitItem())
+            }
+        }
+
+    @Test
+    fun onAircraftDeselectedClearsFollowedHex() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
+            vm.onAircraftDeselected()
+
+            vm.followingAircraft.test {
+                assertNull(awaitItem())
+            }
+            vm.selectedAircraft.test {
+                assertNull(awaitItem())
+            }
+        }
+
+    @Test
+    fun followedAircraftClearedWhenDisappearsFromFeed() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
+
+            assertEquals("ABC123", vm.followingAircraft.value)
+
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(
+                        aircraft = mockAircraft(hex = "DEF456"),
+                        info = null,
+                        servers = setOf(mockServer()),
+                    ),
+                )
+            vm.onAircraftUpdated(aircraftList)
+            advanceUntilIdle()
+
+            vm.followingAircraft.test {
+                assertNull(awaitItem())
+            }
+        }
+
+    @Test
+    fun followedAircraftNotClearedWhenStillInFeed() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.syncSelection("ABC123")
+            vm.followSelectedAircraft()
+
+            assertEquals("ABC123", vm.followingAircraft.value)
+
+            val aircraftList =
+                listOf(
+                    AircraftWithServers(
+                        aircraft = mockAircraft(hex = "ABC123"),
+                        info = null,
+                        servers = setOf(mockServer()),
+                    ),
+                )
+            vm.onAircraftUpdated(aircraftList)
+            advanceUntilIdle()
+
+            vm.followingAircraft.test {
+                assertEquals("ABC123", awaitItem())
+            }
+        }
+
+    @Test
+    fun followSelectedAircraftWithNoSelectionSetsNull() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.followSelectedAircraft()
+
+            vm.followingAircraft.test {
+                assertNull(awaitItem())
+            }
+        }
+
+    @Test
+    fun `onMapTouchDown cancels follow user location when following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.toggleFollowUserLocation()
+            assertTrue(vm.followingUserLocation.value)
+
+            vm.onMapTouchDown()
+            assertFalse(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `onMapTouchDown does nothing when not following`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.followingUserLocation.value)
+
+            vm.onMapTouchDown()
+            assertFalse(vm.followingUserLocation.value)
+        }
+
+    @Test
+    fun `switching providerConfigFlow updates activeProvider`() =
+        runTest {
+            val providerFlow = MutableStateFlow<TileProviderConfig>(TileProviders.OPENSTREETMAP)
+            val vm = createViewModel(providerConfigFlow = providerFlow)
+            advanceUntilIdle()
+
+            assertEquals(TileProviders.OPENSTREETMAP, vm.activeProvider.value)
+
+            providerFlow.value = TileProviders.CARTO_DARK_ALL
+            advanceUntilIdle()
+
+            assertEquals(TileProviders.CARTO_DARK_ALL, vm.activeProvider.value)
+        }
+
+    private fun makeTrail(
+        hex: String,
+        lat1: Double = 40.0,
+        lon1: Double = -74.0,
+        lat2: Double = 40.1,
+        lon2: Double = -74.1,
+    ): AircraftTrail =
+        AircraftTrail(
+            hex = hex,
+            positions =
+                listOf(
+                    AircraftPosition(latitude = lat1, longitude = lon1, altitude = "35000", timestamp = 1.0),
+                    AircraftPosition(latitude = lat2, longitude = lon2, altitude = "35000", timestamp = 2.0),
+                ),
+        )
+
+    @Test
+    fun `onAircraftTrailsUpdated with NONE mode draws no trails`() =
+        runTest {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val trails = mapOf("ABC123" to makeTrail("ABC123"))
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onAircraftTrailsUpdated with ALL mode draws trails for all aircraft`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(trailDisplayMode = TrailDisplayMode.ALL))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val trails =
+                mapOf(
+                    "ABC123" to makeTrail("ABC123"),
+                    "DEF456" to makeTrail("DEF456", lat1 = 41.0, lon1 = -75.0, lat2 = 41.1, lon2 = -75.1),
+                )
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onAircraftTrailsUpdated with ALL mode and selected aircraft draws all trails not just selected`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(trailDisplayMode = TrailDisplayMode.ALL))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.syncSelection("ABC123")
+            advanceUntilIdle()
+
+            val trails =
+                mapOf(
+                    "ABC123" to makeTrail("ABC123"),
+                    "DEF456" to makeTrail("DEF456", lat1 = 41.0, lon1 = -75.0, lat2 = 41.1, lon2 = -75.1),
+                )
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onAircraftTrailsUpdated with SELECTED mode and selection draws only selected trail`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(trailDisplayMode = TrailDisplayMode.SELECTED))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.syncSelection("ABC123")
+            advanceUntilIdle()
+
+            val trails =
+                mapOf(
+                    "ABC123" to makeTrail("ABC123"),
+                    "DEF456" to makeTrail("DEF456", lat1 = 41.0, lon1 = -75.0, lat2 = 41.1, lon2 = -75.1),
+                )
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `onAircraftTrailsUpdated with SELECTED mode and no selection draws no trails`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(trailDisplayMode = TrailDisplayMode.SELECTED))
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val trails =
+                mapOf(
+                    "ABC123" to makeTrail("ABC123"),
+                    "DEF456" to makeTrail("DEF456", lat1 = 41.0, lon1 = -75.0, lat2 = 41.1, lon2 = -75.1),
+                )
+            vm.onAircraftTrailsUpdated(trails)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun `scale limits are set from settings on load`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(minZoomLevel = 5, maxZoomLevel = 12))
+            val controller = FakeMapStateController()
+            createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            assertEquals(osmZoomToScale(5), controller.lastMinScale, 0.0001)
+            assertEquals(osmZoomToScale(12), controller.lastMaxScale, 0.0001)
+        }
+
+    @Test
+    fun `default zoom applied when restoreMapStateOnStart is false`() =
+        runTest {
+            settingsFlow.value = Async.Success(settings.copy(defaultZoomLevel = 10, restoreMapStateOnStart = false))
+            val controller = FakeMapStateController()
+            createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            assertEquals(osmZoomToScale(10), controller.scale, 0.0001)
+        }
+
+    @Test
+    fun `restored zoom below min is clamped up to min`() =
+        runTest {
+            settingsFlow.value =
+                Async.Success(
+                    settings.copy(minZoomLevel = 8, maxZoomLevel = 14, restoreMapStateOnStart = true),
+                )
+            everySuspend { getSavedMapStateUseCase.invoke() } returns
+                com.jordankurtz.squawkscope.model.MapState(0.5, 0.5, osmZoomToScale(3))
+            val controller = FakeMapStateController()
+            createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            assertEquals(osmZoomToScale(8), controller.scale, 0.0001)
+        }
+
+    @Test
+    fun `restored zoom above max is clamped down to max`() =
+        runTest {
+            settingsFlow.value =
+                Async.Success(
+                    settings.copy(minZoomLevel = 5, maxZoomLevel = 10, restoreMapStateOnStart = true),
+                )
+            everySuspend { getSavedMapStateUseCase.invoke() } returns
+                com.jordankurtz.squawkscope.model.MapState(0.5, 0.5, osmZoomToScale(15))
+            val controller = FakeMapStateController()
+            createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            assertEquals(osmZoomToScale(10), controller.scale, 0.0001)
+        }
+
+    // Regression tests for the iOS map-tap → flight sheet chain.
+    // MapScreen's LaunchedEffect(selectedAircraft) calls AircraftViewModel.selectAircraft
+    // which the AircraftBridge observes. All three VMs must be @Single in Koin so the
+    // iOS bridge and MapScreen share the same instance.
+
+    @Test
+    fun `tapping an aircraft marker sets selectedAircraft`() =
+        runTest {
+            val controller = FakeMapStateController()
+            val vm = createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            vm.onAircraftUpdated(listOf(AircraftWithServers(aircraft = mockAircraft(hex = "ABC123"))))
+
+            controller.simulateMarkerClick("ABC123")
+
+            assertEquals("ABC123", vm.selectedAircraft.value)
+        }
+
+    @Test
+    fun `tapping the same marker twice deselects it`() =
+        runTest {
+            val controller = FakeMapStateController()
+            val vm = createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            vm.onAircraftUpdated(listOf(AircraftWithServers(aircraft = mockAircraft(hex = "ABC123"))))
+
+            controller.simulateMarkerClick("ABC123")
+            controller.simulateMarkerClick("ABC123")
+
+            assertNull(vm.selectedAircraft.value)
+        }
+
+    @Test
+    fun `tapping a different marker switches selection`() =
+        runTest {
+            val controller = FakeMapStateController()
+            val vm = createViewModel(mapStateController = controller)
+            advanceUntilIdle()
+            vm.onAircraftUpdated(
+                listOf(
+                    AircraftWithServers(aircraft = mockAircraft(hex = "ABC123")),
+                    AircraftWithServers(aircraft = mockAircraft(hex = "DEF456")),
+                ),
+            )
+
+            controller.simulateMarkerClick("ABC123")
+            controller.simulateMarkerClick("DEF456")
+
+            assertEquals("DEF456", vm.selectedAircraft.value)
+        }
+}

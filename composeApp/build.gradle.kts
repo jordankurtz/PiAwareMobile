@@ -140,11 +140,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.jordankurtz.piawaremobile"
+    namespace = "com.jordankurtz.squawkscope"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.jordankurtz.piawaremobile"
+        applicationId = "com.jordankurtz.squawkscope"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -197,18 +197,18 @@ kotlin.sourceSets.commonMain {
 
 compose.desktop {
     application {
-        mainClass = "com.jordankurtz.piawaremobile.MainKt"
+        mainClass = "com.jordankurtz.squawkscope.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.jordankurtz.piawaremobile"
+            packageName = "com.jordankurtz.squawkscope"
             packageVersion = "1.0.0"
         }
     }
 }
 
 buildkonfig {
-    packageName = "com.jordankurtz.piawaremobile"
+    packageName = "com.jordankurtz.squawkscope"
     objectName = "BuildConfig"
 
     defaultConfigs {
@@ -237,7 +237,7 @@ buildkonfig {
 sqldelight {
     databases {
         create("TileCacheDatabase") {
-            packageName.set("com.jordankurtz.piawaremobile.map.cache")
+            packageName.set("com.jordankurtz.squawkscope.map.cache")
         }
     }
 }
@@ -247,30 +247,30 @@ kover {
         filters {
             excludes {
                 // DI modules and annotations — wiring only, no logic
-                packages("com.jordankurtz.piawaremobile.di")
+                packages("com.jordankurtz.squawkscope.di")
                 // Compose UI — tested via UI/instrumented tests, not unit-coverable
-                packages("com.jordankurtz.piawaremobile.ui")
-                packages("com.jordankurtz.piawaremobile.settings.ui")
+                packages("com.jordankurtz.squawkscope.ui")
+                packages("com.jordankurtz.squawkscope.settings.ui")
                 // Data classes / serialization models — no logic
-                packages("com.jordankurtz.piawaremobile.model")
+                packages("com.jordankurtz.squawkscope.model")
                 // Generated code
                 packages("org.koin.ksp.generated")
-                packages("piawaremobile.composeapp.generated")
-                classes("com.jordankurtz.piawaremobile.BuildConfig")
+                packages("squawkscope.composeapp.generated")
+                classes("com.jordankurtz.squawkscope.BuildConfig")
                 // Platform expect/actual declarations
-                classes("com.jordankurtz.piawaremobile.Platform*")
+                classes("com.jordankurtz.squawkscope.Platform*")
                 // Compose top-level scaffolding
                 classes(
-                    "com.jordankurtz.piawaremobile.AppKt",
-                    "com.jordankurtz.piawaremobile.OverlayKt",
-                    "com.jordankurtz.piawaremobile.MainKt",
+                    "com.jordankurtz.squawkscope.AppKt",
+                    "com.jordankurtz.squawkscope.OverlayKt",
+                    "com.jordankurtz.squawkscope.MainKt",
                 )
                 // Map UI composables
                 classes(
-                    "com.jordankurtz.piawaremobile.map.FlightDetailsBottomSheetKt",
-                    "com.jordankurtz.piawaremobile.map.MapScreenKt",
-                    "com.jordankurtz.piawaremobile.map.MapHelpersKt",
-                    "com.jordankurtz.piawaremobile.map.OpenStreetMapKt",
+                    "com.jordankurtz.squawkscope.map.FlightDetailsBottomSheetKt",
+                    "com.jordankurtz.squawkscope.map.MapScreenKt",
+                    "com.jordankurtz.squawkscope.map.MapHelpersKt",
+                    "com.jordankurtz.squawkscope.map.OpenStreetMapKt",
                 )
             }
         }
