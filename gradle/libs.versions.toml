@@ -32,7 +32,7 @@ ktlint-plugin = "12.2.0"
 detekt = "1.23.8"
 kover = "0.9.8"
 sqldelight = "2.0.2"
-androidx-compose-ui-test = "1.9.3"
+androidx-compose-ui-test = "1.11.4"
 coil = "3.2.0"
 skie = "0.10.13"
 
