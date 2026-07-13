@@ -5,7 +5,7 @@ import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
-import dev.mokkery.matcher.matching
+import dev.mokkery.matcher.matches
 import dev.mokkery.mock
 import dev.mokkery.verify
 import dev.mokkery.verify.VerifyMode
@@ -196,7 +196,7 @@ class OfflineMapsViewModelTest {
 
             verifySuspend(mode = VerifyMode.exactly(1)) {
                 store.saveRegion(
-                    matching<OfflineRegion> { region ->
+                    matches<OfflineRegion> { region ->
                         region.name == "Airport area" &&
                             region.minZoom == 8 &&
                             region.maxZoom == 12 &&
@@ -239,7 +239,7 @@ class OfflineMapsViewModelTest {
 
             verifySuspend(mode = VerifyMode.exactly(1)) {
                 store.saveRegion(
-                    matching<OfflineRegion> { region -> region.providerId == "custom" },
+                    matches<OfflineRegion> { region -> region.providerId == "custom" },
                 )
             }
         }

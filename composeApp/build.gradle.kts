@@ -49,7 +49,6 @@ kotlin {
     jvm("desktop")
 
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
     ).forEach { iosTarget ->
@@ -179,6 +178,10 @@ dependencies {
     debugImplementation(compose.uiTooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     add("kspCommonMainMetadata", libs.koin.compiler)
+
+    constraints {
+        add("implementation", "androidx.concurrent:concurrent-futures:1.2.0")
+    }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
@@ -218,9 +221,6 @@ buildkonfig {
     targetConfigs {
         create("android") {
             buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.android").getOrElse(""))
-        }
-        create("iosX64") {
-            buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse(""))
         }
         create("iosArm64") {
             buildConfigField(STRING, "SENTRY_DSN", providers.gradleProperty("sentry.dsn.ios").getOrElse(""))
