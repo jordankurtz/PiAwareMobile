@@ -10,7 +10,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.mokkery)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.koinCompiler)
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.kover)
     alias(libs.plugins.sentry)
@@ -177,25 +177,10 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    add("kspCommonMainMetadata", libs.koin.compiler)
 
     constraints {
         add("implementation", "androidx.concurrent:concurrent-futures:1.3.0")
     }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
-    if (name != "kspCommonMainKotlinMetadata") {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>().all {
-    dependsOn("kspCommonMainKotlinMetadata")
-}
-
-kotlin.sourceSets.commonMain {
-    kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
 }
 
 compose.desktop {
@@ -254,7 +239,6 @@ kover {
                 // Data classes / serialization models — no logic
                 packages("com.jordankurtz.squawkscope.model")
                 // Generated code
-                packages("org.koin.ksp.generated")
                 packages("squawkscope.composeapp.generated")
                 classes("com.jordankurtz.squawkscope.BuildConfig")
                 // Platform expect/actual declarations
