@@ -25,14 +25,6 @@ subprojects {
         }
     }
 
-    afterEvaluate {
-        tasks.matching { it.name.startsWith("runKtlint") || it.name.startsWith("ktlint") }.configureEach {
-            tasks.findByName("kspCommonMainKotlinMetadata")?.let { kspTask ->
-                dependsOn(kspTask)
-            }
-        }
-    }
-
     configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
         config.setFrom(rootProject.files("detekt.yml"))
         buildUponDefaultConfig = true
