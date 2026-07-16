@@ -75,9 +75,10 @@ class TileCacheStatsTrackerTest {
         runTest {
             val tracker = TileCacheStatsTracker()
 
-            (1..100).map {
-                launch { tracker.recordDiskHit() }
-            }.joinAll()
+            (1..100)
+                .map {
+                    launch { tracker.recordDiskHit() }
+                }.joinAll()
 
             assertEquals(100L, tracker.stats.value.diskHits)
         }

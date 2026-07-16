@@ -18,9 +18,7 @@ import kotlin.test.assertNull
 class GetAircraftTrailUseCaseTest {
     private lateinit var trailManager: AircraftTrailManager
 
-    private fun createUseCase(): GetAircraftTrailUseCase {
-        return GetAircraftTrailUseCaseImpl(trailManager)
-    }
+    private fun createUseCase(): GetAircraftTrailUseCase = GetAircraftTrailUseCaseImpl(trailManager)
 
     @Test
     fun `invoke returns flow that emits trail for aircraft`() =

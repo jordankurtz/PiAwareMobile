@@ -178,8 +178,10 @@ class AircraftViewModel(
     private fun loadReceiverLocations(servers: List<Server>) {
         viewModelScope.launch {
             val locations =
-                servers.map { server -> async { server to getReceiverLocationUseCase(server) } }
-                    .awaitAll().filter { it.second != null }
+                servers
+                    .map { server -> async { server to getReceiverLocationUseCase(server) } }
+                    .awaitAll()
+                    .filter { it.second != null }
                     // nulls already filtered above, but type checking doesn't know that
                     .toMap() as Map<Server, Location>
 
@@ -204,8 +206,7 @@ class AircraftViewModel(
                     val aircraftList = getAircraftWithDetailsUseCase(servers, infoServer)
                     _numberOfPlanes.value = aircraftList.count()
                     _aircraft.value = aircraftList
-                }
-                .flowOn(ioDispatcher)
+                }.flowOn(ioDispatcher)
                 .launchIn(this)
         }
     }

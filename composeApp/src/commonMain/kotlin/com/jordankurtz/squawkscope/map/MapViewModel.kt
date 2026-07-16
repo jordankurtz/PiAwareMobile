@@ -147,7 +147,8 @@ class MapViewModel(
         }
 
         viewModelScope.launch {
-            providerConfigFlow.drop(1).collect { // skip initial — already loaded
+            providerConfigFlow.drop(1).collect {
+                // skip initial — already loaded
                 mapStateController.replaceLayer(tileLayerId, mapProvider)?.let { newId ->
                     tileLayerId = newId
                 }

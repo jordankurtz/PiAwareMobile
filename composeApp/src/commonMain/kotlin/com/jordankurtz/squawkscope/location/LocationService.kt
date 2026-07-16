@@ -13,7 +13,9 @@ interface LocationService {
 }
 
 @Factory(binds = [LocationService::class])
-expect class LocationServiceImpl(contextWrapper: ContextWrapper) : LocationService {
+expect class LocationServiceImpl(
+    contextWrapper: ContextWrapper,
+) : LocationService {
     override fun startLocationUpdates(onLocationUpdate: (Location) -> Unit)
 
     override fun stopLocationUpdates()

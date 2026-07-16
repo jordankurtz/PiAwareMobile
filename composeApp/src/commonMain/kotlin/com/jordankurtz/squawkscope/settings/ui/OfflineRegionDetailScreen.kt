@@ -134,7 +134,10 @@ internal fun OfflineRegionDetailContent(
             ) {
                 DetailRow(
                     label = stringResource(Res.string.offline_maps_detail_status),
-                    value = region.status.name.lowercase().replaceFirstChar { it.uppercase() },
+                    value =
+                        region.status.name
+                            .lowercase()
+                            .replaceFirstChar { it.uppercase() },
                 )
                 DetailRow(
                     label = stringResource(Res.string.offline_maps_detail_zoom),

@@ -197,8 +197,11 @@ internal fun ListHeader(
 
                 val avgAltitude =
                     aircraft
-                        .mapNotNull { it.aircraft.altBaro?.replace(",", "")?.toIntOrNull() }
-                        .takeIf { it.isNotEmpty() }
+                        .mapNotNull {
+                            it.aircraft.altBaro
+                                ?.replace(",", "")
+                                ?.toIntOrNull()
+                        }.takeIf { it.isNotEmpty() }
                         ?.average()
                         ?.roundToInt()
                 if (avgAltitude != null) {
@@ -671,11 +674,25 @@ internal fun filterAircraft(
     if (query.isBlank()) return aircraft
     val trimmed = query.trim().lowercase()
     return aircraft.filter { item ->
-        item.aircraft.flight?.trim()?.lowercase()?.contains(trimmed) == true ||
-            item.aircraft.hex.lowercase().contains(trimmed) ||
-            item.info?.registration?.lowercase()?.contains(trimmed) == true ||
-            item.info?.typeDescription?.lowercase()?.contains(trimmed) == true ||
-            item.info?.icaoType?.lowercase()?.contains(trimmed) == true ||
+        item.aircraft.flight
+            ?.trim()
+            ?.lowercase()
+            ?.contains(trimmed) == true ||
+            item.aircraft.hex
+                .lowercase()
+                .contains(trimmed) ||
+            item.info
+                ?.registration
+                ?.lowercase()
+                ?.contains(trimmed) == true ||
+            item.info
+                ?.typeDescription
+                ?.lowercase()
+                ?.contains(trimmed) == true ||
+            item.info
+                ?.icaoType
+                ?.lowercase()
+                ?.contains(trimmed) == true ||
             item.aircraft.squawk?.contains(trimmed) == true
     }
 }

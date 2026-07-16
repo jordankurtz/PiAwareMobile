@@ -19,28 +19,20 @@ import org.koin.core.annotation.Single
 class PiAwareDataSource(
     private val piAwareApi: PiAwareApi,
 ) : AircraftDataSource {
-    override suspend fun getAircraft(server: Server): List<Aircraft> {
-        return piAwareApi.getAircraft(server.address)
-    }
+    override suspend fun getAircraft(server: Server): List<Aircraft> = piAwareApi.getAircraft(server.address)
 
-    override suspend fun getReceiverInfo(server: Server): Receiver? {
-        return piAwareApi.getDump1090ReceiverInfo(server.address)
-    }
+    override suspend fun getReceiverInfo(server: Server): Receiver? = piAwareApi.getDump1090ReceiverInfo(server.address)
 
-    override suspend fun getDump978ReceiverInfo(server: Server): Receiver? {
-        return piAwareApi.getDump978ReceiverInfo(server.address)
-    }
+    override suspend fun getDump978ReceiverInfo(server: Server): Receiver? =
+        piAwareApi.getDump978ReceiverInfo(server.address)
 
-    override suspend fun getAircraftTypes(server: Server): Map<String, ICAOAircraftType> {
-        return piAwareApi.getAircraftTypes(server.address)
-    }
+    override suspend fun getAircraftTypes(server: Server): Map<String, ICAOAircraftType> =
+        piAwareApi.getAircraftTypes(server.address)
 
     override suspend fun getAircraftInfo(
         server: Server,
         bkey: String,
-    ): JsonObject? {
-        return piAwareApi.getAircraftInfo(server.address, bkey)
-    }
+    ): JsonObject? = piAwareApi.getAircraftInfo(server.address, bkey)
 
     override suspend fun fetchTrails(server: Server): Map<String, List<AircraftPosition>> {
         val receiver = piAwareApi.getDump1090ReceiverInfo(server.address) ?: return emptyMap()
@@ -48,9 +40,10 @@ class PiAwareDataSource(
         if (historyCount <= 0) return emptyMap()
 
         return coroutineScope {
-            (0 until historyCount).map { index ->
-                async { fetchHistoryWithRetry(server.address, index) }
-            }.awaitAll()
+            (0 until historyCount)
+                .map { index ->
+                    async { fetchHistoryWithRetry(server.address, index) }
+                }.awaitAll()
                 .filterNotNull()
                 .toTrails()
         }

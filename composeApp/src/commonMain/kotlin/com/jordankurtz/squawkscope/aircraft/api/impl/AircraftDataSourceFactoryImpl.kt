@@ -10,10 +10,9 @@ class AircraftDataSourceFactoryImpl(
     private val piAwareDataSource: PiAwareDataSource,
     private val readsbDataSource: ReadsbDataSource,
 ) : AircraftDataSourceFactory {
-    override fun getDataSource(serverType: ServerType): AircraftDataSource {
-        return when (serverType) {
+    override fun getDataSource(serverType: ServerType): AircraftDataSource =
+        when (serverType) {
             ServerType.PIAWARE -> piAwareDataSource
             ServerType.READSB -> readsbDataSource
         }
-    }
 }

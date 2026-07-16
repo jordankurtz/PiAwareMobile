@@ -23,19 +23,20 @@ class GetAircraftWithDetailsUseCaseImpl(
         withContext(ioDispatcher) {
             val aircraftWithServers = aircraftRepo.getAircraftWithServers(servers)
 
-            aircraftWithServers.map { (aircraft, serverSet) ->
-                async {
-                    val aircraftInfo =
-                        aircraftRepo.findAircraftInfo(
-                            server = infoServer,
-                            hex = aircraft.hex,
+            aircraftWithServers
+                .map { (aircraft, serverSet) ->
+                    async {
+                        val aircraftInfo =
+                            aircraftRepo.findAircraftInfo(
+                                server = infoServer,
+                                hex = aircraft.hex,
+                            )
+                        AircraftWithServers(
+                            aircraft = aircraft,
+                            info = aircraftInfo,
+                            servers = serverSet,
                         )
-                    AircraftWithServers(
-                        aircraft = aircraft,
-                        info = aircraftInfo,
-                        servers = serverSet,
-                    )
-                }
-            }.awaitAll()
+                    }
+                }.awaitAll()
         }
 }

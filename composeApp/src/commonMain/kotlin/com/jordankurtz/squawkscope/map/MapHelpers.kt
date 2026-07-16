@@ -28,9 +28,7 @@ fun osmZoomToScale(zoom: Int): Double = 2.0.pow(zoom - MAX_LEVEL)
 fun mapSizeAtLevel(
     wmtsLevel: Int,
     tileSize: Int,
-): Int {
-    return tileSize * 2.0.pow(wmtsLevel).toInt()
-}
+): Int = tileSize * 2.0.pow(wmtsLevel).toInt()
 
 fun getColorForAltitude(altitude: String?): Color {
     if (altitude == GROUND_ALTITUDE) {
@@ -67,7 +65,10 @@ fun getColorForAltitude(altitude: String?): Color {
  * Result of computing the fit-to-aircraft target.
  */
 sealed class FitTarget {
-    data class SinglePoint(val x: Double, val y: Double) : FitTarget()
+    data class SinglePoint(
+        val x: Double,
+        val y: Double,
+    ) : FitTarget()
 
     data class BoundingRegion(
         val xLeft: Double,
@@ -124,9 +125,7 @@ private fun normalize(
     t: Double,
     min: Double,
     max: Double,
-): Double {
-    return (t - min) / (max - min)
-}
+): Double = (t - min) / (max - min)
 
 /**
  * Inverse of [doProjection]: converts normalized [0,1] map coordinates back to geographic degrees.

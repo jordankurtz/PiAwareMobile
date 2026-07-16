@@ -9,8 +9,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 
-actual fun getKtorClient(): HttpClient {
-    return HttpClient(Android) {
+actual fun getKtorClient(): HttpClient =
+    HttpClient(Android) {
         install(ContentNegotiation) {
             json(
                 Json {
@@ -28,4 +28,3 @@ actual fun getKtorClient(): HttpClient {
             socketTimeoutMillis = HttpTimeoutDefaults.SOCKET_TIMEOUT_MS
         }
     }
-}

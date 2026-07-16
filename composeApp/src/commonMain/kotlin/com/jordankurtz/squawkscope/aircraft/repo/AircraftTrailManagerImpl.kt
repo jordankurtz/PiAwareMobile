@@ -22,7 +22,11 @@ class AircraftTrailManagerImpl : AircraftTrailManager {
 
     override suspend fun updateTrailsFromAircraft(aircraft: List<Aircraft>) {
         trailMutex.withLock {
-            val timestamp = Clock.System.now().epochSeconds.toDouble()
+            val timestamp =
+                Clock.System
+                    .now()
+                    .epochSeconds
+                    .toDouble()
             currentAircraftHex = aircraft.map { it.hex }.toSet()
 
             aircraft

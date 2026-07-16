@@ -10,7 +10,5 @@ import org.koin.core.annotation.Factory
 class GetAllAircraftTrailsUseCaseImpl(
     private val trailManager: AircraftTrailManager,
 ) : GetAllAircraftTrailsUseCase {
-    override fun invoke(): StateFlow<Map<String, AircraftTrail>> {
-        return trailManager.aircraftTrails
-    }
+    override fun invoke(): StateFlow<Map<String, AircraftTrail>> = trailManager.aircraftTrails
 }

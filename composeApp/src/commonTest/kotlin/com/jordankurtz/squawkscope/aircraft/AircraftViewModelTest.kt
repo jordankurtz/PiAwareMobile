@@ -102,8 +102,8 @@ class AircraftViewModelTest {
     @Suppress("UNUSED_PARAMETER")
     private fun testTickerFlow(interval: Duration): Flow<Unit> = pollTicker
 
-    private fun createViewModel(): AircraftViewModel {
-        return AircraftViewModel(
+    private fun createViewModel(): AircraftViewModel =
+        AircraftViewModel(
             loadAircraftTypesUseCase = loadAircraftTypesUseCase,
             getAircraftWithDetailsUseCase = getAircraftWithDetailsUseCase,
             getReceiverLocationUseCase = getReceiverLocationUseCase,
@@ -116,7 +116,6 @@ class AircraftViewModelTest {
             mainDispatcher = testDispatcher,
             tickerFlow = ::testTickerFlow,
         )
-    }
 
     @Test
     fun `onResume skips first call and reloads history on subsequent calls`() =

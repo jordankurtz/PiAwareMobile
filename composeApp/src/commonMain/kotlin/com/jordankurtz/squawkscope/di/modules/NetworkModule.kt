@@ -8,7 +8,5 @@ import org.koin.core.annotation.Single
 @Module
 object NetworkModule {
     @Single
-    fun provideHttpClient(): HttpClient {
-        return KtorClient().client
-    }
+    fun provideHttpClient(): HttpClient = KtorClient().client
 }

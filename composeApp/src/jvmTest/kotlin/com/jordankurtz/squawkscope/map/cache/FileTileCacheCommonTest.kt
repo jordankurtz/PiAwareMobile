@@ -394,7 +394,9 @@ class FileTileCacheCommonTest {
                 0L,
                 "osm",
                 data.size.toLong(),
-                kotlin.time.Clock.System.now().toEpochMilliseconds() - 1000,
+                kotlin.time.Clock.System
+                    .now()
+                    .toEpochMilliseconds() - 1000,
             )
 
             val result = cache.get(zoomLvl = 1, col = 0, row = 0, providerId = "osm")

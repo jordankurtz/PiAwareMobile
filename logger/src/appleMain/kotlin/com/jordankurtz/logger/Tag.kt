@@ -1,5 +1,3 @@
 package com.jordankurtz.logger
 
-internal actual fun createTag(): String {
-    return "AppTag"
-}
+internal actual fun createTag(): String = "AppTag"

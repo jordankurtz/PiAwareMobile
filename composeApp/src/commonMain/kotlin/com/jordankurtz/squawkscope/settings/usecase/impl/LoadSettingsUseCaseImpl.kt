@@ -11,7 +11,5 @@ import org.koin.core.annotation.Factory
 class LoadSettingsUseCaseImpl(
     private val settingsService: SettingsService,
 ) : LoadSettingsUseCase {
-    override operator fun invoke(): Flow<Async<Settings>> {
-        return settingsService.loadSettings()
-    }
+    override operator fun invoke(): Flow<Async<Settings>> = settingsService.loadSettings()
 }

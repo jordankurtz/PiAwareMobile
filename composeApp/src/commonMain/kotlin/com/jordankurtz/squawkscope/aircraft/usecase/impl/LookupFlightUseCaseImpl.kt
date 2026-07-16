@@ -34,8 +34,7 @@ class LookupFlightUseCaseImpl(
                         flight.scheduledOut
                             ?: flight.scheduledOff
                     departureTime?.let { flight to it }
-                }
-                .filter { (_, departureTime) -> departureTime < now }
+                }.filter { (_, departureTime) -> departureTime < now }
                 .maxByOrNull { (_, departureTime) -> departureTime }
                 ?.first
 

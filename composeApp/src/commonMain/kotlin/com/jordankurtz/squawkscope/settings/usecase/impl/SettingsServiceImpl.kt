@@ -26,20 +26,19 @@ class SettingsServiceImpl(
     private val settingsRepository: SettingsRepository,
     @param:IODispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SettingsService {
-    override fun loadSettings(): Flow<Async<Settings>> {
-        return settingsRepository.getSettings()
+    override fun loadSettings(): Flow<Async<Settings>> =
+        settingsRepository
+            .getSettings()
             .distinctUntilChanged()
             .flowOn(ioDispatcher)
             .async()
-    }
 
-    override fun getShowUserLocationOnMap(): Flow<Boolean> {
-        return settingsRepository.getSettings().map { it.showUserLocationOnMap }
-    }
+    override fun getShowUserLocationOnMap(): Flow<Boolean> =
+        settingsRepository.getSettings().map {
+            it.showUserLocationOnMap
+        }
 
-    override suspend fun getFlightAwareApiKey(): String {
-        return settingsRepository.getSettings().first().flightAwareApiKey
-    }
+    override suspend fun getFlightAwareApiKey(): String = settingsRepository.getSettings().first().flightAwareApiKey
 
     override suspend fun addServer(
         name: String,

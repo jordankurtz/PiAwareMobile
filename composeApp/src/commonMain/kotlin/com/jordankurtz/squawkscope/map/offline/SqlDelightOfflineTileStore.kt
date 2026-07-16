@@ -85,12 +85,13 @@ class SqlDelightOfflineTileStore(
         providerId: String,
     ): Boolean =
         withContext(ioDispatcher) {
-            queries.isPinned(
-                zoom_level = zoomLevel.toLong(),
-                col = col.toLong(),
-                row = row.toLong(),
-                provider_id = providerId,
-            ).executeAsOne() > 0L
+            queries
+                .isPinned(
+                    zoom_level = zoomLevel.toLong(),
+                    col = col.toLong(),
+                    row = row.toLong(),
+                    provider_id = providerId,
+                ).executeAsOne() > 0L
         }
 
     override suspend fun getPinnedTilesForRegion(regionId: Long): List<TileCoord> =

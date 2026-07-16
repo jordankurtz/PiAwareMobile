@@ -37,19 +37,21 @@ class AircraftRepoImpl(
             coroutineScope {
                 // Fetch aircraft from each server with the server name
                 val aircraftByServer =
-                    servers.map { server ->
-                        async {
-                            try {
-                                val dataSource = dataSourceFactory.getDataSource(server.type)
-                                dataSource.getAircraft(server).map { aircraft -> aircraft to server }
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Logger.e("Failed to fetch aircraft from server $server", e)
-                                emptyList()
+                    servers
+                        .map { server ->
+                            async {
+                                try {
+                                    val dataSource = dataSourceFactory.getDataSource(server.type)
+                                    dataSource.getAircraft(server).map { aircraft -> aircraft to server }
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (e: Exception) {
+                                    Logger.e("Failed to fetch aircraft from server $server", e)
+                                    emptyList()
+                                }
                             }
-                        }
-                    }.awaitAll().flatten()
+                        }.awaitAll()
+                        .flatten()
 
                 // Group by hex and merge - keep freshest aircraft data, accumulate servers
                 val mergedAircraft = mutableMapOf<String, Pair<Aircraft, MutableSet<Server>>>()
@@ -79,9 +81,10 @@ class AircraftRepoImpl(
     override suspend fun loadAircraftTypes(servers: List<Server>) {
         if (aircraftTypes == null) {
             aircraftTypes =
-                servers.map { server ->
-                    dataSourceFactory.getDataSource(server.type).getAircraftTypes(server)
-                }.flatten()
+                servers
+                    .map { server ->
+                        dataSourceFactory.getDataSource(server.type).getAircraftTypes(server)
+                    }.flatten()
         }
     }
 
@@ -107,8 +110,8 @@ class AircraftRepoImpl(
         }
     }
 
-    override suspend fun lookupFlight(ident: String): Async<FlightResponse> {
-        return try {
+    override suspend fun lookupFlight(ident: String): Async<FlightResponse> =
+        try {
             val response =
                 aeroApi.getFlight(
                     ident = ident,
@@ -120,7 +123,6 @@ class AircraftRepoImpl(
             Logger.e("Failed to fetch flight for ident $ident", e)
             Async.Error("Failed to fetch flight for ident $ident", e)
         }
-    }
 
     override suspend fun fetchAndMergeHistory(server: Server) {
         val dataSource = dataSourceFactory.getDataSource(server.type)
@@ -154,7 +156,8 @@ class AircraftRepoImpl(
 
         if (dkey.isNotEmpty() && data.containsKey("children")) {
             val subkey = bkey + dkey.first()
-            if (data["children"]?.let { Json.decodeFromJsonElement<List<String>>(it) }
+            if (data["children"]
+                    ?.let { Json.decodeFromJsonElement<List<String>>(it) }
                     ?.contains(subkey) == true
             ) {
                 return lookupAircraftInfoRecursive(server, hex, level + 1)
@@ -164,10 +167,10 @@ class AircraftRepoImpl(
         return null
     }
 
-    private fun lookAircraftType(info: JsonElement): ICAOAircraftType? {
-        return info.let { it.jsonObject["t"]?.jsonPrimitive?.content }
+    private fun lookAircraftType(info: JsonElement): ICAOAircraftType? =
+        info
+            .let { it.jsonObject["t"]?.jsonPrimitive?.content }
             ?.let { aircraftTypes?.get(it) }
-    }
 
     fun <K, V> List<Map<K, V>>.flatten(): Map<K, V> {
         val result = mutableMapOf<K, V>()
@@ -176,6 +179,4 @@ class AircraftRepoImpl(
     }
 }
 
-fun List<Aircraft>.filterNoLocation(): List<Aircraft> {
-    return this.filter { it.hasPosition }
-}
+fun List<Aircraft>.filterNoLocation(): List<Aircraft> = this.filter { it.hasPosition }

@@ -15,11 +15,3 @@ ktlint_standard_no-wildcard-imports = enabled
 ktlint_standard_filename = disabled
 ktlint_standard_function-naming = disabled
 ktlint_standard_property-naming = disabled
-# New in ktlint 1.7/plugin v14; would require a full-codebase reformat. Disabled for now
-# to unblock the plugin bump. See follow-up issue for adopting these rules properly.
-ktlint_standard_chain-method-continuation = disabled
-ktlint_standard_function-expression-body = disabled
-ktlint_standard_class-signature = disabled
-ktlint_standard_multiline-expression-wrapping = disabled
-ktlint_standard_function-signature = disabled
-ktlint_standard_function-literal = disabled

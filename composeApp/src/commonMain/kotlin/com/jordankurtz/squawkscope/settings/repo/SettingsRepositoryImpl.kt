@@ -17,8 +17,8 @@ import org.koin.core.annotation.Single
 class SettingsRepositoryImpl(
     private val datastore: DataStore<Preferences>,
 ) : SettingsRepository {
-    override fun getSettings(): Flow<Settings> {
-        return datastore.data.map { preferences ->
+    override fun getSettings(): Flow<Settings> =
+        datastore.data.map { preferences ->
             Settings(
                 servers = preferences[SettingsRepository.SERVERS]?.let { Json.decodeFromString(it) } ?: emptyList(),
                 refreshInterval = preferences[SettingsRepository.REFRESH_INTERVAL] ?: DEFAULT_REFRESH_INTERVAL,
@@ -66,7 +66,6 @@ class SettingsRepositoryImpl(
                     } ?: emptyList(),
             )
         }
-    }
 
     override suspend fun saveSettings(settings: Settings) {
         datastore.edit { preferences ->

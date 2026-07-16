@@ -141,7 +141,11 @@ fun MainScreen(
                 val builtInMatch = TileProviders.ALL.find { it.id == activeProviderId }
                 val providerDisplayName =
                     builtInMatch?.displayNameRes?.let { stringResource(it) }
-                        ?: settings.getValue()?.customProviders?.find { it.id == activeProviderId }?.displayName
+                        ?: settings
+                            .getValue()
+                            ?.customProviders
+                            ?.find { it.id == activeProviderId }
+                            ?.displayName
                         ?: activeProviderId
                 SettingsItem(
                     title = stringResource(Res.string.map_provider_title),
