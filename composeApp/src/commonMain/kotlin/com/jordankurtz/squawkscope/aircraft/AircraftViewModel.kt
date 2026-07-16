@@ -180,7 +180,8 @@ class AircraftViewModel(
             val locations =
                 servers.map { server -> async { server to getReceiverLocationUseCase(server) } }
                     .awaitAll().filter { it.second != null }
-                    .toMap() as Map<Server, Location> // we already filtered out the nulls but type checking doesn't know that
+                    // nulls already filtered above, but type checking doesn't know that
+                    .toMap() as Map<Server, Location>
 
             _receiverLocations.value = locations
         }
