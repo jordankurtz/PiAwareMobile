@@ -135,7 +135,7 @@ class SqlDelightOfflineTileStore(
         id: Long,
         zoom: Int,
         path: String,
-    ) = withContext(ioDispatcher) {
+    ): Unit = withContext(ioDispatcher) {
         queries.updateRegionThumbnail(thumbnailZoom = zoom.toLong(), thumbnailPath = path, id = id)
     }
 }
