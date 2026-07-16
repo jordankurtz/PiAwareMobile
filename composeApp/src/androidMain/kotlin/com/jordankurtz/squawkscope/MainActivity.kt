@@ -15,7 +15,9 @@ import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
 import org.koin.core.scope.Scope
 
-class MainActivity : ComponentActivity(), AndroidScopeComponent {
+class MainActivity :
+    ComponentActivity(),
+    AndroidScopeComponent {
     override val scope: Scope by activityScope()
 
     private val locationService: LocationService by inject()

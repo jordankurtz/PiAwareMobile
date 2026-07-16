@@ -32,12 +32,13 @@ class FileTileCache(
         withContext(ioDispatcher) {
             val tileKey = tileKey(zoomLvl, col, row, providerId)
             val entry =
-                queries.selectCacheEntry(
-                    zoomLvl.toLong(),
-                    col.toLong(),
-                    row.toLong(),
-                    providerId,
-                ).executeAsOneOrNull()
+                queries
+                    .selectCacheEntry(
+                        zoomLvl.toLong(),
+                        col.toLong(),
+                        row.toLong(),
+                        providerId,
+                    ).executeAsOneOrNull()
 
             if (entry == null) {
                 Logger.d("Cache miss: $tileKey (not found)")
@@ -47,12 +48,13 @@ class FileTileCache(
             val age = Clock.System.now().toEpochMilliseconds() - entry.fetched_at
             if (age > maxAgeMillis) {
                 val pinned =
-                    queries.isPinned(
-                        zoom_level = zoomLvl.toLong(),
-                        col = col.toLong(),
-                        row = row.toLong(),
-                        provider_id = providerId,
-                    ).executeAsOne() > 0L
+                    queries
+                        .isPinned(
+                            zoom_level = zoomLvl.toLong(),
+                            col = col.toLong(),
+                            row = row.toLong(),
+                            provider_id = providerId,
+                        ).executeAsOne() > 0L
                 if (pinned) {
                     Logger.d("Cache hit (pinned, skipping expiry check): $tileKey")
                     // fall through to serve the tile below

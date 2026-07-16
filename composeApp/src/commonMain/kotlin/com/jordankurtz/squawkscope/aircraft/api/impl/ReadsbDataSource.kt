@@ -23,8 +23,8 @@ import org.koin.core.annotation.Single
 class ReadsbDataSource(
     private val httpClient: HttpClient,
 ) : AircraftDataSource {
-    override suspend fun getAircraft(server: Server): List<Aircraft> {
-        return try {
+    override suspend fun getAircraft(server: Server): List<Aircraft> =
+        try {
             val response: PiAwareResponse =
                 httpClient.get("http://${server.address}/data/aircraft.json").body()
             response.aircraft
@@ -34,10 +34,9 @@ class ReadsbDataSource(
             Logger.e("Error fetching aircraft from readsb server ${server.address}", e)
             emptyList()
         }
-    }
 
-    override suspend fun getReceiverInfo(server: Server): Receiver? {
-        return try {
+    override suspend fun getReceiverInfo(server: Server): Receiver? =
+        try {
             httpClient.get("http://${server.address}/data/receiver.json").body()
         } catch (e: CancellationException) {
             throw e
@@ -45,15 +44,14 @@ class ReadsbDataSource(
             Logger.e("Error fetching receiver info from readsb server ${server.address}", e)
             null
         }
-    }
 
     override suspend fun getDump978ReceiverInfo(server: Server): Receiver? {
         // readsb does not support dump978 UAT receivers
         return null
     }
 
-    override suspend fun getAircraftTypes(server: Server): Map<String, ICAOAircraftType> {
-        return try {
+    override suspend fun getAircraftTypes(server: Server): Map<String, ICAOAircraftType> =
+        try {
             httpClient.get("http://${server.address}/db/aircraft_types/icao_aircraft_types.json").body()
         } catch (e: CancellationException) {
             throw e
@@ -61,13 +59,12 @@ class ReadsbDataSource(
             Logger.e("Error fetching aircraft types from readsb server ${server.address}", e)
             emptyMap()
         }
-    }
 
     override suspend fun getAircraftInfo(
         server: Server,
         bkey: String,
-    ): JsonObject? {
-        return try {
+    ): JsonObject? =
+        try {
             httpClient.get("http://${server.address}/db/$bkey.json").body()
         } catch (e: CancellationException) {
             throw e
@@ -75,13 +72,14 @@ class ReadsbDataSource(
             Logger.e("Error fetching aircraft info from readsb server ${server.address}", e)
             null
         }
-    }
 
     override suspend fun fetchTrails(server: Server): Map<String, List<AircraftPosition>> {
         val aircraft =
             try {
-                httpClient.get("http://${server.address}/data/aircraft.json")
-                    .body<PiAwareResponse>().aircraft
+                httpClient
+                    .get("http://${server.address}/data/aircraft.json")
+                    .body<PiAwareResponse>()
+                    .aircraft
                     .filter { it.hasPosition }
             } catch (e: CancellationException) {
                 throw e
@@ -91,9 +89,10 @@ class ReadsbDataSource(
             }
 
         return coroutineScope {
-            aircraft.map { plane ->
-                async { fetchTrace(server, plane.hex) }
-            }.awaitAll()
+            aircraft
+                .map { plane ->
+                    async { fetchTrace(server, plane.hex) }
+                }.awaitAll()
                 .filterNotNull()
                 .toTrails()
         }
@@ -102,8 +101,8 @@ class ReadsbDataSource(
     private suspend fun fetchTrace(
         server: Server,
         hex: String,
-    ): ReadsbTraceResponse? {
-        return try {
+    ): ReadsbTraceResponse? =
+        try {
             httpClient.get("http://${server.address}/data/traces/${hex.take(2)}/$hex.json").body()
         } catch (e: CancellationException) {
             throw e
@@ -111,7 +110,6 @@ class ReadsbDataSource(
             Logger.e("Error fetching trace for $hex from readsb server ${server.address}", e)
             null
         }
-    }
 
     private fun List<ReadsbTraceResponse>.toTrails(): Map<String, List<AircraftPosition>> {
         val result = mutableMapOf<String, MutableList<AircraftPosition>>()

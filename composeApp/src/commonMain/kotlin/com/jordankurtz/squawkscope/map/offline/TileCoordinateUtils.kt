@@ -6,7 +6,11 @@ import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.tan
 
-data class TileCoord(val zoom: Int, val col: Int, val row: Int)
+data class TileCoord(
+    val zoom: Int,
+    val col: Int,
+    val row: Int,
+)
 
 /**
  * Converts a lat/lon coordinate to OSM slippy-map tile col/row at the given zoom.

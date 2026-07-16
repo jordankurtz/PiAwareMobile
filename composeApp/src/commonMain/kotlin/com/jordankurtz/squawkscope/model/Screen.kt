@@ -10,7 +10,10 @@ import squawkscope.composeapp.generated.resources.screen_list
 import squawkscope.composeapp.generated.resources.screen_map
 import squawkscope.composeapp.generated.resources.screen_settings
 
-sealed class Screen(val title: StringResource, val icon: DrawableResource) {
+sealed class Screen(
+    val title: StringResource,
+    val icon: DrawableResource,
+) {
     object Map : Screen(Res.string.screen_map, Res.drawable.ic_map)
 
     object List : Screen(Res.string.screen_list, Res.drawable.ic_list)

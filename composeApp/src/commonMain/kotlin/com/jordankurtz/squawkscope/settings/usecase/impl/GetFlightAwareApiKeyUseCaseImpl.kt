@@ -8,7 +8,5 @@ import org.koin.core.annotation.Factory
 class GetFlightAwareApiKeyUseCaseImpl(
     private val settingsService: SettingsService,
 ) : GetFlightAwareApiKeyUseCase {
-    override suspend operator fun invoke(): String {
-        return settingsService.getFlightAwareApiKey()
-    }
+    override suspend operator fun invoke(): String = settingsService.getFlightAwareApiKey()
 }

@@ -21,7 +21,9 @@ import platform.posix.memcpy
  *   (typically `NSCachesDirectory/map_tiles/`).
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-class AppleCacheFileSystem(private val cacheDir: String) : CacheFileSystem {
+class AppleCacheFileSystem(
+    private val cacheDir: String,
+) : CacheFileSystem {
     private val fileManager: NSFileManager = NSFileManager()
 
     private fun fullPath(key: String): String {

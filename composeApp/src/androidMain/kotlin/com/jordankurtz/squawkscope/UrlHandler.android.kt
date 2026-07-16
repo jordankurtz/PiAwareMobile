@@ -7,7 +7,9 @@ import com.jordankurtz.squawkscope.di.modules.ContextWrapper
 import org.koin.core.annotation.Factory
 
 @Factory(binds = [UrlHandler::class])
-actual class UrlHandlerImpl actual constructor(private val contextWrapper: ContextWrapper) : UrlHandler {
+actual class UrlHandlerImpl actual constructor(
+    private val contextWrapper: ContextWrapper,
+) : UrlHandler {
     actual override fun openUrlInternally(url: String) {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

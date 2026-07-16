@@ -8,8 +8,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 
-actual fun getKtorClient(): HttpClient {
-    return HttpClient(Darwin) {
+actual fun getKtorClient(): HttpClient =
+    HttpClient(Darwin) {
         install(ContentNegotiation) {
             json(
                 Json {
@@ -31,4 +31,3 @@ actual fun getKtorClient(): HttpClient {
             }
         }
     }
-}

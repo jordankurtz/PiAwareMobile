@@ -18,17 +18,18 @@ class LoadHistoryUseCaseImpl(
         if (servers.isEmpty()) return
 
         coroutineScope {
-            servers.map { server ->
-                async {
-                    try {
-                        aircraftRepo.fetchAndMergeHistory(server)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Logger.e("Failed to fetch history from server $server", e)
+            servers
+                .map { server ->
+                    async {
+                        try {
+                            aircraftRepo.fetchAndMergeHistory(server)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Logger.e("Failed to fetch history from server $server", e)
+                        }
                     }
-                }
-            }.awaitAll()
+                }.awaitAll()
         }
     }
 }

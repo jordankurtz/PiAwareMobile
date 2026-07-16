@@ -16,7 +16,9 @@ import com.jordankurtz.squawkscope.model.Location
 import org.koin.core.annotation.Factory
 
 @Factory(binds = [LocationService::class])
-actual class LocationServiceImpl actual constructor(private val contextWrapper: ContextWrapper) : LocationService {
+actual class LocationServiceImpl actual constructor(
+    private val contextWrapper: ContextWrapper,
+) : LocationService {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(contextWrapper.context)
     private var locationCallback: LocationCallback? = null
@@ -40,13 +42,14 @@ actual class LocationServiceImpl actual constructor(private val contextWrapper: 
         }
 
         val locationRequest =
-            LocationRequest.Builder(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                // 5 seconds
-                5000L,
-            ).apply {
-                setMinUpdateIntervalMillis(2000L)
-            }.build()
+            LocationRequest
+                .Builder(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    // 5 seconds
+                    5000L,
+                ).apply {
+                    setMinUpdateIntervalMillis(2000L)
+                }.build()
 
         locationCallback =
             object : LocationCallback() {

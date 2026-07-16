@@ -213,8 +213,7 @@ class OfflineMapsViewModel(
                 region.thumbnailZoom != null &&
                     region.status == DownloadStatus.COMPLETE &&
                     (existingPath == null || !thumbnailFileManager.exists(existingPath))
-            }
-            .forEach { region ->
+            }.forEach { region ->
                 val zoom = region.thumbnailZoom ?: return@forEach
                 val path = thumbnailFileManager.thumbnailPath(region.id)
                 val ok =

@@ -13,8 +13,8 @@ import platform.Foundation.NSUserDomainMask
 @Module
 actual class DataStoreModule {
     @Single
-    actual fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences> {
-        return PreferenceDataStoreFactory.createWithPath {
+    actual fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences> =
+        PreferenceDataStoreFactory.createWithPath {
             (
                 requireNotNull(
                     NSSearchPathForDirectoriesInDomains(
@@ -25,5 +25,4 @@ actual class DataStoreModule {
                 ) + "/settings.preferences_pb"
             ).toPath()
         }
-    }
 }

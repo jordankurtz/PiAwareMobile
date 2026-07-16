@@ -102,7 +102,7 @@ class MapViewModel(
     /** Exposes the last location passed to [recenterOnLocation] for test verification. */
     internal val lastRecenteredLocation = MutableStateFlow<Location?>(null)
 
-    private val _trailSelectedAircraft = MutableStateFlow<String?>(null)
+    private val trailSelectedAircraft = MutableStateFlow<String?>(null)
 
     init {
         tileLayerId = mapStateController.addLayer(mapProvider)
@@ -111,7 +111,7 @@ class MapViewModel(
             if (previousAircraftMarkerIds.contains(id)) {
                 val newSelection = if (_selectedAircraft.value == id) null else id
                 _selectedAircraft.value = newSelection
-                _trailSelectedAircraft.value = newSelection
+                trailSelectedAircraft.value = newSelection
                 onAircraftTrailsUpdated(lastTrails)
             }
         }
@@ -120,7 +120,7 @@ class MapViewModel(
             if (_selectedAircraft.value != null) {
                 _selectedAircraft.value = null
                 _followingAircraft.value = null
-                _trailSelectedAircraft.value = null
+                trailSelectedAircraft.value = null
                 onAircraftTrailsUpdated(lastTrails)
             }
         }
@@ -147,7 +147,8 @@ class MapViewModel(
         }
 
         viewModelScope.launch {
-            providerConfigFlow.drop(1).collect { // skip initial — already loaded
+            providerConfigFlow.drop(1).collect {
+                // skip initial — already loaded
                 mapStateController.replaceLayer(tileLayerId, mapProvider)?.let { newId ->
                     tileLayerId = newId
                 }
@@ -158,7 +159,7 @@ class MapViewModel(
     fun onAircraftDeselected() {
         _selectedAircraft.value = null
         _followingAircraft.value = null
-        _trailSelectedAircraft.value = null
+        trailSelectedAircraft.value = null
         onAircraftTrailsUpdated(lastTrails)
     }
 
@@ -177,7 +178,7 @@ class MapViewModel(
     fun syncSelection(hex: String?) {
         if (_selectedAircraft.value != hex) {
             _selectedAircraft.value = hex
-            _trailSelectedAircraft.value = hex
+            trailSelectedAircraft.value = hex
             onAircraftTrailsUpdated(lastTrails)
         }
     }
@@ -378,7 +379,7 @@ class MapViewModel(
                 TrailDisplayMode.NONE -> emptyMap()
                 TrailDisplayMode.ALL -> trails
                 TrailDisplayMode.SELECTED -> {
-                    val selectedHex = _trailSelectedAircraft.value ?: _selectedAircraft.value
+                    val selectedHex = trailSelectedAircraft.value ?: _selectedAircraft.value
                     if (selectedHex != null) {
                         trails.filterKeys { it == selectedHex }
                     } else {

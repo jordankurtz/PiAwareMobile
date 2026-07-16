@@ -4,7 +4,9 @@ import com.jordankurtz.logger.LogWriter
 import com.jordankurtz.logger.Logger
 import io.sentry.kotlin.multiplatform.Sentry
 
-class SentryLogger(val dsn: String) : LogWriter {
+class SentryLogger(
+    val dsn: String,
+) : LogWriter {
     init {
         Sentry.init { options ->
             options.dsn = dsn

@@ -13,9 +13,7 @@ import kotlin.test.assertEquals
 class GetAllAircraftTrailsUseCaseTest {
     private lateinit var trailManager: AircraftTrailManager
 
-    private fun createUseCase(): GetAllAircraftTrailsUseCase {
-        return GetAllAircraftTrailsUseCaseImpl(trailManager)
-    }
+    private fun createUseCase(): GetAllAircraftTrailsUseCase = GetAllAircraftTrailsUseCaseImpl(trailManager)
 
     @Test
     fun `invoke returns aircraft trails from repo`() {

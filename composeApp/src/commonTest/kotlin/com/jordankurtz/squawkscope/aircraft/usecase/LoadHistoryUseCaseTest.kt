@@ -19,9 +19,7 @@ class LoadHistoryUseCaseTest {
     private val server2 = Server(name = "Server 2", address = "server2.local")
     private val server3 = Server(name = "Server 3", address = "server3.local")
 
-    private fun createUseCase(): LoadHistoryUseCase {
-        return LoadHistoryUseCaseImpl(aircraftRepo)
-    }
+    private fun createUseCase(): LoadHistoryUseCase = LoadHistoryUseCaseImpl(aircraftRepo)
 
     @Test
     fun `invoke fetches history from all servers`() =

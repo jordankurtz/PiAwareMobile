@@ -6,7 +6,9 @@ import org.koin.core.annotation.Single
 import org.koin.core.scope.Scope
 
 // androidMain
-actual class ContextWrapper(val context: Context)
+actual class ContextWrapper(
+    val context: Context,
+)
 
 @Module
 actual class ContextModule {

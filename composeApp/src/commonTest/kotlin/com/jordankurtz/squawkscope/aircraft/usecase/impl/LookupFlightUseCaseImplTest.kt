@@ -29,8 +29,8 @@ class LookupFlightUseCaseImplTest {
     private fun createMockFlight(
         ident: String,
         scheduledOut: Instant?,
-    ): Flight {
-        return Flight(
+    ): Flight =
+        Flight(
             ident = ident,
             identIcao = null,
             identIata = null,
@@ -85,7 +85,6 @@ class LookupFlightUseCaseImplTest {
             actualRunwayOff = null,
             actualRunwayOn = null,
         )
-    }
 
     @Test
     fun `invoke returns most recent past flight when successful`() =

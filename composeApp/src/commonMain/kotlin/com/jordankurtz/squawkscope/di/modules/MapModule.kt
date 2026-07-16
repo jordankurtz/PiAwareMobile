@@ -30,7 +30,8 @@ class MapModule {
             runBlocking(ioDispatcher) {
                 resolveActiveProviderConfig(settingsRepository.getSettings().first())
             }
-        return settingsRepository.getSettings()
+        return settingsRepository
+            .getSettings()
             .map { resolveActiveProviderConfig(it) }
             .stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = initial)
     }

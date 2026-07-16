@@ -22,14 +22,14 @@ class AeroApiImpl(
         end: String?,
         maxPages: Int?,
         cursor: String?,
-    ): FlightResponse {
-        return client.get("https://aeroapi.flightaware.com/aeroapi/flights/$ident") {
-            header("x-apikey", getFlightAwareApiKeyUseCase())
-            parameter("ident_type", identType)
-            parameter("start", start)
-            parameter("end", end)
-            parameter("max_pages", maxPages)
-            parameter("cursor", cursor)
-        }.body()
-    }
+    ): FlightResponse =
+        client
+            .get("https://aeroapi.flightaware.com/aeroapi/flights/$ident") {
+                header("x-apikey", getFlightAwareApiKeyUseCase())
+                parameter("ident_type", identType)
+                parameter("start", start)
+                parameter("end", end)
+                parameter("max_pages", maxPages)
+                parameter("cursor", cursor)
+            }.body()
 }

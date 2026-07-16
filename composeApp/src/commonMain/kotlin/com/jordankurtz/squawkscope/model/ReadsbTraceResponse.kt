@@ -40,7 +40,12 @@ internal object TraceEntrySerializer : KSerializer<TraceEntry> {
             timeOffset = array[0].jsonPrimitive.content.toDouble(),
             latitude = array[1].jsonPrimitive.content.toDouble(),
             longitude = array[2].jsonPrimitive.content.toDouble(),
-            altitude = array.getOrNull(3)?.takeIf { it != JsonNull }?.jsonPrimitive?.content,
+            altitude =
+                array
+                    .getOrNull(3)
+                    ?.takeIf { it != JsonNull }
+                    ?.jsonPrimitive
+                    ?.content,
         )
     }
 }

@@ -142,8 +142,7 @@ internal fun MapRegionPickerContent(
                                 )
                             initialized = true
                         }
-                    }
-                    .then(boxModePointerInput),
+                    }.then(boxModePointerInput),
         ) {
             if (!initialized) return@Canvas
 

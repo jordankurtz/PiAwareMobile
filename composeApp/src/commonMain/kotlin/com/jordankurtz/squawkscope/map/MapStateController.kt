@@ -12,7 +12,11 @@ import ovh.plrapps.mapcompose.api.BoundingBox
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.paths.PathDataBuilder
 
-data class MapScrollPosition(val scrollX: Double, val scrollY: Double, val scale: Double)
+data class MapScrollPosition(
+    val scrollX: Double,
+    val scrollY: Double,
+    val scale: Double,
+)
 
 @Suppress("TooManyFunctions")
 interface MapStateController {

@@ -1,8 +1,9 @@
 package com.jordankurtz.logger
 
 @Suppress("ThrowingExceptionsWithoutMessageOrCause") // Throwable used only to capture stack trace
-internal actual fun createTag(): String {
-    return Throwable().stackTrace
+internal actual fun createTag(): String =
+    Throwable()
+        .stackTrace
         .first {
             it.className !in
                 listOf(
@@ -10,6 +11,4 @@ internal actual fun createTag(): String {
                     "com.jordankurtz.logger.LoggerKt",
                     "com.jordankurtz.logger.TagKt",
                 )
-        }
-        .let { stack -> stack.className.substringAfterLast('.') }
-}
+        }.let { stack -> stack.className.substringAfterLast('.') }

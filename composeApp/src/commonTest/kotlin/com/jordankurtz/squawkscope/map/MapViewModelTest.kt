@@ -538,7 +538,8 @@ class MapViewModelTest {
                     settings.copy(minZoomLevel = 8, maxZoomLevel = 14, restoreMapStateOnStart = true),
                 )
             everySuspend { getSavedMapStateUseCase.invoke() } returns
-                com.jordankurtz.squawkscope.model.MapState(0.5, 0.5, osmZoomToScale(3))
+                com.jordankurtz.squawkscope.model
+                    .MapState(0.5, 0.5, osmZoomToScale(3))
             val controller = FakeMapStateController()
             createViewModel(mapStateController = controller)
             advanceUntilIdle()
@@ -553,7 +554,8 @@ class MapViewModelTest {
                     settings.copy(minZoomLevel = 5, maxZoomLevel = 10, restoreMapStateOnStart = true),
                 )
             everySuspend { getSavedMapStateUseCase.invoke() } returns
-                com.jordankurtz.squawkscope.model.MapState(0.5, 0.5, osmZoomToScale(15))
+                com.jordankurtz.squawkscope.model
+                    .MapState(0.5, 0.5, osmZoomToScale(15))
             val controller = FakeMapStateController()
             createViewModel(mapStateController = controller)
             advanceUntilIdle()

@@ -9,7 +9,5 @@ import org.koin.core.annotation.Factory
 class GetShowUserLocationOnMapUseCaseImpl(
     private val settingsService: SettingsService,
 ) : GetShowUserLocationOnMapUseCase {
-    override fun invoke(): Flow<Boolean> {
-        return settingsService.getShowUserLocationOnMap()
-    }
+    override fun invoke(): Flow<Boolean> = settingsService.getShowUserLocationOnMap()
 }

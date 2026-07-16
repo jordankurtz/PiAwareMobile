@@ -10,11 +10,12 @@ import org.koin.core.annotation.Single
 @Module
 actual class DataStoreModule {
     @Single
-    actual fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences> {
-        return PreferenceDataStoreFactory.createWithPath {
-            contextWrapper.context.filesDir.resolve(
-                "settings.preferences_pb",
-            ).absolutePath.toPath()
+    actual fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences> =
+        PreferenceDataStoreFactory.createWithPath {
+            contextWrapper.context.filesDir
+                .resolve(
+                    "settings.preferences_pb",
+                ).absolutePath
+                .toPath()
         }
-    }
 }

@@ -10,9 +10,8 @@ import org.koin.core.annotation.Single
 @Module
 actual class DataStoreModule {
     @Single
-    actual fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences> {
-        return PreferenceDataStoreFactory.createWithPath {
+    actual fun provideDataStore(contextWrapper: ContextWrapper): DataStore<Preferences> =
+        PreferenceDataStoreFactory.createWithPath {
             ("settings.preferences_pb").toPath()
         }
-    }
 }

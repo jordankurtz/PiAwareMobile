@@ -40,17 +40,17 @@ class MapStateRepositoryImpl(
      * Loads the last saved map state from persistent settings.
      * Returns a default state if no state has been saved yet.
      */
-    override suspend fun getSavedMapState(): MapState {
-        return dataStore.data.map { preferences ->
-            val scrollX = preferences[KEY_SCROLL_X]
-            val scrollY = preferences[KEY_SCROLL_Y]
-            val zoom = preferences[KEY_ZOOM]
+    override suspend fun getSavedMapState(): MapState =
+        dataStore.data
+            .map { preferences ->
+                val scrollX = preferences[KEY_SCROLL_X]
+                val scrollY = preferences[KEY_SCROLL_Y]
+                val zoom = preferences[KEY_ZOOM]
 
-            if (scrollX != null && scrollY != null && zoom != null) {
-                MapState(scrollX, scrollY, zoom)
-            } else {
-                DEFAULT_STATE
-            }
-        }.first()
-    }
+                if (scrollX != null && scrollY != null && zoom != null) {
+                    MapState(scrollX, scrollY, zoom)
+                } else {
+                    DEFAULT_STATE
+                }
+            }.first()
 }

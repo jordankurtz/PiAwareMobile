@@ -49,7 +49,10 @@ class SquawkCodesTest {
 
     @Test
     fun `at least one entry per severity bucket`() {
-        val severities = SquawkCodes.all.values.map { it.severity }.toSet()
+        val severities =
+            SquawkCodes.all.values
+                .map { it.severity }
+                .toSet()
         assertTrue(SquawkSeverity.EMERGENCY in severities)
         assertTrue(SquawkSeverity.CAUTION in severities)
         assertTrue(SquawkSeverity.INFO in severities)
